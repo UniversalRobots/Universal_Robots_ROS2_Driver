@@ -1,14 +1,15 @@
-cmake_minimum_required(VERSION 2.8.3)
-
+cmake_minimum_required(VERSION 3.5)
 project(ur_bringup)
 
-find_package(catkin REQUIRED)
+find_package(ament_cmake REQUIRED)
 
-catkin_package()
+# if (BUILD_TESTING)
+#   find_package(roslaunch REQUIRED)
+#   roslaunch_add_file_check(tests/roslaunch_test.xml)
+# endif()
 
-if (CATKIN_ENABLE_TESTING)
-  find_package(roslaunch REQUIRED)
-  roslaunch_add_file_check(tests/roslaunch_test.xml)
-endif()
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
-install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+ament_package()

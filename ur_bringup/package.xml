@@ -14,7 +14,7 @@
   <license>BSD</license>
   <url type="website">http://ros.org/wiki/ur_bringup</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <test_depend>roslaunch</test_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>ur_description</exec_depend>
