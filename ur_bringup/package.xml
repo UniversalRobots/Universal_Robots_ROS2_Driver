@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>ur_bringup</name>
-  <version>1.2.7</version>
+  <version>0.0.0</version>
   <description>The ur_bringup package</description>
 
   <author>Wim Meeussen</author>
