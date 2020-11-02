@@ -26,24 +26,3 @@
 //----------------------------------------------------------------------
 
 #include "ur_controllers/scaled_joint_trajectory_controller.h"
-#include "ur_controllers/scaled_joint_command_interface.h"
-
-#include <pluginlib/class_list_macros.hpp>
-#include <trajectory_interface/quintic_spline_segment.h>
-
-namespace position_controllers
-{
-typedef ur_controllers::ScaledJointTrajectoryController<trajectory_interface::QuinticSplineSegment<double>,
-                                                        ur_controllers::ScaledPositionJointInterface>
-    ScaledJointTrajectoryController;
-}
-
-namespace velocity_controllers
-{
-typedef ur_controllers::ScaledJointTrajectoryController<trajectory_interface::QuinticSplineSegment<double>,
-                                                        ur_controllers::ScaledVelocityJointInterface>
-    ScaledJointTrajectoryController;
-}
-
-PLUGINLIB_EXPORT_CLASS(position_controllers::ScaledJointTrajectoryController, controller_interface::ControllerBase)
-PLUGINLIB_EXPORT_CLASS(velocity_controllers::ScaledJointTrajectoryController, controller_interface::ControllerBase)
