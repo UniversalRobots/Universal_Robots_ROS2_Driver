@@ -27,10 +27,11 @@
 #ifndef UR_ROBOT_DRIVER_ROS_ROBOT_STATE_HELPER_INCLUDED
 #define UR_ROBOT_DRIVER_ROS_ROBOT_STATE_HELPER_INCLUDED
 
+#include <sstream>
 #include <ur_client_library/ur/datatypes.h>
-#include <ur_dashboard_msgs/RobotMode.h>
-#include <ur_dashboard_msgs/SafetyMode.h>
-#include <ur_dashboard_msgs/SetModeAction.h>
+#include <ur_dashboard_msgs/msg/robot_mode.hpp>
+#include <ur_dashboard_msgs/msg/safety_mode.hpp>
+#include <ur_dashboard_msgs/action/set_mode.hpp>
 
 namespace ur_driver
 {
