@@ -32,17 +32,17 @@
 
 #include <ur_client_library/ur/dashboard_client.h>
 
-#include <ur_dashboard_msgs/AddToLog.h>
-#include <ur_dashboard_msgs/GetLoadedProgram.h>
-#include <ur_dashboard_msgs/GetProgramState.h>
-#include <ur_dashboard_msgs/IsProgramRunning.h>
-#include <ur_dashboard_msgs/IsProgramSaved.h>
-#include <ur_dashboard_msgs/Load.h>
-#include <ur_dashboard_msgs/Popup.h>
-#include <ur_dashboard_msgs/ProgramState.h>
-#include <ur_dashboard_msgs/GetRobotMode.h>
-#include <ur_dashboard_msgs/GetSafetyMode.h>
-#include <ur_dashboard_msgs/RawRequest.h>
+#include <ur_dashboard_msgs/msg/program_state.hpp>
+#include <ur_dashboard_msgs/srv/add_to_log.hpp>
+#include <ur_dashboard_msgs/srv/get_loaded_program.hpp>
+#include <ur_dashboard_msgs/srv/get_program_state.hpp>
+#include <ur_dashboard_msgs/srv/get_robot_mode.hpp>
+#include <ur_dashboard_msgs/srv/get_safety_mode.hpp>
+#include <ur_dashboard_msgs/srv/is_program_running.hpp>
+#include <ur_dashboard_msgs/srv/is_program_saved.hpp>
+#include <ur_dashboard_msgs/srv/load.hpp>
+#include <ur_dashboard_msgs/srv/popup.hpp>
+#include <ur_dashboard_msgs/srv/raw_request.hpp>
 
 namespace ur_driver
 {

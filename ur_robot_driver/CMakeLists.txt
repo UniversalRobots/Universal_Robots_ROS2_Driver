@@ -13,6 +13,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(ur_client_library REQUIRED)
+find_package(ur_dashboard_msgs REQUIRED)
 
 include_directories(
   include
@@ -20,6 +21,7 @@ include_directories(
 )
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+  ur_dashboard_msgs
 )
 
 add_library(ur_robot_driver_plugin

@@ -21,6 +21,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>ur_client_library</depend>
+  <depend>ur_dashboard_msgs</depend>
 
   <test_depend>rostest</test_depend>
 
