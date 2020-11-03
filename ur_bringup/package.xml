@@ -14,10 +14,9 @@
   <url type="website">http://ros.org/wiki/ur_bringup</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <test_depend>roslaunch</test_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>ur_description</exec_depend>
-  <exec_depend>ur_driver</exec_depend>
+  <exec_depend>ur_robot_driver</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
 
   <export>

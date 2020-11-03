@@ -22,7 +22,6 @@
   <buildtool_depend>cmake</buildtool_depend>
 
   <depend>libconsole-bridge-dev</depend>
-  <exec_depend>catkin</exec_depend>
 
   <export>
     <build_type>cmake</build_type>
