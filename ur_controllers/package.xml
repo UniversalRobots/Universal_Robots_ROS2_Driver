@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>ur_controllers</name>
   <version>0.0.0</version>
   <description>Provides controllers that use the speed scaling interface of Universal Robots.</description>
@@ -18,6 +17,6 @@
   <depend>std_msgs</depend>
 
   <export>
-    <controller_interface plugin="${prefix}/controller_plugins.xml"/>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

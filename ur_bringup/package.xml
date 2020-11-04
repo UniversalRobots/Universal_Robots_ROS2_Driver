@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>ur_bringup</name>
   <version>0.0.0</version>
   <description>The ur_bringup package</description>
@@ -22,5 +21,6 @@
   <exec_depend>robot_state_publisher</exec_depend>
 
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
