@@ -1,9 +1,8 @@
-<?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>ur_description</name>
   <version>0.0.0</version>
   <description>
-      URDF description for Universal UR5/10 robot arms
+    URDF description for Universal UR5/10 robot arms
   </description>
 
   <author>Wim Meeussen</author>
@@ -27,5 +26,6 @@
   <exec_depend>xacro</exec_depend>
 
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
