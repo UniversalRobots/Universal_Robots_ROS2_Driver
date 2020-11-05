@@ -29,5 +29,4 @@
 
 namespace ur_driver
 {
-
 }  // namespace ur_driver

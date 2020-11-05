@@ -32,7 +32,6 @@ namespace ur_controllers
 {
 class SpeedScalingStateController
 {
-
 };
 }  // namespace ur_controllers
 #endif  // ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
