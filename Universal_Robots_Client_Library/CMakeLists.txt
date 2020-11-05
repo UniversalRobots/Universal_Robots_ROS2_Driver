@@ -13,7 +13,7 @@ endif()
 ## Check C++11 support / enable global pedantic and Wall
 ##
 include(DefineCXX17CompilerFlag)
-DEFINE_CXX_17_COMPILER_FLAG(CXX17_FLAG)
+define_cxx_17_compiler_flag(CXX17_FLAG)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 
 add_library(urcl SHARED
@@ -71,7 +71,7 @@ endif()
 ##
 ## Build testing if enabled by option
 ##
-if (BUILDING_TESTS)
+if(BUILDING_TESTS)
   enable_testing()
   add_subdirectory(tests)
 else()
