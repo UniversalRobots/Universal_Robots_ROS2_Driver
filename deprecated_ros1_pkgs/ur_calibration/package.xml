@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>ur_calibration</name>
   <version>0.0.2</version>
   <description>Package for extracting the factory calibration from a UR robot and change it such that it can be used by ur_description to gain a correct URDF</description>

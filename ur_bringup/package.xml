@@ -1,11 +1,10 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ur_bringup</name>
   <version>0.0.0</version>
   <description>The ur_bringup package</description>
 
-  <author>Wim Meeussen</author>
-  <author>Shaun Edwards</author>
-  <author>Felix Messmer</author>
   <maintainer email="g.a.vanderhoorn@tudelft.nl">G.A. vd. Hoorn</maintainer>
   <maintainer email="miguel.prada@tecnalia.com">Miguel Prada Sarasola</maintainer>
   <maintainer email="nhg@ipa.fhg.de">Nadia Hammoudeh Garcia</maintainer>
@@ -13,10 +12,15 @@
   <license>BSD</license>
   <url type="website">http://ros.org/wiki/ur_bringup</url>
 
+  <author>Wim Meeussen</author>
+  <author>Shaun Edwards</author>
+  <author>Felix Messmer</author>
+
   <buildtool_depend>ament_cmake</buildtool_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>ur_description</exec_depend>
   <exec_depend>ur_robot_driver</exec_depend>
+  <exec_depend>ur_client_library</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
 
   <export>
