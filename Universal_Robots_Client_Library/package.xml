@@ -1,14 +1,9 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>ur_client_library</name>
   <version>0.1.1</version>
   <description>Standalone C++ library for accessing Universal Robots interfaces. This has been forked off the ur_robot_driver.</description>
-  <author>Thomas Timm Andersen</author>
-  <author>Simon Rasmussen</author>
-  <author>Felix Exner</author>
-  <author>Lea Steffen</author>
-  <author>Tristan Schnell</author>
   <maintainer email="exner@fzi.de">Felix Exner</maintainer>
   <license>Apache-2.0</license>
   <license>BSD-2-Clause</license>
@@ -18,6 +13,11 @@
   <url type="website">http://wiki.ros.org/ur_client_library</url>
   <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_Client_Library/issues</url>
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_Client_Library</url>
+  <author>Thomas Timm Andersen</author>
+  <author>Simon Rasmussen</author>
+  <author>Felix Exner</author>
+  <author>Lea Steffen</author>
+  <author>Tristan Schnell</author>
 
   <buildtool_depend>cmake</buildtool_depend>
 
