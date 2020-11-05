@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<package format="2">
+<package format="3">
 
   <name>ur5_moveit_config</name>
   <version>0.0.0</version>
@@ -30,5 +29,8 @@
   <depend>ur_description</depend>
 
   <test_depend>roslaunch</test_depend>
-  
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>
