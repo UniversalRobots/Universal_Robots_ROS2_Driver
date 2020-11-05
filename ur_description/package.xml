@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ur_description</name>
   <version>0.0.0</version>
@@ -5,10 +7,6 @@
     URDF description for Universal UR5/10 robot arms
   </description>
 
-  <author>Wim Meeussen</author>
-  <author>Kelsey Hawkins</author>
-  <author>Mathias Ludtke</author>
-  <author>Felix Messmer</author>
   <maintainer email="g.a.vanderhoorn@tudelft.nl">G.A. vd. Hoorn</maintainer>
   <maintainer email="miguel.prada@tecnalia.com">Miguel Prada Sarasola</maintainer>
   <maintainer email="nhg@ipa.fhg.de">Nadia Hammoudeh Garcia</maintainer>
@@ -16,6 +14,11 @@
   <license>BSD</license>
 
   <url type="website">http://ros.org/wiki/ur_description</url>
+
+  <author>Wim Meeussen</author>
+  <author>Kelsey Hawkins</author>
+  <author>Mathias Ludtke</author>
+  <author>Felix Messmer</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
