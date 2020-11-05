@@ -7,3 +7,4 @@ install_manifest.txt
 .idea
 .directory
 .vscode
+.moveit_ci/
