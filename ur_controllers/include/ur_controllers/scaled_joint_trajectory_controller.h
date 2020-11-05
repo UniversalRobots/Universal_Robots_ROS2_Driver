@@ -32,7 +32,6 @@ namespace ur_controllers
 template <class SegmentImpl, class HardwareInterface>
 class ScaledJointTrajectoryController
 {
-
 };
 }  // namespace ur_controllers
 

@@ -41,7 +41,8 @@ add_executable(calibration_correction
   src/calibration_correction.cpp
 )
 
-add_dependencies(calibration_correction ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(calibration_correction
+  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(calibration_correction
@@ -58,11 +59,13 @@ install(DIRECTORY launch
 #############
 
 ## Add gtest based cpp test target and link libraries
-if (CATKIN_ENABLE_TESTING)
+if(CATKIN_ENABLE_TESTING)
   catkin_add_gtest(calibration_test
     test/calibration_test.cpp
     src/calibration.cpp)
-  target_link_libraries(calibration_test ${catkin_LIBRARIES} yaml-cpp ur_client_library::urcl)
+  target_link_libraries(calibration_test
+    ${catkin_LIBRARIES} yaml-cpp ur_client_library::urcl)
 endif()
 
-install(TARGETS calibration_correction RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS calibration_correction
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
