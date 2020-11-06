@@ -27,7 +27,7 @@
 
 #include <ur_robot_driver/robot_state_helper.h>
 
-using namespace ur_driver;
+using namespace ur_robot_driver;
 
 int main(int argc, char** argv)
 {

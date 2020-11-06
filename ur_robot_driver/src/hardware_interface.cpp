@@ -26,6 +26,7 @@
 //----------------------------------------------------------------------
 #include <ur_robot_driver/hardware_interface.h>
 
-namespace ur_driver
+namespace ur_robot_driver
 {
-}  // namespace ur_driver
+
+}  // namespace ur_robot_driver

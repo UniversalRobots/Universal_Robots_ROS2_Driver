@@ -24,10 +24,9 @@
  *
  */
 //----------------------------------------------------------------------
-#ifndef UR_DRIVER_HARDWARE_INTERFACE_H_INCLUDED
-#define UR_DRIVER_HARDWARE_INTERFACE_H_INCLUDED
+#pragma once
 
-namespace ur_driver
+namespace ur_robot_driver
 {
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
@@ -38,6 +37,4 @@ class HardwareInterface
 {
 };
 
-}  // namespace ur_driver
-
-#endif  // ifndef UR_DRIVER_HARDWARE_INTERFACE_H_INCLUDED
+}  // namespace ur_robot_driver

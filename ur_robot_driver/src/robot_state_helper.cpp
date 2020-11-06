@@ -28,6 +28,6 @@
 #include <ur_robot_driver/robot_state_helper.h>
 
 #include <std_srvs/srv/trigger.hpp>
-namespace ur_driver
+namespace ur_robot_driver
 {
-}  // namespace ur_driver
+}  // namespace ur_robot_driver
