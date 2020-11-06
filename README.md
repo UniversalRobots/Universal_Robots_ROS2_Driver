@@ -4,8 +4,17 @@ Alpha version of the ROS2 Universal Robots driver. Should be transferred to the 
 
 ## Build Instructions
 
-Follow the instructions in /Universal_Robots_Client_Library to build and install it with CMake.
+To build this package in a ROS Foxy workspace, clone this repo
+into the `src/` directory, then:
 
-Clone and build ros2_control-related stuff per the directions here:  https://github.com/ros-controls/ros2_control#getting-started
+```
+# Clone source-based dependencies into src/ directory
+vcs import --skip-existing --input src/Universal_Robots_ROS2_Driver/.repos.yaml src
 
-You MAY need to install FastRTPS per:  https://hamishwillee.gitbooks.io/havdevguide/content/en/setup/fast-rtps-installation.html  (Please delete this line if you don't need to do that.)
+# Install package-based dependencies
+rosdep install -y --rosdistro $ROS_DISTRO --ignore-src --from-paths src
+
+# Build sources
+source /opt/ros/$ROS_DISTRO/setup.bash
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
