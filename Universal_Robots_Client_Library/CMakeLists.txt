@@ -98,9 +98,3 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ur_client_libraryCo
   COMPATIBILITY SameMajorVersion)
 install(FILES ur_client_libraryConfig.cmake
   DESTINATION lib/cmake/ur_client_library)
-
-# When built with catkin available, install package.xml
-find_package(catkin)
-if(catkin_FOUND)
-  install(FILES package.xml DESTINATION share/${PROJECT_NAME})
-endif()
