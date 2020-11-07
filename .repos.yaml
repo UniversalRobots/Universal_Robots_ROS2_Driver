@@ -35,7 +35,12 @@ repositories:
     type: git
     url: https://github.com/ros-planning/srdfdom.git
     version: ros2
+  ur_client_library:
+    type: git
+    url: https://github.com/PickNikRobotics/Universal_Robots_Client_Library.git
+    version: foxy-devel
   warehouse_ros:
     type: git
     url: https://github.com/ros-planning/warehouse_ros.git
     version: ros2
+
