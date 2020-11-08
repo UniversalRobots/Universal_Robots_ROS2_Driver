@@ -19,10 +19,12 @@ env:
     - TEST_BLACKLIST=ur5_moveit_config      # list packages, for which to skip the unittests
     - UPSTREAM_WORKSPACE=.repos.yaml # pull in packages from a local
     - WARNINGS_OK=false    # Don't accept warnings [true | false]
-    # .repos file FIXME -Werror disabled because of compiler warnings
+    # TODO(andyz): -Werror disabled because of compiler warnings
     # in geometric_shapes ("redundant redeclaration of ‘void
     # qh_[...]’")
-    - CXXFLAGS="-Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls -Wno-unused-parameter -Wno-unused-but-set-parameter -Wno-unused-function"
+    # TODO(andyz): -Wredundant-decls disabled because of compiler warnings
+    # See https://github.com/ros2/rosidl_typesupport_fastrtps/issues/28
+    - CXXFLAGS="-Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wno-unused-parameter -Wno-unused-but-set-parameter -Wno-unused-function"
 
 jobs:
   fast_finish: true
