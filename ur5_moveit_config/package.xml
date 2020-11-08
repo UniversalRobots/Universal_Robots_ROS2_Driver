@@ -21,11 +21,14 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <!-- TODO(andyz): Re-enable when MoveIt2 debians are available -->
+<!--
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>moveit_planners_ompl</exec_depend>
   <exec_depend>moveit_ros_visualization</exec_depend>
   <exec_depend>moveit_fake_controller_manager</exec_depend>
   <exec_depend>moveit_simple_controller_manager</exec_depend>
+-->
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>xacro</exec_depend>
