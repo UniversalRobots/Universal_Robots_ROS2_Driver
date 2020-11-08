@@ -26,6 +26,51 @@
 //----------------------------------------------------------------------
 #pragma once
 
+// System
+#include <memory>
+#include <vector>
+
+// ros2_control hardware_interface
+#include "hardware_interface/hardware_info.hpp"
+#include "hardware_interface/components/actuator.hpp"
+#include "hardware_interface/components/sensor.hpp"
+#include "hardware_interface/components/system_interface.hpp"
+#include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "hardware_interface/types/hardware_interface_status_values.hpp"
+#include "hardware_interface/visibility_control.h"
+
+#include "rclcpp/macros.hpp"
+
+using hardware_interface::components::Actuator;
+using hardware_interface::components::Sensor;
+using hardware_interface::HardwareInfo;
+using hardware_interface::status;
+using hardware_interface::return_type;
+
+namespace hardware_interface
+{
+// TODO(andyz): This is likely to be incorporated in ros2_control, may not need to define it here
+class BaseSystemHardwareInterface : public components::SystemInterface
+{
+public:
+  return_type configure(const HardwareInfo& system_info) override
+  {
+    info_ = system_info;
+    status_ = status::CONFIGURED;
+    return return_type::OK;
+  }
+
+  status get_status() const final
+  {
+    return status_;
+  }
+
+protected:
+  HardwareInfo info_;
+  status status_;
+};
+}  // namespace hardware_interface
+
 namespace ur_robot_driver
 {
 /*!
@@ -33,8 +78,20 @@ namespace ur_robot_driver
  * driver. It contains the read and write methods of the main control loop and registers various ROS
  * topics and services.
  */
-class HardwareInterface
+class URHardwareInterface final : public hardware_interface::components::SystemInterface
 {
+public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(URHardwareInterface);
+
+  return_type configure(const HardwareInfo & system_info) override;
+
+  return_type start() override;
+
+  return_type stop() override;
+
+  return_type read() override;
+
+  return_type write() override;
 };
 
 }  // namespace ur_robot_driver

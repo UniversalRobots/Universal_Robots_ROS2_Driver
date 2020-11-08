@@ -28,5 +28,4 @@
 
 namespace ur_robot_driver
 {
-
 }  // namespace ur_robot_driver
