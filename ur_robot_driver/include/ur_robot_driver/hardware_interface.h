@@ -41,35 +41,11 @@
 
 #include "rclcpp/macros.hpp"
 
+using hardware_interface::HardwareInfo;
+using hardware_interface::return_type;
+using hardware_interface::status;
 using hardware_interface::components::Actuator;
 using hardware_interface::components::Sensor;
-using hardware_interface::HardwareInfo;
-using hardware_interface::status;
-using hardware_interface::return_type;
-
-namespace hardware_interface
-{
-// TODO(andyz): This is likely to be incorporated in ros2_control, may not need to define it here
-class BaseSystemHardwareInterface : public components::SystemInterface
-{
-public:
-  return_type configure(const HardwareInfo& system_info) override
-  {
-    info_ = system_info;
-    status_ = status::CONFIGURED;
-    return return_type::OK;
-  }
-
-  status get_status() const final
-  {
-    return status_;
-  }
-
-protected:
-  HardwareInfo info_;
-  status status_;
-};
-}  // namespace hardware_interface
 
 namespace ur_robot_driver
 {
@@ -83,15 +59,26 @@ class URHardwareInterface final : public hardware_interface::components::SystemI
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(URHardwareInterface);
 
-  return_type configure(const HardwareInfo & system_info) override;
+  hardware_interface::return_type configure(const HardwareInfo& system_info) final
+  {
+    info_ = system_info;
+    status_ = status::CONFIGURED;
+    return return_type::OK;
+  }
 
-  return_type start() override;
+  status get_status() const final
+  {
+    return status_;
+  }
 
-  return_type stop() override;
+  return_type start() final;
+  return_type stop() final;
+  return_type read() final;
+  return_type write() final;
 
-  return_type read() override;
-
-  return_type write() override;
+protected:
+  HardwareInfo info_;
+  status status_;
 };
 
 }  // namespace ur_robot_driver
