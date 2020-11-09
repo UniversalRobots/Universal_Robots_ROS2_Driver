@@ -28,23 +28,23 @@
 
 namespace ur_robot_driver
 {
-  hardware_interface::return_type URHardwareInterface::configure(const HardwareInfo& system_info)
+hardware_interface::return_type URHardwareInterface::configure(const HardwareInfo& system_info)
+{
+  info_ = system_info;
+  status_ = status::CONFIGURED;
+
+  current_joint_angles_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  joint_angle_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+
+  for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
-    info_ = system_info;
-    status_ = status::CONFIGURED;
-
-    current_joint_angles_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-    joint_angle_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-
-    for (const hardware_interface::ComponentInfo & joint : info_.joints)
+    if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
     {
-      if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
-      {
-        status_ = status::UNKNOWN;
-        return return_type::ERROR;
-      }
+      status_ = status::UNKNOWN;
+      return return_type::ERROR;
     }
-
-    return return_type::OK;
   }
+
+  return return_type::OK;
+}
 }  // namespace ur_robot_driver

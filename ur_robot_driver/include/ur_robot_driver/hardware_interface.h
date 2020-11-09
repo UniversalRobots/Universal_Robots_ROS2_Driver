@@ -39,6 +39,7 @@
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
+// ROS
 #include "rclcpp/macros.hpp"
 
 using hardware_interface::HardwareInfo;
@@ -54,7 +55,7 @@ namespace ur_robot_driver
  * driver. It contains the read and write methods of the main control loop and registers various ROS
  * topics and services.
  */
-class URHardwareInterface final : public hardware_interface::components::SystemInterface
+class URHardwareInterface : public hardware_interface::components::SystemInterface
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(URHardwareInterface);
@@ -75,7 +76,6 @@ protected:
   HardwareInfo info_;
   status status_;
   std::vector<double> joint_angle_commands_, current_joint_angles_;
-
 };
 
 }  // namespace ur_robot_driver
