@@ -31,7 +31,8 @@
 #include <regex>
 
 // ROS
-#include "rclcpp/rclcpp.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 // UR client library
 #include <ur_client_library/ur/dashboard_client.h>
@@ -68,16 +69,17 @@ public:
   virtual ~DashboardClientROS() = default;
 
 private:
-  // inline ros::ServiceServer createDashboardTriggerSrv(const std::string& topic, const std::string& command,
-  //                                                     const std::string& expected)
-  // {
-  //   return nh_.advertiseService<std_srvs::Trigger::Request, std_srvs::Trigger::Response>(
-  //       topic, [&, command, expected](std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& resp) {
-  //         resp.message = this->client_.sendAndReceive(command);
-  //         resp.success = std::regex_match(resp.message, std::regex(expected));
-  //         return true;
-  //       });
-  // }
+  inline rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr createDashboardTriggerSrv(const std::string& topic, const std::string& command,
+                                                      const std::string& expected)
+  {
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr service = node_->create_service<std_srvs::srv::Trigger>("topic",
+      [&, command, expected](const std::shared_ptr<std_srvs::srv::Trigger::Request> req, const std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
+        resp->message = this->client_.sendAndReceive(command);
+        resp->success = std::regex_match(resp->message, std::regex(expected));
+      });
+
+    return service;
+  }
 
   std::shared_ptr<rclcpp::Node> node_;
   urcl::DashboardClient client_;
