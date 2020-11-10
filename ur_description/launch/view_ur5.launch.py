@@ -23,7 +23,8 @@ def generate_launch_description():
         'ur_description', 'urdf/ur5.urdf.xacro')
     robot_description = {'robot_description': robot_description_config}
 
-    # TODO(andyz): load SRDF too. Refer to:  https://github.com/ros-planning/moveit2/blob/main/moveit_ros/moveit_servo/launch/servo_cpp_interface_demo.launch.py
+    robot_description_semantic_config = load_file('ur5_moveit_config', 'config/ur5.srdf')
+    robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
 
     # We do not have a robot connected, so publish fake joint states
     joint_state_pub_node = Node(
@@ -36,18 +37,18 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[robot_description] # TODO(andyz): add SRDF here
+        parameters=[robot_description]
     )
 
     # RViz
     rviz_config_file = get_package_share_directory(
-        'ur_description') + "/cfg/view_robot.rviz"
+        'ur_description') + "/config/view_robot.rviz"
     rviz_node = Node(package='rviz2',
                      executable='rviz2',
                      name='rviz2',
                      output='log',
                      arguments=['-d', rviz_config_file],
-                     parameters=[robot_description]
+                     parameters=[robot_description, robot_description_semantic]
                      )
 
     return LaunchDescription([rviz_node, robot_state_pub_node, joint_state_pub_node])
