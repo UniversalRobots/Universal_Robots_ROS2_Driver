@@ -19,13 +19,32 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
- * \date    2019-04-11
+ * \author  Andy Zelenak zelenak@picknik.ai
+ * \date    2020-11-9
  *
  */
 //----------------------------------------------------------------------
 #include <ur_robot_driver/hardware_interface.h>
 
-namespace ur_driver
+namespace ur_robot_driver
 {
-}  // namespace ur_driver
+hardware_interface::return_type URHardwareInterface::configure(const HardwareInfo& system_info)
+{
+  info_ = system_info;
+  status_ = status::CONFIGURED;
+
+  current_joint_angles_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  joint_angle_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+
+  for (const hardware_interface::ComponentInfo& joint : info_.joints)
+  {
+    if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
+    {
+      status_ = status::UNKNOWN;
+      return return_type::ERROR;
+    }
+  }
+
+  return return_type::OK;
+}
+}  // namespace ur_robot_driver

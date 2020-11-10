@@ -25,8 +25,7 @@
  */
 //----------------------------------------------------------------------
 
-#ifndef UR_ROBOT_DRIVER_ROS_DASHBOARD_CLIENT_H_INCLUDED
-#define UR_ROBOT_DRIVER_ROS_DASHBOARD_CLIENT_H_INCLUDED
+#pragma once
 
 #include <regex>
 
@@ -44,7 +43,7 @@
 #include <ur_dashboard_msgs/srv/popup.hpp>
 #include <ur_dashboard_msgs/srv/raw_request.hpp>
 
-namespace ur_driver
+namespace ur_robot_driver
 {
 /*!
  * \brief ROS wrapper for UR's dashboard server access. Many (not necessarily all) dashboard
@@ -53,5 +52,4 @@ namespace ur_driver
 class DashboardClientROS
 {
 };
-}  // namespace ur_driver
-#endif  // ifndef UR_ROBOT_DRIVER_ROS_DASHBOARD_CLIENT_H_INCLUDED
+}  // namespace ur_robot_driver
