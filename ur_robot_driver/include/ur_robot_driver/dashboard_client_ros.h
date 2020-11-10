@@ -81,7 +81,24 @@ private:
     return service;
   }
 
+  bool connect();
+
   std::shared_ptr<rclcpp::Node> node_;
   urcl::DashboardClient client_;
+
+  // Commanding services
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr brake_release_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr clear_operational_mode_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr close_popup_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr close_safety_popup_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr pause_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr play_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr power_off_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr power_on_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr restart_safety_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr shutdown_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr stop_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr running_service_;
 };
 }  // namespace ur_robot_driver
