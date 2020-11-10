@@ -29,4 +29,9 @@
 
 namespace ur_robot_driver
 {
+DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
+  : node_(node), client_(robot_ip)
+{
+  ;
+}
 }  // namespace ur_robot_driver
