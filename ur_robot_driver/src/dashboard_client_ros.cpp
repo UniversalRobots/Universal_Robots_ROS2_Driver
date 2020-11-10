@@ -40,10 +40,10 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   // If this service is called the operational mode can again be changed from PolyScope, and the user password is
   // enabled.
   clear_operational_mode_service_ = createDashboardTriggerSrv("clear_operational_mode", "clear operational mode\n",
-                                                                 "No longer controlling the operational mode\\. "
-                                                                 "Current "
-                                                                 "operational mode: "
-                                                                 "'(MANUAL|AUTOMATIC)'\\.");
+                                                              "No longer controlling the operational mode\\. "
+                                                              "Current "
+                                                              "operational mode: "
+                                                              "'(MANUAL|AUTOMATIC)'\\.");
 
   // Close a (non-safety) popup on the teach pendant.
   close_popup_service_ = createDashboardTriggerSrv("close_popup", "close popup\n", "closing popup");
