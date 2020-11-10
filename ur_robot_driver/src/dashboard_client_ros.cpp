@@ -27,6 +27,6 @@
 
 #include <ur_robot_driver/dashboard_client_ros.h>
 
-namespace ur_driver
+namespace ur_robot_driver
 {
-}  // namespace ur_driver
+}  // namespace ur_robot_driver

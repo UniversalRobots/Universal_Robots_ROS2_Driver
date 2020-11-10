@@ -1,7 +1,9 @@
-<library path="lib/libur_robot_driver_plugin">
-  <class name="ur_driver/HardwareInterface" type="ur_driver::HardwareInterface" base_class_type="hardware_interface::RobotHW">
+<library path="ur_robot_driver_plugin">
+  <class name="ur_robot_driver/URHardwareInterface"
+         type="ur_robot_driver::URHardwareInterface"
+         base_class_type="hardware_interface::RobotHardwareInterface">
     <description>
-      Universal Robots ROS Driver as plugin
+		ROS2 Control System Driver for the Universal Robots series.
     </description>
   </class>
 </library>

@@ -24,8 +24,7 @@
  *
  */
 //----------------------------------------------------------------------
-#ifndef UR_ROBOT_DRIVER_ROS_ROBOT_STATE_HELPER_INCLUDED
-#define UR_ROBOT_DRIVER_ROS_ROBOT_STATE_HELPER_INCLUDED
+#pragma once
 
 #include <sstream>
 #include <ur_client_library/ur/datatypes.h>
@@ -33,7 +32,7 @@
 #include <ur_dashboard_msgs/msg/safety_mode.hpp>
 #include <ur_dashboard_msgs/action/set_mode.hpp>
 
-namespace ur_driver
+namespace ur_robot_driver
 {
 /*!
  * \brief A small helper class around the robot state (constisting of 'robot_mode' and
@@ -46,6 +45,4 @@ namespace ur_driver
 class RobotStateHelper
 {
 };
-}  // namespace ur_driver
-
-#endif  // ifndef UR_ROBOT_DRIVER_ROS_ROBOT_STATE_HELPER_INCLUDED
+}  // namespace ur_robot_driver
