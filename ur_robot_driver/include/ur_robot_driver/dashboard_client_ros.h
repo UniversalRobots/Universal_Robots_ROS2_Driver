@@ -104,6 +104,8 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr shutdown_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr stop_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::Load>::SharedPtr load_installation_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::Load>::SharedPtr load_program_service_;
 
   // Query services
   rclcpp::Service<ur_dashboard_msgs::srv::IsProgramRunning>::SharedPtr running_service_;

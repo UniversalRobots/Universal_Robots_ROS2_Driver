@@ -99,6 +99,24 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         }
         return true;
       });
+
+  // Load a robot installation from a file
+  load_installation_service_ = node_->create_service<ur_dashboard_msgs::srv::Load>(
+      "load_installation", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
+                               ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
+        resp->answer = this->client_.sendAndReceive("load installation " + req->filename + "\n");
+        resp->success = std::regex_match(resp->answer, std::regex("Loading installation: .+"));
+        return true;
+      });
+
+  // Load a robot program from a file
+  load_program_service_ = node->create_service<ur_dashboard_msgs::srv::Load>(
+      "load_program", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
+                          ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
+        resp->answer = this->client_.sendAndReceive("load " + req->filename + "\n");
+        resp->success = std::regex_match(resp->answer, std::regex("Loading program: .+"));
+        return true;
+      });
 }
 
 bool DashboardClientROS::connect()
