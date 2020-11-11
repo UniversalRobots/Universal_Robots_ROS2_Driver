@@ -80,11 +80,25 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   unlock_protective_stop_service_ =
       createDashboardTriggerSrv("unlock_protective_stop", "unlock protective stop\n", "Protective stop releasing");
 
-  using namespace std::placeholders;
-
   // Query whether there is currently a program running
   running_service_ = node_->create_service<ur_dashboard_msgs::srv::IsProgramRunning>(
-      "program_running", std::bind(&DashboardClientROS::handleRunningQuery, this, _1, _2));
+      "program_running",
+      std::bind(&DashboardClientROS::handleRunningQuery, this, std::placeholders::_1, std::placeholders::_2));
+
+  // Load a robot installation from a file
+  get_loaded_program_service_ = node_->create_service<ur_dashboard_msgs::srv::GetLoadedProgram>(
+      "get_loaded_program", [&](const ur_dashboard_msgs::srv::GetLoadedProgram::Request::SharedPtr req,
+                                ur_dashboard_msgs::srv::GetLoadedProgram::Response::SharedPtr resp) {
+        resp->answer = this->client_.sendAndReceive("get loaded program\n");
+        std::smatch match;
+        std::regex expected("Loaded program: (.+)");
+        resp->success = std::regex_match(resp->answer, match, expected);
+        if (resp->success)
+        {
+          resp->program_name = match[1];
+        }
+        return true;
+      });
 }
 
 bool DashboardClientROS::connect()

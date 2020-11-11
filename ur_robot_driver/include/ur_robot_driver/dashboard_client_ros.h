@@ -107,5 +107,6 @@ private:
 
   // Query services
   rclcpp::Service<ur_dashboard_msgs::srv::IsProgramRunning>::SharedPtr running_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetLoadedProgram>::SharedPtr get_loaded_program_service_;
 };
 }  // namespace ur_robot_driver
