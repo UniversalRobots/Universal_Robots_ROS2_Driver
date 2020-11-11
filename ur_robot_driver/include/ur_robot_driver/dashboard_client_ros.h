@@ -83,6 +83,9 @@ private:
     return service;
   }
 
+  bool handleRunningQuery(ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
+                          ur_dashboard_msgs::srv::IsProgramRunning::Response::SharedPtr resp);
+
   bool connect();
 
   std::shared_ptr<rclcpp::Node> node_;
@@ -101,6 +104,8 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr shutdown_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr stop_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_service_;
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr running_service_;
+
+  // Query services
+  rclcpp::Service<ur_dashboard_msgs::srv::IsProgramRunning>::SharedPtr running_service_;
 };
 }  // namespace ur_robot_driver

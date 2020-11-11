@@ -74,6 +74,17 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Stop program execution on the robot
   stop_service_ = createDashboardTriggerSrv("stop", "stop\n", "Stopped");
+
+  // Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the
+  // cause of the protective stop is resolved before calling this service.
+  unlock_protective_stop_service_ =
+      createDashboardTriggerSrv("unlock_protective_stop", "unlock protective stop\n", "Protective stop releasing");
+
+  using namespace std::placeholders;
+
+  // Query whether there is currently a program running
+  running_service_ = node_->create_service<ur_dashboard_msgs::srv::IsProgramRunning>(
+      "program_running", std::bind(&DashboardClientROS::handleRunningQuery, this, _1, _2));
 }
 
 bool DashboardClientROS::connect()
@@ -84,5 +95,21 @@ bool DashboardClientROS::connect()
   tv.tv_usec = 0;
   client_.setReceiveTimeout(tv);
   return client_.connect();
+}
+
+bool DashboardClientROS::handleRunningQuery(const ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
+                                            ur_dashboard_msgs::srv::IsProgramRunning::Response::SharedPtr resp)
+{
+  resp->answer = this->client_.sendAndReceive("running\n");
+  std::regex expected("Program running: (true|false)");
+  std::smatch match;
+  resp->success = std::regex_match(resp->answer, match, expected);
+
+  if (resp->success)
+  {
+    resp->program_running = (match[1] == "true");
+  }
+
+  return true;
 }
 }  // namespace ur_robot_driver
