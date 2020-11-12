@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 
@@ -26,6 +27,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
   rclcpp
+  std_srvs
   ur_client_library
   ur_dashboard_msgs
 )
@@ -59,12 +61,12 @@ pluginlib_export_plugin_description_file(hardware_interface hardware_interface_p
 # target_link_libraries(ur_robot_driver_node ${catkin_LIBRARIES} ur_client_library::urcl)
 # ament_target_dependencies(ur_robot_driver_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-# add_executable(dashboard_client
-#   src/dashboard_client_ros.cpp
-#   src/dashboard_client_node.cpp
-# )
-# target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
-# ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+add_executable(dashboard_client
+  src/dashboard_client_ros.cpp
+  src/dashboard_client_node.cpp
+)
+target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
+ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # add_executable(robot_state_helper
 #   src/robot_state_helper.cpp
