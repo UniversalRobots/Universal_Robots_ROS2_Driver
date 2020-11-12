@@ -51,6 +51,7 @@ namespace ur_robot_driver
 class RobotStateHelper
 {
 public:
+  using SetModeGoalHandle = rclcpp_action::ServerGoalHandle<ur_dashboard_msgs::action::SetMode>;
   /*!
    * \brief Constructor that should be used by default
    *
@@ -89,6 +90,7 @@ private:
   bool safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv);
 
   // Action server stuff
+  void setModeAcceptCallback(const std::shared_ptr<SetModeGoalHandle>);
   void setModeGoalCallback();
   void setModePreemptCallback();
   void startActionServer();

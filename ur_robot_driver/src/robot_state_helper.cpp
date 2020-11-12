@@ -66,6 +66,18 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr node)
   // Service to start UR program execution on the robot
   play_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/play");
   play_program_srv_->wait_for_service();
+
+  set_mode_as_ = rclcpp_action::create_server<ur_dashboard_msgs::action::SetMode>(
+      node_, "set_mode",
+      [](const rclcpp_action::GoalUUID&, std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal>) {
+        // Accept all goals
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+      },
+      [](const std::shared_ptr<SetModeGoalHandle>) {
+        // Accept all cancel requests
+        return rclcpp_action::CancelResponse::ACCEPT;
+      },
+      std::bind(&RobotStateHelper::setModeAcceptCallback, this, std::placeholders::_1));
 }
 
 void RobotStateHelper::robotModeCallback(const ur_dashboard_msgs::msg::RobotMode::SharedPtr msg)
@@ -309,6 +321,10 @@ void RobotStateHelper::startActionServer()
     //            set_mode_as_.start();
     is_started_ = true;
   }
+}
+
+void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
+{
 }
 
 // namespace ur_robot_driver
