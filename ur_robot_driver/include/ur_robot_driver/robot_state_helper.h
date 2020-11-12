@@ -26,11 +26,17 @@
 //----------------------------------------------------------------------
 #pragma once
 
+// ROS
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/create_server.hpp>
+#include <std_srvs/srv/trigger.h>
+
 #include <sstream>
 #include <ur_client_library/ur/datatypes.h>
 #include <ur_dashboard_msgs/msg/robot_mode.hpp>
 #include <ur_dashboard_msgs/msg/safety_mode.hpp>
 #include <ur_dashboard_msgs/action/set_mode.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 namespace ur_robot_driver
 {
@@ -44,5 +50,65 @@ namespace ur_robot_driver
  */
 class RobotStateHelper
 {
+public:
+  /*!
+   * \brief Constructor that should be used by default
+   *
+   * \param nh Node handle that should be used. The handle's namespace should be the same as used
+   * for the hardware interface. Otherwise remapping will be necessary to access the hardware
+   * interface's topics and sercices.
+   */
+  RobotStateHelper(const rclcpp::Node::SharedPtr node);
+  RobotStateHelper() = delete;
+  virtual ~RobotStateHelper() = default;
+
+private:
+  rclcpp::Node::SharedPtr node_;
+
+  void robotModeCallback(const ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);
+  void safetyModeCallback(const ur_dashboard_msgs::msg::SafetyMode::SharedPtr msg);
+
+  /*!
+   * \brief Updates action feedback and triggers next transition if necessary
+   */
+  void updateRobotState();
+
+  /*!
+   * \brief Performs the transition required by the current mode to get to the next mode.
+   */
+  void doTransition();
+
+  /*!
+   * \brief Small wrapper function to call a trigger service. The trigger's response message will be
+   * loged to INFO output.
+   *
+   * \param srv Pointer to service client that shall be used.
+   *
+   * \returns service response's success field.
+   */
+  bool safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv);
+
+  // Action server stuff
+  void setModeGoalCallback();
+  void setModePreemptCallback();
+  void startActionServer();
+  bool is_started_;
+  ur_dashboard_msgs::action::SetMode::Goal::ConstSharedPtr goal_;
+  ur_dashboard_msgs::action::SetMode::Feedback feedback_;
+  ur_dashboard_msgs::action::SetMode::Result result_;
+
+  urcl::RobotMode robot_mode_;
+  urcl::SafetyMode safety_mode_;
+
+  rclcpp::Subscription<ur_dashboard_msgs::msg::RobotMode>::SharedPtr robot_mode_sub_;
+  rclcpp::Subscription<ur_dashboard_msgs::msg::SafetyMode>::SharedPtr safety_mode_sub_;
+
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_srv_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr restart_safety_srv_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr power_on_srv_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr power_off_srv_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr brake_release_srv_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr stop_program_srv_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr play_program_srv_;
 };
 }  // namespace ur_robot_driver
