@@ -165,7 +165,6 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
                         ur_dashboard_msgs::srv::AddToLog::Response::SharedPtr resp) {
         resp->answer = this->client_.sendAndReceive("addToLog " + req->message + "\n");
         resp->success = std::regex_match(resp->answer, std::regex("(Added log message|No log message to add)"));
-
         return true;
       });
 

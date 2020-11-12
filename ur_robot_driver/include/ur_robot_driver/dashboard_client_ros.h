@@ -128,8 +128,5 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::GetProgramState>::SharedPtr program_state_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetSafetyMode>::SharedPtr safety_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetRobotMode>::SharedPtr robot_mode_service_;
-
-  // EXISTS AS SPARE IN ROS1 DRIVER
-  //    rclcpp::Service<ur_dashboard_msgs::srv::> polyscope_version_service_;
 };
 }  // namespace ur_robot_driver
