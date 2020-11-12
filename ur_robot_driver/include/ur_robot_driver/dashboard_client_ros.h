@@ -86,6 +86,15 @@ private:
   bool handleRunningQuery(ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
                           ur_dashboard_msgs::srv::IsProgramRunning::Response::SharedPtr resp);
 
+  bool handleSavedQuery(ur_dashboard_msgs::srv::IsProgramSaved::Request::SharedPtr req,
+                        ur_dashboard_msgs::srv::IsProgramSaved::Response::SharedPtr resp);
+
+  bool handleSafetyModeQuery(ur_dashboard_msgs::srv::GetSafetyMode::Request::SharedPtr req,
+                             ur_dashboard_msgs::srv::GetSafetyMode::Response::SharedPtr resp);
+
+  bool handleRobotModeQuery(ur_dashboard_msgs::srv::GetRobotMode::Request::SharedPtr req,
+                            ur_dashboard_msgs::srv::GetRobotMode::Response::SharedPtr resp);
+
   bool connect();
 
   std::shared_ptr<rclcpp::Node> node_;
@@ -106,9 +115,21 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::Load>::SharedPtr load_installation_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::Load>::SharedPtr load_program_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr quit_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::AddToLog>::SharedPtr add_to_log_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reconnect_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::RawRequest>::SharedPtr raw_request_service_;
 
   // Query services
   rclcpp::Service<ur_dashboard_msgs::srv::IsProgramRunning>::SharedPtr running_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetLoadedProgram>::SharedPtr get_loaded_program_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::IsProgramSaved>::SharedPtr is_program_saved_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::Popup>::SharedPtr popup_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetProgramState>::SharedPtr program_state_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetSafetyMode>::SharedPtr safety_mode_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetRobotMode>::SharedPtr robot_mode_service_;
+
+  // EXISTS AS SPARE IN ROS1 DRIVER
+  //    rclcpp::Service<ur_dashboard_msgs::srv::> polyscope_version_service_;
 };
 }  // namespace ur_robot_driver
