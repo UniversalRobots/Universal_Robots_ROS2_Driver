@@ -77,5 +77,4 @@ protected:
   status status_;
   std::vector<double> joint_angle_commands_, current_joint_angles_;
 };
-
 }  // namespace ur_robot_driver
