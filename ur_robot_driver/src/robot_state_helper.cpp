@@ -37,6 +37,35 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr node)
   , robot_mode_(urcl::RobotMode::UNKNOWN)
   , safety_mode_(urcl::SafetyMode::UNDEFINED_SAFETY_MODE)
 {
+  // Topic on which the robot_mode is published by the driver
+  robot_mode_sub_ = node_->create_subscription<ur_dashboard_msgs::msg::RobotMode>(
+      "robot_mode", 1, std::bind(&RobotStateHelper::robotModeCallback, this, std::placeholders::_1));
+
+  // Topic on which the safety is published by the driver
+  safety_mode_sub_ = node_->create_subscription<ur_dashboard_msgs::msg::SafetyMode>(
+      "safety_mode", 1, std::bind(&RobotStateHelper::safetyModeCallback, this, std::placeholders::_1));
+
+  // Service to unlock protective stop
+  unlock_protective_stop_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/unlock_protective_stop");
+
+  // Service to restart safety
+  restart_safety_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/restart_safety");
+
+  // Service to power on the robot
+  power_on_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/power_on");
+
+  // Service to power off the robot
+  power_off_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/power_off");
+
+  // Service to release the robot's brakes
+  brake_release_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/brake_release");
+
+  // Service to stop UR program execution on the robot
+  stop_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/stop");
+
+  // Service to start UR program execution on the robot
+  play_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard/play");
+  play_program_srv_->wait_for_service();
 }
 
 void RobotStateHelper::robotModeCallback(const ur_dashboard_msgs::msg::RobotMode::SharedPtr msg)

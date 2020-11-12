@@ -93,9 +93,12 @@ private:
   void setModePreemptCallback();
   void startActionServer();
   bool is_started_;
+
   ur_dashboard_msgs::action::SetMode::Goal::ConstSharedPtr goal_;
   ur_dashboard_msgs::action::SetMode::Feedback feedback_;
   ur_dashboard_msgs::action::SetMode::Result result_;
+
+  rclcpp_action::Server<ur_dashboard_msgs::action::SetMode>::SharedPtr set_mode_as_;
 
   urcl::RobotMode robot_mode_;
   urcl::SafetyMode safety_mode_;
