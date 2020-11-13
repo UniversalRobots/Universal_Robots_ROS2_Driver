@@ -29,6 +29,8 @@
 
 #include <unistd.h>
 
+#include <rclcpp_action/server_goal_handle.hpp>
+
 namespace ur_robot_driver
 {
 RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr node)
@@ -69,14 +71,8 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr node)
 
   set_mode_as_ = rclcpp_action::create_server<ur_dashboard_msgs::action::SetMode>(
       node_, "set_mode",
-      [](const rclcpp_action::GoalUUID&, std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal>) {
-        // Accept all goals
-        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
-      },
-      [](const std::shared_ptr<SetModeGoalHandle>) {
-        // Accept all cancel requests
-        return rclcpp_action::CancelResponse::ACCEPT;
-      },
+      std::bind(&RobotStateHelper::setModeGoalCallback, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&RobotStateHelper::setModeCancelCallback, this, std::placeholders::_1),
       std::bind(&RobotStateHelper::setModeAcceptCallback, this, std::placeholders::_1));
 }
 
@@ -262,7 +258,7 @@ bool RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigge
   return result.get()->success;
 }
 
-void RobotStateHelper::setModeGoalCallback()
+void RobotStateHelper::setModeGoalCallbackOld()
 {
   //        goal_ = set_mode_as_.acceptNewGoal();
 
@@ -308,7 +304,7 @@ void RobotStateHelper::setModeGoalCallback()
   }
 }
 
-void RobotStateHelper::setModePreemptCallback()
+void RobotStateHelper::setModePreemptCallbackOld()
 {
   RCLCPP_INFO(rclcpp::get_logger("ur_robot_state_helper"), "Current goal got preempted.");
   //        set_mode_as_.setPreempted();
@@ -325,6 +321,20 @@ void RobotStateHelper::startActionServer()
 
 void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
 {
+}
+
+rclcpp_action::GoalResponse RobotStateHelper::setModeGoalCallback(
+    const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal)
+{
+  // Accept all goals
+  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
+
+rclcpp_action::CancelResponse
+RobotStateHelper::setModeCancelCallback(std::shared_ptr<const RobotStateHelper::SetModeGoalHandle> goal_handle)
+{
+  // Accept all cancel requests
+  return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 // namespace ur_robot_driver

@@ -59,15 +59,15 @@ public:
    * for the hardware interface. Otherwise remapping will be necessary to access the hardware
    * interface's topics and sercices.
    */
-  RobotStateHelper(const rclcpp::Node::SharedPtr node);
+  RobotStateHelper(rclcpp::Node::SharedPtr node);
   RobotStateHelper() = delete;
   virtual ~RobotStateHelper() = default;
 
 private:
   rclcpp::Node::SharedPtr node_;
 
-  void robotModeCallback(const ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);
-  void safetyModeCallback(const ur_dashboard_msgs::msg::SafetyMode::SharedPtr msg);
+  void robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);
+  void safetyModeCallback(ur_dashboard_msgs::msg::SafetyMode::SharedPtr msg);
 
   /*!
    * \brief Updates action feedback and triggers next transition if necessary
@@ -90,9 +90,17 @@ private:
   bool safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv);
 
   // Action server stuff
-  void setModeAcceptCallback(const std::shared_ptr<SetModeGoalHandle>);
-  void setModeGoalCallback();
-  void setModePreemptCallback();
+
+  void setModeAcceptCallback(std::shared_ptr<SetModeGoalHandle> goal_handle);
+
+  rclcpp_action::GoalResponse setModeGoalCallback(const rclcpp_action::GoalUUID& uuid,
+                                                  std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal);
+
+  rclcpp_action::CancelResponse
+  setModeCancelCallback(std::shared_ptr<const RobotStateHelper::SetModeGoalHandle> goal_handle);
+
+  void setModeGoalCallbackOld();
+  void setModePreemptCallbackOld();
   void startActionServer();
   bool is_started_;
 
