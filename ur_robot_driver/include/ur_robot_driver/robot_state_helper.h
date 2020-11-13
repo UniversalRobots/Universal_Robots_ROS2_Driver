@@ -99,8 +99,8 @@ private:
   rclcpp_action::CancelResponse
   setModeCancelCallback(std::shared_ptr<const RobotStateHelper::SetModeGoalHandle> goal_handle);
 
-  void setModeGoalCallbackOld();
-  void setModePreemptCallbackOld();
+//  void setModeGoalCallbackOld();
+//  void setModePreemptCallbackOld();
   void startActionServer();
   bool is_started_;
 

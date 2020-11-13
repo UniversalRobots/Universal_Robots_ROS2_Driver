@@ -258,57 +258,58 @@ bool RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigge
   return result.get()->success;
 }
 
-void RobotStateHelper::setModeGoalCallbackOld()
-{
-  //        goal_ = set_mode_as_.acceptNewGoal();
+// DECIDE IF SIMPLE ACTION SERVER WILL BE USED, BOTH OPTIONS ARE LEFT IN THE CODE FOR NOW
+//void RobotStateHelper::setModeGoalCallbackOld()
+//{
+//  //        goal_ = set_mode_as_.acceptNewGoal();
+//
+//  urcl::RobotMode target_mode = static_cast<urcl::RobotMode>(goal_->target_robot_mode);
+//
+//  // Do some input sanitation first.
+//  switch (target_mode)
+//  {
+//    case urcl::RobotMode::POWER_OFF:
+//    case urcl::RobotMode::IDLE:
+//    case urcl::RobotMode::RUNNING:
+//      if (robot_mode_ != target_mode || safety_mode_ > urcl::SafetyMode::REDUCED)
+//      {
+//        if (goal_->stop_program)
+//        {
+//          safeDashboardTrigger(this->stop_program_srv_);
+//        }
+//        doTransition();
+//      }
+//      else
+//      {
+//        // There is no transition to do here, but we have to start the program again, if desired.
+//        // This happens inside updateRobotState()
+//        updateRobotState();
+//      }
+//      break;
+//    case urcl::RobotMode::NO_CONTROLLER:
+//    case urcl::RobotMode::DISCONNECTED:
+//    case urcl::RobotMode::CONFIRM_SAFETY:
+//    case urcl::RobotMode::BOOTING:
+//    case urcl::RobotMode::POWER_ON:
+//    case urcl::RobotMode::BACKDRIVE:
+//    case urcl::RobotMode::UPDATING_FIRMWARE:
+//      result_.message =
+//          "Requested target mode " + robotModeString(target_mode) + " which cannot be explicitly selected.";
+//      result_.success = false;
+//      //                set_mode_as_.setAborted(result_);
+//      break;
+//    default:
+//      result_.message = "Requested illegal mode.";
+//      result_.success = false;
+//      //                set_mode_as_.setAborted(result_);
+//  }
+//}
 
-  urcl::RobotMode target_mode = static_cast<urcl::RobotMode>(goal_->target_robot_mode);
-
-  // Do some input sanitation first.
-  switch (target_mode)
-  {
-    case urcl::RobotMode::POWER_OFF:
-    case urcl::RobotMode::IDLE:
-    case urcl::RobotMode::RUNNING:
-      if (robot_mode_ != target_mode || safety_mode_ > urcl::SafetyMode::REDUCED)
-      {
-        if (goal_->stop_program)
-        {
-          safeDashboardTrigger(this->stop_program_srv_);
-        }
-        doTransition();
-      }
-      else
-      {
-        // There is no transition to do here, but we have to start the program again, if desired.
-        // This happens inside updateRobotState()
-        updateRobotState();
-      }
-      break;
-    case urcl::RobotMode::NO_CONTROLLER:
-    case urcl::RobotMode::DISCONNECTED:
-    case urcl::RobotMode::CONFIRM_SAFETY:
-    case urcl::RobotMode::BOOTING:
-    case urcl::RobotMode::POWER_ON:
-    case urcl::RobotMode::BACKDRIVE:
-    case urcl::RobotMode::UPDATING_FIRMWARE:
-      result_.message =
-          "Requested target mode " + robotModeString(target_mode) + " which cannot be explicitly selected.";
-      result_.success = false;
-      //                set_mode_as_.setAborted(result_);
-      break;
-    default:
-      result_.message = "Requested illegal mode.";
-      result_.success = false;
-      //                set_mode_as_.setAborted(result_);
-  }
-}
-
-void RobotStateHelper::setModePreemptCallbackOld()
-{
-  RCLCPP_INFO(rclcpp::get_logger("ur_robot_state_helper"), "Current goal got preempted.");
-  //        set_mode_as_.setPreempted();
-}
+//void RobotStateHelper::setModePreemptCallbackOld()
+//{
+//  RCLCPP_INFO(rclcpp::get_logger("ur_robot_state_helper"), "Current goal got preempted.");
+//  //        set_mode_as_.setPreempted();
+//}
 
 void RobotStateHelper::startActionServer()
 {
