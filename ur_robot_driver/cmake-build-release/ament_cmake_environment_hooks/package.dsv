@@ -1,4 +1,0 @@
-source;share/ur_robot_driver/local_setup.bash
-source;share/ur_robot_driver/local_setup.dsv
-source;share/ur_robot_driver/local_setup.sh
-source;share/ur_robot_driver/local_setup.zsh
