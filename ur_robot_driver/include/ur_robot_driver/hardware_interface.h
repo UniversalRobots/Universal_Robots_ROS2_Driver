@@ -60,7 +60,11 @@ class URHardwareInterface : public hardware_interface::components::SystemInterfa
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(URHardwareInterface);
 
-  hardware_interface::return_type configure(const HardwareInfo& system_info) final;
+  return_type configure(const HardwareInfo& system_info) final;
+
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
+
+  std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
 
   status get_status() const final
   {
@@ -75,7 +79,14 @@ public:
 protected:
   HardwareInfo info_;
   status status_;
-  std::vector<double> joint_angle_commands_, current_joint_angles_;
+  std::vector<double> commands_, states_;
 };
 
 }  // namespace ur_robot_driver
+
+#include "pluginlib/class_list_macros.hpp"
+
+PLUGINLIB_EXPORT_CLASS(
+        ur_robot_driver::URHardwareInterface,
+        hardware_interface::components::SystemInterface
+)
