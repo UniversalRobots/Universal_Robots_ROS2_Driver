@@ -75,7 +75,7 @@ public:
     return status_;
   }
 
-  std::string get_name() const
+  std::string getName() const
   {
     return info_.name;
   }
