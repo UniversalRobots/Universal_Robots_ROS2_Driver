@@ -24,6 +24,8 @@
   <buildtool_depend>pluginlib</buildtool_depend>
   <buildtool_depend>rclcpp</buildtool_depend>
 
+  <depend>rclcpp</depend>
+  <depend>std_srvs</depend>
   <depend>ur_client_library</depend>
   <depend>ur_dashboard_msgs</depend>
 

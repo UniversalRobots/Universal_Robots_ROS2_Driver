@@ -91,7 +91,6 @@ protected:
 
   std::shared_ptr<urcl::UrDriver> ur_driver_;
 };
-
 }  // namespace ur_robot_driver
 
 #include "pluginlib/class_list_macros.hpp"
