@@ -33,8 +33,8 @@ hardware_interface::return_type URHardwareInterface::configure(const HardwareInf
   info_ = system_info;
   status_ = status::CONFIGURED;
 
-  current_joint_angles_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  joint_angle_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
@@ -47,4 +47,28 @@ hardware_interface::return_type URHardwareInterface::configure(const HardwareInf
 
   return return_type::OK;
 }
+
+    std::vector<hardware_interface::StateInterface> URHardwareInterface::export_state_interfaces() {
+      return std::vector<hardware_interface::StateInterface>();
+    }
+
+    std::vector<hardware_interface::CommandInterface> URHardwareInterface::export_command_interfaces() {
+      return std::vector<hardware_interface::CommandInterface>();
+    }
+
+    return_type URHardwareInterface::start() {
+      return return_type::OK;
+    }
+
+    return_type URHardwareInterface::stop() {
+      return return_type::OK;
+    }
+
+    return_type URHardwareInterface::read() {
+      return return_type::OK;
+    }
+
+    return_type URHardwareInterface::write() {
+      return return_type::OK;
+    }
 }  // namespace ur_robot_driver
