@@ -41,6 +41,7 @@
 
 // UR stuff
 #include <ur_client_library/ur/ur_driver.h>
+#include <ur_robot_driver/dashboard_client_ros.h>
 
 // ROS
 #include "rclcpp/macros.hpp"
@@ -89,7 +90,8 @@ protected:
   status status_;
   std::vector<double> commands_, states_;
 
-  std::shared_ptr<urcl::UrDriver> ur_driver_;
+  std::unique_ptr<urcl::UrDriver> ur_driver_;
+  std::unique_ptr<ur_robot_driver::DashboardClientROS> dashboard_client_;
 };
 }  // namespace ur_robot_driver
 
