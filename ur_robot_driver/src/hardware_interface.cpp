@@ -27,7 +27,12 @@
 #include <ur_robot_driver/hardware_interface.h>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
+#include <ur_client_library/ur/tool_communication.h>
+#include <ur_client_library/exceptions.h>
+
 #include "rclcpp/rclcpp.hpp"
+
+namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
@@ -39,6 +44,7 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
+  // TODO all the checking from HardwareInfo which holds urdf info
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
     if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
@@ -49,7 +55,6 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   }
 
   // TODO fetch parameters (robot_ip, write&read params, ...), this can also be done in start
-
 
   status_ = status::CONFIGURED;
 
@@ -125,10 +130,40 @@ return_type URPositionHardwareInterface::stop()
   return return_type::OK;
 }
 
+template <typename T>
+void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
+                                           const std::string& var_name, T& data)
+{
+  if (!data_pkg->getData(var_name, data))
+  {
+    // This throwing should never happen unless misconfigured
+    std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+    throw std::runtime_error(error_msg);
+  }
+}
+
+template <typename T, size_t N>
+void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
+                                                 const std::string& var_name, std::bitset<N>& data)
+{
+  if (!data_pkg->getData<T, N>(var_name, data))
+  {
+    // This throwing should never happen unless misconfigured
+    std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+    throw std::runtime_error(error_msg);
+  }
+}
+
 return_type URPositionHardwareInterface::read()
 {
-
   // TODO add receiving commands from driver
+
+  std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
+  if (data_pkg)
+  {
+    packet_read_ = true;
+    readData(data_pkg, "actual_q", urcl_joint_positions_);
+  }
 
   return return_type::OK;
 }
@@ -136,6 +171,13 @@ return_type URPositionHardwareInterface::read()
 return_type URPositionHardwareInterface::write()
 {
   // TODO send commands_ to driver
+
+  for (uint i = 0; i < info_.joints.size(); i++)
+    urcl_position_commands_[i] = commands_[i];
+
+  ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
+
+  packet_read_ = false;
 
   return return_type::OK;
 }

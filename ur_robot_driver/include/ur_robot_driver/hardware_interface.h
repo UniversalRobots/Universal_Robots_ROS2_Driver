@@ -86,9 +86,20 @@ public:
   return_type write() final;
 
 protected:
+  template <typename T>
+  void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
+                T& data);
+  template <typename T, size_t N>
+  void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
+                      std::bitset<N>& data);
+
   HardwareInfo info_;
   status status_;
   std::vector<double> commands_, states_;
+
+  urcl::vector6d_t urcl_position_commands_;
+  urcl::vector6d_t urcl_joint_positions_;
+  bool packet_read_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::unique_ptr<ur_robot_driver::DashboardClientROS> dashboard_client_;
