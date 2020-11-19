@@ -48,6 +48,9 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
     }
   }
 
+  // TODO fetch parameters (robot_ip, write&read params, ...), this can also be done in start
+
+
   status_ = status::CONFIGURED;
 
   return return_type::OK;
@@ -83,6 +86,10 @@ return_type URPositionHardwareInterface::start()
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
+  // TODO initialize driver
+
+  // TODO initialize dashboard client
+
   // set some default values
   // TODO replace with reading current state of the joints
   for (uint i = 0; i < states_.size(); i++)
@@ -107,6 +114,10 @@ return_type URPositionHardwareInterface::stop()
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
+  // TODO stop/reset driver
+
+  // TODO stop/reset dashboard client
+
   status_ = hardware_interface::status::STOPPED;
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System sucessfully stopped!");
@@ -116,11 +127,16 @@ return_type URPositionHardwareInterface::stop()
 
 return_type URPositionHardwareInterface::read()
 {
+
+  // TODO add receiving commands from driver
+
   return return_type::OK;
 }
 
 return_type URPositionHardwareInterface::write()
 {
+  // TODO send commands_ to driver
+
   return return_type::OK;
 }
 }  // namespace ur_robot_driver
