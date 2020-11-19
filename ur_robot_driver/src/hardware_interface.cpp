@@ -25,14 +25,17 @@
  */
 //----------------------------------------------------------------------
 #include <ur_robot_driver/hardware_interface.h>
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+
+#include "rclcpp/rclcpp.hpp"
 
 namespace ur_robot_driver
 {
-hardware_interface::return_type URHardwareInterface::configure(const HardwareInfo& system_info)
+hardware_interface::return_type URPositionHardwareInterface::configure(const HardwareInfo& system_info)
 {
   info_ = system_info;
-  status_ = status::CONFIGURED;
 
+  // resize and initialize
   commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
@@ -45,35 +48,78 @@ hardware_interface::return_type URHardwareInterface::configure(const HardwareInf
     }
   }
 
+  status_ = status::CONFIGURED;
+
   return return_type::OK;
 }
 
-std::vector<hardware_interface::StateInterface> URHardwareInterface::export_state_interfaces()
+std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
 {
-  return std::vector<hardware_interface::StateInterface>();
+  std::vector<hardware_interface::StateInterface> state_interfaces;
+  for (uint i = 0; i < info_.joints.size(); i++)
+  {
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &states_[i]));
+  }
+
+  return state_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface> URHardwareInterface::export_command_interfaces()
+std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
 {
-  return std::vector<hardware_interface::CommandInterface>();
+  std::vector<hardware_interface::CommandInterface> command_interfaces;
+  for (uint i = 0; i < info_.joints.size(); i++)
+  {
+    command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &commands_[i]));
+  }
+
+  return command_interfaces;
 }
 
-return_type URHardwareInterface::start()
+return_type URPositionHardwareInterface::start()
+{
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
+
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  // set some default values
+  // TODO replace with reading current state of the joints
+  for (uint i = 0; i < states_.size(); i++)
+  {
+    if (std::isnan(states_[i]) || std::isnan(commands_[i]))
+    {
+      states_[i] = 0;
+      commands_[i] = 0;
+    }
+  }
+
+  status_ = hardware_interface::status::STARTED;
+
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System Sucessfully started!");
+
+  return return_type::OK;
+}
+
+return_type URPositionHardwareInterface::stop()
+{
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
+
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  status_ = hardware_interface::status::STOPPED;
+
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System sucessfully stopped!");
+
+  return return_type::OK;
+}
+
+return_type URPositionHardwareInterface::read()
 {
   return return_type::OK;
 }
 
-return_type URHardwareInterface::stop()
-{
-  return return_type::OK;
-}
-
-return_type URHardwareInterface::read()
-{
-  return return_type::OK;
-}
-
-return_type URHardwareInterface::write()
+return_type URPositionHardwareInterface::write()
 {
   return return_type::OK;
 }

@@ -39,6 +39,9 @@
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
+// UR stuff
+#include <ur_client_library/ur/ur_driver.h>
+
 // ROS
 #include "rclcpp/macros.hpp"
 
@@ -55,10 +58,10 @@ namespace ur_robot_driver
  * driver. It contains the read and write methods of the main control loop and registers various ROS
  * topics and services.
  */
-class URHardwareInterface : public hardware_interface::components::SystemInterface
+class URPositionHardwareInterface : public hardware_interface::components::SystemInterface
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(URHardwareInterface);
+  RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
 
   return_type configure(const HardwareInfo& system_info) final;
 
@@ -85,10 +88,12 @@ protected:
   HardwareInfo info_;
   status status_;
   std::vector<double> commands_, states_;
+
+  std::shared_ptr<urcl::UrDriver> ur_driver_;
 };
 
 }  // namespace ur_robot_driver
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(ur_robot_driver::URHardwareInterface, hardware_interface::components::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(ur_robot_driver::URPositionHardwareInterface, hardware_interface::components::SystemInterface)
