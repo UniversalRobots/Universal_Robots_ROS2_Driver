@@ -48,27 +48,33 @@ hardware_interface::return_type URHardwareInterface::configure(const HardwareInf
   return return_type::OK;
 }
 
-    std::vector<hardware_interface::StateInterface> URHardwareInterface::export_state_interfaces() {
-      return std::vector<hardware_interface::StateInterface>();
-    }
+std::vector<hardware_interface::StateInterface> URHardwareInterface::export_state_interfaces()
+{
+  return std::vector<hardware_interface::StateInterface>();
+}
 
-    std::vector<hardware_interface::CommandInterface> URHardwareInterface::export_command_interfaces() {
-      return std::vector<hardware_interface::CommandInterface>();
-    }
+std::vector<hardware_interface::CommandInterface> URHardwareInterface::export_command_interfaces()
+{
+  return std::vector<hardware_interface::CommandInterface>();
+}
 
-    return_type URHardwareInterface::start() {
-      return return_type::OK;
-    }
+return_type URHardwareInterface::start()
+{
+  return return_type::OK;
+}
 
-    return_type URHardwareInterface::stop() {
-      return return_type::OK;
-    }
+return_type URHardwareInterface::stop()
+{
+  return return_type::OK;
+}
 
-    return_type URHardwareInterface::read() {
-      return return_type::OK;
-    }
+return_type URHardwareInterface::read()
+{
+  return return_type::OK;
+}
 
-    return_type URHardwareInterface::write() {
-      return return_type::OK;
-    }
+return_type URHardwareInterface::write()
+{
+  return return_type::OK;
+}
 }  // namespace ur_robot_driver

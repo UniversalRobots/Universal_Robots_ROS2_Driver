@@ -71,6 +71,11 @@ public:
     return status_;
   }
 
+  std::string get_name() const
+  {
+    return info_.name;
+  }
+
   return_type start() final;
   return_type stop() final;
   return_type read() final;
@@ -86,7 +91,4 @@ protected:
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(
-        ur_robot_driver::URHardwareInterface,
-        hardware_interface::components::SystemInterface
-)
+PLUGINLIB_EXPORT_CLASS(ur_robot_driver::URHardwareInterface, hardware_interface::components::SystemInterface)
