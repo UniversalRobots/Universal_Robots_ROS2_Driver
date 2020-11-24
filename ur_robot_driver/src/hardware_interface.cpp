@@ -45,14 +45,14 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
   // TODO all the checking from HardwareInfo which holds urdf info
-  for (const hardware_interface::ComponentInfo& joint : info_.joints)
-  {
-    if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
-    {
-      status_ = status::UNKNOWN;
-      return return_type::ERROR;
-    }
-  }
+//  for (const hardware_interface::ComponentInfo& joint : info_.joints)
+//  {
+//    if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
+//    {
+//      status_ = status::UNKNOWN;
+//      return return_type::ERROR;
+//    }
+//  }
 
   // TODO fetch parameters (robot_ip, write&read params, ...), this can also be done in start
 
@@ -158,6 +158,10 @@ return_type URPositionHardwareInterface::read()
 {
   // TODO add receiving commands from driver
 
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Reading ...");
+  return return_type::OK;
+
+
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
   if (data_pkg)
   {
@@ -171,6 +175,8 @@ return_type URPositionHardwareInterface::read()
 return_type URPositionHardwareInterface::write()
 {
   // TODO send commands_ to driver
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
+  return return_type::OK;
 
   for (uint i = 0; i < info_.joints.size(); i++)
     urcl_position_commands_[i] = commands_[i];

@@ -1,0 +1,20 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 2  # Hz
+
+    forward_command_controller_position:
+      type: forward_command_controller/ForwardCommandController
+
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+
+forward_command_controller_position:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+    interface_name: position
