@@ -3,6 +3,7 @@ import yaml
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+import xacro
 
 
 def load_file(package_name, file_path):
@@ -19,9 +20,14 @@ def load_file(package_name, file_path):
 def generate_launch_description():
 
     # Get URDF
-    robot_description_config = load_file(
-        'ur_description', 'urdf/ur5.urdf.xacro')
+    # robot_description_config = load_file(
+    #     'ur_description', 'urdf/ur5.urdf.xacro')
+
+    # Get URDF via xacro
+    robot_description_path = os.path.join(get_package_share_directory('ur_description'), 'urdf', 'ur5.urdf.xacro')
+    robot_description_config = xacro.process_file(robot_description_path).toxml()
     robot_description = {'robot_description': robot_description_config}
+
 
     robot_description_semantic_config = load_file('ur5_moveit_config', 'config/ur5.srdf')
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}

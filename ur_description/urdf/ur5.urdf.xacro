@@ -22,7 +22,7 @@
     <child link = "shoulder_link" />
     <origin xyz="0.0 0.0 0.089159" rpy="0.0 0.0 0.0" />
     <axis xyz="0 0 1" />
-    <limit lower="-6.283185308" upper="6.283185308" effort="150.0" velocity="3.15"/>
+    <limit lower="${-2*pi}" upper="${2*pi}" effort="150.0" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
 
@@ -47,7 +47,7 @@
     <child link = "upper_arm_link" />
     <origin xyz="0.0 0.13585 0.0" rpy="0.0 1.57079632679 0.0" />
     <axis xyz="0 1 0" />
-    <limit lower="-6.28318530718" upper="6.28318530718" effort="150.0" velocity="3.15"/>
+    <limit lower="${-2*pi}" upper="${2*pi}" effort="150.0" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
 
@@ -72,7 +72,7 @@
     <child link = "forearm_link" />
     <origin xyz="0.0 -0.1197 0.42500" rpy="0.0 0.0 0.0" />
     <axis xyz="0 1 0" />
-    <limit lower="-3.141592654" upper="3.141592654" effort="150.0" velocity="3.15"/>
+    <limit lower="${-pi}" upper="${pi}" effort="150.0" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
 
@@ -97,7 +97,7 @@
     <child link = "wrist_1_link" />
     <origin xyz="0.0 0.0 0.39225" rpy="0.0 1.57079632679  0.0" />
     <axis xyz="0 1 0" />
-    <limit lower="-6.28318530718" upper="6.28318530718" effort="28.0" velocity="3.2"/>
+    <limit lower="${-2*pi}" upper="${2*pi}" effort="28.0" velocity="3.2"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
 
@@ -122,7 +122,7 @@
     <child link = "wrist_2_link" />
     <origin xyz="0.0 0.093 0.0" rpy="0.0 0.0 0.0" />
     <axis xyz="0 0 1" />
-    <limit lower="-6.28318530718" upper="6.28318530718" effort="28.0" velocity="3.2"/>
+    <limit lower="${-2*pi}" upper="${2*pi}" effort="28.0" velocity="3.2"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
 
@@ -147,7 +147,7 @@
     <child link = "wrist_3_link" />
     <origin xyz="0.0 0.0 0.09465" rpy="0.0 0.0 0.0" />
     <axis xyz="0 1 0" />
-    <limit lower="-6.28318530718" upper="6.28318530718" effort="28.0" velocity="3.2"/>
+    <limit lower="${-2*pi}" upper="${2*pi}" effort="28.0" velocity="3.2"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
 
