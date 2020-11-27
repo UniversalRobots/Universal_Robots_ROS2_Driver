@@ -19,10 +19,6 @@ def load_file(package_name, file_path):
 
 def generate_launch_description():
 
-    # Get URDF
-    # robot_description_config = load_file(
-    #     'ur_description', 'urdf/ur5.urdf.xacro')
-
     # Get URDF via xacro
     robot_description_path = os.path.join(get_package_share_directory('ur_description'), 'urdf', 'ur5.urdf.xacro')
     robot_description_config = xacro.process_file(robot_description_path).toxml()
