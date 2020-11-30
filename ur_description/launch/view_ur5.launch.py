@@ -24,7 +24,6 @@ def generate_launch_description():
     robot_description_config = xacro.process_file(robot_description_path).toxml()
     robot_description = {'robot_description': robot_description_config}
 
-
     robot_description_semantic_config = load_file('ur5_moveit_config', 'config/ur5.srdf')
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
 
