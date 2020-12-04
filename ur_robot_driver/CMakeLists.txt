@@ -67,6 +67,9 @@ add_executable(dashboard_client
 )
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+install(TARGETS
+        dashboard_client
+        DESTINATION lib/${PROJECT_NAME})
 
 # add_executable(robot_state_helper
 #   src/robot_state_helper.cpp
