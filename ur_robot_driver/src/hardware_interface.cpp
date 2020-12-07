@@ -48,14 +48,14 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   joint_efforts_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
   // TODO all the checking from HardwareInfo which holds urdf info
-//  for (const hardware_interface::ComponentInfo& joint : info_.joints)
-//  {
-//    if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
-//    {
-//      status_ = status::UNKNOWN;
-//      return return_type::ERROR;
-//    }
-//  }
+  //  for (const hardware_interface::ComponentInfo& joint : info_.joints)
+  //  {
+  //    if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
+  //    {
+  //      status_ = status::UNKNOWN;
+  //      return return_type::ERROR;
+  //    }
+  //  }
 
   // TODO fetch parameters (robot_ip, write&read params, ...), this can also be done in start
 
@@ -69,15 +69,14 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++)
   {
-    state_interfaces.emplace_back(
-        hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-            info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[i]));
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[i]));
 
     state_interfaces.emplace_back(
-            hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &joint_efforts_[i]));
-
+        hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &joint_efforts_[i]));
   }
 
   return state_interfaces;
@@ -88,11 +87,11 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (uint i = 0; i < info_.joints.size(); i++)
   {
-    command_interfaces.emplace_back(
-        hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-            info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_commands_[i]));
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_commands_[i]));
   }
 
   return command_interfaces;
@@ -161,10 +160,10 @@ return_type URPositionHardwareInterface::start()
   try
   {
     ur_driver_ = std::make_unique<urcl::UrDriver>(
-            robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
-            std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
-            std::move(tool_comm_setup), calibration_checksum, (uint32_t)reverse_port, (uint32_t)script_sender_port,
-            servoj_gain, servoj_lookahead_time, non_blocking_read);
+        robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
+        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
+        std::move(tool_comm_setup), calibration_checksum, (uint32_t)reverse_port, (uint32_t)script_sender_port,
+        servoj_gain, servoj_lookahead_time, non_blocking_read);
   }
   catch (urcl::ToolCommNotAvailable& e)
   {
@@ -177,7 +176,6 @@ return_type URPositionHardwareInterface::start()
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
     return return_type::ERROR;
   }
-
 
   status_ = hardware_interface::status::STARTED;
 
@@ -228,8 +226,6 @@ void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::Dat
 
 return_type URPositionHardwareInterface::read()
 {
-  // TODO add receiving commands from driver
-
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Reading ...");
 
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
@@ -257,7 +253,8 @@ return_type URPositionHardwareInterface::write()
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
   return return_type::OK;
 
-  for (uint i = 0; i < info_.joints.size(); i++){
+  for (uint i = 0; i < info_.joints.size(); i++)
+  {
     urcl_position_commands_[i] = position_commands_[i];
     urcl_velocity_commands_[i] = velocity_commands_[i];
   }
@@ -271,11 +268,11 @@ return_type URPositionHardwareInterface::write()
   return return_type::OK;
 }
 
-    void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
-    {
-      if (program_running)
-      {
-        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Robot receives commands from ROS side");
-      }
-    }
+void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
+{
+  if (program_running)
+  {
+    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Robot receives commands from ROS side");
+  }
+}
 }  // namespace ur_robot_driver
