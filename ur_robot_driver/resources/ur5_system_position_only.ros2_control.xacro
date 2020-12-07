@@ -6,9 +6,19 @@
     <ros2_control name="${name}" type="system">
       <hardware>
         <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
-        <param name="example_param_hw_start_duration_sec">2.0</param>
-        <param name="example_param_hw_stop_duration_sec">3.0</param>
-        <param name="example_param_hw_slowdown">2.0</param>
+        <param name="robot_ip">192.168.0.10</param>
+        <param name="script_filename">/home/catkin_ws/src/Universal_Robots_ROS2_Driver/ur_robot_driver/resources/ros_control.urscript</param>
+        <param name="output_recipe_filename">/home/catkin_ws/src/Universal_Robots_ROS2_Driver/ur_robot_driver/resources/rtde_output_recipe.txt</param>
+        <param name="input_recipe_filename">/home/catkin_ws/src/Universal_Robots_ROS2_Driver/ur_robot_driver/resources/rtde_input_recipe.txt</param>
+        <param name="headless_mode">0</param>
+        <param name="reverse_port">50001</param>
+        <param name="script_sender_port">50002</param>
+        <param name="tf_prefix">'</param>
+        <param name="non_blocking_read">0</param>
+        <param name="servoj_gain">2000</param>
+        <param name="servoj_lookahead_time">0.03</param>
+        <param name="use_tool_communication">0</param>
+        <param name="kinematics/hash">'</param>
       </hardware>
       <joint name="shoulder_pan_joint">
         <command_interface name="position">
