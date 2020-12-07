@@ -46,11 +46,11 @@
 // ROS
 #include "rclcpp/macros.hpp"
 
+using hardware_interface::Actuator;
 using hardware_interface::HardwareInfo;
 using hardware_interface::return_type;
-using hardware_interface::status;
-using hardware_interface::Actuator;
 using hardware_interface::Sensor;
+using hardware_interface::status;
 
 namespace ur_robot_driver
 {
@@ -85,13 +85,13 @@ public:
   return_type read() final;
   return_type write() final;
 
-    /*!
+  /*!
    * \brief Callback to handle a change in the current state of the URCaps program running on the
    * robot.
    *
    * \param program_running The new state of the program
    */
-    void handleRobotProgramState(bool program_running);
+  void handleRobotProgramState(bool program_running);
 
 protected:
   template <typename T>
