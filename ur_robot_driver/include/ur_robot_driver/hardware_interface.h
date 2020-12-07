@@ -85,6 +85,14 @@ public:
   return_type read() final;
   return_type write() final;
 
+    /*!
+   * \brief Callback to handle a change in the current state of the URCaps program running on the
+   * robot.
+   *
+   * \param program_running The new state of the program
+   */
+    void handleRobotProgramState(bool program_running);
+
 protected:
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
@@ -95,14 +103,19 @@ protected:
 
   HardwareInfo info_;
   status status_;
-  std::vector<double> commands_, states_;
+
+  std::vector<double> position_commands_, position_states_;
+  std::vector<double> velocity_commands_, velocity_states_;
+  std::vector<double> joint_efforts_;
 
   urcl::vector6d_t urcl_position_commands_;
+  urcl::vector6d_t urcl_velocity_commands_;
   urcl::vector6d_t urcl_joint_positions_;
+  urcl::vector6d_t urcl_joint_velocities_;
+  urcl::vector6d_t urcl_joint_efforts_;
   bool packet_read_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
-  std::unique_ptr<ur_robot_driver::DashboardClientROS> dashboard_client_;
 };
 }  // namespace ur_robot_driver
 
