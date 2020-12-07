@@ -32,9 +32,9 @@
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
-#include "hardware_interface/components/actuator.hpp"
-#include "hardware_interface/components/sensor.hpp"
-#include "hardware_interface/components/system_interface.hpp"
+#include "hardware_interface/actuator.hpp"
+#include "hardware_interface/sensor.hpp"
+#include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
@@ -49,8 +49,8 @@
 using hardware_interface::HardwareInfo;
 using hardware_interface::return_type;
 using hardware_interface::status;
-using hardware_interface::components::Actuator;
-using hardware_interface::components::Sensor;
+using hardware_interface::Actuator;
+using hardware_interface::Sensor;
 
 namespace ur_robot_driver
 {
@@ -59,7 +59,7 @@ namespace ur_robot_driver
  * driver. It contains the read and write methods of the main control loop and registers various ROS
  * topics and services.
  */
-class URPositionHardwareInterface : public hardware_interface::components::SystemInterface
+class URPositionHardwareInterface : public hardware_interface::SystemInterface
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
@@ -75,7 +75,7 @@ public:
     return status_;
   }
 
-  std::string getName() const
+  std::string get_name() const
   {
     return info_.name;
   }
@@ -108,4 +108,4 @@ protected:
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(ur_robot_driver::URPositionHardwareInterface, hardware_interface::components::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(ur_robot_driver::URPositionHardwareInterface, hardware_interface::SystemInterface)
