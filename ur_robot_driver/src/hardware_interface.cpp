@@ -251,7 +251,6 @@ return_type URPositionHardwareInterface::write()
 {
   // TODO send commands_ to driver
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
-  return return_type::OK;
 
   for (uint i = 0; i < info_.joints.size(); i++)
   {
