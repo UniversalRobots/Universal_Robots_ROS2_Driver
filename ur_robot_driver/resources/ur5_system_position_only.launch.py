@@ -79,5 +79,14 @@ def generate_launch_description():
           'stdout': 'screen',
           'stderr': 'screen',
           },
+        ), Node(
+            package="ur_robot_driver",
+            executable="dashboard_client",
+            name="dashboard_client",
+            output="screen",
+            emulate_tty=True,
+            parameters=[
+                {"robot_ip": "000.000.000.000"}
+            ]
         ), rviz_node, robot_state_pub_node
     ])
