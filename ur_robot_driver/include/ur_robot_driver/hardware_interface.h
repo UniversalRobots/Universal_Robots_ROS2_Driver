@@ -115,6 +115,34 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   bool packet_read_;
 
+  uint32_t runtime_state_;
+
+  urcl::vector6d_t fts_measurements_;
+  urcl::vector6d_t tcp_pose_;
+  std::bitset<18> actual_dig_out_bits_;
+  std::bitset<18> actual_dig_in_bits_;
+  std::array<double, 2> standard_analog_input_;
+  std::array<double, 2> standard_analog_output_;
+  std::bitset<4> analog_io_types_;
+  uint32_t tool_mode_;
+  std::bitset<2> tool_analog_input_types_;
+  std::array<double, 2> tool_analog_input_;
+  int32_t tool_output_voltage_;
+  double tool_output_current_;
+  double tool_temperature_;
+  double speed_scaling_;
+  double target_speed_fraction_;
+  double speed_scaling_combined_;
+  std::vector<std::string> joint_names_;
+  int32_t robot_mode_;
+  int32_t safety_mode_;
+  std::bitset<4> robot_status_bits_;
+  std::bitset<11> safety_status_bits_;
+
+    bool robot_program_running_;
+    bool non_blocking_read_;
+
+
   std::unique_ptr<urcl::UrDriver> ur_driver_;
 };
 }  // namespace ur_robot_driver

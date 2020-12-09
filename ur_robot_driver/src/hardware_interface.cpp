@@ -177,7 +177,7 @@ return_type URPositionHardwareInterface::start()
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
   // not used with combined_robot_hw can suppress important errors and affect real-time performance.
-  bool non_blocking_read = static_cast<bool>(stoi(info_.hardware_parameters["non_blocking_read"]));
+  bool non_blocking_read_ = static_cast<bool>(stoi(info_.hardware_parameters["non_blocking_read"]));
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
@@ -203,7 +203,7 @@ return_type URPositionHardwareInterface::start()
   std::unique_ptr<urcl::ToolCommSetup> tool_comm_setup;
   if (use_tool_communication)
   {
-    // TODO initilize tool communication if flag is set
+
     tool_comm_setup = std::make_unique<urcl::ToolCommSetup>();
 
     using ToolVoltageT = std::underlying_type<urcl::ToolVoltage>::type;
@@ -271,7 +271,7 @@ return_type URPositionHardwareInterface::start()
         robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
         std::move(tool_comm_setup), calibration_checksum, (uint32_t)reverse_port, (uint32_t)script_sender_port,
-        servoj_gain, servoj_lookahead_time, non_blocking_read);
+        servoj_gain, servoj_lookahead_time, non_blocking_read_);
   }
   catch (urcl::ToolCommNotAvailable& e)
   {
@@ -348,6 +348,32 @@ return_type URPositionHardwareInterface::read()
     memcpy(&velocity_states_[0], &urcl_joint_velocities_[0], 6 * sizeof(double));
     memcpy(&joint_efforts_[0], &urcl_joint_efforts_[0], 6 * sizeof(double));
 
+    readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
+    readData(data_pkg, "speed_scaling", speed_scaling_);
+    readData(data_pkg, "runtime_state", runtime_state_);
+    readData(data_pkg, "actual_TCP_force", fts_measurements_);
+    readData(data_pkg, "actual_TCP_pose", tcp_pose_);
+    readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
+    readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
+    readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
+    readData(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
+    readData(data_pkg, "tool_mode", tool_mode_);
+    readData(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
+    readData(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
+    readData(data_pkg, "tool_output_voltage", tool_output_voltage_);
+    readData(data_pkg, "tool_output_current", tool_output_current_);
+    readData(data_pkg, "tool_temperature", tool_temperature_);
+    readData(data_pkg, "robot_mode", robot_mode_);
+    readData(data_pkg, "safety_mode", safety_mode_);
+    readBitsetData<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
+    readBitsetData<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
+    readBitsetData<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
+    readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
+    readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
+    readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+
+    // TODO logic for sending other stuff to higher level interface
+
     return return_type::OK;
   }
 
@@ -358,6 +384,10 @@ return_type URPositionHardwareInterface::write()
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
 
+  if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
+       runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
+      robot_program_running_ && (!non_blocking_read_ || packet_read_)){
+
   for (uint i = 0; i < info_.joints.size(); ++i)
   {
     urcl_position_commands_[i] = position_commands_[i];
@@ -365,19 +395,27 @@ return_type URPositionHardwareInterface::write()
   }
 
   // TODO decide when to MODE_SERVOJ and MODE_SPEEDJ based on the active controller
+  ur_driver_->writeKeepalive();
   ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
 //  ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
 
   packet_read_ = false;
 
   return return_type::OK;
+
+  }
+  else{
+
+    // TODO could not read form the driver --> reset controllers
+  }
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
-  if (program_running)
+  if (!robot_program_running_ && program_running)
   {
-    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Robot receives commands from ROS side");
+    // TODO how to set controller reset flag
   }
+  robot_program_running_ = program_running;
 }
 }  // namespace ur_robot_driver
