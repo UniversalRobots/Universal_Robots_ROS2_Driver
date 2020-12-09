@@ -47,66 +47,60 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   velocity_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   joint_efforts_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
-  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
-
-    if (joint.command_interfaces.size() != 2) {
-      RCLCPP_FATAL(
-              rclcpp::get_logger("URPositionHardwareInterface"),
-              "Joint '%s' has %d command interfaces found. 2 expected.",
-              joint.name.c_str(), joint.command_interfaces.size());
+  for (const hardware_interface::ComponentInfo& joint : info_.joints)
+  {
+    if (joint.command_interfaces.size() != 2)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
+                   "Joint '%s' has %d command interfaces found. 2 expected.", joint.name.c_str(),
+                   joint.command_interfaces.size());
       return return_type::ERROR;
     }
 
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
-      RCLCPP_FATAL(
-              rclcpp::get_logger("URPositionHardwareInterface"),
-              "Joint '%s' have %s command interfaces found as first command interface. '%s' expected.",
-              joint.name.c_str(), joint.command_interfaces[0].name.c_str(),
-              hardware_interface::HW_IF_POSITION);
+    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
+                   "Joint '%s' have %s command interfaces found as first command interface. '%s' expected.",
+                   joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return return_type::ERROR;
     }
 
-    if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
-      RCLCPP_FATAL(
-              rclcpp::get_logger("URPositionHardwareInterface"),
-              "Joint '%s' have %s command interfaces found as second command interface. '%s' expected.",
-              joint.name.c_str(), joint.command_interfaces[1].name.c_str(),
-              hardware_interface::HW_IF_VELOCITY);
+    if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
+                   "Joint '%s' have %s command interfaces found as second command interface. '%s' expected.",
+                   joint.name.c_str(), joint.command_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces.size() != 3) {
-      RCLCPP_FATAL(
-              rclcpp::get_logger("URPositionHardwareInterface"),
-              "Joint '%s' has %d state interface. 3 expected.",
-              joint.name.c_str(), joint.state_interfaces.size());
+    if (joint.state_interfaces.size() != 3)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"), "Joint '%s' has %d state interface. 3 expected.",
+                   joint.name.c_str(), joint.state_interfaces.size());
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
-      RCLCPP_FATAL(
-              rclcpp::get_logger("URPositionHardwareInterface"),
-              "Joint '%s' have %s state interface as first state interface. '%s' expected.",
-              joint.name.c_str(), joint.state_interfaces[0].name.c_str(),
-              hardware_interface::HW_IF_POSITION);
+    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
+                   "Joint '%s' have %s state interface as first state interface. '%s' expected.", joint.name.c_str(),
+                   joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
-      RCLCPP_FATAL(
-              rclcpp::get_logger("URPositionHardwareInterface"),
-              "Joint '%s' have %s state interface as second state interface. '%s' expected.",
-              joint.name.c_str(), joint.state_interfaces[1].name.c_str(),
-              hardware_interface::HW_IF_POSITION);
+    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
+                   "Joint '%s' have %s state interface as second state interface. '%s' expected.", joint.name.c_str(),
+                   joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_POSITION);
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
-      RCLCPP_FATAL(
-              rclcpp::get_logger("URPositionHardwareInterface"),
-              "Joint '%s' have %s state interface as third state interface. '%s' expected.",
-              joint.name.c_str(), joint.state_interfaces[2].name.c_str(),
-              hardware_interface::HW_IF_POSITION);
+    if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT)
+    {
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
+                   "Joint '%s' have %s state interface as third state interface. '%s' expected.", joint.name.c_str(),
+                   joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_POSITION);
       return return_type::ERROR;
     }
   }
@@ -203,7 +197,6 @@ return_type URPositionHardwareInterface::start()
   std::unique_ptr<urcl::ToolCommSetup> tool_comm_setup;
   if (use_tool_communication)
   {
-
     tool_comm_setup = std::make_unique<urcl::ToolCommSetup>();
 
     using ToolVoltageT = std::underlying_type<urcl::ToolVoltage>::type;
@@ -251,7 +244,6 @@ return_type URPositionHardwareInterface::start()
     // is set to TRUE.  Then, this parameter is required.
     rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
     tool_comm_setup->setRxIdleChars(rx_idle_chars);
-
 
     int tx_idle_chars;
     // Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the
@@ -386,26 +378,25 @@ return_type URPositionHardwareInterface::write()
 
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
-      robot_program_running_ && (!non_blocking_read_ || packet_read_)){
-
-  for (uint i = 0; i < info_.joints.size(); ++i)
+      robot_program_running_ && (!non_blocking_read_ || packet_read_))
   {
-    urcl_position_commands_[i] = position_commands_[i];
-    urcl_velocity_commands_[i] = velocity_commands_[i];
+    for (uint i = 0; i < info_.joints.size(); ++i)
+    {
+      urcl_position_commands_[i] = position_commands_[i];
+      urcl_velocity_commands_[i] = velocity_commands_[i];
+    }
+
+    // TODO decide when to MODE_SERVOJ and MODE_SPEEDJ based on the active controller
+    ur_driver_->writeKeepalive();
+    ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
+    //  ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
+
+    packet_read_ = false;
+
+    return return_type::OK;
   }
-
-  // TODO decide when to MODE_SERVOJ and MODE_SPEEDJ based on the active controller
-  ur_driver_->writeKeepalive();
-  ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
-//  ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
-
-  packet_read_ = false;
-
-  return return_type::OK;
-
-  }
-  else{
-
+  else
+  {
     // TODO could not read form the driver --> reset controllers
   }
 }

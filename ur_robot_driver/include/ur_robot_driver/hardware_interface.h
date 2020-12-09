@@ -139,9 +139,8 @@ protected:
   std::bitset<4> robot_status_bits_;
   std::bitset<11> safety_status_bits_;
 
-    bool robot_program_running_;
-    bool non_blocking_read_;
-
+  bool robot_program_running_;
+  bool non_blocking_read_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
 };
