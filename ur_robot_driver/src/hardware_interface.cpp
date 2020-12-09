@@ -388,7 +388,7 @@ return_type URPositionHardwareInterface::write()
 
     // TODO decide when to MODE_SERVOJ and MODE_SPEEDJ based on the active controller
     ur_driver_->writeKeepalive();
-    ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
+    //    ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
     //  ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
 
     packet_read_ = false;
