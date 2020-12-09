@@ -190,7 +190,6 @@ return_type URPositionHardwareInterface::stop()
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
-  // TODO stop/reset driver
   ur_driver_.reset();
 
   status_ = hardware_interface::status::STOPPED;
@@ -252,7 +251,7 @@ return_type URPositionHardwareInterface::write()
   // TODO send commands_ to driver
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
 
-  for (uint i = 0; i < info_.joints.size(); i++)
+  for (uint i = 0; i < info_.joints.size(); ++i)
   {
     urcl_position_commands_[i] = position_commands_[i];
     urcl_velocity_commands_[i] = velocity_commands_[i];
@@ -260,7 +259,7 @@ return_type URPositionHardwareInterface::write()
 
   // TODO decide when to MODE_SERVOJ and MODE_SPEEDJ based on the active controller
   ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
-  ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
+//  ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
 
   packet_read_ = false;
 
