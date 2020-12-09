@@ -19,6 +19,14 @@
         <param name="servoj_lookahead_time">0.03</param>
         <param name="use_tool_communication">0</param>
         <param name="kinematics/hash">'</param>
+        <param name="tool_voltage">0</param>
+        <param name="tool_parity">0</param>
+        <param name="tool_baud_rate">115200</param>
+        <param name="tool_stop_bits">1</param>
+        <param name="tool_rx_idle_chars">1.5</param>
+        <param name="tool_tx_idle_chars">3.5</param>
+        <param name="tool_device_name">/tmp/ttyUR</param>
+        <param name="tool_tcp_port">54321</param>
       </hardware>
       <joint name="shoulder_pan_joint">
         <command_interface name="position">

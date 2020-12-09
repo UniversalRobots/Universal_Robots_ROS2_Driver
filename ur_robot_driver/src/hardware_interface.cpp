@@ -153,6 +153,62 @@ return_type URPositionHardwareInterface::start()
   {
     // TODO initilize tool communication if flag is set
     tool_comm_setup = std::make_unique<urcl::ToolCommSetup>();
+
+    using ToolVoltageT = std::underlying_type<urcl::ToolVoltage>::type;
+    ToolVoltageT tool_voltage;
+    // Tool voltage that will be set as soon as the UR-Program on the robot is started. Note: This
+    // parameter is only evaluated, when the parameter "use_tool_communication" is set to TRUE.
+    // Then, this parameter is required.}
+    tool_voltage = std::stoi(info_.hardware_parameters["tool_voltage"]);
+
+    tool_comm_setup->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage));
+
+    using ParityT = std::underlying_type<urcl::Parity>::type;
+    ParityT parity;
+    // Parity used for tool communication. Will be set as soon as the UR-Program on the robot is
+    // started. Can be 0 (None), 1 (odd) and 2 (even).
+    //
+    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
+    // is set to TRUE.  Then, this parameter is required.
+    parity = std::stoi(info_.hardware_parameters["tool_parity"]);
+    tool_comm_setup->setParity(static_cast<urcl::Parity>(parity));
+
+    int baud_rate;
+    // Baud rate used for tool communication. Will be set as soon as the UR-Program on the robot is
+    // started. See UR documentation for valid baud rates.
+    //
+    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
+    // is set to TRUE.  Then, this parameter is required.
+    baud_rate = std::stoi(info_.hardware_parameters["tool_baud_rate"]);
+    tool_comm_setup->setBaudRate(static_cast<uint32_t>(baud_rate));
+
+    int stop_bits;
+    // Number of stop bits used for tool communication. Will be set as soon as the UR-Program on the robot is
+    // started. Can be 1 or 2.
+    //
+    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
+    // is set to TRUE.  Then, this parameter is required.
+    stop_bits = std::stoi(info_.hardware_parameters["tool_stop_bits"]);
+    tool_comm_setup->setStopBits(static_cast<uint32_t>(stop_bits));
+
+    int rx_idle_chars;
+    // Number of idle chars for the RX unit used for tool communication. Will be set as soon as the UR-Program on the
+    // robot is started. Valid values: min=1.0, max=40.0
+    //
+    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
+    // is set to TRUE.  Then, this parameter is required.
+    rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
+    tool_comm_setup->setRxIdleChars(rx_idle_chars);
+
+
+    int tx_idle_chars;
+    // Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the
+    // robot is started. Valid values: min=0.0, max=40.0
+    //
+    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
+    // is set to TRUE.  Then, this parameter is required.
+    tx_idle_chars = std::stoi(info_.hardware_parameters["tool_tx_idle_chars"]);
+    tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
@@ -248,7 +304,6 @@ return_type URPositionHardwareInterface::read()
 
 return_type URPositionHardwareInterface::write()
 {
-  // TODO send commands_ to driver
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
 
   for (uint i = 0; i < info_.joints.size(); ++i)
