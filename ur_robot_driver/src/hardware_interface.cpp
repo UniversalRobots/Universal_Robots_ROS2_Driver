@@ -47,17 +47,69 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   velocity_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   joint_efforts_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
-  // TODO all the checking from HardwareInfo which holds urdf info
-  //  for (const hardware_interface::ComponentInfo& joint : info_.joints)
-  //  {
-  //    if (joint.type.compare("ros2_control_components/PositionJoint") != 0)
-  //    {
-  //      status_ = status::UNKNOWN;
-  //      return return_type::ERROR;
-  //    }
-  //  }
+  for (const hardware_interface::ComponentInfo & joint : info_.joints) {
 
-  // TODO fetch parameters (robot_ip, write&read params, ...), this can also be done in start
+    if (joint.command_interfaces.size() != 2) {
+      RCLCPP_FATAL(
+              rclcpp::get_logger("URPositionHardwareInterface"),
+              "Joint '%s' has %d command interfaces found. 2 expected.",
+              joint.name.c_str(), joint.command_interfaces.size());
+      return return_type::ERROR;
+    }
+
+    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
+      RCLCPP_FATAL(
+              rclcpp::get_logger("URPositionHardwareInterface"),
+              "Joint '%s' have %s command interfaces found as first command interface. '%s' expected.",
+              joint.name.c_str(), joint.command_interfaces[0].name.c_str(),
+              hardware_interface::HW_IF_POSITION);
+      return return_type::ERROR;
+    }
+
+    if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
+      RCLCPP_FATAL(
+              rclcpp::get_logger("URPositionHardwareInterface"),
+              "Joint '%s' have %s command interfaces found as second command interface. '%s' expected.",
+              joint.name.c_str(), joint.command_interfaces[1].name.c_str(),
+              hardware_interface::HW_IF_VELOCITY);
+      return return_type::ERROR;
+    }
+
+    if (joint.state_interfaces.size() != 3) {
+      RCLCPP_FATAL(
+              rclcpp::get_logger("URPositionHardwareInterface"),
+              "Joint '%s' has %d state interface. 3 expected.",
+              joint.name.c_str(), joint.state_interfaces.size());
+      return return_type::ERROR;
+    }
+
+    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
+      RCLCPP_FATAL(
+              rclcpp::get_logger("URPositionHardwareInterface"),
+              "Joint '%s' have %s state interface as first state interface. '%s' expected.",
+              joint.name.c_str(), joint.state_interfaces[0].name.c_str(),
+              hardware_interface::HW_IF_POSITION);
+      return return_type::ERROR;
+    }
+
+    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
+      RCLCPP_FATAL(
+              rclcpp::get_logger("URPositionHardwareInterface"),
+              "Joint '%s' have %s state interface as second state interface. '%s' expected.",
+              joint.name.c_str(), joint.state_interfaces[1].name.c_str(),
+              hardware_interface::HW_IF_POSITION);
+      return return_type::ERROR;
+    }
+
+    if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
+      RCLCPP_FATAL(
+              rclcpp::get_logger("URPositionHardwareInterface"),
+              "Joint '%s' have %s state interface as third state interface. '%s' expected.",
+              joint.name.c_str(), joint.state_interfaces[2].name.c_str(),
+              hardware_interface::HW_IF_POSITION);
+      return return_type::ERROR;
+    }
+  }
 
   status_ = status::CONFIGURED;
 
