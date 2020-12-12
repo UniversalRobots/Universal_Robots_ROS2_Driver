@@ -387,10 +387,11 @@ return_type URPositionHardwareInterface::write()
     memcpy(&urcl_position_commands_[0], &position_commands_[0], 6 * sizeof(double));
     memcpy(&urcl_velocity_commands_[0], &velocity_commands_[0], 6 * sizeof(double));
 
+    // create a lambda substract functor
+    std::function<double(double, double)> substractor = [](double a, double b) { return a - b; };
+
     // create a position difference vector
     std::vector<double> pos_diff;
-
-    std::function<double(double, double)> substractor = [](double a, double b) { return a - b; };
     std::transform(position_commands_.begin(), position_commands_.end(), position_commands_old_.begin(),
                    pos_diff.begin(), substractor);
 
