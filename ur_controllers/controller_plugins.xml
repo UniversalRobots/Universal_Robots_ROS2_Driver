@@ -1,17 +1,24 @@
-<library path="lib/libur_controllers">
-  <class name="ur_controllers/SpeedScalingStateController" type="ur_controllers::SpeedScalingStateController" base_class_type="controller_interface::ControllerBase">
-  <description>
-    This controller publishes the readings of all available speed scaling factors.
-  </description>
-  </class>
-  <class name="position_controllers/ScaledJointTrajectoryController" type="position_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerBase">
-  <description>
-    Scaled velocity-based joint trajectory controller
-  </description>
-  </class>
-  <class name="velocity_controllers/ScaledJointTrajectoryController" type="velocity_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerBase">
-  <description>
-    Scaled velocity-based joint trajectory controller
-  </description>
+<library path="ur_controllers">
+  <class name="ur_controllers/ForceTorqueStateController" type="ur_controllers::ForceTorqueStateController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      The force torque state controller publishes the current force and torques
+    </description>
   </class>
 </library>
+<!--<library path="lib/libur_controllers">-->
+<!--<class name="ur_controllers/SpeedScalingStateController" type="ur_controllers::SpeedScalingStateController" base_class_type="controller_interface::ControllerBase">-->
+<!--<description>-->
+<!--This controller publishes the readings of all available speed scaling factors.-->
+<!--</description>-->
+<!--</class>-->
+<!--<class name="position_controllers/ScaledJointTrajectoryController" type="position_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerBase">-->
+<!--<description>-->
+<!--Scaled velocity-based joint trajectory controller-->
+<!--</description>-->
+<!--</class>-->
+<!--<class name="velocity_controllers/ScaledJointTrajectoryController" type="velocity_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerBase">-->
+<!--<description>-->
+<!--Scaled velocity-based joint trajectory controller-->
+<!--</description>-->
+<!--</class>-->
+<!--</library>-->
