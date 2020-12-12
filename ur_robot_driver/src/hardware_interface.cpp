@@ -41,11 +41,15 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   info_ = system_info;
 
   // resize and initialize
-  position_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  position_commands_.resize(info_.joints.size(), 0.0);
   position_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  velocity_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  velocity_commands_.resize(info_.joints.size(), 0.0);
   velocity_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   joint_efforts_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+
+  // auxiliary vectors
+  position_commands_old_.resize(info_.joints.size(), 0.0);
+  velocity_commands_old_.resize(info_.joints.size(), 0.0);
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
@@ -380,16 +384,38 @@ return_type URPositionHardwareInterface::write()
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_))
   {
-    for (uint i = 0; i < info_.joints.size(); ++i)
-    {
-      urcl_position_commands_[i] = position_commands_[i];
-      urcl_velocity_commands_[i] = velocity_commands_[i];
-    }
+    memcpy(&urcl_position_commands_[0], &position_commands_[0], 6 * sizeof(double));
+    memcpy(&urcl_velocity_commands_[0], &velocity_commands_[0], 6 * sizeof(double));
 
-    // TODO decide when to MODE_SERVOJ and MODE_SPEEDJ based on the active controller
-    ur_driver_->writeKeepalive();
-    //    ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
-    //  ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
+    // create a position difference vector
+    std::vector<double> pos_diff;
+
+    std::function<double(double, double)> substractor = [](double a, double b) { return a - b; };
+    std::transform(position_commands_.begin(), position_commands_.end(), position_commands_old_.begin(),
+                   pos_diff.begin(), substractor);
+
+    // create a velocity difference vector
+    std::vector<double> vel_diff;
+    std::transform(velocity_commands_.begin(), velocity_commands_.end(), velocity_commands_old_.begin(),
+                   vel_diff.begin(), substractor);
+
+    double pos_diff_sum = 0.0;
+    double vel_diff_sum = 0.0;
+    std::for_each(pos_diff.begin(), pos_diff.end(), [&pos_diff_sum](double a) { return pos_diff_sum += a; });
+    std::for_each(vel_diff.begin(), vel_diff.end(), [&vel_diff_sum](double a) { return vel_diff_sum += a; });
+
+    if (pos_diff_sum != 0.0)
+    {
+      ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
+    }
+    else if (vel_diff_sum != 0.0)
+    {
+      ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
+    }
+    else
+    {
+      ur_driver_->writeKeepalive();
+    }
 
     packet_read_ = false;
 
