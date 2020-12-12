@@ -392,11 +392,13 @@ return_type URPositionHardwareInterface::write()
 
     // create a position difference vector
     std::vector<double> pos_diff;
+    pos_diff.resize(position_commands_.size());
     std::transform(position_commands_.begin(), position_commands_.end(), position_commands_old_.begin(),
                    pos_diff.begin(), substractor);
 
     // create a velocity difference vector
     std::vector<double> vel_diff;
+    vel_diff.resize(velocity_commands_.size());
     std::transform(velocity_commands_.begin(), velocity_commands_.end(), velocity_commands_old_.begin(),
                    vel_diff.begin(), substractor);
 
