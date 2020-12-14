@@ -383,12 +383,12 @@ return_type URPositionHardwareInterface::read()
 
 return_type URPositionHardwareInterface::write()
 {
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
-
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_))
   {
+    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
+
     memcpy(&urcl_position_commands_[0], &position_commands_[0], 6 * sizeof(double));
     memcpy(&urcl_velocity_commands_[0], &velocity_commands_[0], 6 * sizeof(double));
 
