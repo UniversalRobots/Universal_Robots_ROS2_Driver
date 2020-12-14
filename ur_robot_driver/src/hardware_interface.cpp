@@ -47,6 +47,11 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   velocity_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   joint_efforts_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
+  // ft sensor values init
+  ft_sensor_measurements_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  // tcp pose reading
+  ft_sensor_measurements_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+
   // auxiliary vectors
   position_commands_old_.resize(info_.joints.size(), 0.0);
   velocity_commands_old_.resize(info_.joints.size(), 0.0);
