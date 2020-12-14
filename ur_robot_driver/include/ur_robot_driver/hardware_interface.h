@@ -107,7 +107,8 @@ protected:
   std::vector<double> position_commands_, position_states_, position_commands_old_;
   std::vector<double> velocity_commands_, velocity_states_, velocity_commands_old_;
   std::vector<double> joint_efforts_;
-  std::vector<double> ft_sensor_measurements_ std::vector<double> tcp_pose_reading_;
+  std::vector<double> ft_sensor_measurements_;
+  std::vector<double> tcp_pose_reading_;
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_velocity_commands_;
