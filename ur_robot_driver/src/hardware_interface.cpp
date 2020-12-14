@@ -433,6 +433,10 @@ return_type URPositionHardwareInterface::write()
   {
     // TODO could not read form the driver --> reset controllers
   }
+
+  // remember old values
+  memcpy(&position_commands_old_[0], &position_commands_[0], 6 * sizeof(double));
+  memcpy(&velocity_commands_old_[0], &velocity_commands_[0], 6 * sizeof(double));
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
