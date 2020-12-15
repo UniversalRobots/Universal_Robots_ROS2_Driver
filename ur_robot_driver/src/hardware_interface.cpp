@@ -180,7 +180,7 @@ return_type URPositionHardwareInterface::start()
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
   // not used with combined_robot_hw can suppress important errors and affect real-time performance.
-  bool non_blocking_read_ = static_cast<bool>(stoi(info_.hardware_parameters["non_blocking_read"]));
+  non_blocking_read_ = static_cast<bool>(stoi(info_.hardware_parameters["non_blocking_read"]));
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
