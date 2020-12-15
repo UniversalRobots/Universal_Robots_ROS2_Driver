@@ -427,16 +427,17 @@ return_type URPositionHardwareInterface::write()
 
     packet_read_ = false;
 
+    // remember old values
+    memcpy(&position_commands_old_[0], &position_commands_[0], 6 * sizeof(double));
+    memcpy(&velocity_commands_old_[0], &velocity_commands_[0], 6 * sizeof(double));
+
     return return_type::OK;
   }
   else
   {
     // TODO could not read form the driver --> reset controllers
+    return return_type::ERROR;
   }
-
-  // remember old values
-  memcpy(&position_commands_old_[0], &position_commands_[0], 6 * sizeof(double));
-  memcpy(&velocity_commands_old_[0], &velocity_commands_[0], 6 * sizeof(double));
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
