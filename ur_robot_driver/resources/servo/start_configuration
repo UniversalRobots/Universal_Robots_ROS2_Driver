@@ -1,0 +1,7 @@
+ros2 topic pub --rate 2 /forward_command_controller_position/commands std_msgs/msg/Float64MultiArray "data:
+- 0.5
+- -2.0
+- 2.0
+- 0.0
+- 1.57
+- 0.0"
