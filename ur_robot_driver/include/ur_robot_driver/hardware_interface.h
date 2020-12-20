@@ -104,23 +104,19 @@ protected:
   HardwareInfo info_;
   status status_;
 
-  std::vector<double> position_commands_, position_states_, position_commands_old_;
-  std::vector<double> velocity_commands_, velocity_states_, velocity_commands_old_;
-  std::vector<double> joint_efforts_;
-  std::vector<double> ft_sensor_measurements_;
-  std::vector<double> tcp_pose_reading_;
-
   urcl::vector6d_t urcl_position_commands_;
+  urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
+  urcl::vector6d_t urcl_velocity_commands_old_;
   urcl::vector6d_t urcl_joint_positions_;
   urcl::vector6d_t urcl_joint_velocities_;
   urcl::vector6d_t urcl_joint_efforts_;
+  urcl::vector6d_t urcl_ft_sensor_measurements_;
+  urcl::vector6d_t urcl_tcp_pose_;
   bool packet_read_;
 
   uint32_t runtime_state_;
 
-  urcl::vector6d_t fts_measurements_;
-  urcl::vector6d_t tcp_pose_;
   std::bitset<18> actual_dig_out_bits_;
   std::bitset<18> actual_dig_in_bits_;
   std::array<double, 2> standard_analog_input_;
@@ -135,7 +131,6 @@ protected:
   double speed_scaling_;
   double target_speed_fraction_;
   double speed_scaling_combined_;
-  std::vector<std::string> joint_names_;
   int32_t robot_mode_;
   int32_t safety_mode_;
   std::bitset<4> robot_status_bits_;

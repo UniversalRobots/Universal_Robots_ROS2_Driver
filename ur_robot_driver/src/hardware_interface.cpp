@@ -25,7 +25,7 @@
  */
 //----------------------------------------------------------------------
 #include <ur_robot_driver/hardware_interface.h>
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
 
 #include <ur_client_library/ur/tool_communication.h>
 #include <ur_client_library/exceptions.h>
@@ -40,21 +40,14 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
 {
   info_ = system_info;
 
-  // resize and initialize
-  position_commands_.resize(info_.joints.size(), 0.0);
-  position_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  velocity_commands_.resize(info_.joints.size(), 0.0);
-  velocity_states_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  joint_efforts_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-
-  // ft sensor values init
-  ft_sensor_measurements_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  // tcp pose reading
-  ft_sensor_measurements_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-
-  // auxiliary vectors
-  position_commands_old_.resize(info_.joints.size(), 0.0);
-  velocity_commands_old_.resize(info_.joints.size(), 0.0);
+  // initialize
+  urcl_joint_positions_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
+  urcl_joint_velocities_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
+  urcl_joint_efforts_= { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
+  urcl_ft_sensor_measurements_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
+  urcl_tcp_pose_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
+  urcl_position_commands_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
+  urcl_velocity_commands_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
@@ -122,16 +115,16 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (uint i = 0; i < info_.joints.size(); i++)
+  for (size_t i = 0; i < info_.joints.size(); ++i)
   {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_states_[i]));
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
 
     state_interfaces.emplace_back(
-        hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &joint_efforts_[i]));
+        hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
   }
 
   return state_interfaces;
@@ -140,13 +133,13 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  for (uint i = 0; i < info_.joints.size(); i++)
+  for (size_t i = 0; i < info_.joints.size(); ++i)
   {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_position_commands_[i]));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_commands_[i]));
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
   }
 
   return command_interfaces;
@@ -188,11 +181,6 @@ return_type URPositionHardwareInterface::start()
   // Specify lookahead time for servoing to position in joint space.
   // A longer lookahead time can smooth the trajectory.
   double servoj_lookahead_time = stod(info_.hardware_parameters["servoj_lookahead_time"]);
-
-  // Whenever the runtime state of the "External Control" program node in the UR-program changes, a
-  // message gets published here. So this is equivalent to the information whether the robot accepts
-  // commands from ROS side.
-  //  program_state_pub_ = robot_hw_nh.advertise<std_msgs::Bool>("robot_program_running", 10, true);
 
   bool use_tool_communication = static_cast<bool>(stoi(info_.hardware_parameters["use_tool_communication"]));
 
@@ -347,15 +335,11 @@ return_type URPositionHardwareInterface::read()
     readData(data_pkg, "actual_qd", urcl_joint_velocities_);
     readData(data_pkg, "actual_current", urcl_joint_efforts_);
 
-    memcpy(&position_states_[0], &urcl_joint_positions_[0], 6 * sizeof(double));
-    memcpy(&velocity_states_[0], &urcl_joint_velocities_[0], 6 * sizeof(double));
-    memcpy(&joint_efforts_[0], &urcl_joint_efforts_[0], 6 * sizeof(double));
-
     readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
     readData(data_pkg, "speed_scaling", speed_scaling_);
     readData(data_pkg, "runtime_state", runtime_state_);
-    readData(data_pkg, "actual_TCP_force", fts_measurements_);
-    readData(data_pkg, "actual_TCP_pose", tcp_pose_);
+    readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
+    readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
     readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
     readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
     readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
@@ -391,22 +375,19 @@ return_type URPositionHardwareInterface::write()
   {
     RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Writing ...");
 
-    memcpy(&urcl_position_commands_[0], &position_commands_[0], 6 * sizeof(double));
-    memcpy(&urcl_velocity_commands_[0], &velocity_commands_[0], 6 * sizeof(double));
-
     // create a lambda substract functor
     std::function<double(double, double)> substractor = [](double a, double b) { return std::abs(a - b); };
 
     // create a position difference vector
     std::vector<double> pos_diff;
-    pos_diff.resize(position_commands_.size());
-    std::transform(position_commands_.begin(), position_commands_.end(), position_commands_old_.begin(),
+    pos_diff.resize(urcl_position_commands_.size());
+    std::transform(urcl_position_commands_.begin(), urcl_position_commands_.end(), urcl_position_commands_old_.begin(),
                    pos_diff.begin(), substractor);
 
     // create a velocity difference vector
     std::vector<double> vel_diff;
-    vel_diff.resize(velocity_commands_.size());
-    std::transform(velocity_commands_.begin(), velocity_commands_.end(), velocity_commands_old_.begin(),
+    vel_diff.resize(urcl_velocity_commands_.size());
+    std::transform(urcl_velocity_commands_.begin(), urcl_velocity_commands_.end(), urcl_velocity_commands_old_.begin(),
                    vel_diff.begin(), substractor);
 
     double pos_diff_sum = 0.0;
@@ -430,14 +411,14 @@ return_type URPositionHardwareInterface::write()
     packet_read_ = false;
 
     // remember old values
-    memcpy(&position_commands_old_[0], &position_commands_[0], 6 * sizeof(double));
-    memcpy(&velocity_commands_old_[0], &velocity_commands_[0], 6 * sizeof(double));
+    urcl_position_commands_old_ = urcl_position_commands_;
+    urcl_velocity_commands_old_ = urcl_velocity_commands_;
 
     return return_type::OK;
   }
   else
   {
-    // TODO could not read form the driver --> reset controllers
+    // TODO could not read from the driver --> reset controllers
     return return_type::ERROR;
   }
 }
