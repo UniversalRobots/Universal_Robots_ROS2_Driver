@@ -19,6 +19,7 @@
 //----------------------------------------------------------------------
 /*!\file
  *
+ * \author  Lovro Ivanov lovro.ivanov@gmail.com
  * \author  Andy Zelenak zelenak@picknik.ai
  * \date    2020-11-9
  *

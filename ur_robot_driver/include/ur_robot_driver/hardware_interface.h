@@ -19,7 +19,8 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
+ * \author  Lovro Ivanov lovro.ivanov@gmail.com
+ * \author  Andy Zelenak zelenak@picknik.ai
  * \date    2019-04-11
  *
  */
