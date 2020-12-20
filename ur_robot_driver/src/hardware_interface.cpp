@@ -41,13 +41,13 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   info_ = system_info;
 
   // initialize
-  urcl_joint_positions_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
-  urcl_joint_velocities_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
-  urcl_joint_efforts_= { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
-  urcl_ft_sensor_measurements_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
-  urcl_tcp_pose_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
-  urcl_position_commands_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
-  urcl_velocity_commands_ = { {0.0, 0.0, 0.0, 0.0, 0.0, 0.0} };
+  urcl_joint_positions_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_joint_velocities_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_joint_efforts_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
@@ -123,8 +123,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
 
-    state_interfaces.emplace_back(
-        hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
   }
 
   return state_interfaces;
