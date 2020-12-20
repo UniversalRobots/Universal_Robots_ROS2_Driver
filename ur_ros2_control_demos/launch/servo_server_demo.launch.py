@@ -30,15 +30,15 @@ def load_yaml(package_name, file_path):
 def generate_launch_description():
 
     ur5_controller = os.path.join(
-        get_package_share_directory('ur_robot_driver'),
-        'resources',
+        get_package_share_directory('ur_ros2_control_demos'),
+        'config',
         'ur5_system_position_only.yaml'
     )
 
     # Get URDF via xacro
     robot_description_path = os.path.join(
-        get_package_share_directory('ur_robot_driver'),
-        'resources',
+        get_package_share_directory('ur_ros2_control_demos'),
+        'urdf',
         'ur5.urdf.xacro')
     robot_description_config = xacro.process_file(robot_description_path)
     robot_description = {'robot_description': robot_description_config.toxml()}
@@ -48,11 +48,11 @@ def generate_launch_description():
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
 
     # Get parameters for the Servo node
-    servo_yaml = load_yaml('ur_robot_driver', 'resources/servo/ur5_simulated_config.yaml')
+    servo_yaml = load_yaml('ur_ros2_control_demos', 'config/ur5_simulated_config.yaml')
     servo_params = { 'moveit_servo' : servo_yaml }
 
     # RViz
-    rviz_config_file = get_package_share_directory('ur_robot_driver') + "/resources/servo/demo_rviz_config.rviz"
+    rviz_config_file = get_package_share_directory('ur_ros2_control_demos') + "/config/rviz/demo_rviz_config.rviz"
     rviz_node = Node(package='rviz2',
                      executable='rviz2',
                      name='rviz2',
