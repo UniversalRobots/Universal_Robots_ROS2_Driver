@@ -87,9 +87,9 @@ public:
 
   /*!
    * \brief Callback to handle a change in the current state of the URCaps program running on the
-   * robot.
+   * robot. Executed only on the state change.
    *
-   * \param program_running The new state of the program
+   * \param program_running True when the URCap program is running on the robot.
    */
   void handleRobotProgramState(bool program_running);
 
