@@ -107,8 +107,6 @@
         <state_interface name="effort"/>
       </joint>
     </ros2_control>
-
   </xacro:macro>
 
 </robot>
-
