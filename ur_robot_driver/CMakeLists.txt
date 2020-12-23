@@ -68,6 +68,11 @@ add_executable(dashboard_client
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+install(
+        TARGETS dashboard_client
+        DESTINATION lib/${PROJECT_NAME}
+)
+
 # add_executable(robot_state_helper
 #   src/robot_state_helper.cpp
 #   src/robot_state_helper_node.cpp
@@ -80,6 +85,25 @@ ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} $
 #   LIBRARY DESTINATION lib}
 #   RUNTIME DESTINATION bin}
 # )
+
+# INSTALL
+install(
+        TARGETS ur_robot_driver_plugin
+        DESTINATION lib
+)
+install(
+        DIRECTORY include/
+        DESTINATION include
+)
+
+
+## EXPORTS
+ament_export_include_directories(
+        include
+)
+ament_export_libraries(
+        ur_robot_driver_plugin
+)
 
 install(PROGRAMS scripts/tool_communication
   DESTINATION bin
@@ -94,6 +118,11 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_dependencies(
+        hardware_interface
+        pluginlib
+        rclcpp
+        ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
 
 ament_package()
