@@ -1,4 +1,4 @@
-?xml version="1.0"?>
+<?xml version="1.0"?>
 <robot name="ur5" xmlns:xacro="http://wiki.ros.org/xacro">
 
   <link name="base_link" >
