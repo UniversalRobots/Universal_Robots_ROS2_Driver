@@ -34,7 +34,8 @@ int main(int argc, char** argv)
   rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("ur_dashboard_client");
 
   // The IP address under which the robot is reachable.
-  const std::string robot_ip = node->declare_parameter<std::string>("robot_ip", "192.168.56.101");
+  std::string robot_ip = node->declare_parameter<std::string>("robot_ip", "192.168.56.101");
+  node->get_parameter<std::string>("robot_ip", robot_ip);
 
   ur_robot_driver::DashboardClientROS client(node, robot_ip);
 

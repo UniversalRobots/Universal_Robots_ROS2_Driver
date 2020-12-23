@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<robot name="ur5" xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <link name="base_link" >
+    <visual>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/visual/base.dae" />
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/collision/base.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="shoulder_pan_joint" type="revolute">
+    <parent link="base_link" />
+    <child link = "shoulder_link" />
+    <origin xyz="0.0 0.0 0.089159" rpy="0.0 0.0 0.0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-6.283185308" upper="6.283185308" effort="150.0" velocity="3.15"/>
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+
+  <link name="shoulder_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/visual/shoulder.dae" />
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/collision/shoulder.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="shoulder_lift_joint" type="revolute">
+    <parent link="shoulder_link" />
+    <child link = "upper_arm_link" />
+    <origin xyz="0.0 0.13585 0.0" rpy="0.0 1.57079632679 0.0" />
+    <axis xyz="0 1 0" />
+    <limit lower="-6.28318530718" upper="6.28318530718" effort="150.0" velocity="3.15"/>
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+
+  <link name="upper_arm_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/visual/upperarm.dae" />
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/collision/upperarm.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm_link" />
+    <child link = "forearm_link" />
+    <origin xyz="0.0 -0.1197 0.42500" rpy="0.0 0.0 0.0" />
+    <axis xyz="0 1 0" />
+    <limit lower="-3.141592654" upper="3.141592654" effort="150.0" velocity="3.15"/>
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+
+  <link name="forearm_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/visual/forearm.dae" />
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/collision/forearm.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wrist_1_joint" type="revolute">
+    <parent link="forearm_link" />
+    <child link = "wrist_1_link" />
+    <origin xyz="0.0 0.0 0.39225" rpy="0.0 1.57079632679  0.0" />
+    <axis xyz="0 1 0" />
+    <limit lower="-6.28318530718" upper="6.28318530718" effort="28.0" velocity="3.2"/>
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+
+  <link name="wrist_1_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/visual/wrist1.dae" />
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/collision/wrist1.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wrist_2_joint" type="revolute">
+    <parent link="wrist_1_link" />
+    <child link = "wrist_2_link" />
+    <origin xyz="0.0 0.093 0.0" rpy="0.0 0.0 0.0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-6.28318530718" upper="6.28318530718" effort="28.0" velocity="3.2"/>
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+
+  <link name="wrist_2_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/visual/wrist2.dae" />
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/collision/wrist2.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wrist_3_joint" type="revolute">
+    <parent link="wrist_2_link" />
+    <child link = "wrist_3_link" />
+    <origin xyz="0.0 0.0 0.09465" rpy="0.0 0.0 0.0" />
+    <axis xyz="0 1 0" />
+    <limit lower="-6.28318530718" upper="6.28318530718" effort="28.0" velocity="3.2"/>
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+
+  <link name="wrist_3_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/visual/wrist3.dae" />
+      </geometry>
+      <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://ur_description/meshes/ur5/collision/wrist3.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="ee_fixed_joint" type="fixed">
+    <parent link="wrist_3_link" />
+    <child link = "ee_link" />
+    <origin xyz="0.0 0.0823 0.0" rpy="0.0 0.0 1.57079632679 " />
+  </joint>
+
+  <link name="ee_link">
+    <collision>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="-0.01 0 0"/>
+    </collision>
+  </link>
+
+  <!-- ROS base_link to UR 'Base' Coordinates transform -->
+  <link name="base"/>
+  <joint name="base_link-base_fixed_joint" type="fixed">
+    <!-- NOTE: this rotation is only needed as long as base_link itself is
+               not corrected wrt the real robot (ie: rotated over 180
+               degrees)
+    -->
+    <origin xyz="0 0 0" rpy="0 0 -3.141592654"/>
+    <parent link="base_link"/>
+    <child link="base"/>
+  </joint>
+
+  <!-- Frame coincident with all-zeros TCP on UR controller -->
+  <link name="tool0"/>
+  <joint name="wrist_3_link-tool0_fixed_joint" type="fixed">
+    <origin xyz="0 0.0823 0" rpy="1.57079632679 0 0"/>
+    <parent link="wrist_3_link"/>
+    <child link="tool0"/>
+  </joint>
+
+ <!-- Import ur5 ros2_control description -->
+ <xacro:include filename="ur5_system_position_only.ros2_control.xacro" />
+ <xacro:ur5_system_position_only name="URPositionHardwareInterface" prefix="" />
+
+</robot>
