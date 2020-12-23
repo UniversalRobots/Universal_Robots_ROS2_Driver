@@ -10,7 +10,7 @@ def generate_launch_description():
             output="screen",
             emulate_tty=True,
             parameters=[
-                {"robot_ip": "000.000.000.000"}
+                {"robot_ip": "10.0.1.186"}
             ]
         )
     ])
