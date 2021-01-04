@@ -5,6 +5,27 @@
   <!-- ur5 -->
   <xacro:include filename="$(find ur_description)/urdf/ur5.urdf.xacro" />
 
+  <!-- ros2 control argument-->
+  <xacro:arg name="use_ros2_control" default="false"/>
+
+  <xacro:if value="$(arg use_ros2_control)" >
+    <!-- other ros2 control arguments -->
+    <xacro:arg name="script_filename" default="$(find ur_robot_driver)/resources/ros_control.urscript"/>
+    <xacro:arg name="output_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_output_recipe.txt"/>
+    <xacro:arg name="input_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
+    <xacro:arg name="robot_ip" default="10.0.1.186"/>
+    <!-- ros2 control include -->
+    <xacro:include filename="$(find ur_ros2_control_demos)/urdf/ur5_system_position_only.ros2_control.xacro" />
+    <!-- ros2 control instance -->
+    <xacro:ur5_system_position_only name="URPositionHardwareInterface" prefix=""
+                                    script_filename="$(arg script_filename)"
+                                    output_recipe_filename="$(arg output_recipe_filename)"
+                                    input_recipe_filename="$(arg input_recipe_filename)"
+                                    tf_prefix=""
+                                    hash_kinematics=""
+                                    robot_ip="$(arg robot_ip)" />
+  </xacro:if>
+
   <!-- arm -->
   <xacro:ur5_robot prefix="" joint_limited="false" />
 
