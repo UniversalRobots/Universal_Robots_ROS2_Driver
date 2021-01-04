@@ -37,10 +37,35 @@ def generate_launch_description():
 
     # Get URDF via xacro
     robot_description_path = os.path.join(
-        get_package_share_directory('ur_ros2_control_demos'),
+        get_package_share_directory('ur_description'),
         'urdf',
-        'ur5.urdf.xacro')
-    robot_description_config = xacro.process_file(robot_description_path)
+        'ur5_robot.urdf.xacro')
+
+    script_filename = os.path.join(
+        get_package_share_directory('ur_robot_driver'),
+        'resources',
+        'ros_control.urscript')
+
+    input_recipe_filename = os.path.join(
+        get_package_share_directory('ur_robot_driver'),
+        'resources',
+        'rtde_output_recipe.txt')
+
+    output_recipe_filename = os.path.join(
+        get_package_share_directory('ur_robot_driver'),
+        'resources',
+        'rtde_input_recipe.txt')
+
+    use_ros2_control = True
+
+    robot_description_config = xacro.process_file(robot_description_path,
+                                                  mappings={'use_ros2_control': 'true' if use_ros2_control else 'false',
+                                                            'script_filename': script_filename,
+                                                            'input_recipe_filename': input_recipe_filename,
+                                                            'output_recipe_filename': output_recipe_filename,
+                                                            'robot_ip': '10.0.1.186'}
+                                                  )
+
     robot_description = {'robot_description': robot_description_config.toxml()}
 
     # Get SRDF
@@ -48,7 +73,7 @@ def generate_launch_description():
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
 
     # Get parameters for the Servo node
-    servo_yaml = load_yaml('ur_ros2_control_demos', 'config/ur5_simulated_config.yaml')
+    servo_yaml = load_yaml('ur_ros2_control_demos', 'config/ur5_servo_config.yaml')
     servo_params = { 'moveit_servo' : servo_yaml }
 
     # RViz
@@ -85,16 +110,14 @@ def generate_launch_description():
             output='screen',
     )
     
-    # return LaunchDescription([ , container ])
+    ros2_control_node = Node(
+        package='controller_manager',
+        executable='ros2_control_node',
+        parameters=[robot_description, ur5_controller],
+        output={
+            'stdout': 'screen',
+            'stderr': 'screen',
+        },
+    )
 
-    return LaunchDescription([
-        Node(
-            package='controller_manager',
-            executable='ros2_control_node',
-            parameters=[robot_description, ur5_controller],
-            output={
-                'stdout': 'screen',
-                'stderr': 'screen',
-            },
-        ), rviz_node, robot_state_pub_node, container
-    ])
+    return LaunchDescription([ros2_control_node, rviz_node, robot_state_pub_node, container])
