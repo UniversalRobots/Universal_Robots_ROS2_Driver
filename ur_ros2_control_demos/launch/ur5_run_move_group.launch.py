@@ -5,6 +5,7 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 import xacro
 
+
 def load_file(package_name, file_path):
     package_path = get_package_share_directory(package_name)
     absolute_file_path = os.path.join(package_path, file_path)
@@ -14,6 +15,7 @@ def load_file(package_name, file_path):
             return file.read()
     except EnvironmentError: # parent of IOError, OSError *and* WindowsError where available
         return None
+
 
 def load_yaml(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -30,10 +32,35 @@ def generate_launch_description():
 
     # planning_context
     robot_description_path = os.path.join(
+        get_package_share_directory('ur_description'),
+        'urdf',
+        'ur5_robot.urdf.xacro')
+
+    script_filename = os.path.join(
         get_package_share_directory('ur_robot_driver'),
         'resources',
-        'ur5.urdf.xacro')
-    robot_description_config = xacro.process_file(robot_description_path)
+        'ros_control.urscript')
+
+    input_recipe_filename = os.path.join(
+        get_package_share_directory('ur_robot_driver'),
+        'resources',
+        'rtde_output_recipe.txt')
+
+    output_recipe_filename = os.path.join(
+        get_package_share_directory('ur_robot_driver'),
+        'resources',
+        'rtde_input_recipe.txt')
+
+    use_ros2_control = True
+
+    robot_description_config = xacro.process_file(robot_description_path,
+                                                  mappings={'use_ros2_control': 'true' if use_ros2_control else 'false',
+                                                            'script_filename': script_filename,
+                                                            'input_recipe_filename': input_recipe_filename,
+                                                            'output_recipe_filename': output_recipe_filename,
+                                                            'robot_ip': '10.0.1.186'}
+                                                   )
+
     robot_description = {'robot_description': robot_description_config.toxml()}
 
     robot_description_semantic_config = load_file('ur5_moveit_config', 'config/ur5.srdf')
@@ -71,7 +98,7 @@ def generate_launch_description():
                                output='screen',
                                parameters=[robot_description,
                                            robot_description_semantic,
-                                           kinematics_yaml,
+                                           robot_description_kinematics,
                                            ompl_planning_pipeline_config,
                                            trajectory_execution,
                                            moveit_controllers,
@@ -87,7 +114,7 @@ def generate_launch_description():
                      parameters=[robot_description,
                                  robot_description_semantic,
                                  ompl_planning_pipeline_config,
-                                 kinematics_yaml])
+                                 robot_description_kinematics])
 
     # Static TF
     static_tf = Node(package='tf2_ros',
@@ -127,4 +154,9 @@ def generate_launch_description():
         },
     )
 
-    return LaunchDescription([ rviz_node, static_tf, robot_state_publisher, run_move_group_node, mongodb_server_node, ros2_control_node ])
+    if use_ros2_control:
+        return LaunchDescription([rviz_node, static_tf, robot_state_publisher,
+                                  run_move_group_node, mongodb_server_node, ros2_control_node])
+    else:
+        return LaunchDescription([rviz_node, static_tf, robot_state_publisher,
+                                  run_move_group_node, mongodb_server_node])
