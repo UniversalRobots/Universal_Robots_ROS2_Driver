@@ -41,17 +41,18 @@ def generate_launch_description():
         'urdf',
         'ur5_robot.urdf.xacro')
 
+    # UR driver configuration files
     script_filename = os.path.join(
         get_package_share_directory('ur_robot_driver'),
         'resources',
         'ros_control.urscript')
 
-    input_recipe_filename = os.path.join(
+    output_recipe_filename = os.path.join(
         get_package_share_directory('ur_robot_driver'),
         'resources',
         'rtde_output_recipe.txt')
 
-    output_recipe_filename = os.path.join(
+    input_recipe_filename = os.path.join(
         get_package_share_directory('ur_robot_driver'),
         'resources',
         'rtde_input_recipe.txt')

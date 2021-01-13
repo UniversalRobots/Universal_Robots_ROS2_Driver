@@ -49,12 +49,12 @@ def generate_launch_description():
     input_recipe_filename = os.path.join(
         get_package_share_directory('ur_robot_driver'),
         'resources',
-        'rtde_output_recipe.txt')
+        'rtde_input_recipe.txt')
 
     output_recipe_filename = os.path.join(
         get_package_share_directory('ur_robot_driver'),
         'resources',
-        'rtde_input_recipe.txt')
+        'rtde_output_recipe.txt')
 
     use_ros2_control = True
 
