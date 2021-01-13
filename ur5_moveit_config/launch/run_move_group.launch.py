@@ -73,7 +73,7 @@ def generate_launch_description():
                                            planning_scene_monitor_parameters])
 
     # RViz
-    rviz_config_file = get_package_share_directory('ur_description') + "/config/view_robot.rviz"
+    rviz_config_file = get_package_share_directory('ur_description') + "/cfg/view_robot.rviz"
     rviz_node = Node(package='rviz2',
                      executable='rviz2',
                      name='rviz2',
