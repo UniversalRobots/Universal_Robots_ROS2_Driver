@@ -215,5 +215,8 @@
     <xacro:property name="wrist_3_visual_material_color" value="${__wrist_3_mesh['visual']['material']['color']}" scope="parent"/>
     <xacro:property name="wrist_3_collision_mesh" value="${__wrist_3_mesh['collision']['mesh']}" scope="parent"/>
     <xacro:property name="wrist_3_visual_offset" value="${__wrist_3_mesh['visual_offset']}" scope="parent"/>
+
+    <!--KINEMATICS HASH-->
+    <xacro:property name="kinematics_hash" value="${__kinematics['hash']}" scope="parent"/>
   </xacro:macro>
 </robot>
