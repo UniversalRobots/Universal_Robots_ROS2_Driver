@@ -28,8 +28,41 @@ def load_yaml(package_name, file_path):
 def generate_launch_description():
 
     # planning_context
-    robot_description_config = load_file('ur_description', 'urdf/ur5.urdf.xacro')
-    robot_description = {'robot_description' : robot_description_config}
+    # set ur robot
+    robot_name = 'ur5'
+
+    # <robot_name> parameters files
+    joint_limits_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                       robot_name, 'joint_limits.yaml')
+    kinematics_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                     robot_name, 'default_kinematics.yaml')
+    physical_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                   robot_name, 'physical_parameters.yaml')
+    visual_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                 robot_name, 'visual_parameters.yaml')
+
+    # common parameters
+    # If True, enable the safety limits controller
+    safety_limits = False
+    # The lower/upper limits in the safety controller
+    safety_pos_margin = 0.15
+    # Used to set k position in the safety controller
+    safety_k_position = 20
+
+    # Get URDF via xacro
+    robot_description_path = os.path.join(get_package_share_directory('ur_description'), 'urdf', 'ur.xacro')
+
+    robot_description_config = xacro.process_file(robot_description_path,
+                                                  mappings={'joint_limit_params': joint_limits_params,
+                                                            'kinematics_params': kinematics_params,
+                                                            'physical_params': physical_params,
+                                                            'visual_params': visual_params,
+                                                            'safety_limits': str(safety_limits).lower(),
+                                                            'safety_pos_margin': str(safety_pos_margin),
+                                                            'safety_k_position': str(safety_k_position)}
+                                                  )
+
+    robot_description = {'robot_description': robot_description_config.toxml()}
 
     robot_description_semantic_config = load_file('ur5_moveit_config', 'config/ur5.srdf')
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
