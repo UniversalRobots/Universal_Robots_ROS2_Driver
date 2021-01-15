@@ -30,11 +30,28 @@ def load_yaml(package_name, file_path):
 
 def generate_launch_description():
 
-    # planning_context
-    robot_description_path = os.path.join(
-        get_package_share_directory('ur_description'),
-        'urdf',
-        'ur5_robot.urdf.xacro')
+    # set ur robot
+    robot_name = 'ur5e'
+
+    # <robot_name> parameters files
+    joint_limits_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                       robot_name, 'joint_limits.yaml')
+    kinematics_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                     robot_name, 'default_kinematics.yaml')
+    physical_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                   robot_name, 'physical_parameters.yaml')
+    visual_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
+                                 robot_name, 'visual_parameters.yaml')
+
+    # common parameters
+    # If True, enable the safety limits controller
+    safety_limits = False
+    # The lower/upper limits in the safety controller
+    safety_pos_margin = 0.15
+    # Used to set k position in the safety controller
+    safety_k_position = 20
+
+    use_ros2_control = True
 
     script_filename = os.path.join(
         get_package_share_directory('ur_robot_driver'),
@@ -51,22 +68,30 @@ def generate_launch_description():
         'resources',
         'rtde_output_recipe.txt')
 
-    use_ros2_control = True
+    # Get URDF via xacro
+    robot_description_path = os.path.join(get_package_share_directory('ur_description'), 'urdf', 'ur.xacro')
 
     robot_description_config = xacro.process_file(robot_description_path,
-                                                  mappings={'use_ros2_control': 'true' if use_ros2_control else 'false',
+                                                  mappings={'joint_limit_params': joint_limits_params,
+                                                            'kinematics_params': kinematics_params,
+                                                            'physical_params': physical_params,
+                                                            'visual_params': visual_params,
+                                                            'safety_limits': str(safety_limits).lower(),
+                                                            'safety_pos_margin': str(safety_pos_margin),
+                                                            'safety_k_position': str(safety_k_position),
+                                                            'use_ros2_control': str(use_ros2_control).lower(),
                                                             'script_filename': script_filename,
                                                             'input_recipe_filename': input_recipe_filename,
                                                             'output_recipe_filename': output_recipe_filename,
                                                             'robot_ip': '10.0.1.186'}
-                                                   )
+                                                  )
 
     robot_description = {'robot_description': robot_description_config.toxml()}
 
-    robot_description_semantic_config = load_file('ur5_moveit_config', 'config/ur5.srdf')
+    robot_description_semantic_config = load_file(robot_name + '_moveit_config', 'config/' + robot_name + '.srdf')
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
 
-    kinematics_yaml = load_yaml('ur5_moveit_config', 'config/kinematics.yaml')
+    kinematics_yaml = load_yaml(robot_name + '_moveit_config', 'config/kinematics.yaml')
     robot_description_kinematics = { 'robot_description_kinematics' : kinematics_yaml }
 
     # Planning Functionality
@@ -74,7 +99,7 @@ def generate_launch_description():
         'planning_plugin' : 'ompl_interface/OMPLPlanner',
         'request_adapters' : """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""" ,
         'start_state_max_bounds_error' : 0.1 } }
-    ompl_planning_yaml = load_yaml('ur5_moveit_config', 'config/ompl_planning.yaml')
+    ompl_planning_yaml = load_yaml(robot_name + '_moveit_config', 'config/ompl_planning.yaml')
     ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
 
     # Trajectory Execution Functionality
@@ -138,7 +163,7 @@ def generate_launch_description():
                                            {'warehouse_plugin': 'warehouse_ros_mongo::MongoDatabaseConnection'}],
                                output='screen')
 
-    ur5_controller = os.path.join(
+    ur_controller = os.path.join(
         get_package_share_directory('ur_ros2_control_demos'),
         'config',
         'ur5_system_position_only.yaml'
@@ -147,7 +172,7 @@ def generate_launch_description():
     ros2_control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
-        parameters=[robot_description, ur5_controller],
+        parameters=[robot_description, ur_controller],
         output={
             'stdout': 'screen',
             'stderr': 'screen',
