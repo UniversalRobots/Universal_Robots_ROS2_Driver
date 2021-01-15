@@ -72,8 +72,31 @@
       physical_parameters_file="${physical_parameters_file}"
       visual_parameters_file="${visual_parameters_file}"/>
 
+    <!-- ros2 control argument-->
+    <xacro:arg name="use_ros2_control" default="true"/>
+
+    <xacro:if value="$(arg use_ros2_control)" >
+      <!-- Data files required by the UR driver -->
+      <xacro:arg name="script_filename" default="$(find ur_robot_driver)/resources/ros_control.urscript"/>
+      <xacro:arg name="output_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_output_recipe.txt"/>
+      <xacro:arg name="input_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
+      <xacro:arg name="robot_ip" default="10.0.1.186"/>
+      <!-- ros2 control include -->
+      <xacro:include filename="$(find ur_ros2_control_demos)/urdf/ur5_system_position_only.ros2_control.xacro" />
+      <!-- ros2 control instance -->
+      <xacro:ur5_system_position_only
+              name="URPositionHardwareInterface" prefix=""
+              script_filename="$(arg script_filename)"
+              output_recipe_filename="$(arg output_recipe_filename)"
+              input_recipe_filename="$(arg input_recipe_filename)"
+              tf_prefix=""
+              hash_kinematics="${kinematics_hash}"
+              robot_ip="$(arg robot_ip)" />
+    </xacro:if>
+
     <!-- Add URDF transmission elements (for ros_control) -->
-    <xacro:ur_arm_transmission prefix="${prefix}" hw_interface="${transmission_hw_interface}" />
+    <!--<xacro:ur_arm_transmission prefix="${prefix}" hw_interface="${transmission_hw_interface}" />-->
+    <!-- Placeholder for ros2_control transmission which don't yet exist -->
 
     <!-- links: main serial chain -->
     <link name="${prefix}base_link"/>
