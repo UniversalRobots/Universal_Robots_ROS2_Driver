@@ -33,13 +33,13 @@ def generate_launch_description():
 
     # <robot_name> parameters files
     joint_limits_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                       robot_name, 'joint_limits.yaml')
+                                       robot_name.replace('_', ''), 'joint_limits.yaml')
     kinematics_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                     robot_name, 'default_kinematics.yaml')
+                                     robot_name.replace('_', ''), 'default_kinematics.yaml')
     physical_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                   robot_name, 'physical_parameters.yaml')
+                                   robot_name.replace('_', ''), 'physical_parameters.yaml')
     visual_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                 robot_name, 'visual_parameters.yaml')
+                                 robot_name.replace('_', ''), 'visual_parameters.yaml')
 
     # common parameters
     # If True, enable the safety limits controller
@@ -59,7 +59,8 @@ def generate_launch_description():
                                                             'visual_params': visual_params,
                                                             'safety_limits': str(safety_limits).lower(),
                                                             'safety_pos_margin': str(safety_pos_margin),
-                                                            'safety_k_position': str(safety_k_position)}
+                                                            'safety_k_position': str(safety_k_position),
+                                                            'name': robot_name.replace('_', '')}
                                                   )
 
     robot_description = {'robot_description': robot_description_config.toxml()}
@@ -106,7 +107,7 @@ def generate_launch_description():
                                            planning_scene_monitor_parameters])
 
     # RViz
-    rviz_config_file = get_package_share_directory('ur_description') + "/cfg/view_robot.rviz"
+    rviz_config_file = get_package_share_directory('ur_description') + "/config/rviz/view_robot.rviz"
     rviz_node = Node(package='rviz2',
                      executable='rviz2',
                      name='rviz2',
