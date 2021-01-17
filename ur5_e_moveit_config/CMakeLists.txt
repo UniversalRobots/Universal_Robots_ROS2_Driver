@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ur5e_moveit_config)
+project(ur5_e_moveit_config)
 
 find_package(ament_cmake REQUIRED)
 
