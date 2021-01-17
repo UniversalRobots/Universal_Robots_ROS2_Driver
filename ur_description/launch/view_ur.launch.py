@@ -49,7 +49,8 @@ def generate_launch_description():
                                                             'visual_params': visual_params,
                                                             'safety_limits': str(safety_limits).lower(),
                                                             'safety_pos_margin': str(safety_pos_margin),
-                                                            'safety_k_position': str(safety_k_position)}
+                                                            'safety_k_position': str(safety_k_position),
+                                                            'name': robot_name.replace('_', '')}
                                                   )
 
     robot_description = {'robot_description': robot_description_config.toxml()}
