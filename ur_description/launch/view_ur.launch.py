@@ -19,17 +19,17 @@ def load_file(package_name, file_path):
 def generate_launch_description():
 
     # set ur robot
-    robot_name = 'ur5e'
+    robot_name = 'ur5_e'
 
     # <robot_name> parameters files
     joint_limits_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                       robot_name, 'joint_limits.yaml')
+                                       robot_name.replace('_', ''), 'joint_limits.yaml')
     kinematics_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                     robot_name, 'default_kinematics.yaml')
+                                     robot_name.replace('_', ''), 'default_kinematics.yaml')
     physical_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                   robot_name, 'physical_parameters.yaml')
+                                   robot_name.replace('_', ''), 'physical_parameters.yaml')
     visual_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
-                                 robot_name, 'visual_parameters.yaml')
+                                 robot_name.replace('_', ''), 'visual_parameters.yaml')
 
     # common parameters
     # If True, enable the safety limits controller
@@ -54,7 +54,8 @@ def generate_launch_description():
 
     robot_description = {'robot_description': robot_description_config.toxml()}
 
-    robot_description_semantic_config = load_file(robot_name + '_moveit_config', 'config/' + robot_name + '.srdf')
+    robot_description_semantic_config = load_file(robot_name + '_moveit_config', 'config/' +
+                                                  robot_name.replace('_', '') + '.srdf')
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
 
     # We do not have a robot connected, so publish fake joint states
@@ -73,7 +74,7 @@ def generate_launch_description():
 
     # RViz
     rviz_config_file = get_package_share_directory(
-        'ur_description') + "/cfg/view_robot.rviz"
+        'ur_description') + "/config/rviz/view_robot.rviz"
     rviz_node = Node(package='rviz2',
                      executable='rviz2',
                      name='rviz2',
