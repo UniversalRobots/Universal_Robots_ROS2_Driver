@@ -108,7 +108,6 @@ protected:
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
-  urcl::vector6d_t urcl_velocity_commands_old_;
   urcl::vector6d_t urcl_joint_positions_;
   urcl::vector6d_t urcl_joint_velocities_;
   urcl::vector6d_t urcl_joint_efforts_;
@@ -139,6 +138,8 @@ protected:
 
   bool robot_program_running_;
   bool non_blocking_read_;
+
+  bool position_interface_in_use_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
 };
