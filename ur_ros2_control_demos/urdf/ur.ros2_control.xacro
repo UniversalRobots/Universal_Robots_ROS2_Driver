@@ -109,6 +109,17 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
+      <sensor name="tcp_fts_sensor">
+        <state_interface name="fx"/>
+        <state_interface name="fy"/>
+        <state_interface name="fz"/>
+        <state_interface name="tx"/>
+        <state_interface name="ty"/>
+        <state_interface name="tz"/>
+        <param name="frame_id">tool0</param>
+        <param name="lower_limits">-100</param>
+        <param name="upper_limits">100</param>
+      </sensor>
     </ros2_control>
   </xacro:macro>
 
