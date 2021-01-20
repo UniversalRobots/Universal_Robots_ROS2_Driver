@@ -6,11 +6,23 @@
 
 namespace ur_controllers
 {
+
 ForceTorqueStateController::ForceTorqueStateController() : controller_interface::ControllerInterface()
 {
 }
 
-controller_interface::InterfaceConfiguration ForceTorqueStateController::command_interface_configuration() const
+    controller_interface::return_type ForceTorqueStateController::init(const std::string &controller_name) {
+
+      auto ret = ControllerInterface::init(controller_name);
+      if (ret != controller_interface::return_type::SUCCESS) {
+        return ret;
+      }
+
+      return controller_interface::return_type::SUCCESS;
+
+    }
+
+    controller_interface::InterfaceConfiguration ForceTorqueStateController::command_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::NONE;
@@ -76,12 +88,6 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
     }
   }
 
-  if (!wrench_state_publisher_->is_activated())
-  {
-    RCUTILS_LOG_WARN_ONCE_NAMED("publisher", "wrench state publisher is not activated");
-    return controller_interface::return_type::ERROR;
-  }
-
   // TODO set frame_id as parameter --> it includes tf listener within controller
   wrench_state_msg_.header.stamp = get_node()->get_clock()->now();
   wrench_state_msg_.header.frame_id = "tool0";
@@ -122,16 +128,12 @@ ForceTorqueStateController::on_activate(const rclcpp_lifecycle::State& /*previou
 
   init_sensor_state_msg();
 
-  wrench_state_publisher_->on_activate();
-
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ForceTorqueStateController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  wrench_state_publisher_->on_deactivate();
-
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
