@@ -83,7 +83,7 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
   }
 
   // TODO set frame_id as parameter --> it includes tf listener within controller
-  wrench_state_msg_.header.stamp = lifecycle_node_->get_clock()->now();
+  wrench_state_msg_.header.stamp = get_node()->get_clock()->now();
   wrench_state_msg_.header.frame_id = "tool0";
 
   // update wrench state message
@@ -103,7 +103,7 @@ ForceTorqueStateController::on_configure(const rclcpp_lifecycle::State& /*previo
   {
     // TODO make topic name a parameter
     wrench_state_publisher_ =
-        lifecycle_node_->create_publisher<geometry_msgs::msg::WrenchStamped>("ft_data", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>("ft_data", rclcpp::SystemDefaultsQoS());
   }
   catch (...)
   {
