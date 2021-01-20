@@ -3,6 +3,7 @@ import yaml
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+import xacro
 
 def load_file(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -29,7 +30,7 @@ def generate_launch_description():
 
     # planning_context
     # set ur robot
-    robot_name = 'ur5'
+    robot_name = 'ur5_e'
 
     # <robot_name> parameters files
     joint_limits_params = os.path.join(get_package_share_directory('ur_description'), 'config/' +
@@ -65,10 +66,10 @@ def generate_launch_description():
 
     robot_description = {'robot_description': robot_description_config.toxml()}
 
-    robot_description_semantic_config = load_file('ur5_moveit_config', 'config/ur5.srdf')
+    robot_description_semantic_config = load_file('ur5_e_moveit_config', 'config/ur5e.srdf')
     robot_description_semantic = {'robot_description_semantic' : robot_description_semantic_config}
 
-    kinematics_yaml = load_yaml('ur5_moveit_config', 'config/kinematics.yaml')
+    kinematics_yaml = load_yaml('ur5_e_moveit_config', 'config/kinematics.yaml')
     robot_description_kinematics = { 'robot_description_kinematics' : kinematics_yaml }
 
     # Planning Functionality
@@ -76,7 +77,7 @@ def generate_launch_description():
         'planning_plugin' : 'ompl_interface/OMPLPlanner',
         'request_adapters' : """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""" ,
         'start_state_max_bounds_error' : 0.1 } }
-    ompl_planning_yaml = load_yaml('ur5_moveit_config', 'config/ompl_planning.yaml')
+    ompl_planning_yaml = load_yaml('ur5_e_moveit_config', 'config/ompl_planning.yaml')
     ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
 
     # Trajectory Execution Functionality
