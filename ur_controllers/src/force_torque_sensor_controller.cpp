@@ -6,23 +6,22 @@
 
 namespace ur_controllers
 {
-
 ForceTorqueStateController::ForceTorqueStateController() : controller_interface::ControllerInterface()
 {
 }
 
-    controller_interface::return_type ForceTorqueStateController::init(const std::string &controller_name) {
+controller_interface::return_type ForceTorqueStateController::init(const std::string& controller_name)
+{
+  auto ret = ControllerInterface::init(controller_name);
+  if (ret != controller_interface::return_type::SUCCESS)
+  {
+    return ret;
+  }
 
-      auto ret = ControllerInterface::init(controller_name);
-      if (ret != controller_interface::return_type::SUCCESS) {
-        return ret;
-      }
+  return controller_interface::return_type::SUCCESS;
+}
 
-      return controller_interface::return_type::SUCCESS;
-
-    }
-
-    controller_interface::InterfaceConfiguration ForceTorqueStateController::command_interface_configuration() const
+controller_interface::InterfaceConfiguration ForceTorqueStateController::command_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::NONE;

@@ -33,7 +33,7 @@ public:
 
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
-    controller_interface::return_type init(const std::string &controller_name) override;
+  controller_interface::return_type init(const std::string& controller_name) override;
 
 protected:
   bool init_sensor_data();
