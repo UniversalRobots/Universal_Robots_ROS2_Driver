@@ -138,7 +138,6 @@ protected:
 
   bool robot_program_running_;
   bool non_blocking_read_;
-
   bool position_interface_in_use_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
