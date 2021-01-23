@@ -393,7 +393,8 @@ return_type URPositionHardwareInterface::write()
       if (pos_diff_sum != 0.0)
         position_interface_in_use_ = true;
     }
-    else if (position_interface_in_use_)
+
+    if (position_interface_in_use_)
     {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
     }
