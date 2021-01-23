@@ -9,7 +9,7 @@ Follow the [instructions](https://github.com/UniversalRobots/Universal_Robots_RO
 
 ## Build Instructions
 
-To build this package follow the [instructions](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/) for installation of ROS2.
+To build this package follow the [instructions](https://index.ros.org/doc/ros2/Tutorials/Workspace/Creating-A-Workspace/) for installation of ROS2.
 
 After installation create a ROS Foxy workspace:
 ```
