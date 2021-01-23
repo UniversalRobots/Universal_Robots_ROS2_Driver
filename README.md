@@ -59,6 +59,7 @@ Start the `forward_command_controller`:
 ```
 ros2 control load_start_controller forward_command_controller_position
 ```
+
 ## TODO Run a test node (TBD)
 Run a test node which will publish joint commands on /forward_command_controller_position/commands (std_msgs::msg::Float64MultiArray)
 after checking the current joint states (to create minimal increment for safety)
