@@ -135,7 +135,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Service to query the current program state
   program_state_service_ = node_->create_service<ur_dashboard_msgs::srv::GetProgramState>(
-      "program_state", [&](const ur_dashboard_msgs::srv::GetProgramState::Request::SharedPtr,
+      "program_state", [&](const ur_dashboard_msgs::srv::GetProgramState::Request::SharedPtr /*unused*/,
                            ur_dashboard_msgs::srv::GetProgramState::Response::SharedPtr resp) {
         resp->answer = this->client_.sendAndReceive("programState\n");
         std::smatch match;
