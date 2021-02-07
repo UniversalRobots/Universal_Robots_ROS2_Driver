@@ -57,8 +57,8 @@ controller_interface::InterfaceConfiguration ForceTorqueStateController::state_i
 
 controller_interface::return_type ur_controllers::ForceTorqueStateController::update()
 {
-  geometry_msgs::msg::Vector3 fVec;
-  geometry_msgs::msg::Vector3 tVec;
+  geometry_msgs::msg::Vector3 f_vec;
+  geometry_msgs::msg::Vector3 t_vec;
 
   if (state_interfaces_.size() != fts_params_.state_interfaces_names_.size())
     return controller_interface::return_type::ERROR;
@@ -68,22 +68,22 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
     switch (index)
     {
       case 0:
-        fVec.set__x(state_interfaces_[index].get_value());
+        f_vec.set__x(state_interfaces_[index].get_value());
         break;
       case 1:
-        fVec.set__y(state_interfaces_[index].get_value());
+        f_vec.set__y(state_interfaces_[index].get_value());
         break;
       case 2:
-        fVec.set__z(state_interfaces_[index].get_value());
+        f_vec.set__z(state_interfaces_[index].get_value());
         break;
       case 3:
-        tVec.set__x(state_interfaces_[index].get_value());
+        t_vec.set__x(state_interfaces_[index].get_value());
         break;
       case 4:
-        tVec.set__y(state_interfaces_[index].get_value());
+        t_vec.set__y(state_interfaces_[index].get_value());
         break;
       case 5:
-        tVec.set__z(state_interfaces_[index].get_value());
+        t_vec.set__z(state_interfaces_[index].get_value());
         break;
       default:
         break;
@@ -94,8 +94,8 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
   wrench_state_msg_.header.frame_id = fts_params_.frame_id;
 
   // update wrench state message
-  wrench_state_msg_.wrench.set__force(fVec);
-  wrench_state_msg_.wrench.set__torque(tVec);
+  wrench_state_msg_.wrench.set__force(f_vec);
+  wrench_state_msg_.wrench.set__torque(t_vec);
 
   // publish
   wrench_state_publisher_->publish(wrench_state_msg_);
