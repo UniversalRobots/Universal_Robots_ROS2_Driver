@@ -3,11 +3,11 @@ project(ur_controllers)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -20,13 +20,13 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(rcutils REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-        controller_interface
-        joint_trajectory_controller
-        pluginlib
-        std_msgs
-        geometry_msgs
-        rclcpp_lifecycle
-        rcutils
+  controller_interface
+  joint_trajectory_controller
+  pluginlib
+  std_msgs
+  geometry_msgs
+  rclcpp_lifecycle
+  rcutils
 )
 
 include_directories(include)
@@ -35,9 +35,11 @@ add_library(${PROJECT_NAME} SHARED
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_controller.cpp
   src/force_torque_sensor_controller.cpp
-        include/ur_controllers/force_torque_sensor_controller.h src/force_torque_sensor_controller.cpp)
+  src/force_torque_sensor_controller.cpp)
 
-target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_include_directories(${PROJECT_NAME} PRIVATE
+  include
+)
 
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
@@ -64,11 +66,11 @@ install(FILES controller_plugins.xml
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 ament_export_include_directories(
-        include
+  include
 )
 
 ament_export_libraries(
-        ${PROJECT_NAME}
+  ${PROJECT_NAME}
 )
 
 

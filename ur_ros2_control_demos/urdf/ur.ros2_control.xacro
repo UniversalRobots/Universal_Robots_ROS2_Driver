@@ -116,9 +116,6 @@
         <state_interface name="tx"/>
         <state_interface name="ty"/>
         <state_interface name="tz"/>
-        <param name="frame_id">tool0</param>
-        <param name="lower_limits">-100</param>
-        <param name="upper_limits">100</param>
       </sensor>
     </ros2_control>
   </xacro:macro>
