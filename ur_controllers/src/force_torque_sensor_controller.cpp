@@ -6,7 +6,8 @@
 
 namespace ur_controllers
 {
-ForceTorqueStateController::ForceTorqueStateController() : controller_interface::ControllerInterface()
+ForceTorqueStateController::ForceTorqueStateController()
+  : controller_interface::ControllerInterface(), wrench_state_publisher_(nullptr)
 {
 }
 
@@ -16,6 +17,20 @@ controller_interface::return_type ForceTorqueStateController::init(const std::st
   if (ret != controller_interface::return_type::SUCCESS)
   {
     return ret;
+  }
+
+  try
+  {
+    auto node = get_node();
+    node->declare_parameter<std::vector<std::string>>("state_interface_names", {});
+    node->declare_parameter<std::string>("sensor_name", "");
+    node->declare_parameter<std::string>("topic_name", "");
+    node->declare_parameter<std::string>("frame_id", "");
+  }
+  catch (const std::exception& e)
+  {
+    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    return controller_interface::return_type::ERROR;
   }
 
   return controller_interface::return_type::SUCCESS;
@@ -32,13 +47,11 @@ controller_interface::InterfaceConfiguration ForceTorqueStateController::state_i
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  // TODO solve this hardcoded naming
-  config.names.emplace_back("tcp_fts_sensor/fx");
-  config.names.emplace_back("tcp_fts_sensor/fy");
-  config.names.emplace_back("tcp_fts_sensor/fz");
-  config.names.emplace_back("tcp_fts_sensor/tx");
-  config.names.emplace_back("tcp_fts_sensor/ty");
-  config.names.emplace_back("tcp_fts_sensor/tz");
+  for (const auto& si : fts_params_.state_interfaces_names_)
+  {
+    config.names.push_back(fts_params_.sensor_name_ + "/" + si);
+  }
+
   return config;
 }
 
@@ -47,49 +60,38 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
   geometry_msgs::msg::Vector3 fVec;
   geometry_msgs::msg::Vector3 tVec;
 
-  // TODO remove these hardcoded names and create better string filtering within state_interfaces_
-  for (const auto& state_interface : state_interfaces_)
+  if (state_interfaces_.size() != fts_params_.state_interfaces_names_.size())
+    return controller_interface::return_type::ERROR;
+
+  for (auto index = 0ul; index < state_interfaces_.size(); ++index)
   {
-    if (state_interface.get_interface_name() == "fx")
+    switch (index)
     {
-      fVec.set__x(state_interface.get_value());
-      continue;
-    }
-
-    if (state_interface.get_interface_name() == "fy")
-    {
-      fVec.set__y(state_interface.get_value());
-      continue;
-    }
-
-    if (state_interface.get_interface_name() == "fz")
-    {
-      fVec.set__z(state_interface.get_value());
-      continue;
-    }
-
-    if (state_interface.get_interface_name() == "tx")
-    {
-      tVec.set__x(state_interface.get_value());
-      continue;
-    }
-
-    if (state_interface.get_interface_name() == "ty")
-    {
-      tVec.set__y(state_interface.get_value());
-      continue;
-    }
-
-    if (state_interface.get_interface_name() == "tz")
-    {
-      tVec.set__z(state_interface.get_value());
-      continue;
+      case 0:
+        fVec.set__x(state_interfaces_[index].get_value());
+        break;
+      case 1:
+        fVec.set__y(state_interfaces_[index].get_value());
+        break;
+      case 2:
+        fVec.set__z(state_interfaces_[index].get_value());
+        break;
+      case 3:
+        tVec.set__x(state_interfaces_[index].get_value());
+        break;
+      case 4:
+        tVec.set__y(state_interfaces_[index].get_value());
+        break;
+      case 5:
+        tVec.set__z(state_interfaces_[index].get_value());
+        break;
+      default:
+        break;
     }
   }
 
-  // TODO set frame_id as parameter --> it includes tf listener within controller
   wrench_state_msg_.header.stamp = get_node()->get_clock()->now();
-  wrench_state_msg_.header.frame_id = "tool0";
+  wrench_state_msg_.header.frame_id = fts_params_.frame_id;
 
   // update wrench state message
   wrench_state_msg_.wrench.set__force(fVec);
@@ -104,29 +106,52 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ForceTorqueStateController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  fts_params_.state_interfaces_names_ = node_->get_parameter("state_interface_names").as_string_array();
+
+  if (fts_params_.state_interfaces_names_.empty())
+  {
+    RCLCPP_ERROR(get_node()->get_logger(), "'state_interface_names' parameter was empty");
+    return CallbackReturn::ERROR;
+  }
+
+  fts_params_.sensor_name_ = node_->get_parameter("sensor_name").as_string();
+  if (fts_params_.sensor_name_.empty())
+  {
+    RCLCPP_ERROR(get_node()->get_logger(), "'sensor_name' parameter was empty");
+    return CallbackReturn::ERROR;
+  }
+
+  fts_params_.topic_name = node_->get_parameter("topic_name").as_string();
+  if (fts_params_.topic_name.empty())
+  {
+    RCLCPP_ERROR(get_node()->get_logger(), "'topic_name' parameter was empty");
+    return CallbackReturn::ERROR;
+  }
+
+  fts_params_.frame_id = node_->get_parameter("frame_id").as_string();
+  if (fts_params_.frame_id.empty())
+  {
+    RCLCPP_ERROR(get_node()->get_logger(), "'frame_id' parameter was empty");
+    return CallbackReturn::ERROR;
+  }
+
   try
   {
-    // TODO make topic name a parameter
-    wrench_state_publisher_ =
-        get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>("ft_data", rclcpp::SystemDefaultsQoS());
+    // register ft sensor data publisher
+    wrench_state_publisher_ = get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>(
+        fts_params_.topic_name, rclcpp::SystemDefaultsQoS());
   }
   catch (...)
   {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
+
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ForceTorqueStateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  if (!init_sensor_data())
-  {
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
-
-  init_sensor_state_msg();
-
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -134,43 +159,6 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ForceTorqueStateController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
-template <typename T>
-bool has_any_key(const std::unordered_map<std::string, T>& map, const std::vector<std::string>& keys)
-{
-  bool found_key = false;
-  for (const auto& key_item : map)
-  {
-    const auto& key = key_item.first;
-    if (std::find(keys.cbegin(), keys.cend(), key) != keys.cend())
-    {
-      found_key = true;
-      break;
-    }
-  }
-  return found_key;
-}
-
-bool ForceTorqueStateController::init_sensor_data()
-{
-  bool has_fts_sensor = false;
-  // loop in reverse order, this maintains the order of values at retrieval time
-  for (auto si = state_interfaces_.crbegin(); si != state_interfaces_.crend(); si++)
-  {
-    // TODO remove hardcoded naming
-    if (si->get_name() == "tcp_fts_sensor")
-    {
-      has_fts_sensor = true;
-      axis_val_names_.push_back(si->get_interface_name());
-    }
-  }
-  return has_fts_sensor;
-}
-
-void ForceTorqueStateController::init_sensor_state_msg()
-{
-  // default initialization for wrenchstamped state message
 }
 
 }  // namespace ur_controllers

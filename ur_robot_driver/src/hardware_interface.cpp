@@ -133,7 +133,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
     for (uint j = 0; j < info_.sensors[i].state_interfaces.size(); ++j)
     {
       state_interfaces.emplace_back(hardware_interface::StateInterface(
-          info_.sensors[i].name, info_.sensors[i].state_interfaces[j].name, &urcl_ft_sensor_measurements_[i]));
+          info_.sensors[i].name, info_.sensors[i].state_interfaces[j].name, &urcl_ft_sensor_measurements_[j]));
     }
   }
 
