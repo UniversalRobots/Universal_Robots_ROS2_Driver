@@ -19,8 +19,8 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
- * \date    2019-04-17
+ * \author  Marvin Große Besselmann grosse@fzi.de
+ * \date    2021-02-10
  *
  */
 //----------------------------------------------------------------------
@@ -28,10 +28,49 @@
 #ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
 #define UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "controller_interface/controller_interface.hpp"
+
+#include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+
 namespace ur_controllers
 {
-class SpeedScalingStateController
+class SpeedScalingStateController : public controller_interface::ControllerInterface
 {
+public:
+  SpeedScalingStateController();
+
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
+
+  controller_interface::return_type update() override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_configure(const rclcpp_lifecycle::State& previous_state) override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_activate(const rclcpp_lifecycle::State& previous_state) override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
+
+protected:
+  bool init_joint_data();
+  void init_joint_state_msg();
+
+protected:
+  std::vector<std::string> joint_names_;
+  std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::JointState>> joint_state_publisher_;
+  sensor_msgs::msg::JointState joint_state_msg_;
+
+  std::unordered_map<std::string, std::unordered_map<std::string, double>> name_if_value_mapping_;
 };
 }  // namespace ur_controllers
 #endif  // ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED

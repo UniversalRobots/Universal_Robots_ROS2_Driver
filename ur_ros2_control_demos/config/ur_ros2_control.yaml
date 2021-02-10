@@ -8,6 +8,9 @@ controller_manager:
     joint_state_controller:
       type: joint_state_controller/JointStateController
 
+    speed_scaling_state_controller:
+      type: ur_controllers/SpeedScalingStateController
+
     ur_joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
