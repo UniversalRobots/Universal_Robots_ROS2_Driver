@@ -11,6 +11,9 @@ controller_manager:
     ur_joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
+    force_torque_state_controller:
+      type: ur_controllers/ForceTorqueStateController
+
 ur_joint_trajectory_controller:
   ros__parameters:
     joints:
@@ -37,3 +40,16 @@ forward_command_controller_position:
       - wrist_2_joint
       - wrist_3_joint
     interface_name: position
+
+force_torque_state_controller:
+  ros__parameters:
+    sensor_name: tcp_fts_sensor
+    state_interface_names:
+      - fx
+      - fy
+      - fz
+      - tx
+      - ty
+      - tz
+    frame_id: tool0
+    topic_name: ft_data

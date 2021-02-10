@@ -128,6 +128,15 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
         info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
   }
 
+  for (auto& sensor : info_.sensors)
+  {
+    for (uint j = 0; j < sensor.state_interfaces.size(); ++j)
+    {
+      state_interfaces.emplace_back(hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name,
+                                                                       &urcl_ft_sensor_measurements_[j]));
+    }
+  }
+
   return state_interfaces;
 }
 
