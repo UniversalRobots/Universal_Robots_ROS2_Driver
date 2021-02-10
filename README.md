@@ -2,6 +2,11 @@
 
 Alpha version of the ROS2 Universal Robots driver. Should be transferred to the Universal Robots org when ready.
 
+## General driver information
+Driver currently only supports position joint interface which means only position-based controllers can be used with 
+the ROS2 driver. [Universal Robots Client Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) includes also
+velocity-based control whose support will be addressed in additional development of ROS2 driver.
+
 ## Requirements
 
 Follow the [instructions](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#setting-up-a-ur-robot-for-ur_robot_driver) in the paragraph 
