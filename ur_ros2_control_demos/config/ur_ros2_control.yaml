@@ -27,26 +27,8 @@ ur_joint_trajectory_controller:
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
     constraints:
-      stopped_velocity_tolerance: 0.01
+      stopped_velocity_tolerance: 0.0
       goal_time: 0.0
-      shoulder_pan_joint:
-        trajectory: 0.05
-        goal:       0.03
-      shoulder_lift_joint:
-        trajectory: 0.05
-        goal:       0.03
-      elbow_joint:
-        trajectory: 0.05
-        goal:       0.03
-      wrist_1_joint:
-        trajectory: 0.05
-        goal:       0.03
-      wrist_2_joint:
-        trajectory: 0.05
-        goal:       0.03
-      wrist_3_joint:
-        trajectory: 0.05
-        goal:       0.03
 
 forward_command_controller_position:
   ros__parameters:
