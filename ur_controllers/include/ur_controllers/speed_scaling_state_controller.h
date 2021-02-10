@@ -37,7 +37,7 @@
 
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "sensor_msgs/msg/joint_state.hpp"
+#include "std_msgs/msg/float64.hpp"
 
 namespace ur_controllers
 {
@@ -63,12 +63,12 @@ public:
 
 protected:
   bool init_joint_data();
-  void init_joint_state_msg();
 
 protected:
   std::vector<std::string> joint_names_;
-  std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::JointState>> joint_state_publisher_;
-  sensor_msgs::msg::JointState joint_state_msg_;
+
+  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
+  std_msgs::msg::Float64 speed_scaling_state_msg_;
 
   std::unordered_map<std::string, std::unordered_map<std::string, double>> name_if_value_mapping_;
 };
