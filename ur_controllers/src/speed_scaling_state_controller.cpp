@@ -78,12 +78,13 @@ const
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 SpeedScalingStateController::on_configure(const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  try {
-    // TODO change subscriber to single value
-    joint_state_publisher_ = get_node()->create_publisher<sensor_msgs::msg::JointState>(
-      "joint_states", rclcpp::SystemDefaultsQoS());
-
-  } catch (const std::exception & e) {
+  try
+  {
+    speed_scaling_state_publisher_ =
+        get_node()->create_publisher<std_msgs::msg::Float64>("speed_scaling_factor", rclcpp::SystemDefaultsQoS());
+  }
+  catch (const std::exception& e)
+  {
     // get_node() may throw, logging raw here
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
@@ -97,8 +98,6 @@ SpeedScalingStateController::on_activate(const rclcpp_lifecycle::State & /*previ
   if (!init_joint_data()) {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
-
-  init_joint_state_msg();
 
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -150,20 +149,9 @@ bool SpeedScalingStateController::init_joint_data()
   return true;
 }
 
-void SpeedScalingStateController::init_joint_state_msg()
+double get_value(const std::unordered_map<std::string, std::unordered_map<std::string, double>>& map,
+                 const std::string& name, const std::string& interface_name)
 {
-  const size_t num_joints = joint_names_.size();
-
-  /// @note joint_state_msg publishes position, velocity and effort for all joints,
-  /// with at least one of these interfaces, the rest are omitted from this message
-
-  // default initialization for joint state message
-  joint_state_msg_.name = joint_names_;
-  joint_state_msg_.position.resize(num_joints, kUninitializedValue);
-  joint_state_msg_.velocity.resize(num_joints, kUninitializedValue);
-  joint_state_msg_.effort.resize(num_joints, kUninitializedValue);
-}
-
 double get_value(
   const std::unordered_map<std::string, std::unordered_map<std::string, double>> & map,
   const std::string & name, const std::string & interface_name)
@@ -182,22 +170,18 @@ SpeedScalingStateController::update()
 {
   for (const auto & state_interface : state_interfaces_) {
     name_if_value_mapping_[state_interface.get_name()][state_interface.get_interface_name()] =
-      state_interface.get_value();
-    RCLCPP_DEBUG(
-      get_node()->get_logger(), "%s/%s: %f\n",
-      state_interface.get_name().c_str(),
-      state_interface.get_interface_name().c_str(),
-      state_interface.get_value());
+        state_interface.get_value();
+    RCLCPP_DEBUG(get_node()->get_logger(), "%s/%s: %f\n", state_interface.get_name().c_str(),
+                 state_interface.get_interface_name().c_str(), state_interface.get_value());
   }
 
-  joint_state_msg_.header.stamp = node_->get_clock()->now();
-
-  for (auto i = 0ul; i < joint_names_.size(); ++i) {
-    std::cout << get_value(name_if_value_mapping_, joint_names_[i], "speed_scaling_factor") << std::endl;
+  for (auto i = 0ul; i < joint_names_.size(); ++i)
+  {
+    speed_scaling_state_msg_.data = get_value(name_if_value_mapping_, joint_names_[i], "speed_scaling_factor");
   }
 
   // publish
-  joint_state_publisher_->publish(joint_state_msg_);
+  speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);
 
   return controller_interface::return_type::SUCCESS;
 }
