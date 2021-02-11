@@ -53,9 +53,6 @@ class State;
 namespace ur_controllers
 {
 const auto kUninitializedValue = std::numeric_limits<double>::quiet_NaN();
-using hardware_interface::HW_IF_EFFORT;
-using hardware_interface::HW_IF_POSITION;
-using hardware_interface::HW_IF_VELOCITY;
 
 SpeedScalingStateController::SpeedScalingStateController()
 {
@@ -103,7 +100,7 @@ SpeedScalingStateController::on_configure(const rclcpp_lifecycle::State& /*previ
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 SpeedScalingStateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  if (!init_joint_data())
+  if (!init_sensor_data())
   {
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -134,7 +131,7 @@ bool has_any_key(const std::unordered_map<std::string, T>& map, const std::vecto
   return found_key;
 }
 
-bool SpeedScalingStateController::init_joint_data()
+bool SpeedScalingStateController::init_sensor_data()
 {
   // loop in reverse order, this maintains the order of values at retrieval time
   for (auto si = state_interfaces_.crbegin(); si != state_interfaces_.crend(); si++)
@@ -155,7 +152,7 @@ bool SpeedScalingStateController::init_joint_data()
     const auto& interfaces_and_values = name_ifv.second;
     if (has_any_key(interfaces_and_values, { "speed_scaling_factor" }))
     {
-      joint_names_.push_back(name_ifv.first);
+      sensor_names_.push_back(name_ifv.first);
     }
   }
 
@@ -189,9 +186,9 @@ controller_interface::return_type SpeedScalingStateController::update()
                    state_interface.get_interface_name().c_str(), state_interface.get_value());
     }
 
-    for (auto i = 0ul; i < joint_names_.size(); ++i)
+    for (auto i = 0ul; i < sensor_names_.size(); ++i)
     {
-      speed_scaling_state_msg_.data = get_value(name_if_value_mapping_, joint_names_[i], "speed_scaling_factor");
+      speed_scaling_state_msg_.data = get_value(name_if_value_mapping_, sensor_names_[i], "speed_scaling_factor");
     }
 
     // publish
