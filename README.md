@@ -50,7 +50,7 @@ source install/setup.bash
 Start the driver:
 
 ```
-ros2 launch ur_ros2_control_demos ur5_3_system_position_only.launch.py
+ros2 launch ur_ros2_control_demos ur5_e_system_position_only.launch.py
 ```
 
 Start the `joint_state_controller`:
