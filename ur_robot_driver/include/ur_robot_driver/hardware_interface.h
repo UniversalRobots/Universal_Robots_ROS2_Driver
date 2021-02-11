@@ -55,6 +55,13 @@ using hardware_interface::status;
 
 namespace ur_robot_driver
 {
+enum class PausingState
+{
+  PAUSED,
+  RUNNING,
+  RAMPUP
+};
+
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
  * driver. It contains the read and write methods of the main control loop and registers various ROS
@@ -86,6 +93,12 @@ public:
   return_type read() final;
   return_type write() final;
 
+ /*!
+   * \brief Read and evaluate data in order to set robot status properties for industrial
+   *        robot status interface
+   */
+  void extractRobotStatus();
+
   /*!
    * \brief Callback to handle a change in the current state of the URCaps program running on the
    * robot. Executed only on the state change.
@@ -113,9 +126,40 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
+
+  // TODO exchange for industrial robot status interface
+  enum class TriState : int8_t
+  {
+    UNKNOWN = -1,
+    FALSE = 0,
+    TRUE = 1,
+  };
+  enum class RobotMode : int8_t
+  {
+    UNKNOWN = -1,
+    MANUAL = 1,
+    AUTO = 2,
+  };
+  typedef std::int32_t ErrorCode;
+  struct RobotStatus
+  {
+    RobotMode mode;
+    TriState e_stopped;
+    TriState drives_powered;
+    TriState motion_possible;
+    TriState in_motion;
+    TriState in_error;
+    ErrorCode error_code;
+  };
+  RobotStatus robot_status_resource_{};
+  // END TODO
+
   bool packet_read_;
 
   uint32_t runtime_state_;
+  bool position_controller_running_;
+  bool velocity_controller_running_;
+  bool controllers_initialized_;
 
   std::bitset<18> actual_dig_out_bits_;
   std::bitset<18> actual_dig_in_bits_;
@@ -139,6 +183,9 @@ protected:
   bool robot_program_running_;
   bool non_blocking_read_;
   bool position_interface_in_use_;
+
+  PausingState pausing_state_;
+  double pausing_ramp_up_increment_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
 };
