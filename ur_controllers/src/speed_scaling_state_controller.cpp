@@ -74,6 +74,18 @@ controller_interface::InterfaceConfiguration SpeedScalingStateController::state_
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 SpeedScalingStateController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  node_->declare_parameter("state_publish_rate");
+
+  if (!node_->get_parameter("state_publish_rate", publish_rate_))
+  {
+    RCLCPP_INFO(get_node()->get_logger(), "Parameter 'state_publish_rate' not set");
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+  else
+  {
+    RCLCPP_INFO(get_node()->get_logger(), "Publisher rate set to : %.1f Hz", publish_rate_);
+  }
+
   try
   {
     speed_scaling_state_publisher_ =
@@ -96,6 +108,7 @@ SpeedScalingStateController::on_activate(const rclcpp_lifecycle::State& /*previo
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
   }
 
+  last_publish_time_ = node_->now();
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -166,22 +179,25 @@ double get_value(const std::unordered_map<std::string, std::unordered_map<std::s
 
 controller_interface::return_type SpeedScalingStateController::update()
 {
-  for (const auto& state_interface : state_interfaces_)
+  if (publish_rate_ > 0.0 && (node_->now() - last_publish_time_) > rclcpp::Duration(1.0 / publish_rate_, 0.0))
   {
-    name_if_value_mapping_[state_interface.get_name()][state_interface.get_interface_name()] =
-        state_interface.get_value();
-    RCLCPP_DEBUG(get_node()->get_logger(), "%s/%s: %f\n", state_interface.get_name().c_str(),
-                 state_interface.get_interface_name().c_str(), state_interface.get_value());
+    for (const auto& state_interface : state_interfaces_)
+    {
+      name_if_value_mapping_[state_interface.get_name()][state_interface.get_interface_name()] =
+          state_interface.get_value();
+      RCLCPP_DEBUG(get_node()->get_logger(), "%s/%s: %f\n", state_interface.get_name().c_str(),
+                   state_interface.get_interface_name().c_str(), state_interface.get_value());
+    }
+
+    for (auto i = 0ul; i < joint_names_.size(); ++i)
+    {
+      speed_scaling_state_msg_.data = get_value(name_if_value_mapping_, joint_names_[i], "speed_scaling_factor");
+    }
+
+    // publish
+    speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);
+    last_publish_time_ = node_->now();
   }
-
-  for (auto i = 0ul; i < joint_names_.size(); ++i)
-  {
-    speed_scaling_state_msg_.data = get_value(name_if_value_mapping_, joint_names_[i], "speed_scaling_factor");
-  }
-
-  // publish
-  speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);
-
   return controller_interface::return_type::SUCCESS;
 }
 
