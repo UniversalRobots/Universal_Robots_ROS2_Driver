@@ -66,6 +66,8 @@ protected:
 
 protected:
   std::vector<std::string> joint_names_;
+  rclcpp::Time last_publish_time_;
+  double publish_rate_;
 
   std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
   std_msgs::msg::Float64 speed_scaling_state_msg_;

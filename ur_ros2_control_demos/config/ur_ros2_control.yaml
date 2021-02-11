@@ -33,6 +33,10 @@ ur_joint_trajectory_controller:
       stopped_velocity_tolerance: 0.0
       goal_time: 0.0
 
+speed_scaling_state_controller:
+  ros__parameters:
+    state_publish_rate: 100.0
+
 forward_command_controller_position:
   ros__parameters:
     joints:
