@@ -21,6 +21,7 @@
  *
  * \author  Lovro Ivanov lovro.ivanov@gmail.com
  * \author  Andy Zelenak zelenak@picknik.ai
+ * \author  Marvin Große Besselmann grosse@fzi.de
  * \date    2020-11-9
  *
  */
@@ -37,6 +38,14 @@ namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
+static const std::bitset<11>
+    in_error_bitset_(1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_PROTECTIVE_STOPPED) |
+                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_ROBOT_EMERGENCY_STOPPED) |
+                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_EMERGENCY_STOPPED) |
+                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_VIOLATION) |
+                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_FAULT) |
+                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_STOPPED_DUE_TO_SAFETY));
+
 hardware_interface::return_type URPositionHardwareInterface::configure(const HardwareInfo& system_info)
 {
   info_ = system_info;
@@ -49,6 +58,13 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
+  pausing_state_ = PausingState::RUNNING;
+  pausing_ramp_up_increment_ = 0.01;
+  position_controller_running_ = false;
+  velocity_controller_running_ = false;
+  controllers_initialized_ = false;
+
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
@@ -341,6 +357,15 @@ void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::Dat
 
 return_type URPositionHardwareInterface::read()
 {
+  robot_status_resource_.mode = RobotMode::UNKNOWN;
+  robot_status_resource_.e_stopped = TriState::UNKNOWN;
+  robot_status_resource_.drives_powered = TriState::UNKNOWN;
+  robot_status_resource_.motion_possible = TriState::UNKNOWN;
+  robot_status_resource_.in_motion = TriState::UNKNOWN;
+  robot_status_resource_.in_error = TriState::UNKNOWN;
+  robot_status_resource_.error_code = 0;
+
+
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
   if (data_pkg)
@@ -375,6 +400,42 @@ return_type URPositionHardwareInterface::read()
     readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
     // TODO logic for sending other stuff to higher level interface
+    extractRobotStatus();
+
+    // pausing state follows runtime state when pausing
+    if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED))
+    {
+      pausing_state_ = PausingState::PAUSED;
+    }
+    // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
+    else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
+             pausing_state_ == PausingState::PAUSED)
+    {
+      speed_scaling_combined_ = 0.0;
+      pausing_state_ = PausingState::RAMPUP;
+    }
+
+    if (pausing_state_ == PausingState::RAMPUP)
+    {
+      double speed_scaling_ramp = speed_scaling_combined_ + pausing_ramp_up_increment_;
+      speed_scaling_combined_ = std::min(speed_scaling_ramp, speed_scaling_ * target_speed_fraction_);
+
+      if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_)
+      {
+        pausing_state_ = PausingState::RUNNING;
+      }
+    }
+    else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING))
+    {
+      // We have to keep speed scaling on ROS side at 0 during RESUMING to prevent controllers from
+      // continuing to interpolate
+      speed_scaling_combined_ = 0.0;
+    }
+    else
+    {
+      // Normal case
+      speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
+    }
 
     return return_type::OK;
   }
@@ -427,6 +488,58 @@ return_type URPositionHardwareInterface::write()
     // TODO could not read from the driver --> reset controllers
     return return_type::ERROR;
   }
+}
+
+void URPositionHardwareInterface::extractRobotStatus()
+{
+    robot_status_resource_.mode =
+      robot_status_bits_[urcl::toUnderlying(rtde::UrRtdeRobotStatusBits::IS_TEACH_BUTTON_PRESSED)] ? RobotMode::MANUAL :
+                                                                                                     RobotMode::AUTO;
+
+  robot_status_resource_.e_stopped =
+      safety_status_bits_[urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_EMERGENCY_STOPPED)] ? TriState::TRUE :
+                                                                                                    TriState::FALSE;
+
+  // Note that this is true as soon as the drives are powered,
+  // even if the brakes are still closed
+  // which is in slight contrast to the comments in the
+  // message definition
+  robot_status_resource_.drives_powered =
+      robot_status_bits_[urcl::toUnderlying(rtde::UrRtdeRobotStatusBits::IS_POWER_ON)] ? TriState::TRUE :
+                                                                                         TriState::FALSE;
+
+  // I found no way to reliably get information if the robot is moving
+  robot_status_resource_.in_motion = TriState::UNKNOWN;
+
+  if ((safety_status_bits_ & in_error_bitset_).any())
+  {
+    robot_status_resource_.in_error = TriState::TRUE;
+  }
+  else
+  {
+    robot_status_resource_.in_error = TriState::FALSE;
+  }
+
+  // Motion is not possible if controller is either in error or in safeguard stop.
+  // TODO: Check status of robot program "external control" here as well
+  if (robot_status_resource_.in_error == TriState::TRUE ||
+      safety_status_bits_[urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_SAFEGUARD_STOPPED)])
+  {
+    robot_status_resource_.motion_possible = TriState::FALSE;
+  }
+  // TODO The hardcoded 7 should be ur_dashboard_msgs::RobotMode::RUNNING exchange when msgs are built
+  else if (robot_mode_ == 7)
+  {
+    robot_status_resource_.motion_possible = TriState::TRUE;
+  }
+  else
+  {
+    robot_status_resource_.motion_possible = TriState::FALSE;
+  }
+
+  // the error code, if any, is not transmitted by this protocol
+  // it can and should be fetched separately
+  robot_status_resource_.error_code = 0;
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
