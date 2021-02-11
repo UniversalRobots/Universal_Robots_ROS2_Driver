@@ -62,10 +62,10 @@ public:
   on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
 protected:
-  bool init_joint_data();
+  bool init_sensor_data();
 
 protected:
-  std::vector<std::string> joint_names_;
+  std::vector<std::string> sensor_names_;
   rclcpp::Time last_publish_time_;
   double publish_rate_;
 
