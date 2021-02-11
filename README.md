@@ -65,19 +65,11 @@ Start the `forward_command_controller`:
 ros2 control load_start_controller forward_command_controller_position
 ```
 
-## TODO Run a test node (TBD)
+## Run a test node
 Run a test node which will publish joint commands on /forward_command_controller_position/commands (std_msgs::msg::Float64MultiArray)
-after checking the current joint states (to create minimal increment for safety)
+after checking the current joint states (to create minimal increment for safety). The node commands increment of 0.1 radians for each
+joint. The commands are incremented in regards to /joint_states found when the node is run.
 
-USE WITH CAUTION!!!
-Other option is to publish commands directly. In this case make sure the published command will not take your
-robot in collision with environment/people.
 ```
-ros2 topic pub /forward_command_controller_position/commands std_msgs/msg/Float64MultiArray "data: 
-- 0.0                                                               
-- 0.0
-- 0.0
-- 0.0
-- 0.0
-- 0.01"
+ros2 run ur_ros2_control_demos test_driver 
 ```
