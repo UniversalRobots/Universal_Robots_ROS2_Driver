@@ -39,12 +39,12 @@ namespace rtde = urcl::rtde_interface;
 namespace ur_robot_driver
 {
 static const std::bitset<11>
-    in_error_bitset_(1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_PROTECTIVE_STOPPED) |
-                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_ROBOT_EMERGENCY_STOPPED) |
-                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_EMERGENCY_STOPPED) |
-                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_VIOLATION) |
-                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_FAULT) |
-                     1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_STOPPED_DUE_TO_SAFETY));
+    IN_ERROR_BITSET(1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_PROTECTIVE_STOPPED) |
+                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_ROBOT_EMERGENCY_STOPPED) |
+                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_EMERGENCY_STOPPED) |
+                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_VIOLATION) |
+                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_FAULT) |
+                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_STOPPED_DUE_TO_SAFETY));
 
 hardware_interface::return_type URPositionHardwareInterface::configure(const HardwareInfo& system_info)
 {
@@ -64,7 +64,6 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   position_controller_running_ = false;
   velocity_controller_running_ = false;
   controllers_initialized_ = false;
-
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
@@ -365,7 +364,6 @@ return_type URPositionHardwareInterface::read()
   robot_status_resource_.in_error = TriState::UNKNOWN;
   robot_status_resource_.error_code = 0;
 
-
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
   if (data_pkg)
@@ -492,7 +490,7 @@ return_type URPositionHardwareInterface::write()
 
 void URPositionHardwareInterface::extractRobotStatus()
 {
-    robot_status_resource_.mode =
+  robot_status_resource_.mode =
       robot_status_bits_[urcl::toUnderlying(rtde::UrRtdeRobotStatusBits::IS_TEACH_BUTTON_PRESSED)] ? RobotMode::MANUAL :
                                                                                                      RobotMode::AUTO;
 
@@ -511,7 +509,7 @@ void URPositionHardwareInterface::extractRobotStatus()
   // I found no way to reliably get information if the robot is moving
   robot_status_resource_.in_motion = TriState::UNKNOWN;
 
-  if ((safety_status_bits_ & in_error_bitset_).any())
+  if ((safety_status_bits_ & IN_ERROR_BITSET).any())
   {
     robot_status_resource_.in_error = TriState::TRUE;
   }

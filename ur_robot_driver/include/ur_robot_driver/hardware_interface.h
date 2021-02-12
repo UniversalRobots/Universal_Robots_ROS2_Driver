@@ -93,7 +93,7 @@ public:
   return_type read() final;
   return_type write() final;
 
- /*!
+  /*!
    * \brief Read and evaluate data in order to set robot status properties for industrial
    *        robot status interface
    */
