@@ -128,7 +128,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
         info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
   }
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface("speed", "speed_scaling_factor", &speed_scaling_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("speed", "speed_scaling_factor", &speed_scaling_combined_));
 
   for (auto& sensor : info_.sensors)
   {
