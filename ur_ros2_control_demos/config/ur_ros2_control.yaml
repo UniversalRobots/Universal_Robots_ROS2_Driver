@@ -27,7 +27,7 @@ ur_joint_trajectory_controller:
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
     constraints:
-      stopped_velocity_tolerance: 0.01
+      stopped_velocity_tolerance: 0.0
       goal_time: 0.0
 
 forward_command_controller_position:
