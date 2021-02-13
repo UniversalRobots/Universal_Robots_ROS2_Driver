@@ -6,8 +6,8 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 add_executable(test_driver
-        src/test_driver.cpp
-        )
+  src/test_driver.cpp
+)
 ament_target_dependencies(test_driver rclcpp std_msgs sensor_msgs)
 
 install(DIRECTORY config launch urdf DESTINATION share/${PROJECT_NAME})
