@@ -1,19 +1,15 @@
 #include <chrono>
-#include <functional>
-#include <memory>
-#include <string>
-
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
-#include "std_msgs/msg/float64_multi_array.hpp"
+#include <std_msgs/msg/float64_multi_array.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/multi_array_dimension.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/string.hpp>
 
 using namespace std::chrono_literals;
 
 #define INCREMENT 0.1  // rads
 
-std::vector<std::string> name_order = { "shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
+std::vector<std::string> NAME_ORDER = { "shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
                                         "wrist_1_joint",      "wrist_2_joint",       "wrist_3_joint" };
 
 class MinimalDriverTest : public rclcpp::Node
@@ -23,14 +19,14 @@ public:
   {
     publisher_ =
         this->create_publisher<std_msgs::msg::Float64MultiArray>("forward_command_controller_position/commands", 10);
-    timer_ = this->create_wall_timer(1500ms, std::bind(&MinimalDriverTest::timer_callback, this));
+    timer_ = this->create_wall_timer(1500ms, std::bind(&MinimalDriverTest::timerCallback, this));
 
     subscription_ = this->create_subscription<sensor_msgs::msg::JointState>(
-        "joint_states", 10, std::bind(&MinimalDriverTest::topic_callback, this, std::placeholders::_1));
+        "joint_states", 10, std::bind(&MinimalDriverTest::topicCallback, this, std::placeholders::_1));
   }
 
 private:
-  void timer_callback()
+  void timerCallback()
   {
     if (!js_received_)
     {
@@ -52,11 +48,11 @@ private:
     message.layout.dim[0].stride = 1;
     message.layout.dim[0].label = "cmd";
 
-    for (size_t i = 0; i < name_order.size(); ++i)
+    for (size_t i = 0; i < NAME_ORDER.size(); ++i)
     {
       for (size_t j = 0; j < msg_internal_.name.size(); ++j)
       {
-        if (msg_internal_.name[j] == name_order[i])
+        if (msg_internal_.name[j] == NAME_ORDER[i])
           message.data[i] = msg_internal_.position[j] + INCREMENT;
       }
     }
@@ -64,7 +60,7 @@ private:
     publisher_->publish(message);
   }
 
-  void topic_callback(const sensor_msgs::msg::JointState::SharedPtr msg)
+  void topicCallback(const sensor_msgs::msg::JointState::SharedPtr msg)
   {
     if (js_received_)
       return;
