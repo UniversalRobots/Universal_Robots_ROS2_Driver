@@ -38,14 +38,6 @@ namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
-static const std::bitset<11>
-    IN_ERROR_BITSET(1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_PROTECTIVE_STOPPED) |
-                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_ROBOT_EMERGENCY_STOPPED) |
-                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_EMERGENCY_STOPPED) |
-                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_VIOLATION) |
-                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_FAULT) |
-                    1 << urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_STOPPED_DUE_TO_SAFETY));
-
 hardware_interface::return_type URPositionHardwareInterface::configure(const HardwareInfo& system_info)
 {
   info_ = system_info;
