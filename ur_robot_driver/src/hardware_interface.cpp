@@ -61,8 +61,6 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
-  position_controller_running_ = false;
-  velocity_controller_running_ = false;
   controllers_initialized_ = false;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
