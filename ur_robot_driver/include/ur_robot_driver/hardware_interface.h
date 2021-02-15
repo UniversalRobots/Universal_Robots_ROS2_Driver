@@ -48,8 +48,6 @@
 // ROS
 #include "rclcpp/macros.hpp"
 
-#include "ur_robot_driver/robot_status_interface.h"
-
 using hardware_interface::Actuator;
 using hardware_interface::HardwareInfo;
 using hardware_interface::return_type;
@@ -97,12 +95,6 @@ public:
   return_type write() final;
 
   /*!
-   * \brief Read and evaluate data in order to set robot status properties for industrial
-   *        robot status interface
-   */
-  void extractRobotStatus();
-
-  /*!
    * \brief Callback to handle a change in the current state of the URCaps program running on the
    * robot. Executed only on the state change.
    *
@@ -129,8 +121,6 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
-
-  RobotStatus robot_status_resource_{};
 
   bool packet_read_;
 

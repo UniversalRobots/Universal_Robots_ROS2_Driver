@@ -354,14 +354,6 @@ void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::Dat
 
 return_type URPositionHardwareInterface::read()
 {
-  robot_status_resource_.mode = RobotMode::UNKNOWN;
-  robot_status_resource_.e_stopped = TriState::UNKNOWN;
-  robot_status_resource_.drives_powered = TriState::UNKNOWN;
-  robot_status_resource_.motion_possible = TriState::UNKNOWN;
-  robot_status_resource_.in_motion = TriState::UNKNOWN;
-  robot_status_resource_.in_error = TriState::UNKNOWN;
-  robot_status_resource_.error_code = 0;
-
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
   if (data_pkg)
@@ -396,7 +388,6 @@ return_type URPositionHardwareInterface::read()
     readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
     // TODO logic for sending other stuff to higher level interface
-    extractRobotStatus();
 
     // pausing state follows runtime state when pausing
     if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED))
@@ -486,56 +477,6 @@ return_type URPositionHardwareInterface::write()
   }
 }
 
-void URPositionHardwareInterface::extractRobotStatus()
-{
-  robot_status_resource_.mode =
-      robot_status_bits_[urcl::toUnderlying(rtde::UrRtdeRobotStatusBits::IS_TEACH_BUTTON_PRESSED)] ? RobotMode::MANUAL :
-                                                                                                     RobotMode::AUTO;
-
-  robot_status_resource_.e_stopped =
-      safety_status_bits_[urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_EMERGENCY_STOPPED)] ? TriState::TRUE :
-                                                                                                    TriState::FALSE;
-
-  // Note that this is true as soon as the drives are powered,
-  // even if the brakes are still closed
-  // which is in slight contrast to the comments in the
-  // message definition
-  robot_status_resource_.drives_powered =
-      robot_status_bits_[urcl::toUnderlying(rtde::UrRtdeRobotStatusBits::IS_POWER_ON)] ? TriState::TRUE :
-                                                                                         TriState::FALSE;
-
-  // I found no way to reliably get information if the robot is moving
-  robot_status_resource_.in_motion = TriState::UNKNOWN;
-
-  if ((safety_status_bits_ & IN_ERROR_BITSET).any())
-  {
-    robot_status_resource_.in_error = TriState::TRUE;
-  }
-  else
-  {
-    robot_status_resource_.in_error = TriState::FALSE;
-  }
-
-  // Motion is not possible if controller is either in error or in safeguard stop.
-  // TODO: Check status of robot program "external control" here as well
-  if (robot_status_resource_.in_error == TriState::TRUE ||
-      safety_status_bits_[urcl::toUnderlying(rtde::UrRtdeSafetyStatusBits::IS_SAFEGUARD_STOPPED)])
-  {
-    robot_status_resource_.motion_possible = TriState::FALSE;
-  }
-  else if (robot_mode_ == ur_dashboard_msgs::msg::RobotMode::RUNNING)
-  {
-    robot_status_resource_.motion_possible = TriState::TRUE;
-  }
-  else
-  {
-    robot_status_resource_.motion_possible = TriState::FALSE;
-  }
-
-  // the error code, if any, is not transmitted by this protocol
-  // it can and should be fetched separately
-  robot_status_resource_.error_code = 0;
-}
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
