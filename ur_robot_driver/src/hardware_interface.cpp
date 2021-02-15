@@ -474,7 +474,6 @@ return_type URPositionHardwareInterface::write()
   }
 }
 
-
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
   if (!robot_program_running_ && program_running)
