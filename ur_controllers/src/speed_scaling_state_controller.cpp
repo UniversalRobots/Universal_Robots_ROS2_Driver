@@ -27,13 +27,6 @@
 
 #include "ur_controllers/speed_scaling_state_controller.h"
 
-#include <stddef.h>
-#include <limits>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/clock.hpp"
@@ -43,7 +36,6 @@
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rcpputils/split.hpp"
 #include "rcutils/logging_macros.h"
-#include "std_msgs/msg/header.hpp"
 
 namespace rclcpp_lifecycle
 {
@@ -52,8 +44,6 @@ class State;
 
 namespace ur_controllers
 {
-const auto kUninitializedValue = std::numeric_limits<double>::quiet_NaN();
-
 SpeedScalingStateController::SpeedScalingStateController()
 {
 }
@@ -103,11 +93,6 @@ SpeedScalingStateController::on_configure(const rclcpp_lifecycle::State& /*previ
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 SpeedScalingStateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  if (!init_sensor_data())
-  {
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
-
   last_publish_time_ = node_->now();
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -118,81 +103,12 @@ SpeedScalingStateController::on_deactivate(const rclcpp_lifecycle::State& /*prev
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-template <typename T>
-bool has_any_key(const std::unordered_map<std::string, T>& map, const std::vector<std::string>& keys)
-{
-  bool found_key = false;
-  for (const auto& key_item : map)
-  {
-    const auto& key = key_item.first;
-    if (std::find(keys.cbegin(), keys.cend(), key) != keys.cend())
-    {
-      found_key = true;
-      break;
-    }
-  }
-  return found_key;
-}
-
-bool SpeedScalingStateController::init_sensor_data()
-{
-  // loop in reverse order, this maintains the order of values at retrieval time
-  for (auto si = state_interfaces_.crbegin(); si != state_interfaces_.crend(); si++)
-  {
-    // initialize map if name is new
-    if (name_if_value_mapping_.count(si->get_name()) == 0)
-    {
-      name_if_value_mapping_[si->get_name()] = {};
-    }
-    // add interface name
-    name_if_value_mapping_[si->get_name()][si->get_interface_name()] = kUninitializedValue;
-  }
-
-  // filter state interfaces that have a speed scaling factor
-  // the rest will be ignored for this message
-  for (const auto& name_ifv : name_if_value_mapping_)
-  {
-    const auto& interfaces_and_values = name_ifv.second;
-    if (has_any_key(interfaces_and_values, { "speed_scaling_factor" }))
-    {
-      sensor_names_.push_back(name_ifv.first);
-    }
-  }
-
-  return true;
-}
-
-double get_value(const std::unordered_map<std::string, std::unordered_map<std::string, double>>& map,
-                 const std::string& name, const std::string& interface_name)
-{
-  const auto& interfaces_and_values = map.at(name);
-  const auto interface_and_value = interfaces_and_values.find(interface_name);
-  if (interface_and_value != interfaces_and_values.cend())
-  {
-    return interface_and_value->second;
-  }
-  else
-  {
-    return kUninitializedValue;
-  }
-}
-
 controller_interface::return_type SpeedScalingStateController::update()
 {
   if (publish_rate_ > 0.0 && (node_->now() - last_publish_time_) > rclcpp::Duration(1.0 / publish_rate_, 0.0))
   {
-    for (const auto& state_interface : state_interfaces_)
-    {
-      name_if_value_mapping_[state_interface.get_name()][state_interface.get_interface_name()] =
-          state_interface.get_value();
-      RCLCPP_DEBUG(get_node()->get_logger(), "%s/%s: %f\n", state_interface.get_name().c_str(),
-                   state_interface.get_interface_name().c_str(), state_interface.get_value());
-    }
-
-    for (auto i = 0ul; i < sensor_names_.size(); ++i)
-    {
-      speed_scaling_state_msg_.data = get_value(name_if_value_mapping_, sensor_names_[i], "speed_scaling_factor");
-    }
+    // Speed scaling is the only interface of the controller
+    speed_scaling_state_msg_.data = state_interfaces_[0].get_value();
 
     // publish
     speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);
