@@ -65,7 +65,10 @@ controller_interface::InterfaceConfiguration SpeedScalingStateController::comman
 
 controller_interface::InterfaceConfiguration SpeedScalingStateController::state_interface_configuration() const
 {
-  return controller_interface::InterfaceConfiguration{ controller_interface::interface_configuration_type::ALL };
+  controller_interface::InterfaceConfiguration config;
+  config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  config.names.push_back("speed_scaling/speed_scaling_factor");
+  return config;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
