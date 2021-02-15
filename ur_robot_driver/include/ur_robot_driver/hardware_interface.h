@@ -134,8 +134,6 @@ protected:
   bool packet_read_;
 
   uint32_t runtime_state_;
-  bool position_controller_running_;
-  bool velocity_controller_running_;
   bool controllers_initialized_;
 
   std::bitset<18> actual_dig_out_bits_;
