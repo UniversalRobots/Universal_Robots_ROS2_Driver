@@ -47,6 +47,8 @@
 // ROS
 #include "rclcpp/macros.hpp"
 
+#include "ur_robot_driver/robot_status_interface.h"
+
 using hardware_interface::Actuator;
 using hardware_interface::HardwareInfo;
 using hardware_interface::return_type;
@@ -127,32 +129,7 @@ protected:
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
 
-  // TODO exchange for industrial robot status interface
-  enum class TriState : int8_t
-  {
-    UNKNOWN = -1,
-    FALSE = 0,
-    TRUE = 1,
-  };
-  enum class RobotMode : int8_t
-  {
-    UNKNOWN = -1,
-    MANUAL = 1,
-    AUTO = 2,
-  };
-  typedef std::int32_t ErrorCode;
-  struct RobotStatus
-  {
-    RobotMode mode;
-    TriState e_stopped;
-    TriState drives_powered;
-    TriState motion_possible;
-    TriState in_motion;
-    TriState in_error;
-    ErrorCode error_code;
-  };
   RobotStatus robot_status_resource_{};
-  // END TODO
 
   bool packet_read_;
 
