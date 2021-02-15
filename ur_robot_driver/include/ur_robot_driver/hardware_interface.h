@@ -43,6 +43,7 @@
 // UR stuff
 #include <ur_client_library/ur/ur_driver.h>
 #include <ur_robot_driver/dashboard_client_ros.h>
+#include <ur_dashboard_msgs/msg/robot_mode.hpp>
 
 // ROS
 #include "rclcpp/macros.hpp"

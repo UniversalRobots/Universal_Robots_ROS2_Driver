@@ -523,8 +523,7 @@ void URPositionHardwareInterface::extractRobotStatus()
   {
     robot_status_resource_.motion_possible = TriState::FALSE;
   }
-  // TODO The hardcoded 7 should be ur_dashboard_msgs::RobotMode::RUNNING exchange when msgs are built
-  else if (robot_mode_ == 7)
+  else if (robot_mode_ == ur_dashboard_msgs::msg::RobotMode::RUNNING)
   {
     robot_status_resource_.motion_possible = TriState::TRUE;
   }
