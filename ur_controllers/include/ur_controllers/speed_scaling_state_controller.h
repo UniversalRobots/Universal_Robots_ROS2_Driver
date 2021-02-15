@@ -28,11 +28,6 @@
 #ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
 #define UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "controller_interface/controller_interface.hpp"
 
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
@@ -62,17 +57,12 @@ public:
   on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
 protected:
-  bool init_sensor_data();
-
-protected:
   std::vector<std::string> sensor_names_;
   rclcpp::Time last_publish_time_;
   double publish_rate_;
 
   std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
   std_msgs::msg::Float64 speed_scaling_state_msg_;
-
-  std::unordered_map<std::string, std::unordered_map<std::string, double>> name_if_value_mapping_;
 };
 }  // namespace ur_controllers
 #endif  // ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
