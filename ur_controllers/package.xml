@@ -5,22 +5,22 @@
   <version>0.0.0</version>
   <description>Provides controllers that use the speed scaling interface of Universal Robots.</description>
 
-  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
+  <maintainer email="grosse@fzi.de">Marvin Große Besselmann</maintainer>
 
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>pluginlib</build_depend>
-  <build_depend>rcutils</build_depend>
 
-  <exec_depend>pluginlib</exec_depend>
-  <exec_depend>rcutils</exec_depend>
-
+  <depend>control_msgs</depend>
   <depend>controller_interface</depend>
-  <depend>rclcpp_lifecycle</depend>
   <depend>geometry_msgs</depend>
   <depend>joint_trajectory_controller</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>rcutils</depend>
+  <depend>realtime_tools</depend>
+  <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>ur_client_library</depend>

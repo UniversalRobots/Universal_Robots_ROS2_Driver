@@ -11,18 +11,26 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(joint_trajectory_controller REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(realtime_tools REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(rcutils REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+  control_msgs
   controller_interface
   joint_trajectory_controller
   pluginlib
+  rclcpp_lifecycle
+  realtime_tools
+  sensor_msgs
   std_msgs
   geometry_msgs
   rclcpp_lifecycle
@@ -64,6 +72,8 @@ install(FILES controller_plugins.xml
 )
 
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
 
 ament_export_include_directories(
   include

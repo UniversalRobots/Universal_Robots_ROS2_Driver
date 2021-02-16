@@ -8,6 +8,9 @@ controller_manager:
     joint_state_controller:
       type: joint_state_controller/JointStateController
 
+    speed_scaling_state_controller:
+      type: ur_controllers/SpeedScalingStateController
+
     ur_joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
@@ -29,6 +32,10 @@ ur_joint_trajectory_controller:
     constraints:
       stopped_velocity_tolerance: 0.0
       goal_time: 0.0
+
+speed_scaling_state_controller:
+  ros__parameters:
+    state_publish_rate: 100.0
 
 forward_command_controller_position:
   ros__parameters:

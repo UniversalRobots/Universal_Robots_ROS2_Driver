@@ -19,8 +19,8 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
- * \date    2019-04-17
+ * \author  Marvin Große Besselmann grosse@fzi.de
+ * \date    2021-02-10
  *
  */
 //----------------------------------------------------------------------
@@ -28,10 +28,41 @@
 #ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
 #define UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
 
+#include "controller_interface/controller_interface.hpp"
+
+#include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "std_msgs/msg/float64.hpp"
+
 namespace ur_controllers
 {
-class SpeedScalingStateController
+class SpeedScalingStateController : public controller_interface::ControllerInterface
 {
+public:
+  SpeedScalingStateController();
+
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
+
+  controller_interface::return_type update() override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_configure(const rclcpp_lifecycle::State& previous_state) override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_activate(const rclcpp_lifecycle::State& previous_state) override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
+
+protected:
+  std::vector<std::string> sensor_names_;
+  rclcpp::Time last_publish_time_;
+  double publish_rate_;
+
+  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
+  std_msgs::msg::Float64 speed_scaling_state_msg_;
 };
 }  // namespace ur_controllers
 #endif  // ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
