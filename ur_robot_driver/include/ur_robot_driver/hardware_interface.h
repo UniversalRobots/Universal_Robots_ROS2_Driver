@@ -43,6 +43,7 @@
 // UR stuff
 #include <ur_client_library/ur/ur_driver.h>
 #include <ur_robot_driver/dashboard_client_ros.h>
+#include <ur_dashboard_msgs/msg/robot_mode.hpp>
 
 // ROS
 #include "rclcpp/macros.hpp"
@@ -55,6 +56,13 @@ using hardware_interface::status;
 
 namespace ur_robot_driver
 {
+enum class PausingState
+{
+  PAUSED,
+  RUNNING,
+  RAMPUP
+};
+
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
  * driver. It contains the read and write methods of the main control loop and registers various ROS
@@ -113,9 +121,11 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
+
   bool packet_read_;
 
   uint32_t runtime_state_;
+  bool controllers_initialized_;
 
   std::bitset<18> actual_dig_out_bits_;
   std::bitset<18> actual_dig_in_bits_;
@@ -139,6 +149,9 @@ protected:
   bool robot_program_running_;
   bool non_blocking_read_;
   bool position_interface_in_use_;
+
+  PausingState pausing_state_;
+  double pausing_ramp_up_increment_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
 };

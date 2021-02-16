@@ -21,6 +21,7 @@
  *
  * \author  Lovro Ivanov lovro.ivanov@gmail.com
  * \author  Andy Zelenak zelenak@picknik.ai
+ * \author  Marvin Große Besselmann grosse@fzi.de
  * \date    2020-11-9
  *
  */
@@ -49,6 +50,10 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
+  pausing_state_ = PausingState::RUNNING;
+  pausing_ramp_up_increment_ = 0.01;
+  controllers_initialized_ = false;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
@@ -375,6 +380,41 @@ return_type URPositionHardwareInterface::read()
     readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
     // TODO logic for sending other stuff to higher level interface
+
+    // pausing state follows runtime state when pausing
+    if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED))
+    {
+      pausing_state_ = PausingState::PAUSED;
+    }
+    // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
+    else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
+             pausing_state_ == PausingState::PAUSED)
+    {
+      speed_scaling_combined_ = 0.0;
+      pausing_state_ = PausingState::RAMPUP;
+    }
+
+    if (pausing_state_ == PausingState::RAMPUP)
+    {
+      double speed_scaling_ramp = speed_scaling_combined_ + pausing_ramp_up_increment_;
+      speed_scaling_combined_ = std::min(speed_scaling_ramp, speed_scaling_ * target_speed_fraction_);
+
+      if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_)
+      {
+        pausing_state_ = PausingState::RUNNING;
+      }
+    }
+    else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING))
+    {
+      // We have to keep speed scaling on ROS side at 0 during RESUMING to prevent controllers from
+      // continuing to interpolate
+      speed_scaling_combined_ = 0.0;
+    }
+    else
+    {
+      // Normal case
+      speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
+    }
 
     return return_type::OK;
   }
