@@ -5,13 +5,17 @@
     </description>
   </class>
   <class name="ur_controllers/SpeedScalingStateController" type="ur_controllers::SpeedScalingStateController" base_class_type="controller_interface::ControllerInterface">
-  <description>
-    This controller publishes the readings of all available speed scaling factors.
-  </description>
+    <description>
+      This controller publishes the readings of all available speed scaling factors.
+    </description>
   </class>
   <class name="ur_controllers/ScaledJointTrajectoryController" type="ur_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerInterface">
-  <description>
-    Scaled position-based joint trajectory controller
-  </description>
+    <description>
+      Scaled position-based joint trajectory controller
+    </description>
+  <class name="ur_controllers/ToolIOController" type="ur_controllers::ToolIOController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller publishes the Tool IO.
+    </description>
   </class>
 </library>

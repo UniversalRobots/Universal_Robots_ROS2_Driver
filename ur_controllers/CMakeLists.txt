@@ -22,6 +22,7 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(rcutils REQUIRED)
+find_package(ur_msgs REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
@@ -35,6 +36,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   geometry_msgs
   rclcpp_lifecycle
   rcutils
+  ur_msgs
 )
 
 include_directories(include)
@@ -43,7 +45,7 @@ add_library(${PROJECT_NAME} SHARED
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_controller.cpp
   src/force_torque_sensor_controller.cpp
-  src/force_torque_sensor_controller.cpp)
+  src/tool_io_controller.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
