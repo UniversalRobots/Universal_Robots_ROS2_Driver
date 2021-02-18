@@ -36,7 +36,29 @@ class ScaledJointTrajectoryController : public joint_trajectory_controller::Join
 {
 public:
   ScaledJointTrajectoryController() = default;
-  virtual ~ScaledJointTrajectoryController() = default;
+  ~ScaledJointTrajectoryController() override = default;
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const
+  {
+    controller_interface::InterfaceConfiguration conf;
+    conf = JointTrajectoryController::state_interface_configuration();
+    conf.names.push_back("speed_scaling/speed_scaling_factor");
+    return conf;
+  }
+
+  controller_interface::return_type update()
+  {
+    if (state_interfaces_.back().get_name() == "speed_scaling")
+    {
+      scaling_factor_ = state_interfaces_.back().get_value();
+    }
+    else
+    {
+      RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface not fount. This should not have happended");
+    }
+
+    return JointTrajectoryController::update();
+  }
 
 private:
   double scaling_factor_;
