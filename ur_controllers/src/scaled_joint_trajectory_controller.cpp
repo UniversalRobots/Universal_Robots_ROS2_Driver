@@ -19,10 +19,13 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
- * \date    2019-04-18
+ * \author  Marvin Große Besselmann grosse@fzi.de
+ * \date    2021-02-18
  *
  */
 //----------------------------------------------------------------------
 
 #include "ur_controllers/scaled_joint_trajectory_controller.h"
+
+#include "pluginlib/class_list_macros.hpp"
+PLUGINLIB_EXPORT_CLASS(ur_controllers::ScaledJointTrajectoryController, controller_interface::ControllerInterface)

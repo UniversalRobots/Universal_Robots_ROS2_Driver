@@ -9,4 +9,9 @@
     This controller publishes the readings of all available speed scaling factors.
   </description>
   </class>
+  <class name="ur_controllers/ScaledJointTrajectoryController" type="ur_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    Scaled position-based joint trajectory controller
+  </description>
+  </class>
 </library>

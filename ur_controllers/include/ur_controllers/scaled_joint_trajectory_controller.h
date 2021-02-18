@@ -19,19 +19,27 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
- * \date    2019-04-18
+ * \author  Marvin Große Besselmann grosse@fzi.de
+ * \date    2021-02-18
  *
  */
 //----------------------------------------------------------------------
 #ifndef UR_CONTROLLERS_SCALED_TRAJECTORY_CONTROLLER_H_INCLUDED
 #define UR_CONTROLLERS_SCALED_TRAJECTORY_CONTROLLER_H_INCLUDED
 
+#include "joint_trajectory_controller/joint_trajectory_controller.hpp"
+
 namespace ur_controllers
 {
-template <class SegmentImpl, class HardwareInterface>
-class ScaledJointTrajectoryController
+// template <class SegmentImpl, class HardwareInterface>
+class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
 {
+public:
+  ScaledJointTrajectoryController() = default;
+  virtual ~ScaledJointTrajectoryController() = default;
+
+private:
+  double scaling_factor_;
 };
 }  // namespace ur_controllers
 
