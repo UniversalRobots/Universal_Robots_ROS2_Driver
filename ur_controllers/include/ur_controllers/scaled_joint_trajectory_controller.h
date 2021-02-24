@@ -39,7 +39,7 @@ public:
   ScaledJointTrajectoryController() = default;
   ~ScaledJointTrajectoryController() override = default;
 
-  controller_interface::InterfaceConfiguration state_interface_configuration() const
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override
   {
     controller_interface::InterfaceConfiguration conf;
     conf = JointTrajectoryController::state_interface_configuration();
@@ -48,7 +48,7 @@ public:
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_activate(const rclcpp_lifecycle::State& state)
+  on_activate(const rclcpp_lifecycle::State& state) override
   {
     TimeData time_data;
     time_data.time = node_->now();
@@ -58,7 +58,7 @@ public:
     return JointTrajectoryController::on_activate(state);
   }
 
-  controller_interface::return_type update()
+  controller_interface::return_type update() override
   {
     if (state_interfaces_.back().get_name() == "speed_scaling")
     {
@@ -117,7 +117,7 @@ public:
     state_current.time_from_start.set__sec(0);
 
     // currently carrying out a trajectory
-    if (traj_point_active_ptr_ && (*traj_point_active_ptr_)->has_trajectory_msg() == false)
+    if (traj_point_active_ptr_ && !(*traj_point_active_ptr_)->has_trajectory_msg())
     {
       // if sampling the first time, set the point before you sample
       if (!(*traj_point_active_ptr_)->is_sampled_already())
