@@ -49,7 +49,7 @@ scaled_joint_trajectory_controller:
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
     constraints:
-      stopped_velocity_tolerance: 0.0
+      stopped_velocity_tolerance: 0.2
       goal_time: 0.0
 
 speed_scaling_state_controller:

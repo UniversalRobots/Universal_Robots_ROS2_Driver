@@ -47,6 +47,17 @@ public:
     return conf;
   }
 
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_activate(const rclcpp_lifecycle::State& state)
+  {
+    TimeData time_data;
+    time_data.time = node_->now();
+    time_data.period = rclcpp::Duration(0, 0);
+    time_data.uptime = node_->now();
+    time_data_.initRT(time_data);
+    return JointTrajectoryController::on_activate(state);
+  }
+
   controller_interface::return_type update()
   {
     if (state_interfaces_.back().get_name() == "speed_scaling")
@@ -102,6 +113,7 @@ public:
       state_current.velocities[index] = joint_velocity_state_interface_[index].get().get_value();
       state_current.accelerations[index] = 0.0;
     }
+    // TODO look up if this is relevant somewhere since im messing with the time below
     state_current.time_from_start.set__sec(0);
 
     // currently carrying out a trajectory
@@ -113,10 +125,22 @@ public:
         (*traj_point_active_ptr_)->set_point_before_trajectory_msg(node_->now(), state_current);
       }
       resize_joint_trajectory_point(state_error, joint_num);
+
+      // Main Speed scaling difference...
+      // Adjust time with scaling factor
+      TimeData time_data;
+      time_data.time = node_->now();
+      rcl_duration_value_t period = (time_data.time - time_data_.readFromRT()->time).nanoseconds();
+      time_data.period = rclcpp::Duration(scaling_factor_ * period);
+      time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
+      rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration(period);
+      time_data_.writeFromNonRT(time_data);  // TODO: Grrr, we need a lock-free data structure here!
+
       // find segment for current timestamp
       joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
       const bool valid_point =
-          (*traj_point_active_ptr_)->sample(node_->now(), state_desired, start_segment_itr, end_segment_itr);
+          (*traj_point_active_ptr_)->sample(traj_time, state_desired, start_segment_itr, end_segment_itr);
+
       if (valid_point)
       {
         bool abort = false;
@@ -209,8 +233,20 @@ public:
     return controller_interface::return_type::SUCCESS;
   }
 
+protected:
+  struct TimeData
+  {
+    TimeData() : time(0.0), period(0.0), uptime(0.0)
+    {
+    }
+    rclcpp::Time time;
+    rclcpp::Duration period;
+    rclcpp::Time uptime;
+  };
+
 private:
   double scaling_factor_;
+  realtime_tools::RealtimeBuffer<TimeData> time_data_;
 };
 }  // namespace ur_controllers
 
