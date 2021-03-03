@@ -190,10 +190,10 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "safety_mode", &safety_mode_copy_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface("gpio", "tool_mode", &tool_mode_copy_));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_mode", &tool_mode_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_output_current", &tool_output_current_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "tool_output_current", &tool_output_current_));
 
   state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
 
