@@ -35,6 +35,10 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::com
 
   config.names.emplace_back("gpio/speed_scaling_factor_cmd");
 
+  config.names.emplace_back("gpio/scaling_async_success");
+
+  config.names.emplace_back("gpio/io_async_success");
+
   return config;
 }
 
@@ -43,6 +47,7 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
+  // digital io
   for (size_t i = 0; i < 18; ++i)
   {
     config.names.emplace_back("gpio/digital_output_" + std::to_string(i));
@@ -53,29 +58,10 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
     config.names.emplace_back("gpio/digital_input_" + std::to_string(i));
   }
 
-  for (size_t i = 0; i < 11; ++i)
-  {
-    config.names.emplace_back("gpio/safety_status_bit_" + std::to_string(i));
-  }
-
-  for (size_t i = 0; i < 4; ++i)
-  {
-    config.names.emplace_back("gpio/analog_io_type_" + std::to_string(i));
-  }
-
-  for (size_t i = 0; i < 4; ++i)
-  {
-    config.names.emplace_back("gpio/robot_status_bit_" + std::to_string(i));
-  }
-
+  // analog io
   for (size_t i = 0; i < 2; ++i)
   {
-    config.names.emplace_back("gpio/tool_analog_input_type_" + std::to_string(i));
-  }
-
-  for (size_t i = 0; i < 2; ++i)
-  {
-    config.names.emplace_back("gpio/tool_analog_input_" + std::to_string(i));
+    config.names.emplace_back("gpio/standard_analog_output_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 2; ++i)
@@ -83,21 +69,39 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
     config.names.emplace_back("gpio/standard_analog_input_" + std::to_string(i));
   }
 
-  for (size_t i = 0; i < 2; ++i)
+  for (size_t i = 0; i < 4; ++i)
   {
-    config.names.emplace_back("gpio/standard_analog_output_" + std::to_string(i));
+    config.names.emplace_back("gpio/analog_io_type_" + std::to_string(i));
   }
 
-  config.names.emplace_back("gpio/robot_mode");
-  config.names.emplace_back("gpio/safety_mode");
-  config.names.emplace_back("gpio/tool_output_voltage");
-
+  // tool
   config.names.emplace_back("gpio/tool_mode");
+  config.names.emplace_back("gpio/tool_output_voltage");
   config.names.emplace_back("gpio/tool_output_current");
   config.names.emplace_back("gpio/tool_temperature");
 
-  config.names.emplace_back("gpio/io_async_success");
-  config.names.emplace_back("gpio/scaling_async_success");
+  for (size_t i = 0; i < 2; ++i)
+  {
+    config.names.emplace_back("gpio/tool_analog_input_" + std::to_string(i));
+  }
+  for (size_t i = 0; i < 2; ++i)
+  {
+    config.names.emplace_back("gpio/tool_analog_input_type_" + std::to_string(i));
+  }
+
+  // robot
+  config.names.emplace_back("gpio/robot_mode");
+  for (size_t i = 0; i < 4; ++i)
+  {
+    config.names.emplace_back("gpio/robot_status_bit_" + std::to_string(i));
+  }
+
+  // safety
+  config.names.emplace_back("gpio/safety_mode");
+  for (size_t i = 0; i < 11; ++i)
+  {
+    config.names.emplace_back("gpio/safety_status_bit_" + std::to_string(i));
+  }
 
   return config;
 }
