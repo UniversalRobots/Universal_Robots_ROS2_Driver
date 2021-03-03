@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <ur_controllers/gpio_controller.h>
+
 #include "ur_controllers/gpio_controller.h"
 
 namespace ur_controllers
@@ -44,6 +46,10 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   for (size_t i = 0; i < 18; ++i)
   {
     config.names.emplace_back("gpio/digital_output_" + std::to_string(i));
+  }
+
+  for (size_t i = 0; i < 18; ++i)
+  {
     config.names.emplace_back("gpio/digital_input_" + std::to_string(i));
   }
 
@@ -55,14 +61,30 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   for (size_t i = 0; i < 4; ++i)
   {
     config.names.emplace_back("gpio/analog_io_type_" + std::to_string(i));
+  }
+
+  for (size_t i = 0; i < 4; ++i)
+  {
     config.names.emplace_back("gpio/robot_status_bit_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 2; ++i)
   {
     config.names.emplace_back("gpio/tool_analog_input_type_" + std::to_string(i));
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
     config.names.emplace_back("gpio/tool_analog_input_" + std::to_string(i));
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
     config.names.emplace_back("gpio/standard_analog_input_" + std::to_string(i));
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
     config.names.emplace_back("gpio/standard_analog_output_" + std::to_string(i));
   }
 
@@ -82,6 +104,8 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
 
 controller_interface::return_type ur_controllers::GPIOController::init(const std::string& controller_name)
 {
+  initMsgs();
+
   return ControllerInterface::init(controller_name);
 }
 
@@ -93,6 +117,30 @@ controller_interface::return_type ur_controllers::GPIOController::update()
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
+  try
+  {
+    // register publisher
+    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("io_states", rclcpp::SystemDefaultsQoS());
+
+    tool_data_pub_ = get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("tool_data", rclcpp::SystemDefaultsQoS());
+
+    robot_mode_pub_ =
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("robot_mode", rclcpp::SystemDefaultsQoS());
+
+    safety_mode_pub_ =
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("safety_mode", rclcpp::SystemDefaultsQoS());
+
+    set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
+        "set_speed_slider", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
+        "set_io", std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
+  }
+  catch (...)
+  {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+
   return LifecycleNodeInterface::on_configure(previous_state);
 }
 
@@ -106,6 +154,25 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& previous_state)
 {
   return LifecycleNodeInterface::on_deactivate(previous_state);
+}
+
+bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp)
+{
+  return false;
+}
+
+bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
+                                    ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp)
+{
+  return false;
+}
+
+void GPIOController::initMsgs()
+{
+  io_msg_.digital_in_states.resize(standard_digital_output_cmd_.size());
+  io_msg_.digital_out_states.resize(standard_digital_output_cmd_.size());
+  io_msg_.analog_in_states.resize(2);
+  io_msg_.analog_out_states.resize(2);
 }
 
 }  // namespace ur_controllers
