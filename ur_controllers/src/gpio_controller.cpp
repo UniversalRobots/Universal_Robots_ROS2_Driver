@@ -162,6 +162,39 @@ ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& pre
 
 bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp)
 {
+  // io async success
+  command_interfaces_[20].set_value(2.0);
+
+  if (req->pin >= 0 && req->pin <= 17 && req->FUN_SET_DIGITAL_OUT)
+  {
+    command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
+
+    while (command_interfaces_[20].get_value() != 2.0)
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    resp->success = static_cast<bool>(command_interfaces_[20].get_value());
+    return resp->success;
+  }
+  else if (req->pin >= 0 && req->pin <= 2 && req->FUN_SET_ANALOG_OUT)
+  {
+    command_interfaces_[18 + req->pin].set_value(static_cast<double>(req->state));
+
+    while (command_interfaces_[20].get_value() != 2.0)
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    resp->success = static_cast<bool>(command_interfaces_[20].get_value());
+    return resp->success;
+  }
+  else
+  {
+    resp->success = false;
+    return false;
+  }
+
   return false;
 }
 
