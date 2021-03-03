@@ -2,7 +2,7 @@ repositories:
   moveit2:
     type: git
     url: https://github.com/destogl/moveit2.git
-    version: master
+    version: main
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
