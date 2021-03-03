@@ -18,11 +18,11 @@ Follow the [instructions](https://github.com/UniversalRobots/Universal_Robots_RO
 
 ## Quick Start Instructions
 
-If you are familiar with ROS2, here are the quick-and-dirty build instructions.
+If you are familiar with ROS2, here are the quick-and-dirty build instructions. (TODO: change branch before merge to main)
 
   ```
   cd $COLCON_WS
-  git clone git@github.com:PickNikRobotics/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
+  git clone git@github.com:PickNikRobotics/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver --branch develop
   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
   rosdep install --ignore-src --from-paths src -y -r
   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
