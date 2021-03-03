@@ -1,16 +1,8 @@
 repositories:
-  control_msgs:
+  moveit2:
     type: git
-    url: https://github.com/ros-controls/control_msgs.git
-    version: foxy-devel
-  geometric_shapes:
-    type: git
-    url: https://github.com/ros-planning/geometric_shapes.git
-    version: ros2
-  realtime_tools:
-    type: git
-    url: https://github.com/ros-controls/realtime_tools.git
-    version: foxy-devel
+    url: https://github.com/destogl/moveit2.git
+    version: master
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
@@ -19,16 +11,12 @@ repositories:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
     version: master
-  srdfdom:
-    type: git
-    url: https://github.com/ros-planning/srdfdom.git
-    version: ros2
   ur_client_library:
     type: git
     url: https://github.com/PickNikRobotics/Universal_Robots_Client_Library.git
     version: foxy-devel
-  warehouse_ros:
+  # TODO(denis): remove this when it's available as a debian
+  warehouse_ros_mongo:
     type: git
-    url: https://github.com/ros-planning/warehouse_ros.git
+    url: https://github.com/ros-planning/warehouse_ros_mongo
     version: ros2
-
