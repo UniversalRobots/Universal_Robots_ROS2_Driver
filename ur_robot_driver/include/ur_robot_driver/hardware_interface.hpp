@@ -111,6 +111,10 @@ protected:
   void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
                       std::bitset<N>& data);
 
+  void initAsyncIO();
+  void checkAsyncIO();
+  void updateNonDoubleValues();
+
   HardwareInfo info_;
   status status_;
 
@@ -146,6 +150,26 @@ protected:
   int32_t safety_mode_;
   std::bitset<4> robot_status_bits_;
   std::bitset<11> safety_status_bits_;
+
+  // asynchronous commands
+  std::array<double, 18> standard_dig_out_bits_cmd_;
+  std::array<double, 2> standard_analog_output_cmd_;
+  double io_async_success_;
+  double speed_scaling_cmd_;
+  double scaling_async_success_;
+  bool first_pass_;
+
+  // copy of non double values
+  std::array<double, 18> actual_dig_out_bits_copy_;
+  std::array<double, 18> actual_dig_in_bits_copy_;
+  std::array<double, 4> analog_io_types_copy_;
+  double tool_mode_copy_;
+  std::array<double, 2> tool_analog_input_types_copy_;
+  double tool_output_voltage_copy_;
+  double robot_mode_copy_;
+  double safety_mode_copy_;
+  std::array<double, 4> robot_status_bits_copy_;
+  std::array<double, 11> safety_status_bits_copy_;
 
   bool robot_program_running_;
   bool non_blocking_read_;
