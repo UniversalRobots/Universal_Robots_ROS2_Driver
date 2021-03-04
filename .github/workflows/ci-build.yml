@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - foxy
-  #schedule:
-    ## Run every morning to detect flakiness and broken dependencies
-    #- cron: '28 6 * * *'
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '43 8 * * *'
 
 jobs:
   ci_binary:
