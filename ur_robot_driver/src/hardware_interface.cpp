@@ -607,7 +607,8 @@ void URPositionHardwareInterface::checkAsyncIO()
             static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
       }
 
-      if (io_async_success_ != 2.0) return;
+      if (io_async_success_ != 2.0)
+        return;
     }
   }
 
@@ -615,10 +616,10 @@ void URPositionHardwareInterface::checkAsyncIO()
   {
     if (standard_analog_output_cmd_[i] != standard_analog_output_[i])
     {
-      io_async_success_ = ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i,
-                                                                               standard_analog_output_cmd_[i]);
+      io_async_success_ = ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i]);
 
-        if (io_async_success_ != 2.0) return;
+      if (io_async_success_ != 2.0)
+        return;
     }
   }
 
