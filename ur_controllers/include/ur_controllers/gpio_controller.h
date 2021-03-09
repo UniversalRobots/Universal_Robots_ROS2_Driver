@@ -43,7 +43,7 @@
 
 namespace ur_controllers
 {
-enum COMMAND_INTERFACES
+enum CommandInterfaces
 {
 
   DIGITAL_OUTPUTS_CMD = 0u,
@@ -53,7 +53,7 @@ enum COMMAND_INTERFACES
   SCALING_ASYNC_SUCCESS = 22
 };
 
-enum STATE_INTERFACES
+enum StateInterfaces
 {
 
   DIGITAL_OUTPUTS = 0u,
