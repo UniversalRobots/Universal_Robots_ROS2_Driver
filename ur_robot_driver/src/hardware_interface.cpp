@@ -623,8 +623,7 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
   }
 
-  if (speed_scaling_cmd_ != speed_scaling_ && speed_scaling_cmd_ >= 0.01 && speed_scaling_cmd_ <= 1.0 &&
-      ur_driver_ != nullptr)
+  if (speed_scaling_cmd_ != speed_scaling_ &&  ur_driver_ != nullptr)
   {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(speed_scaling_cmd_);
   }
