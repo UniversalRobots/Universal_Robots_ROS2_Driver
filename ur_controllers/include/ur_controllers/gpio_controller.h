@@ -43,6 +43,37 @@
 
 namespace ur_controllers
 {
+enum COMMAND_INTERFACES
+{
+
+  DIGITAL_OUTPUTS_CMD = 0u,
+  ANALOG_OUTPUTS_CMD = 18,
+  IO_ASYNC_SUCCESS = 20,
+  SPEED_SCALING_CMD = 21,
+  SCALING_ASYNC_SUCCESS = 22
+};
+
+enum STATE_INTERFACES
+{
+
+  DIGITAL_OUTPUTS = 0u,
+  DIGITAL_INPUTS = 18,
+  ANALOG_OUTPUTS = 36,
+  ANALOG_INPUTS = 38,
+  ANALOG_IO_TYPES = 40,
+  TOOL_MODE = 44,
+  TOOL_OUTPUT_VOLTAGE = 45,
+  TOOL_OUTPUT_CURRENT = 46,
+  TOOL_TEMPERATURE = 47,
+  TOOL_ANALOG_INPUTS = 48,
+  TOOL_ANALOG_IO_TYPES = 50,
+  ROBOT_MODE = 52,
+  ROBOT_STATUS_BITS = 53,
+  SAFETY_MODE = 57,
+  SAFETY_STATUS_BITS = 58
+
+};
+
 class GPIOController : public controller_interface::ControllerInterface
 {
 public:
@@ -66,6 +97,14 @@ private:
   bool setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                       ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp);
 
+  void publishIO();
+
+  void publishToolData();
+
+  void publishRobotMode();
+
+  void publishSafetyMode();
+
 protected:
   void initMsgs();
 
@@ -86,9 +125,9 @@ protected:
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
 
   ur_msgs::msg::IOStates io_msg_;
-  ur_msgs::msg::IOStates tool_data_msg_;
-  ur_msgs::msg::IOStates robot_mode_msg_;
-  ur_msgs::msg::IOStates safety_mode_msg_;
+  ur_msgs::msg::ToolDataMsg tool_data_msg_;
+  ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
+  ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
 
   // TODO publishers to add: program_state_pub_, tcp_pose_pub_
   // TODO subscribers to add: script_command_sub_
