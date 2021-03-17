@@ -74,8 +74,8 @@ private:
                                                                                       const std::string& expected)
   {
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr service = node_->create_service<std_srvs::srv::Trigger>(
-        "topic", [&, command, expected](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
-                                        const std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
+        topic, [&, command, expected](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+                                      const std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
           resp->message = this->client_.sendAndReceive(command);
           resp->success = std::regex_match(resp->message, std::regex(expected));
         });
