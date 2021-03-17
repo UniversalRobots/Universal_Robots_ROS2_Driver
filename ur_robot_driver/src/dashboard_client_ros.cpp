@@ -32,6 +32,7 @@ namespace ur_robot_driver
 DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
   : node_(node), client_(robot_ip)
 {
+  node_->declare_parameter<double>("receive_timeout", 1);
   connect();
 
   // Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
@@ -199,7 +200,9 @@ bool DashboardClientROS::connect()
 {
   timeval tv;
   // Timeout after which a call to the dashboard server will be considered failure if no answer has been received.
-  tv.tv_sec = node_->declare_parameter<double>("receive_timeout", 1);
+  double time_buffer;
+  node_->get_parameter("receive_timeout", time_buffer);
+  tv.tv_sec = time_buffer;
   tv.tv_usec = 0;
   client_.setReceiveTimeout(tv);
   return client_.connect();
