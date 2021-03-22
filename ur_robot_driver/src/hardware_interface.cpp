@@ -272,7 +272,6 @@ return_type URPositionHardwareInterface::start()
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
-
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting Dashboard Client");
   rclcpp::Node::SharedPtr dashboard_node = rclcpp::Node::make_shared("ur_dashboard_client");
   dashboard_client_.reset(new ur_robot_driver::DashboardClientROS(dashboard_node, robot_ip));
