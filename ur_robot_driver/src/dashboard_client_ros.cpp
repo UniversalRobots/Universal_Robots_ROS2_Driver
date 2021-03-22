@@ -38,60 +38,60 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   connect();
 
   // Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
-  brake_release_service_ = createDashboardTriggerSrv("brake_release", "brake release\n", "Brake releasing");
+  brake_release_service_ = createDashboardTriggerSrv("~/brake_release", "brake release\n", "Brake releasing");
 
   // If this service is called the operational mode can again be changed from PolyScope, and the user password is
   // enabled.
-  clear_operational_mode_service_ = createDashboardTriggerSrv("clear_operational_mode", "clear operational mode\n",
+  clear_operational_mode_service_ = createDashboardTriggerSrv("~/clear_operational_mode", "clear operational mode\n",
                                                               "No longer controlling the operational mode\\. "
                                                               "Current "
                                                               "operational mode: "
                                                               "'(MANUAL|AUTOMATIC)'\\.");
 
   // Close a (non-safety) popup on the teach pendant.
-  close_popup_service_ = createDashboardTriggerSrv("close_popup", "close popup\n", "closing popup");
+  close_popup_service_ = createDashboardTriggerSrv("~/close_popup", "close popup\n", "closing popup");
 
   // Close a safety popup on the teach pendant.
   close_safety_popup_service_ =
-      createDashboardTriggerSrv("close_safety_popup", "close safety popup\n", "closing safety popup");
+      createDashboardTriggerSrv("~/close_safety_popup", "close safety popup\n", "closing safety popup");
 
   // Pause a running program.
-  pause_service_ = createDashboardTriggerSrv("pause", "pause\n", "Pausing program");
+  pause_service_ = createDashboardTriggerSrv("~/pause", "pause\n", "Pausing program");
 
   // Start execution of a previously loaded program
-  play_service_ = createDashboardTriggerSrv("play", "play\n", "Starting program");
+  play_service_ = createDashboardTriggerSrv("~/play", "play\n", "Starting program");
 
   // Power off the robot motors
-  power_off_service_ = createDashboardTriggerSrv("power_off", "power off\n", "Powering off");
+  power_off_service_ = createDashboardTriggerSrv("~/power_off", "power off\n", "Powering off");
 
   // Power on the robot motors. To fully start the robot, call 'brake_release' afterwards.
-  power_on_service_ = createDashboardTriggerSrv("power_on", "power on\n", "Powering on");
+  power_on_service_ = createDashboardTriggerSrv("~/power_on", "power on\n", "Powering on");
 
   // Used when robot gets a safety fault or violation to restart the safety. After safety has been rebooted the robot
   // will be in Power Off. NOTE: You should always ensure it is okay to restart the system. It is highly recommended to
   // check the error log before using this command (either via PolyScope or e.g. ssh connection).
-  restart_safety_service_ = createDashboardTriggerSrv("restart_safety", "restart safety\n", "Restarting safety");
+  restart_safety_service_ = createDashboardTriggerSrv("~/restart_safety", "restart safety\n", "Restarting safety");
 
   // Shutdown the robot controller
-  shutdown_service_ = createDashboardTriggerSrv("shutdown", "shutdown\n", "Shutting down");
+  shutdown_service_ = createDashboardTriggerSrv("~/shutdown", "shutdown\n", "Shutting down");
 
   // Stop program execution on the robot
-  stop_service_ = createDashboardTriggerSrv("stop", "stop\n", "Stopped");
+  stop_service_ = createDashboardTriggerSrv("~/stop", "stop\n", "Stopped");
 
   // Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the
   // cause of the protective stop is resolved before calling this service.
   unlock_protective_stop_service_ =
-      createDashboardTriggerSrv("unlock_protective_stop", "unlock protective stop\n", "Protective stop releasing");
+      createDashboardTriggerSrv("~/unlock_protective_stop", "unlock protective stop\n", "Protective stop releasing");
 
   // Query whether there is currently a program running
   running_service_ = node_->create_service<ur_dashboard_msgs::srv::IsProgramRunning>(
-      "program_running",
+      "~/program_running",
       std::bind(&DashboardClientROS::handleRunningQuery, this, std::placeholders::_1, std::placeholders::_2));
 
   // Load a robot installation from a file
   get_loaded_program_service_ = node_->create_service<ur_dashboard_msgs::srv::GetLoadedProgram>(
-      "get_loaded_program", [&](const ur_dashboard_msgs::srv::GetLoadedProgram::Request::SharedPtr req,
-                                ur_dashboard_msgs::srv::GetLoadedProgram::Response::SharedPtr resp) {
+      "~/get_loaded_program", [&](const ur_dashboard_msgs::srv::GetLoadedProgram::Request::SharedPtr req,
+                                  ur_dashboard_msgs::srv::GetLoadedProgram::Response::SharedPtr resp) {
         try
         {
           resp->answer = this->client_.sendAndReceive("get loaded program\n");
@@ -114,8 +114,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Load a robot installation from a file
   load_installation_service_ = node_->create_service<ur_dashboard_msgs::srv::Load>(
-      "load_installation", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
-                               ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
+      "~/load_installation", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
+                                 ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
         try
         {
           resp->answer = this->client_.sendAndReceive("load installation " + req->filename + "\n");
@@ -132,8 +132,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Load a robot program from a file
   load_program_service_ = node->create_service<ur_dashboard_msgs::srv::Load>(
-      "load_program", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
-                          ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
+      "~/load_program", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
+                            ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
         try
         {
           resp->answer = this->client_.sendAndReceive("load " + req->filename + "\n");
@@ -150,13 +150,13 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // // Query whether the current program is saved
   is_program_saved_service_ = node_->create_service<ur_dashboard_msgs::srv::IsProgramSaved>(
-      "program_saved",
+      "~/program_saved",
       std::bind(&DashboardClientROS::handleSavedQuery, this, std::placeholders::_1, std::placeholders::_2));
 
   // Service to show a popup on the UR Teach pendant.
   popup_service_ = node_->create_service<ur_dashboard_msgs::srv::Popup>(
-      "popup", [&](ur_dashboard_msgs::srv::Popup::Request::SharedPtr req,
-                   ur_dashboard_msgs::srv::Popup::Response::SharedPtr resp) {
+      "~/popup", [&](ur_dashboard_msgs::srv::Popup::Request::SharedPtr req,
+                     ur_dashboard_msgs::srv::Popup::Response::SharedPtr resp) {
         try
         {
           resp->answer = this->client_.sendAndReceive("popup " + req->message + "\n");
@@ -173,8 +173,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Service to query the current program state
   program_state_service_ = node_->create_service<ur_dashboard_msgs::srv::GetProgramState>(
-      "program_state", [&](const ur_dashboard_msgs::srv::GetProgramState::Request::SharedPtr /*unused*/,
-                           ur_dashboard_msgs::srv::GetProgramState::Response::SharedPtr resp) {
+      "~/program_state", [&](const ur_dashboard_msgs::srv::GetProgramState::Request::SharedPtr /*unused*/,
+                             ur_dashboard_msgs::srv::GetProgramState::Response::SharedPtr resp) {
         try
         {
           resp->answer = this->client_.sendAndReceive("programState\n");
@@ -198,18 +198,18 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Service to query the current safety mode
   safety_mode_service_ = node_->create_service<ur_dashboard_msgs::srv::GetSafetyMode>(
-      "get_safety_mode",
+      "~/get_safety_mode",
       std::bind(&DashboardClientROS::handleSafetyModeQuery, this, std::placeholders::_1, std::placeholders::_2));
 
   // Service to query the current robot mode
   robot_mode_service_ = node_->create_service<ur_dashboard_msgs::srv::GetRobotMode>(
-      "get_robot_mode",
+      "~/get_robot_mode",
       std::bind(&DashboardClientROS::handleRobotModeQuery, this, std::placeholders::_1, std::placeholders::_2));
 
   // Service to add a message to the robot's log
   add_to_log_service_ = node->create_service<ur_dashboard_msgs::srv::AddToLog>(
-      "add_to_log", [&](const ur_dashboard_msgs::srv::AddToLog::Request::SharedPtr req,
-                        ur_dashboard_msgs::srv::AddToLog::Response::SharedPtr resp) {
+      "~/add_to_log", [&](const ur_dashboard_msgs::srv::AddToLog::Request::SharedPtr req,
+                          ur_dashboard_msgs::srv::AddToLog::Response::SharedPtr resp) {
         try
         {
           resp->answer = this->client_.sendAndReceive("addToLog " + req->message + "\n");
@@ -226,8 +226,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // General purpose service to send arbitrary messages to the dashboard server
   raw_request_service_ = node_->create_service<ur_dashboard_msgs::srv::RawRequest>(
-      "raw_request", [&](const ur_dashboard_msgs::srv::RawRequest::Request::SharedPtr req,
-                         ur_dashboard_msgs::srv::RawRequest::Response::SharedPtr resp) {
+      "~/raw_request", [&](const ur_dashboard_msgs::srv::RawRequest::Request::SharedPtr req,
+                           ur_dashboard_msgs::srv::RawRequest::Response::SharedPtr resp) {
         try
         {
           resp->answer = this->client_.sendAndReceive(req->query + "\n");
@@ -241,9 +241,9 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
       });
 
   // Service to reconnect to the dashboard server
-  reconnect_service_ =
-      node_->create_service<std_srvs::srv::Trigger>("connect", [&](const std_srvs::srv::Trigger::Request::SharedPtr req,
-                                                                   std_srvs::srv::Trigger::Response::SharedPtr resp) {
+  reconnect_service_ = node_->create_service<std_srvs::srv::Trigger>(
+      "~/connect",
+      [&](const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp) {
         try
         {
           resp->success = connect();
@@ -259,8 +259,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Disconnect from the dashboard service.
   quit_service_ =
-      node_->create_service<std_srvs::srv::Trigger>("quit", [&](const std_srvs::srv::Trigger::Request::SharedPtr req,
-                                                                std_srvs::srv::Trigger::Response::SharedPtr resp) {
+      node_->create_service<std_srvs::srv::Trigger>("~/quit", [&](const std_srvs::srv::Trigger::Request::SharedPtr req,
+                                                                  std_srvs::srv::Trigger::Response::SharedPtr resp) {
         try
         {
           resp->message = this->client_.sendAndReceive("quit\n");
