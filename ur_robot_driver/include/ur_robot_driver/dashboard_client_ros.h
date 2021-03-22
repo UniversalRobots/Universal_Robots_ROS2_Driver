@@ -21,6 +21,8 @@
  *
  * \author  Felix Exner exner@fzi.de
  * \date    2019-10-21
+ * \author  Marvin Große Besselmann grosse@fzi.de
+ * \date    2021-03-22
  *
  */
 //----------------------------------------------------------------------
@@ -36,6 +38,7 @@
 
 // UR client library
 #include <ur_client_library/ur/dashboard_client.h>
+#include <ur_client_library/exceptions.h>
 #include <ur_dashboard_msgs/msg/program_state.hpp>
 #include <ur_dashboard_msgs/srv/add_to_log.hpp>
 #include <ur_dashboard_msgs/srv/get_loaded_program.hpp>
@@ -76,10 +79,18 @@ private:
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr service = node_->create_service<std_srvs::srv::Trigger>(
         topic, [&, command, expected](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
                                       const std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
-          resp->message = this->client_.sendAndReceive(command);
-          resp->success = std::regex_match(resp->message, std::regex(expected));
+          try
+          {
+            resp->message = this->client_.sendAndReceive(command);
+            resp->success = std::regex_match(resp->message, std::regex(expected));
+          }
+          catch (const urcl::UrException& e)
+          {
+            RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+            resp->message = e.what();
+            resp->success = false;
+          }
         });
-
     return service;
   }
 

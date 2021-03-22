@@ -21,6 +21,8 @@
  *
  * \author  Felix Exner exner@fzi.de
  * \date    2019-10-21
+ * \author  Marvin Große Besselmann grosse@fzi.de
+ * \date    2021-03-22
  *
  */
 //----------------------------------------------------------------------
@@ -90,13 +92,22 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   get_loaded_program_service_ = node_->create_service<ur_dashboard_msgs::srv::GetLoadedProgram>(
       "get_loaded_program", [&](const ur_dashboard_msgs::srv::GetLoadedProgram::Request::SharedPtr req,
                                 ur_dashboard_msgs::srv::GetLoadedProgram::Response::SharedPtr resp) {
-        resp->answer = this->client_.sendAndReceive("get loaded program\n");
-        std::smatch match;
-        std::regex expected("Loaded program: (.+)");
-        resp->success = std::regex_match(resp->answer, match, expected);
-        if (resp->success)
+        try
         {
-          resp->program_name = match[1];
+          resp->answer = this->client_.sendAndReceive("get loaded program\n");
+          std::smatch match;
+          std::regex expected("Loaded program: (.+)");
+          resp->success = std::regex_match(resp->answer, match, expected);
+          if (resp->success)
+          {
+            resp->program_name = match[1];
+          }
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->answer = e.what();
+          resp->success = false;
         }
         return true;
       });
@@ -105,8 +116,17 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   load_installation_service_ = node_->create_service<ur_dashboard_msgs::srv::Load>(
       "load_installation", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
                                ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
-        resp->answer = this->client_.sendAndReceive("load installation " + req->filename + "\n");
-        resp->success = std::regex_match(resp->answer, std::regex("Loading installation: .+"));
+        try
+        {
+          resp->answer = this->client_.sendAndReceive("load installation " + req->filename + "\n");
+          resp->success = std::regex_match(resp->answer, std::regex("Loading installation: .+"));
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->answer = e.what();
+          resp->success = false;
+        }
         return true;
       });
 
@@ -114,8 +134,17 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   load_program_service_ = node->create_service<ur_dashboard_msgs::srv::Load>(
       "load_program", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
                           ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
-        resp->answer = this->client_.sendAndReceive("load " + req->filename + "\n");
-        resp->success = std::regex_match(resp->answer, std::regex("Loading program: .+"));
+        try
+        {
+          resp->answer = this->client_.sendAndReceive("load " + req->filename + "\n");
+          resp->success = std::regex_match(resp->answer, std::regex("Loading program: .+"));
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->answer = e.what();
+          resp->success = false;
+        }
         return true;
       });
 
@@ -128,9 +157,17 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   popup_service_ = node_->create_service<ur_dashboard_msgs::srv::Popup>(
       "popup", [&](ur_dashboard_msgs::srv::Popup::Request::SharedPtr req,
                    ur_dashboard_msgs::srv::Popup::Response::SharedPtr resp) {
-        resp->answer = this->client_.sendAndReceive("popup " + req->message + "\n");
-        resp->success = std::regex_match(resp->answer, std::regex("showing popup"));
-
+        try
+        {
+          resp->answer = this->client_.sendAndReceive("popup " + req->message + "\n");
+          resp->success = std::regex_match(resp->answer, std::regex("showing popup"));
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->answer = e.what();
+          resp->success = false;
+        }
         return true;
       });
 
@@ -138,14 +175,23 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   program_state_service_ = node_->create_service<ur_dashboard_msgs::srv::GetProgramState>(
       "program_state", [&](const ur_dashboard_msgs::srv::GetProgramState::Request::SharedPtr /*unused*/,
                            ur_dashboard_msgs::srv::GetProgramState::Response::SharedPtr resp) {
-        resp->answer = this->client_.sendAndReceive("programState\n");
-        std::smatch match;
-        std::regex expected("(STOPPED|PLAYING|PAUSED) (.+)");
-        resp->success = std::regex_match(resp->answer, match, expected);
-        if (resp->success)
+        try
         {
-          resp->state.state = match[1];
-          resp->program_name = match[2];
+          resp->answer = this->client_.sendAndReceive("programState\n");
+          std::smatch match;
+          std::regex expected("(STOPPED|PLAYING|PAUSED) (.+)");
+          resp->success = std::regex_match(resp->answer, match, expected);
+          if (resp->success)
+          {
+            resp->state.state = match[1];
+            resp->program_name = match[2];
+          }
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->answer = e.what();
+          resp->success = false;
         }
         return true;
       });
@@ -164,8 +210,17 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   add_to_log_service_ = node->create_service<ur_dashboard_msgs::srv::AddToLog>(
       "add_to_log", [&](const ur_dashboard_msgs::srv::AddToLog::Request::SharedPtr req,
                         ur_dashboard_msgs::srv::AddToLog::Response::SharedPtr resp) {
-        resp->answer = this->client_.sendAndReceive("addToLog " + req->message + "\n");
-        resp->success = std::regex_match(resp->answer, std::regex("(Added log message|No log message to add)"));
+        try
+        {
+          resp->answer = this->client_.sendAndReceive("addToLog " + req->message + "\n");
+          resp->success = std::regex_match(resp->answer, std::regex("(Added log message|No log message to add)"));
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->answer = e.what();
+          resp->success = false;
+        }
         return true;
       });
 
@@ -173,7 +228,15 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   raw_request_service_ = node_->create_service<ur_dashboard_msgs::srv::RawRequest>(
       "raw_request", [&](const ur_dashboard_msgs::srv::RawRequest::Request::SharedPtr req,
                          ur_dashboard_msgs::srv::RawRequest::Response::SharedPtr resp) {
-        resp->answer = this->client_.sendAndReceive(req->query + "\n");
+        try
+        {
+          resp->answer = this->client_.sendAndReceive(req->query + "\n");
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->answer = e.what();
+        }
         return true;
       });
 
@@ -181,7 +244,16 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   reconnect_service_ =
       node_->create_service<std_srvs::srv::Trigger>("connect", [&](const std_srvs::srv::Trigger::Request::SharedPtr req,
                                                                    std_srvs::srv::Trigger::Response::SharedPtr resp) {
-        resp->success = connect();
+        try
+        {
+          resp->success = connect();
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->message = e.what();
+          resp->success = false;
+        }
         return true;
       });
 
@@ -189,9 +261,18 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   quit_service_ =
       node_->create_service<std_srvs::srv::Trigger>("quit", [&](const std_srvs::srv::Trigger::Request::SharedPtr req,
                                                                 std_srvs::srv::Trigger::Response::SharedPtr resp) {
-        resp->message = this->client_.sendAndReceive("quit\n");
-        resp->success = std::regex_match(resp->message, std::regex("Disconnected"));
-        client_.disconnect();
+        try
+        {
+          resp->message = this->client_.sendAndReceive("quit\n");
+          resp->success = std::regex_match(resp->message, std::regex("Disconnected"));
+          client_.disconnect();
+        }
+        catch (const urcl::UrException& e)
+        {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->message = e.what();
+          resp->success = false;
+        }
         return true;
       });
 }
@@ -211,14 +292,23 @@ bool DashboardClientROS::connect()
 bool DashboardClientROS::handleRunningQuery(const ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
                                             ur_dashboard_msgs::srv::IsProgramRunning::Response::SharedPtr resp)
 {
-  resp->answer = this->client_.sendAndReceive("running\n");
-  std::regex expected("Program running: (true|false)");
-  std::smatch match;
-  resp->success = std::regex_match(resp->answer, match, expected);
-
-  if (resp->success)
+  try
   {
-    resp->program_running = (match[1] == "true");
+    resp->answer = this->client_.sendAndReceive("running\n");
+    std::regex expected("Program running: (true|false)");
+    std::smatch match;
+    resp->success = std::regex_match(resp->answer, match, expected);
+
+    if (resp->success)
+    {
+      resp->program_running = (match[1] == "true");
+    }
+  }
+  catch (const urcl::UrException& e)
+  {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+    resp->answer = e.what();
+    resp->success = false;
   }
 
   return true;
@@ -227,15 +317,24 @@ bool DashboardClientROS::handleRunningQuery(const ur_dashboard_msgs::srv::IsProg
 bool DashboardClientROS::handleSavedQuery(ur_dashboard_msgs::srv::IsProgramSaved::Request::SharedPtr req,
                                           ur_dashboard_msgs::srv::IsProgramSaved::Response::SharedPtr resp)
 {
-  resp->answer = this->client_.sendAndReceive("isProgramSaved\n");
-  std::regex expected("(true|false) ([^\\s]+)");
-  std::smatch match;
-  resp->success = std::regex_match(resp->answer, match, expected);
-
-  if (resp->success)
+  try
   {
-    resp->program_saved = (match[1] == "true");
-    resp->program_name = match[2];
+    resp->answer = this->client_.sendAndReceive("isProgramSaved\n");
+    std::regex expected("(true|false) ([^\\s]+)");
+    std::smatch match;
+    resp->success = std::regex_match(resp->answer, match, expected);
+
+    if (resp->success)
+    {
+      resp->program_saved = (match[1] == "true");
+      resp->program_name = match[2];
+    }
+  }
+  catch (const urcl::UrException& e)
+  {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+    resp->answer = e.what();
+    resp->success = false;
   }
 
   return true;
@@ -244,57 +343,66 @@ bool DashboardClientROS::handleSavedQuery(ur_dashboard_msgs::srv::IsProgramSaved
 bool DashboardClientROS::handleSafetyModeQuery(const ur_dashboard_msgs::srv::GetSafetyMode::Request::SharedPtr req,
                                                ur_dashboard_msgs::srv::GetSafetyMode::Response::SharedPtr resp)
 {
-  resp->answer = this->client_.sendAndReceive("safetymode\n");
-  std::smatch match;
-  std::regex expected("Safetymode: (.+)");
-  resp->success = std::regex_match(resp->answer, match, expected);
-  if (resp->success)
+  try
   {
-    if (match[1] == "NORMAL")
+    resp->answer = this->client_.sendAndReceive("safetymode\n");
+    std::smatch match;
+    std::regex expected("Safetymode: (.+)");
+    resp->success = std::regex_match(resp->answer, match, expected);
+    if (resp->success)
     {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::NORMAL;
+      if (match[1] == "NORMAL")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::NORMAL;
+      }
+      else if (match[1] == "REDUCED")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::REDUCED;
+      }
+      else if (match[1] == "PROTECTIVE_STOP")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::PROTECTIVE_STOP;
+      }
+      else if (match[1] == "RECOVERY")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::RECOVERY;
+      }
+      else if (match[1] == "SAFEGUARD_STOP")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::SAFEGUARD_STOP;
+      }
+      else if (match[1] == "SYSTEM_EMERGENCY_STOP")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::SYSTEM_EMERGENCY_STOP;
+      }
+      else if (match[1] == "ROBOT_EMERGENCY_STOP")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::ROBOT_EMERGENCY_STOP;
+      }
+      else if (match[1] == "VIOLATION")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::VIOLATION;
+      }
+      else if (match[1] == "FAULT")
+      {
+        resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::FAULT;
+      }
+      // The following are only available in SafetyStatus from 5.5 on
+      // else if (match[1] == "AUTOMATIC_MODE_SAFEGUARD_STOP")
+      //{
+      // resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::AUTOMATIC_MODE_SAFEGUARD_STOP;
+      //}
+      // else if (match[1] == "SYSTEM_THREE_POSITION_ENABLING_STOP")
+      //{
+      // resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::SYSTEM_THREE_POSITION_ENABLING_STOP;
+      //}
     }
-    else if (match[1] == "REDUCED")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::REDUCED;
-    }
-    else if (match[1] == "PROTECTIVE_STOP")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::PROTECTIVE_STOP;
-    }
-    else if (match[1] == "RECOVERY")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::RECOVERY;
-    }
-    else if (match[1] == "SAFEGUARD_STOP")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::SAFEGUARD_STOP;
-    }
-    else if (match[1] == "SYSTEM_EMERGENCY_STOP")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::SYSTEM_EMERGENCY_STOP;
-    }
-    else if (match[1] == "ROBOT_EMERGENCY_STOP")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::ROBOT_EMERGENCY_STOP;
-    }
-    else if (match[1] == "VIOLATION")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::VIOLATION;
-    }
-    else if (match[1] == "FAULT")
-    {
-      resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::FAULT;
-    }
-    // The following are only available in SafetyStatus from 5.5 on
-    // else if (match[1] == "AUTOMATIC_MODE_SAFEGUARD_STOP")
-    //{
-    // resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::AUTOMATIC_MODE_SAFEGUARD_STOP;
-    //}
-    // else if (match[1] == "SYSTEM_THREE_POSITION_ENABLING_STOP")
-    //{
-    // resp->safety_mode.mode = ur_dashboard_msgs::msg::SafetyMode::SYSTEM_THREE_POSITION_ENABLING_STOP;
-    //}
+  }
+  catch (const urcl::UrException& e)
+  {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+    resp->answer = e.what();
+    resp->success = false;
   }
   return true;
 }
@@ -302,52 +410,61 @@ bool DashboardClientROS::handleSafetyModeQuery(const ur_dashboard_msgs::srv::Get
 bool DashboardClientROS::handleRobotModeQuery(const ur_dashboard_msgs::srv::GetRobotMode::Request::SharedPtr req,
                                               ur_dashboard_msgs::srv::GetRobotMode::Response::SharedPtr resp)
 {
-  resp->answer = this->client_.sendAndReceive("robotmode\n");
-  std::smatch match;
-  std::regex expected("Robotmode: (.+)");
-  resp->success = std::regex_match(resp->answer, match, expected);
-  if (resp->success)
+  try
   {
-    if (match[1] == "NO_CONTROLLER")
+    resp->answer = this->client_.sendAndReceive("robotmode\n");
+    std::smatch match;
+    std::regex expected("Robotmode: (.+)");
+    resp->success = std::regex_match(resp->answer, match, expected);
+    if (resp->success)
     {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::NO_CONTROLLER;
+      if (match[1] == "NO_CONTROLLER")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::NO_CONTROLLER;
+      }
+      else if (match[1] == "DISCONNECTED")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::DISCONNECTED;
+      }
+      else if (match[1] == "CONFIRM_SAFETY")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::CONFIRM_SAFETY;
+      }
+      else if (match[1] == "BOOTING")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::BOOTING;
+      }
+      else if (match[1] == "POWER_OFF")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::POWER_OFF;
+      }
+      else if (match[1] == "POWER_ON")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::POWER_ON;
+      }
+      else if (match[1] == "IDLE")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::IDLE;
+      }
+      else if (match[1] == "BACKDRIVE")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::BACKDRIVE;
+      }
+      else if (match[1] == "RUNNING")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::RUNNING;
+      }
+      else if (match[1] == "UPDATING_FIRMWARE")
+      {
+        resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::UPDATING_FIRMWARE;
+      }
     }
-    else if (match[1] == "DISCONNECTED")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::DISCONNECTED;
-    }
-    else if (match[1] == "CONFIRM_SAFETY")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::CONFIRM_SAFETY;
-    }
-    else if (match[1] == "BOOTING")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::BOOTING;
-    }
-    else if (match[1] == "POWER_OFF")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::POWER_OFF;
-    }
-    else if (match[1] == "POWER_ON")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::POWER_ON;
-    }
-    else if (match[1] == "IDLE")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::IDLE;
-    }
-    else if (match[1] == "BACKDRIVE")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::BACKDRIVE;
-    }
-    else if (match[1] == "RUNNING")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::RUNNING;
-    }
-    else if (match[1] == "UPDATING_FIRMWARE")
-    {
-      resp->robot_mode.mode = ur_dashboard_msgs::msg::RobotMode::UPDATING_FIRMWARE;
-    }
+  }
+  catch (const urcl::UrException& e)
+  {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+    resp->answer = e.what();
+    resp->success = false;
   }
   return true;
 }
