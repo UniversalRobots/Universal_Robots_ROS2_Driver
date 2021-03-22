@@ -140,16 +140,5 @@ def generate_launch_description():
         },
     )
 
-    dashboard_client_node = Node(
-        package="ur_robot_driver",
-        executable="dashboard_client",
-        name="dashboard_client",
-        output="screen",
-        emulate_tty=True,
-        parameters=[
-            {"robot_ip": "10.0.1.186"}
-        ]
-    )
-
-    return LaunchDescription([ros2_control_node, dashboard_client_node, rviz_node, robot_state_pub_node, static_tf])
+    return LaunchDescription([ros2_control_node, rviz_node, robot_state_pub_node, static_tf])
 

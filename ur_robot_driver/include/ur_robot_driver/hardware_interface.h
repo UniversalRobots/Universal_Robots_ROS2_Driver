@@ -21,6 +21,7 @@
  *
  * \author  Lovro Ivanov lovro.ivanov@gmail.com
  * \author  Andy Zelenak zelenak@picknik.ai
+ * \author  Marvin Große Besselmann grosse@fzi.de
  * \date    2019-04-11
  *
  */
@@ -154,6 +155,7 @@ protected:
   double pausing_ramp_up_increment_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
+  std::unique_ptr<ur_robot_driver::DashboardClientROS> dashboard_client_;
 };
 }  // namespace ur_robot_driver
 
