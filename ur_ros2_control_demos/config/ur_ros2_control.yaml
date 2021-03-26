@@ -17,6 +17,9 @@ controller_manager:
     force_torque_state_controller:
       type: ur_controllers/ForceTorqueStateController
 
+    scaled_joint_trajectory_controller:
+      type: ur_controllers/ScaledJointTrajectoryController
+
 ur_joint_trajectory_controller:
   ros__parameters:
     joints:
@@ -31,6 +34,22 @@ ur_joint_trajectory_controller:
     allow_partial_joints_goal: false
     constraints:
       stopped_velocity_tolerance: 0.0
+      goal_time: 0.0
+
+scaled_joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+    state_publish_rate: 100.0
+    action_monitor_rate: 20.0
+    allow_partial_joints_goal: false
+    constraints:
+      stopped_velocity_tolerance: 0.2
       goal_time: 0.0
 
 speed_scaling_state_controller:

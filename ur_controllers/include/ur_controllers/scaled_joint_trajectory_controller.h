@@ -19,19 +19,47 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
- * \date    2019-04-18
+ * \author  Marvin Große Besselmann grosse@fzi.de
+ * \date    2021-02-18
  *
  */
 //----------------------------------------------------------------------
 #ifndef UR_CONTROLLERS_SCALED_TRAJECTORY_CONTROLLER_H_INCLUDED
 #define UR_CONTROLLERS_SCALED_TRAJECTORY_CONTROLLER_H_INCLUDED
 
+#include "joint_trajectory_controller/joint_trajectory_controller.hpp"
+#include "joint_trajectory_controller/trajectory.hpp"
+#include "angles/angles.h"
+
 namespace ur_controllers
 {
-template <class SegmentImpl, class HardwareInterface>
-class ScaledJointTrajectoryController
+class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
 {
+public:
+  ScaledJointTrajectoryController() = default;
+  ~ScaledJointTrajectoryController() override = default;
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
+
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  on_activate(const rclcpp_lifecycle::State& state) override;
+
+  controller_interface::return_type update() override;
+
+protected:
+  struct TimeData
+  {
+    TimeData() : time(0.0), period(0.0), uptime(0.0)
+    {
+    }
+    rclcpp::Time time;
+    rclcpp::Duration period;
+    rclcpp::Time uptime;
+  };
+
+private:
+  double scaling_factor_;
+  realtime_tools::RealtimeBuffer<TimeData> time_data_;
 };
 }  // namespace ur_controllers
 
