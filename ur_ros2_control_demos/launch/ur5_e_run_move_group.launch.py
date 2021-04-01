@@ -2,6 +2,7 @@ import os
 import yaml
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import ExecuteProcess
 from ament_index_python.packages import get_package_share_directory
 import xacro
 
@@ -165,6 +166,7 @@ def generate_launch_description():
                                            {'warehouse_plugin': 'warehouse_ros_mongo::MongoDatabaseConnection'}],
                                output='screen')
 
+    # ros2_control using FakeSystem as hardware
     ur_controller = os.path.join(
         get_package_share_directory('ur_ros2_control_demos'),
         'config',
@@ -180,6 +182,31 @@ def generate_launch_description():
             'stderr': 'screen',
         },
     )
+
+    # load joint_state_controller
+    load_joint_state_controller = ExecuteProcess(
+        cmd=["ros2 control load_start_controller joint_state_controller"],
+        shell=True,
+        output="screen",
+    )
+    load_controllers = [load_joint_state_controller]
+    # load trajectory controller
+    load_controllers += [
+        ExecuteProcess(
+            cmd=["ros2 control load_configure_controller ur_joint_trajectory_controller"],
+            shell=True,
+            output="screen",
+            on_exit=[
+                ExecuteProcess(
+                    cmd=[
+                        "ros2 control switch_controllers --start-controllers ur_joint_trajectory_controller"
+                    ],
+                    shell=True,
+                    output="screen",
+                )
+            ],
+        )
+    ]
 
     if use_ros2_control:
         return LaunchDescription([rviz_node, static_tf, robot_state_publisher,
