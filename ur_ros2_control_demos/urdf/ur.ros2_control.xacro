@@ -7,6 +7,7 @@
     hash_kinematics robot_ip">
 
     <ros2_control name="${name}" type="system">
+<!--
       <hardware>
         <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
         <param name="robot_ip">${robot_ip}</param>
@@ -30,6 +31,10 @@
         <param name="tool_tx_idle_chars">3.5</param>
         <param name="tool_device_name">/tmp/ttyUR</param>
         <param name="tool_tcp_port">54321</param>
+      </hardware>
+-->
+      <hardware>
+          <plugin>fake_components/GenericSystem</plugin>
       </hardware>
       <joint name="shoulder_pan_joint">
         <command_interface name="position">
