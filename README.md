@@ -31,6 +31,6 @@ Build:
 TODO
 
 ## General driver information
-The river currently only supports position joint interface which means only position-based controllers can be used with 
+The driver currently only supports position joint interface which means only position-based controllers can be used with 
 the ROS2 driver. [Universal Robots Client Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) includes also a
 velocity-based control whose support will be addressed in additional development of ROS2 driver.
