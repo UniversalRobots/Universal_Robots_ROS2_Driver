@@ -1,7 +1,4 @@
-// this is for emacs file handling -*- mode: c++; indent-tabs-mode: nil -*-
-
-// -- BEGIN LICENSE BLOCK ----------------------------------------------
-// Copyright 2019 FZI Forschungszentrum Informatik
+// Copyright 2019, FZI Forschungszentrum Informatik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// -- END LICENSE BLOCK ------------------------------------------------
 
 //----------------------------------------------------------------------
 /*!\file
@@ -25,7 +21,7 @@
  */
 //----------------------------------------------------------------------
 
-#include "ur_controllers/speed_scaling_state_controller.h"
+#include "ur_controllers/speed_scaling_state_controller.hpp"
 
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"

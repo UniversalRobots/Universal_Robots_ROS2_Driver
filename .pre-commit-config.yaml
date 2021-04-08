@@ -36,11 +36,11 @@ repos:
     hooks:
       - id: isort
 
-  - repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
+  - repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257
     rev: v0.3.3
     hooks:
       - id: pep257
-        args: [--ignore=D1]
+        args: ["--ignore=D100,D103"]
 
   - repo: https://github.com/psf/black
     rev: 20.8b1
@@ -49,10 +49,14 @@ repos:
         args: [--line-length=100]
 
   # Cpp hooks
-  - repo: https://github.com/pocc/pre-commit-hooks
-    rev: v1.1.1
+  - repo: local
     hooks:
-      - id: cppcheck
+      - id: ament_cppcheck
+        name: ament_cppcheck
+        description: Find warnings/errors in ROS C/CPP code.
+        entry: ament_cppcheck
+        language: python
+        files: \.(c|cc|cxx|cpp|h|hpp|hxx|m)$
 
   - repo: local
     hooks:
