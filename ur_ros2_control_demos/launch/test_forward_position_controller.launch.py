@@ -14,7 +14,7 @@
 #
 # Author: Denis Stogl
 #
-# Description: After a robot has been loaded, this will execute a joint motion.
+# Description: After a robot has been loaded, this will execute a series of joint motions.
 
 from launch import LaunchDescription
 from launch.substitutions import PathJoinSubstitution
