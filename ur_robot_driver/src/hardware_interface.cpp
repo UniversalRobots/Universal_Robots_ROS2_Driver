@@ -45,6 +45,7 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
