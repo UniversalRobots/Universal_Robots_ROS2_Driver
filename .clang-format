@@ -8,7 +8,6 @@ AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
-AllowShortLoopsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: true
 AlwaysBreakBeforeMultilineStrings: false
 BreakBeforeBinaryOperators: false
@@ -51,7 +50,7 @@ SpaceAfterCStyleCast: false
 BreakBeforeBraces: Custom
 
 # Control of individual brace wrapping cases
-BraceWrapping: {
+BraceWrapping:
     AfterCaseLabel: 'true'
     AfterClass: 'true'
     AfterControlStatement: 'true'
@@ -63,5 +62,4 @@ BraceWrapping: {
     BeforeCatch : 'true'
     BeforeElse : 'true'
     IndentBraces : 'false'
-}
 ...

@@ -40,6 +40,7 @@ repos:
     rev: v0.3.3
     hooks:
       - id: pep257
+        args: [--ignore=D1]
 
   - repo: https://github.com/psf/black
     rev: 20.8b1
