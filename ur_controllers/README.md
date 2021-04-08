@@ -4,7 +4,7 @@ This package contains controllers and hardware interface for `ros_control` that 
 robot family. Currently this contains
 
   * A **speed_scaling_interface** to read the value of the current speed scaling into controllers.
-  * A **scaled_joint_command_interface** that provides access to joint values and commands in 
+  * A **scaled_joint_command_interface** that provides access to joint values and commands in
   combination with the speed scaling value.
   * A **speed_scaling_state_controller** that publishes the current execution speed as reported by
   the robot to a topic interface. Values are floating points between 0 and 1.

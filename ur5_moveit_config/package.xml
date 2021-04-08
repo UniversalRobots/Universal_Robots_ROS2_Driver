@@ -21,7 +21,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <!-- TODO(andyz): Re-enable when MoveIt2 debians are available -->
+  <!-- TODO(andyz): Re-enable when MoveIt2 debian packages are available -->
 <!--
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>moveit_planners_ompl</exec_depend>

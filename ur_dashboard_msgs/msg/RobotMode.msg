@@ -10,4 +10,3 @@ int8 RUNNING=7
 int8 UPDATING_FIRMWARE=8
 
 int8 mode
-

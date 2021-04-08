@@ -59,7 +59,7 @@
     <g text-rendering="geometricPrecision" shape-rendering="geometricPrecision" transform="matrix(0.2694,0,0,0.2694,106.1866,371.9354)">
       <g clip-path="url(#clipPath9)">
         <svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" opacity="1" writing-mode="lr-tb" stop-color="rgb(0, 0, 0)" shape-rendering="auto" glyph-orientation-horizontal="0deg" color-profile="auto" lighting-color="rgb(255, 255, 255)" color="rgb(0, 0, 0)" font-weight="400" alignment-baseline="auto" font-style="normal" version="1.1" color-interpolation-filters="linearrgb" text-anchor="start" stroke-linecap="butt" color-interpolation="srgb" font-variant="normal" word-spacing="normal" fill-opacity="1" text-rendering="auto" clip-path="none" text-decoration="none" letter-spacing="normal" viewBox="0 0 42.090431 42.090431" glyph-orientation-vertical="auto" display="inline" font-size-adjust="none" overflow="hidden" fill="rgb(0, 0, 0)" font-stretch="normal" stroke-dasharray="none" inkscape:version="0.92.3 (2405546, 2018-03-11)" id="svg1.svg8" stroke-miterlimit="4" stop-opacity="1" color-rendering="auto" font-size="12" pointer-events="visiblepainted" mask="none" direction="ltr" baseline-shift="baseline" sodipodi:docname="play.svg" enable-background="accumulate" fill-rule="nonzero" image-rendering="auto" stroke-dashoffset="0" marker-end="none" width="42.090431mm" clip="auto" cursor="auto" stroke="none" filter="none" visibility="visible" kerning="auto" stroke-width="1" font-family="&quot;Arial&quot;,&quot;Helvetica&quot;,sans-serif" flood-opacity="1" clip-rule="nonzero" src="none" height="42.090431mm" unicode-bidi="normal" stroke-linejoin="miter" stroke-opacity="1" flood-color="rgb(0, 0, 0)" dominant-baseline="auto" marker-start="none" marker-mid="none">
-            
+
           <defs id="svg1.defs2">
             <linearGradient x1="291.0846" gradientUnits="userSpaceOnUse" x2="418.0846" y1="566.9464" y2="606.9464" id="linearGradient1" spreadMethod="reflect">
               <stop stop-opacity="1" stop-color="rgb(255,204,0)" offset="0%"/>
@@ -181,20 +181,20 @@
               <path d="M-253.8405 -455.9464 L166.1595 -455.9464 L166.1595 78.0536 L-253.8405 78.0536 L-253.8405 -455.9464 Z"/>
             </clipPath>
           </defs>
-            
-  
+
+
           <metadata id="svg1.metadata5">
-    
+
   </metadata>
-            
+
           <g inkscape:groupmode="layer" id="svg1.layer1" transform="translate(-73.033657,-106.60448)" inkscape:label="Layer 1">
-                
+
             <circle r="20.045216" id="svg1.path817" style="opacity:1;fill:none;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" cx="94.078873" cy="127.6497"/>
-                
+
             <path sodipodi:arg1="2.0943951" inkscape:flatsided="true" inkscape:transform-center-y="-1.9744208e-06" inkscape:transform-center-x="-3.7729831" inkscape:randomized="0" sodipodi:type="star" d="m 85.314854,141.02054 0,-26.74169 23.158986,13.37085 z" id="svg1.path860" style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers" inkscape:rounded="0" sodipodi:sides="3" sodipodi:r1="15.439323" sodipodi:cx="93.034515" sodipodi:cy="127.6497" sodipodi:arg2="3.1415927" sodipodi:r2="7.7196617"/>
-              
+
           </g>
-          
+
         </svg>
       </g>
     </g>

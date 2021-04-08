@@ -15,14 +15,14 @@
     UR5(e), UR10(e) or UR16e.
 
     NOTE: the default kinematic parameters (ie: link lengths, frame locations,
-    offets, etc) do not correspond to any particular robot. They are defaults
+    offsets, etc) do not correspond to any particular robot. They are defaults
     only. There WILL be non-zero offsets between the Forward Kinematics results
     in TF (ie: robot_state_publisher) and the values reported by the Teach
     Pendant.
 
     For accurate (and robot-specific) transforms, the 'kinematics_parameters_file'
     parameter MUST point to a .yaml file containing the appropriate values for
-    the targetted robot.
+    the targeted robot.
 
     If using the UniversalRobots/Universal_Robots_ROS_Driver, follow the steps
     described in the readme of that repository to extract the kinematic
@@ -67,7 +67,7 @@
   >
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
-      joint_limits_parameters_file="${joint_limits_parameters_file}" 
+      joint_limits_parameters_file="${joint_limits_parameters_file}"
       kinematics_parameters_file="${kinematics_parameters_file}"
       physical_parameters_file="${physical_parameters_file}"
       visual_parameters_file="${visual_parameters_file}"/>
