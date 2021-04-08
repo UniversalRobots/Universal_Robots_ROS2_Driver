@@ -73,3 +73,13 @@ joint. The commands are incremented in regards to /joint_states found when the n
 ```
 ros2 run ur_ros2_control_demos test_driver
 ```
+
+## Contributor guidelines
+Code is auto-formatted with clang-format 10 whenever a git commit is made. Please ensure these dependencies are installed so pre-commit formatting works:
+
+`pip3 install pre-commit`
+`sudo apt install clang-format-10`
+
+Prepare the pre-commit formatting to run like this:
+
+`pre-commit install`
