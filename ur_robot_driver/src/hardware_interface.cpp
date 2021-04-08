@@ -453,6 +453,8 @@ return_type URPositionHardwareInterface::write()
     if (position_interface_in_use_)
     {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
+      // remember old values
+      urcl_position_commands_old_ = urcl_position_commands_;
     }
     else
     {
@@ -460,9 +462,6 @@ return_type URPositionHardwareInterface::write()
     }
 
     packet_read_ = false;
-
-    // remember old values
-    urcl_position_commands_old_ = urcl_position_commands_;
 
     return return_type::OK;
   }
@@ -477,7 +476,8 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
   if (!robot_program_running_ && program_running)
   {
-    // TODO how to set controller reset flag
+    urcl_position_commands_old_ = urcl_position_commands_;
+    position_interface_in_use_ = false;
   }
   robot_program_running_ = program_running;
 }
