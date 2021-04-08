@@ -3,13 +3,13 @@
 Alpha version of the ROS2 Universal Robots driver. Should be transferred to the Universal Robots org when ready.
 
 ## General driver information
-Driver currently only supports position joint interface which means only position-based controllers can be used with 
+Driver currently only supports position joint interface which means only position-based controllers can be used with
 the ROS2 driver. [Universal Robots Client Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) includes also
 velocity-based control whose support will be addressed in additional development of ROS2 driver.
 
 ## Requirements
 
-Follow the [instructions](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#setting-up-a-ur-robot-for-ur_robot_driver) in the paragraph 
+Follow the [instructions](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#setting-up-a-ur-robot-for-ur_robot_driver) in the paragraph
 [`Prepare the robot` ](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#prepare-the-robot)
 
 ## Build Instructions
@@ -71,5 +71,15 @@ after checking the current joint states (to create minimal increment for safety)
 joint. The commands are incremented in regards to /joint_states found when the node is run.
 
 ```
-ros2 run ur_ros2_control_demos test_driver 
+ros2 run ur_ros2_control_demos test_driver
 ```
+
+## Contributor guidelines
+Code is auto-formatted with clang-format 10 whenever a git commit is made. Please ensure these dependencies are installed so pre-commit formatting works:
+
+`pip3 install pre-commit`
+`sudo apt install clang-format-10`
+
+Prepare the pre-commit formatting to run like this:
+
+`pre-commit install`

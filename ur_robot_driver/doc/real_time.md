@@ -24,7 +24,7 @@ Before you download the sources of a real-time-enabled kernel, check the kernel 
 
 ```bash
 $ uname -r
-4.15.0-62-generic 
+4.15.0-62-generic
 ```
 
 To continue with this tutorial, please create a temporary folder and navigate into it. You should
@@ -79,7 +79,7 @@ author. For the kernel sources use (as suggested on
 $ gpg2 --locate-keys torvalds@kernel.org gregkh@kernel.org
 ```
 
-and for the patch search for a key of the author listed on 
+and for the patch search for a key of the author listed on
 [linuxfoundation wiki](https://wiki.linuxfoundation.org/realtime/preempt_rt_versions).
 
 ```bash
@@ -139,7 +139,7 @@ Before we can compile the sources, we have to extract the tar archive and apply 
 ```bash
 $ tar xf linux-4.14.139.tar
 $ cd linux-4.14.139
-linux-4.14.139$ xzcat ../patch-4.14.139-rt66.patch.xz | patch -p1 
+linux-4.14.139$ xzcat ../patch-4.14.139-rt66.patch.xz | patch -p1
 ```
 
 Now to configure your kernel, just type
@@ -249,7 +249,7 @@ kernel automatically.
 Make sure that the kernel does indeed support real-time scheduling:
 
 ```bash
-$ uname -v | cut -d" " -f1-4 
+$ uname -v | cut -d" " -f1-4
 #1 SMP PREEMPT RT
 ```
 

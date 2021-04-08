@@ -52,7 +52,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "pos_joint_traj_controller joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -146,7 +146,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "pos_joint_traj_controller joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -204,7 +204,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -298,7 +298,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "pos_joint_traj_controller joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -388,7 +388,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "pos_joint_traj_controller joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -442,7 +442,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "pos_joint_traj_controller joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -532,7 +532,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "pos_joint_traj_controller joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -586,7 +586,7 @@ The driver will offer an interface to receive the program's URScript on this por
 
 ##### stopped_controllers (default: "pos_joint_traj_controller joint_group_vel_controller")
 
-Controllers that are initally loaded, but not started.
+Controllers that are initially loaded, but not started.
 
 ##### tf_prefix (default: "")
 
@@ -751,7 +751,7 @@ Service to set any of the robot's IOs
 ##### set_speed_slider (ur_msgs/SetSpeedSliderFraction)
 
 Set the speed slider fraction used by the robot's execution. Values should be between 0 and 1. Only set this smaller than 1 if you are using the scaled controllers (as by default) or you know what you're doing. Using this with other controllers might lead to unexpected behaviors.
- 
+
 #### set_payload (ur_msgs/SetPayload)
 
 Setup the mounted payload through a ROS service
@@ -1032,4 +1032,3 @@ By default, socat will create a pty in /dev/pts/N with n being an increasing num
 ##### ~robot_ip (Required)
 
 IP address of the robot
-

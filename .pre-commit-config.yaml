@@ -1,0 +1,84 @@
+# To use:
+#
+#     pre-commit run -a
+#
+# Or:
+#
+#     pre-commit install  # (runs every time you commit in git)
+#
+# To update this file:
+#
+#     pre-commit autoupdate
+#
+# See https://github.com/pre-commit/pre-commit
+
+repos:
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-xml
+      #- id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  # Python hooks
+  - repo: https://github.com/pycqa/isort
+    rev: 5.8.0
+    hooks:
+      - id: isort
+
+  #- repo: local
+    #hooks:
+      #- id: ament_pep257
+        #name: ament_pep257
+        #description: Find warnings/errors in ROS Python code.
+        #entry: ament_pep257
+        #language: python
+
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        args: [--line-length=100]
+
+  # Cpp hooks
+  - repo: local
+    hooks:
+      - id: ament_cppcheck
+        name: ament_cppcheck
+        description: Find warnings/errors in ROS C/CPP code.
+        entry: ament_cppcheck
+        language: python
+        files: \.(c|cc|cxx|cpp|h|hpp|hxx|m)$
+
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        description: Format files with ClangFormat.
+        entry: clang-format-10
+        language: system
+        files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|js|m|proto|vert)$
+        args: ['-fallback-style=none', '-i']
+
+  # Docs - RestructuredText hooks
+  - repo: https://github.com/PyCQA/doc8
+    rev: 0.9.0a1
+    hooks:
+      - id: doc8
+        args: ['--max-line-length=100', '--ignore=D001']
+
+  #- repo: https://github.com/codespell-project/codespell
+    #rev: v2.0.0
+    #hooks:
+      #- id: codespell
+        #args: ['--write-changes', '--skip="*.svg"']
