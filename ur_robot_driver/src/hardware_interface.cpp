@@ -1,7 +1,4 @@
-// this is for emacs file handling -*- mode: c++; indent-tabs-mode: nil -*-
-
-// -- BEGIN LICENSE BLOCK ----------------------------------------------
-// Copyright 2019 FZI Forschungszentrum Informatik
+// Copyright 2019, FZI Forschungszentrum Informatik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// -- END LICENSE BLOCK ------------------------------------------------
 
 //----------------------------------------------------------------------
 /*!\file
@@ -26,7 +22,7 @@
  *
  */
 //----------------------------------------------------------------------
-#include <ur_robot_driver/hardware_interface.h>
+#include <ur_robot_driver/hardware_interface.hpp>
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
 
 #include <ur_client_library/ur/tool_communication.h>
@@ -188,7 +184,7 @@ return_type URPositionHardwareInterface::start()
   // The driver will offer an interface to receive the program's URScript on this port.
   int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
   //  std::string tf_prefix = info_.hardware_parameters["tf_prefix"];
-  std::string tf_prefix;
+  //  std::string tf_prefix;
 
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
@@ -433,7 +429,7 @@ return_type URPositionHardwareInterface::write()
   {
     if (!position_interface_in_use_)
     {
-      // create a lambda substract functor
+      // create a lambda subtract functor
       std::function<double(double, double)> substractor = [](double a, double b) { return std::abs(a - b); };
 
       // create a position difference vector
