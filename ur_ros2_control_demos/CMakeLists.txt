@@ -10,7 +10,8 @@ add_executable(test_driver
 )
 ament_target_dependencies(test_driver rclcpp std_msgs sensor_msgs)
 
-install(DIRECTORY config launch urdf DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY config launch
+        DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
         test_driver

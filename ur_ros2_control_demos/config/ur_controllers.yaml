@@ -2,7 +2,7 @@ controller_manager:
   ros__parameters:
     update_rate: 600  # Hz
 
-    forward_command_controller_position:
+    forward_position_controller:
       type: forward_command_controller/ForwardCommandController
 
     joint_state_controller:
@@ -11,7 +11,7 @@ controller_manager:
     speed_scaling_state_controller:
       type: ur_controllers/SpeedScalingStateController
 
-    ur_joint_trajectory_controller:
+    joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
     force_torque_state_controller:
@@ -20,7 +20,7 @@ controller_manager:
     scaled_joint_trajectory_controller:
       type: ur_controllers/ScaledJointTrajectoryController
 
-ur_joint_trajectory_controller:
+joint_trajectory_controller:
   ros__parameters:
     joints:
       - shoulder_pan_joint
@@ -56,7 +56,7 @@ speed_scaling_state_controller:
   ros__parameters:
     state_publish_rate: 100.0
 
-forward_command_controller_position:
+forward_position_controller:
   ros__parameters:
     joints:
       - shoulder_pan_joint
