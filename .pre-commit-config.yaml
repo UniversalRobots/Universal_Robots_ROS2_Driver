@@ -24,7 +24,7 @@ repos:
       - id: check-merge-conflict
       - id: check-symlinks
       - id: check-xml
-      - id: check-yaml
+      #- id: check-yaml
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
@@ -36,11 +36,13 @@ repos:
     hooks:
       - id: isort
 
-  - repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257
-    rev: v0.3.3
-    hooks:
-      - id: pep257
-        args: ["--ignore=D100,D103"]
+  #- repo: local
+    #hooks:
+      #- id: ament_pep257
+        #name: ament_pep257
+        #description: Find warnings/errors in ROS Python code.
+        #entry: ament_pep257
+        #language: python
 
   - repo: https://github.com/psf/black
     rev: 20.8b1
@@ -73,8 +75,10 @@ repos:
     rev: 0.9.0a1
     hooks:
       - id: doc8
+        args: ['--max-line-length=100', '--ignore=D001']
 
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.0.0
-    hooks:
-      - id: codespell
+  #- repo: https://github.com/codespell-project/codespell
+    #rev: v2.0.0
+    #hooks:
+      #- id: codespell
+        #args: ['--write-changes', '--skip="*.svg"']

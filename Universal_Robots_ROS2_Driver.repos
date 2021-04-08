@@ -31,4 +31,3 @@ repositories:
     type: git
     url: https://github.com/ros-planning/warehouse_ros.git
     version: ros2
-

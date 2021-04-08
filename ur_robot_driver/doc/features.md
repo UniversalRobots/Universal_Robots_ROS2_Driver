@@ -30,5 +30,3 @@ will stop the program without notifying the ROS user.
 <sup>3</sup> There is no specific plan to do this inside of the first driver development. However,
 it is structured in a way so that a ROS2 driver should be developed as easy as possible by keeping
 as much as possible in a ros-independent library.
-
-
