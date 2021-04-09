@@ -121,6 +121,10 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling")
+    {
+      continue;
+    }
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
 

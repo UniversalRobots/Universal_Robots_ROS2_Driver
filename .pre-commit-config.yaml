@@ -31,11 +31,6 @@ repos:
       - id: trailing-whitespace
 
   # Python hooks
-  - repo: https://github.com/pycqa/isort
-    rev: 5.8.0
-    hooks:
-      - id: isort
-
   #- repo: local
     #hooks:
       #- id: ament_pep257

@@ -26,7 +26,6 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip",
-            default_value="",
             description="IP address by which the robot can be reached.",
         )
     )
@@ -62,7 +61,7 @@ def generate_launch_description():
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ThisLaunchFileDir(), "/ur_control.launch.py"]),
         launch_arguments={
-            "ur_type": "ur5",
+            "ur_type": "ur3",
             "robot_ip": robot_ip,
             "use_fake_hardware": use_fake_hardware,
             "fake_sensor_commands": fake_sensor_commands,

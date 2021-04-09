@@ -59,7 +59,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "runtime_config_package",
-            default_value="ur_ros2_control_demos",
+            default_value="ur_bringup",
             description='Package with the controller\'s configuration in "config" folder. \
         Usually the argument is not set, it enables use of a custom setup.',
         )
@@ -243,10 +243,36 @@ def generate_launch_description():
         arguments=["-d", rviz_config_file],
     )
 
-    joint_state_controller_spawner = Node(
+    joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner.py",
-        arguments=["joint_state_controller", "--controller-manager", "/controller_manager"],
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
+
+    io_and_status_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=["io_and_status_controller", "-c", "/controller_manager"],
+    )
+
+    speed_scaling_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=[
+            "speed_scaling_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+    )
+
+    force_torque_sensor_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=[
+            "force_torque_sensor_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
 
     robot_controller_spawner = Node(
@@ -259,7 +285,10 @@ def generate_launch_description():
         control_node,
         robot_state_pub_node,
         rviz_node,
-        joint_state_controller_spawner,
+        joint_state_broadcaster_spawner,
+        io_and_status_controller_spawner,
+        speed_scaling_state_broadcaster_spawner,
+        force_torque_sensor_broadcaster_spawner,
         robot_controller_spawner,
     ]
 

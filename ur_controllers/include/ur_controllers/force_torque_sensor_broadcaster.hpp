@@ -58,10 +58,10 @@ struct FTStateControllerParams
  * Publishes to:
  * - \b topic_name (geometry_msg::msg::WrenchStamped) : Sensor data.
  */
-class ForceTorqueStateController : public controller_interface::ControllerInterface
+class ForceTorqueStateBroadcaster : public controller_interface::ControllerInterface
 {
 public:
-  ForceTorqueStateController();
+  ForceTorqueStateBroadcaster();
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 

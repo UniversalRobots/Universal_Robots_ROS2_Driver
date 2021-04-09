@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ur_controllers/force_torque_sensor_controller.hpp"
+#include "ur_controllers/force_torque_sensor_broadcaster.hpp"
 
 namespace ur_controllers
 {
-ForceTorqueStateController::ForceTorqueStateController()
+ForceTorqueStateBroadcaster::ForceTorqueStateBroadcaster()
   : controller_interface::ControllerInterface(), wrench_state_publisher_(nullptr)
 {
 }
 
-controller_interface::return_type ForceTorqueStateController::init(const std::string& controller_name)
+controller_interface::return_type ForceTorqueStateBroadcaster::init(const std::string& controller_name)
 {
   auto ret = ControllerInterface::init(controller_name);
   if (ret != controller_interface::return_type::OK)
@@ -46,14 +46,14 @@ controller_interface::return_type ForceTorqueStateController::init(const std::st
   return controller_interface::return_type::OK;
 }
 
-controller_interface::InterfaceConfiguration ForceTorqueStateController::command_interface_configuration() const
+controller_interface::InterfaceConfiguration ForceTorqueStateBroadcaster::command_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::NONE;
   return config;
 }
 
-controller_interface::InterfaceConfiguration ForceTorqueStateController::state_interface_configuration() const
+controller_interface::InterfaceConfiguration ForceTorqueStateBroadcaster::state_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -65,7 +65,7 @@ controller_interface::InterfaceConfiguration ForceTorqueStateController::state_i
   return config;
 }
 
-controller_interface::return_type ur_controllers::ForceTorqueStateController::update()
+controller_interface::return_type ur_controllers::ForceTorqueStateBroadcaster::update()
 {
   geometry_msgs::msg::Vector3 f_vec;
   geometry_msgs::msg::Vector3 t_vec;
@@ -114,7 +114,7 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-ForceTorqueStateController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
+ForceTorqueStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   fts_params_.state_interfaces_names_ = node_->get_parameter("state_interface_names").as_string_array();
 
@@ -160,13 +160,13 @@ ForceTorqueStateController::on_configure(const rclcpp_lifecycle::State& /*previo
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-ForceTorqueStateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
+ForceTorqueStateBroadcaster::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-ForceTorqueStateController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
+ForceTorqueStateBroadcaster::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -175,4 +175,4 @@ ForceTorqueStateController::on_deactivate(const rclcpp_lifecycle::State& /*previ
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(ur_controllers::ForceTorqueStateController, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(ur_controllers::ForceTorqueStateBroadcaster, controller_interface::ControllerInterface)

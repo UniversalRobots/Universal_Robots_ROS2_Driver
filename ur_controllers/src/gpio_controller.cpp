@@ -126,30 +126,32 @@ controller_interface::return_type ur_controllers::GPIOController::update()
   publishToolData();
   publishRobotMode();
   publishSafetyMode();
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& previous_state)
+ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   try
   {
     // register publisher
-    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("io_states", rclcpp::SystemDefaultsQoS());
+    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
 
-    tool_data_pub_ = get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("tool_data", rclcpp::SystemDefaultsQoS());
+    tool_data_pub_ =
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
 
     robot_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("robot_mode", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", rclcpp::SystemDefaultsQoS());
 
     safety_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("safety_mode", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", rclcpp::SystemDefaultsQoS());
 
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
-        "set_speed_slider", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
 
     set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
-        "set_io", std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
+        "~/set_speed_slider",
+        std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
   }
   catch (...)
   {
@@ -228,24 +230,26 @@ void GPIOController::publishSafetyMode()
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& previous_state)
+ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& previous_state)
+ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp)
 {
-  if (req->pin >= 0 && req->pin <= 17 && req->FUN_SET_DIGITAL_OUT)
+  if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= 17)
   {
     // io async success
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(2.0);
     command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
+
+    RCLCPP_INFO(node_->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0)
     {
@@ -256,11 +260,13 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     resp->success = static_cast<bool>(command_interfaces_[20].get_value());
     return resp->success;
   }
-  else if (req->pin >= 0 && req->pin <= 2 && req->FUN_SET_ANALOG_OUT)
+  else if (req->fun == req->FUN_SET_ANALOG_OUT && req->pin >= 0 && req->pin <= 2)
   {
     // io async success
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(2.0);
     command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->pin].set_value(static_cast<double>(req->state));
+
+    RCLCPP_INFO(node_->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
 
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0)
     {

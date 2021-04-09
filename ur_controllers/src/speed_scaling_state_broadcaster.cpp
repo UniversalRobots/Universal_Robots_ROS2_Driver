@@ -21,7 +21,7 @@
  */
 //----------------------------------------------------------------------
 
-#include "ur_controllers/speed_scaling_state_controller.hpp"
+#include "ur_controllers/speed_scaling_state_broadcaster.hpp"
 
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -40,16 +40,16 @@ class State;
 
 namespace ur_controllers
 {
-SpeedScalingStateController::SpeedScalingStateController()
+SpeedScalingStateBroadcaster::SpeedScalingStateBroadcaster()
 {
 }
 
-controller_interface::InterfaceConfiguration SpeedScalingStateController::command_interface_configuration() const
+controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::command_interface_configuration() const
 {
   return controller_interface::InterfaceConfiguration{ controller_interface::interface_configuration_type::NONE };
 }
 
-controller_interface::InterfaceConfiguration SpeedScalingStateController::state_interface_configuration() const
+controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::state_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -58,7 +58,7 @@ controller_interface::InterfaceConfiguration SpeedScalingStateController::state_
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-SpeedScalingStateController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
+SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   node_->declare_parameter("state_publish_rate");
 
@@ -75,7 +75,7 @@ SpeedScalingStateController::on_configure(const rclcpp_lifecycle::State& /*previ
   try
   {
     speed_scaling_state_publisher_ =
-        get_node()->create_publisher<std_msgs::msg::Float64>("speed_scaling_factor", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<std_msgs::msg::Float64>("~/speed_scaling_factor", rclcpp::SystemDefaultsQoS());
   }
   catch (const std::exception& e)
   {
@@ -87,19 +87,19 @@ SpeedScalingStateController::on_configure(const rclcpp_lifecycle::State& /*previ
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-SpeedScalingStateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
+SpeedScalingStateBroadcaster::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   last_publish_time_ = node_->now();
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-SpeedScalingStateController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
+SpeedScalingStateBroadcaster::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::return_type SpeedScalingStateController::update()
+controller_interface::return_type SpeedScalingStateBroadcaster::update()
 {
   if (publish_rate_ > 0.0 && (node_->now() - last_publish_time_) > rclcpp::Duration(1.0 / publish_rate_, 0.0))
   {
@@ -117,4 +117,4 @@ controller_interface::return_type SpeedScalingStateController::update()
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(ur_controllers::SpeedScalingStateController, controller_interface::ControllerInterface)
+PLUGINLIB_EXPORT_CLASS(ur_controllers::SpeedScalingStateBroadcaster, controller_interface::ControllerInterface)

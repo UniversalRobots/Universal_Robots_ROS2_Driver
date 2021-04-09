@@ -17,15 +17,31 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    # Declare arguments
+    declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "robot_ip",
+            default_value="10.0.1.186",
+            description="IP address by which the robot can be reached.",
+        )
+    )
+
+    # Initialize Arguments
+    robot_ip = LaunchConfiguration("robot_ip")
+
+    dashboard_client_node = Node(
+        package="ur_robot_driver",
+        executable="dashboard_client",
+        name="dashboard_client",
+        output="screen",
+        emulate_tty=True,
+        parameters=[{"robot_ip": robot_ip}],
+    )
+
     return LaunchDescription(
-        [
-            Node(
-                package="ur_robot_driver",
-                executable="dashboard_client",
-                name="dashboard_client",
-                output="screen",
-                emulate_tty=True,
-                parameters=[{"robot_ip": "10.0.1.186"}],
-            )
+        declared_arguments
+        + [
+            dashboard_client_node,
         ]
     )

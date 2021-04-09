@@ -32,10 +32,10 @@
 
 namespace ur_controllers
 {
-class SpeedScalingStateController : public controller_interface::ControllerInterface
+class SpeedScalingStateBroadcaster : public controller_interface::ControllerInterface
 {
 public:
-  SpeedScalingStateController();
+  SpeedScalingStateBroadcaster();
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
