@@ -24,7 +24,7 @@ ForceTorqueStateController::ForceTorqueStateController()
 controller_interface::return_type ForceTorqueStateController::init(const std::string& controller_name)
 {
   auto ret = ControllerInterface::init(controller_name);
-  if (ret != controller_interface::return_type::SUCCESS)
+  if (ret != controller_interface::return_type::OK)
   {
     return ret;
   }
@@ -43,7 +43,7 @@ controller_interface::return_type ForceTorqueStateController::init(const std::st
     return controller_interface::return_type::ERROR;
   }
 
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 controller_interface::InterfaceConfiguration ForceTorqueStateController::command_interface_configuration() const
@@ -110,7 +110,7 @@ controller_interface::return_type ur_controllers::ForceTorqueStateController::up
   // publish
   wrench_state_publisher_->publish(wrench_state_msg_);
 
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn

@@ -62,7 +62,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
       halt();
       is_halted = true;
     }
-    return controller_interface::return_type::SUCCESS;
+    return controller_interface::return_type::OK;
   }
 
   auto resize_joint_trajectory_point = [](trajectory_msgs::msg::JointTrajectoryPoint& point, size_t size) {
@@ -217,7 +217,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   }
 
   publish_state(state_desired, state_current, state_error);
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 }  // namespace ur_controllers
