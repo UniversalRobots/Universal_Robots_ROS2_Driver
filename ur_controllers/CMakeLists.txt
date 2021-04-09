@@ -22,8 +22,8 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(rcutils REQUIRED)
-find_package(ur_msgs REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
+find_package(ur_msgs REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs

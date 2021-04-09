@@ -18,7 +18,7 @@
 
 namespace ur_controllers
 {
-controller_interface::InterfaceConfiguration ur_controllers::GPIOController::command_interface_configuration() const
+controller_interface::InterfaceConfiguration GPIOController::command_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
@@ -149,7 +149,7 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& prev
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
 
-  return LifecycleNodeInterface::on_configure(previous_state);
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 void GPIOController::publishIO()
@@ -223,13 +223,13 @@ void GPIOController::publishSafetyMode()
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& previous_state)
 {
-  return LifecycleNodeInterface::on_activate(previous_state);
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& previous_state)
 {
-  return LifecycleNodeInterface::on_deactivate(previous_state);
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp)
