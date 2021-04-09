@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <ur_controllers/gpio_controller.h>
+//----------------------------------------------------------------------
+/*!\file
+ *
+ * \author  Lovro Ivanov lovro.ivanov@gmail.com
+ * \date    2021-02-20
+ *
+ */
+//----------------------------------------------------------------------
 
-#include "ur_controllers/gpio_controller.h"
+#include "ur_controllers/gpio_controller.hpp"
 
 namespace ur_controllers
 {

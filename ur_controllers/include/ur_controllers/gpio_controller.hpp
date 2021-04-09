@@ -1,6 +1,3 @@
-// this is for emacs file handling -*- mode: c++; indent-tabs-mode: nil -*-
-
-// -- BEGIN LICENSE BLOCK ----------------------------------------------
 // Copyright (c) 2021 PickNik LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// -- END LICENSE BLOCK ------------------------------------------------
 
 //----------------------------------------------------------------------
 /*!\file
@@ -24,6 +20,7 @@
  *
  */
 //----------------------------------------------------------------------
+
 #ifndef UR_ROBOT_DRIVER_TOOLIOCONTROLLER_H
 #define UR_ROBOT_DRIVER_TOOLIOCONTROLLER_H
 
