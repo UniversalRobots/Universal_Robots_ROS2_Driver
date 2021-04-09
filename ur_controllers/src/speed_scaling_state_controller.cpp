@@ -110,7 +110,7 @@ controller_interface::return_type SpeedScalingStateController::update()
     speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);
     last_publish_time_ = node_->now();
   }
-  return controller_interface::return_type::SUCCESS;
+  return controller_interface::return_type::OK;
 }
 
 }  // namespace ur_controllers
