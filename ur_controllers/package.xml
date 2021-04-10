@@ -31,7 +31,7 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
-  <depend>ur_client_library</depend>
+<!--   <depend>ur_client_library</depend> -->
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_msgs</depend>
 

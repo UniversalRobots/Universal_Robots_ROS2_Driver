@@ -27,7 +27,7 @@
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>std_srvs</depend>
-  <depend>ur_client_library</depend>
+<!--   <depend>ur_client_library</depend> -->
   <depend>ur_dashboard_msgs</depend>
 
   <exec_depend>controller_manager</exec_depend>
