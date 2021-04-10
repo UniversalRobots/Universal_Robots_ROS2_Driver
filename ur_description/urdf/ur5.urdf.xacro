@@ -355,7 +355,7 @@
     <link name="${prefix}base"/>
     <joint name="${prefix}base_link-base_fixed_joint" type="fixed">
       <!-- NOTE: this rotation is only needed as long as base_link itself is
-                 not corrected wrt the real robot (ie: rotated over 180
+                 not corrected wrt the real robot (i.e., rotated over 180
                  degrees)
       -->
       <origin xyz="0 0 0" rpy="0 0 ${-pi}"/>

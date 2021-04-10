@@ -83,3 +83,15 @@ Code is auto-formatted with clang-format 10 whenever a git commit is made. Pleas
 Prepare the pre-commit formatting to run like this:
 
 `pre-commit install`
+
+
+## Stuff to add
+
+1. Explation of packages
+2. How to start:
+   - Simple simulation with FakeSystem
+   - Hardware
+
+3. How to test:
+   - Using forward_command_controller
+   - Using joint_trajectory_controller
