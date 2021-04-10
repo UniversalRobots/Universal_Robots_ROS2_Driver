@@ -2,36 +2,44 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:macro name="ur5_system_position_only" params="name prefix
+    use_fake_hardware:=^|false fake_sensor_commands:=^|false
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
     hash_kinematics robot_ip">
 
     <ros2_control name="${name}" type="system">
       <hardware>
-        <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
-        <param name="robot_ip">${robot_ip}</param>
-        <param name="script_filename">${script_filename}</param>
-        <param name="output_recipe_filename">${output_recipe_filename}</param>
-        <param name="input_recipe_filename">${input_recipe_filename}</param>
-        <param name="headless_mode">0</param>
-        <param name="reverse_port">50001</param>
-        <param name="script_sender_port">50002</param>
-        <param name="tf_prefix">"${tf_prefix}"</param>
-        <param name="non_blocking_read">0</param>
-        <param name="servoj_gain">2000</param>
-        <param name="servoj_lookahead_time">0.03</param>
-        <param name="use_tool_communication">0</param>
-        <param name="kinematics/hash">"${hash_kinematics}"</param>
-        <param name="tool_voltage">0</param>
-        <param name="tool_parity">0</param>
-        <param name="tool_baud_rate">115200</param>
-        <param name="tool_stop_bits">1</param>
-        <param name="tool_rx_idle_chars">1.5</param>
-        <param name="tool_tx_idle_chars">3.5</param>
-        <param name="tool_device_name">/tmp/ttyUR</param>
-        <param name="tool_tcp_port">54321</param>
+        <xacro:if value="${use_fake_hardware}">
+          <plugin>fake_components/GenericSystem</plugin>
+          <param name="fake_sensor_commands">${fake_sensor_commands}</param>
+          <param name="state_following_offset">0.0</param>
+        </xacro:if>
+        <xacro:unless value="${use_fake_hardware}">
+          <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
+          <param name="robot_ip">${robot_ip}</param>
+          <param name="script_filename">${script_filename}</param>
+          <param name="output_recipe_filename">${output_recipe_filename}</param>
+          <param name="input_recipe_filename">${input_recipe_filename}</param>
+          <param name="headless_mode">0</param>
+          <param name="reverse_port">50001</param>
+          <param name="script_sender_port">50002</param>
+          <param name="tf_prefix">"${tf_prefix}"</param>
+          <param name="non_blocking_read">0</param>
+          <param name="servoj_gain">2000</param>
+          <param name="servoj_lookahead_time">0.03</param>
+          <param name="use_tool_communication">0</param>
+          <param name="kinematics/hash">"${hash_kinematics}"</param>
+          <param name="tool_voltage">0</param>
+          <param name="tool_parity">0</param>
+          <param name="tool_baud_rate">115200</param>
+          <param name="tool_stop_bits">1</param>
+          <param name="tool_rx_idle_chars">1.5</param>
+          <param name="tool_tx_idle_chars">3.5</param>
+          <param name="tool_device_name">/tmp/ttyUR</param>
+          <param name="tool_tcp_port">54321</param>
+        </xacro:unless>
       </hardware>
-      <joint name="shoulder_pan_joint">
+      <joint name="${prefix}shoulder_pan_joint">
         <command_interface name="position">
           <param name="min">{-2*pi}</param>
           <param name="max">{2*pi}</param>
@@ -44,7 +52,7 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
-      <joint name="shoulder_lift_joint">
+      <joint name="${prefix}shoulder_lift_joint">
         <command_interface name="position">
           <param name="min">{-2*pi}</param>
           <param name="max">{2*pi}</param>
@@ -56,8 +64,9 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
+        <param name="initial_position">-1.57</param>  <!-- initial position for the FakeSystem -->
       </joint>
-      <joint name="elbow_joint">
+      <joint name="${prefix}elbow_joint">
         <command_interface name="position">
           <param name="min">{-pi}</param>
           <param name="max">{pi}</param>
@@ -70,7 +79,7 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
-      <joint name="wrist_1_joint">
+      <joint name="${prefix}wrist_1_joint">
         <command_interface name="position">
           <param name="min">{-2*pi}</param>
           <param name="max">{2*pi}</param>
@@ -83,7 +92,7 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
-      <joint name="wrist_2_joint">
+      <joint name="${prefix}wrist_2_joint">
         <command_interface name="position">
           <param name="min">{-2*pi}</param>
           <param name="max">{2*pi}</param>
@@ -96,7 +105,7 @@
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
       </joint>
-      <joint name="wrist_3_joint">
+      <joint name="${prefix}wrist_3_joint">
         <command_interface name="position">
           <param name="min">{-2*pi}</param>
           <param name="max">{2*pi}</param>
@@ -110,12 +119,12 @@
         <state_interface name="effort"/>
       </joint>
       <sensor name="tcp_fts_sensor">
-        <state_interface name="fx"/>
-        <state_interface name="fy"/>
-        <state_interface name="fz"/>
-        <state_interface name="tx"/>
-        <state_interface name="ty"/>
-        <state_interface name="tz"/>
+        <state_interface name="force.x"/>
+        <state_interface name="force.y"/>
+        <state_interface name="force.z"/>
+        <state_interface name="torque.x"/>
+        <state_interface name="torque.y"/>
+        <state_interface name="torque.z"/>
       </sensor>
     </ros2_control>
   </xacro:macro>
