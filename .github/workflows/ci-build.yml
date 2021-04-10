@@ -19,7 +19,7 @@ jobs:
           - {ROS_DISTRO: foxy, ROS_REPO: main}
           - {ROS_DISTRO: foxy, ROS_REPO: testing}
     env:
-      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.ci.repos
+      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.repos
     steps:
       - uses: actions/checkout@v1
       - uses: 'ros-industrial/industrial_ci@master'
