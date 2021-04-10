@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 # Author: Denis Stogl
+#
+# Description: After a robot has been loaded, this will execute a series of trajectories.
 
 from launch import LaunchDescription
 from launch.substitutions import PathJoinSubstitution

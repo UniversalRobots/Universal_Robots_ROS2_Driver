@@ -63,8 +63,8 @@
     safety_limits:=false
     safety_pos_margin:=0.15
     safety_k_position:=20
-    use_fake_hardware:=^|false
-    fake_sensor_commands:=^|false"
+    use_fake_hardware:=false
+    fake_sensor_commands:=false"
   >
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
