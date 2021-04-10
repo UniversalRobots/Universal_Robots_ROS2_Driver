@@ -3,15 +3,19 @@
 <package format="3">
   <name>ur_bringup</name>
   <version>0.0.0</version>
-  <description>Bringup package for UR robots.</description>
+  <description>ROS2 demo package for UR robot testing</description>
   <author>Lovro Ivanov</author>
-  <maintainer email="denis@stogl.de">Denis Stogl</maintainer>
+  <maintainer email="lovro.ivanov@gmail.com">Lovro Ivanov</maintainer>
 
   <license>Apache-2.0</license>
+  <license>BSD-2-Clause</license>
+  <license>Zlib</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <exec_depend>xacro</exec_depend>
+
+  <depend>rclcpp</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
