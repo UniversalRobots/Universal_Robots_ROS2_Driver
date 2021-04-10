@@ -53,14 +53,6 @@ ament_target_dependencies(
 )
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
 
-# add_executable(ur_robot_driver_node
-#   src/dashboard_client_ros.cpp
-#   src/hardware_interface.cpp
-#   src/hardware_interface_node.cpp
-# )
-# target_link_libraries(ur_robot_driver_node ${catkin_LIBRARIES} ur_client_library::urcl)
-# ament_target_dependencies(ur_robot_driver_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
 add_executable(dashboard_client
   src/dashboard_client_ros.cpp
   src/dashboard_client_node.cpp
@@ -72,19 +64,6 @@ install(
         TARGETS dashboard_client
         DESTINATION lib/${PROJECT_NAME}
 )
-
-# add_executable(robot_state_helper
-#   src/robot_state_helper.cpp
-#   src/robot_state_helper_node.cpp
-# )
-# target_link_libraries(robot_state_helper ${catkin_LIBRARIES} ur_client_library::urcl)
-# ament_target_dependencies(robot_state_helper ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-# install(TARGETS ur_robot_driver_plugin ur_robot_driver_node robot_state_helper dashboard_client
-#   ARCHIVE DESTINATION lib}
-#   LIBRARY DESTINATION lib}
-#   RUNTIME DESTINATION bin}
-# )
 
 # INSTALL
 install(

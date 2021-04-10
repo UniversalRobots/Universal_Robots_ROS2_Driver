@@ -22,9 +22,9 @@
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>hardware_interface</buildtool_depend>
-  <buildtool_depend>pluginlib</buildtool_depend>
 
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>std_srvs</depend>
   <depend>ur_client_library</depend>
