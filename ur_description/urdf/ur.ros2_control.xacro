@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:macro name="ur_ros2_control" params="name prefix
-    use_fake_hardware:=^|false fake_sensor_commands:=^|false
+    use_fake_hardware:=false fake_sensor_commands:=false
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
     hash_kinematics robot_ip">
@@ -127,7 +127,7 @@
         <state_interface name="torque.z"/>
       </sensor>
 
-      <!-- NOTE The following are joints used only for testing with fake hardware and will chnage int the future -->
+      <!-- NOTE The following are joints used only for testing with fake hardware and will change in the future -->
       <joint name="speed_scaling">
         <state_interface name="speed_scaling_factor"/>
       </joint>

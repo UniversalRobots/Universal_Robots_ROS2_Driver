@@ -3,7 +3,7 @@
 <package format="3">
   <name>ur_bringup</name>
   <version>0.0.0</version>
-  <description>ROS2 demo package for UR robot testing</description>
+  <description>Launch file and run-time configurations, e.g. controllers.</description>
   <author>Lovro Ivanov</author>
   <maintainer email="lovro.ivanov@gmail.com">Lovro Ivanov</maintainer>
 

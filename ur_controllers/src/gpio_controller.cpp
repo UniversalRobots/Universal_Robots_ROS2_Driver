@@ -253,7 +253,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0)
     {
-      // setting the value is not yet finished
+      // TODO: setting the value is not yet finished
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
@@ -270,7 +270,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0)
     {
-      // setting the value is not yet finished
+      // TODO: setting the value is not yet finished
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
@@ -297,7 +297,7 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
 
     while (command_interfaces_[CommandInterfaces::SCALING_ASYNC_SUCCESS].get_value() != 2.0)
     {
-      // setting the value is not yet finished
+      // TODO: setting the value is not yet finished
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 

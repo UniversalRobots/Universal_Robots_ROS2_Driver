@@ -43,7 +43,6 @@ namespace ur_controllers
 {
 enum CommandInterfaces
 {
-
   DIGITAL_OUTPUTS_CMD = 0u,
   ANALOG_OUTPUTS_CMD = 18,
   IO_ASYNC_SUCCESS = 20,
@@ -53,7 +52,6 @@ enum CommandInterfaces
 
 enum StateInterfaces
 {
-
   DIGITAL_OUTPUTS = 0u,
   DIGITAL_INPUTS = 18,
   ANALOG_OUTPUTS = 36,
@@ -69,7 +67,6 @@ enum StateInterfaces
   ROBOT_STATUS_BITS = 53,
   SAFETY_MODE = 57,
   SAFETY_STATUS_BITS = 58
-
 };
 
 class GPIOController : public controller_interface::ControllerInterface
