@@ -20,7 +20,8 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (Command, FindExecutable, LaunchConfiguration,
+                                  PathJoinSubstitution)
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -396,18 +397,6 @@ def generate_launch_description():
         ],
     )
 
-    ## Warehouse mongodb server
-    # mongodb_server_node = Node(
-    # package="warehouse_ros_mongo",
-    # executable="mongo_wrapper_ros.py",
-    # parameters=[
-    # {"warehouse_port": 33829},
-    # {"warehouse_host": "localhost"},
-    # {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-    # ],
-    # output="screen",
-    # )
-
     # rviz with moveit configuration
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "rviz", "view_robot.rviz"]
@@ -436,6 +425,5 @@ def generate_launch_description():
     )
 
     nodes_to_start.extend([move_group_node, rviz_node, static_tf])
-    # nodes_to_start.extend([move_group_node, mongodb_server_node, rviz_node, static_tf])
 
     return LaunchDescription(declared_arguments + nodes_to_start)
