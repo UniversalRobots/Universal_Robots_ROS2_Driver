@@ -51,11 +51,21 @@ repos:
         args: ["--line-length=100"]
 
   # CPP hooks
-  - repo: https://github.com/pocc/pre-commit-hooks
-    rev: v1.1.1
+  # The same options as in ament_cppcheck are used, but its not working...
+  #- repo: https://github.com/pocc/pre-commit-hooks
+    #rev: v1.1.1
+    #hooks:
+      #- id: cppcheck
+        #args: ['-f', '--inline-suppr', '-q', '-rp', '--xml', '--xml-version=2', '--suppress=internalAstError', '--suppress=unknownMacro']
+
+  - repo: local
     hooks:
-      - id: cppcheck
-        args: ["--enable=all --error-exitcode=1"]
+      - id: ament_cppcheck
+        name: ament_cppcheck
+        description: Static code analysis of C/C++ files.
+        entry: ament_cppcheck
+        language: system
+        files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
 
   # Maybe use https://github.com/cpplint/cpplint instead
   - repo: local
@@ -66,6 +76,7 @@ repos:
         entry: ament_cpplint
         language: system
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+        args: ["--linelength=120"]
 
   - repo: local
     hooks:
@@ -85,6 +96,7 @@ repos:
         description: Check format of CMakeLists.txt files.
         entry: ament_lint_cmake
         language: system
+        files: CMakeLists.txt$
 
   # Copyright
   - repo: local
@@ -96,12 +108,6 @@ repos:
         language: system
 
   # Docs - RestructuredText hooks
-  - repo: https://github.com/Lucas-C/pre-commit-hooks-nodejs
-    rev: v1.1.1
-    hooks:
-      - id: markdown-toc   # add ToC in README.md
-        args: [--indent, "  ", -i]
-
   - repo: https://github.com/PyCQA/doc8
     rev: 0.9.0a1
     hooks:
@@ -116,8 +122,9 @@ repos:
       - id: rst-inline-touching-normal
 
   # Spellcheck in comments and docs
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.0.0
-    hooks:
-      - id: codespell
-        args: ['--write-changes --skip="*.svg"']
+  # skipping of *.svg files is not working...
+  #- repo: https://github.com/codespell-project/codespell
+    #rev: v2.0.0
+    #hooks:
+      #- id: codespell
+        #args: ['--write-changes', '--skip="*.svg"']
