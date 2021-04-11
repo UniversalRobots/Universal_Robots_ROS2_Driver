@@ -88,11 +88,16 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move (or jump when using emulation).
 
+4. To test the driver with example MoveIt-setup use the following command:
+   ```
+   ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true
+   ```
+   Now you should be able to use MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
+
 
 ## Expected Changes in the Near Future
 
 - Using upstream `force_torque_sensor_broadcaster` (ros-controls/ros2_controllers#152)
-
 - Trajectory control currently only supports position commands. In the future, velocity control will be added.
 
 
