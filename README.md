@@ -40,7 +40,7 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 
 For starting the driver there are three main launch files in the `ur_bringup` package.
 
-  - `ur_control.launch.py` - starts ros2_control node including hardware interface, joint state broadcaster and a controller.
+  - `ur_control.launch.py` - starts ros2_control node including hardware interface, joint state broadcaster and a controller. This launch file also starts `dashboard_client` if real robot is used.
   - `ur_moveit.launch.py` - start everything from `ur_control.launch.py` plus an example scenario with [MoveIt2](https://moveit.ros.org/).
   - `ur_dashboard_client.launch.py` - start the dashboard client for UR robots.
 
