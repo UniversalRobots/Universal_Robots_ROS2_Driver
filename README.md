@@ -1,36 +1,19 @@
 # Universal Robots ROS2 Driver
 
-Alpha version of the ROS2 Universal Robots driver. Should be transferred to the Universal Robots org when ready.
+Beta version of the ROS2 Universal Robots driver. Should be transferred to the Universal Robots org when ready.
 
 
 ## Packages in the Repository:
 
-  - `ur_bringup` - launch file and run-time configurations, e.g., controllers.
+  - `ur_bringup` - launch file and run-time configurations, e.g. controllers.
   - `ur_controllers` - implementations of controllers specific for UR robots.
   - `ur_dashboard_msgs` - package defining messages used by dashboard node.
   - `ur_description` - description files for the UR robots: meshes, URDF/XACRO files, etc.
-  - `ur_moveit` - example MovieIt configuration for UR robots.
+  - `ur_moveit` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
 
-## Current State of the Driver
-
-Driver currently only supports position joint interface which means only position-based controllers can be used with
-the ROS2 driver. [Universal Robots Client Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) includes also
-velocity-based control whose support will be addressed in additional development of ROS2 driver.
-
-### Expected Changes in the Near Future
-
-- Using upstream `force_torque_sensor_broadcaster` (ros-controls/ros2_controllers#152)
-
-
-## Requirements
-
-Follow the [instructions](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#setting-up-a-ur-robot-for-ur_robot_driver) in the paragraph
-[`Prepare the robot` ](https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#prepare-the-robot)
-
-
-## Getting-Started Instructions
+## Getting Started
 
 1. [Install ROS2 Foxy](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/).
 
@@ -50,27 +33,16 @@ Follow the [instructions](https://github.com/UniversalRobots/Universal_Robots_RO
    source install/setup.bash
    ```
 
-**NOTE**: If you are ROS2 beginner and got lost consult the [references - section](#references).
+**NOTE**: If you are a ROS2 beginner and get lost consult the [references - section](#references).
 
 
-
-## Stuff to add
-
-1. Explation of packages
-2. How to start:
-   - Simple simulation with FakeSystem
-   - Hardware
-
-
-
-
-## How to Use ROS2 Driver for UR Robots
+## How to Use the ROS2 Driver for UR Robots
 
 For starting the driver there are three main launch files in the `ur_bringup` package.
 
   - `ur_control.launch.py` - starts ros2_control node including hardware interface, joint state broadcaster and a controller.
   - `ur_moveit.launch.py` - start everything from `ur_control.launch.py` plus an example scenario with [MoveIt2](https://moveit.ros.org/).
-  - `ur_dashboard_client.launch.py` - start dashboard client for UR robots.
+  - `ur_dashboard_client.launch.py` - start the dashboard client for UR robots.
 
 Also, there are predefined launch files for all supported types of UR robots.
 
@@ -78,18 +50,18 @@ The arguments for launch files can be listed using `ros2 launch ur_bringup <laun
 The most relevant arguments are the following:
 
   - `ur_type` (*mandatory*) - a type of used UR robot (*ur3*, *ur3e*, *ur5*, *ur5e*, *ur10*, *ur10e*, or *ur16e*).
-  - `robot_ip` (*mandatory*) - IP address b which the root can be reached.
+  - `robot_ip` (*mandatory*) - IP address by which the root can be reached.
   - `use_fake_hardware` (default: *false*) - use simple hardware emulator from ros2_control.
     Useful for testing launch files, descriptions, etc. See explanation below.
   - `fake_sensor_commands` (default: *false*) - enables setting sensor values for the hardware emulators.
-    Use full for offline testing of controllers.
+    Useful for offline testing of controllers.
   - `robot_controller` (default: *joint_trajectory_controller*) - controller for robot joints to be started.
     Available controllers: *joint_trajectory_controller*, *scaled_joint_trajectory_controller*, *forward_position_controller*, and *forward_velocity_controller*.
     Note: *JointStateBroadcaster*, *SpeedScalingStateBroadcaster*, *ForceTorqueStateBroadcaster*, and *IO/StatusController* will always start.
 
     *HINT*: list all loaded controllers using `ros2 control list_controllers` command.
 
-**NOTE**: The package implements support to use it without hardware with a simple emulator called `FakeSystem`. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see [ros2_control documentation](https://ros-controls.github.io/control.ros.org/) for more details..
+**NOTE**: The package can simulate hardware with the ros2_control `FakeSystem`. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see [ros2_control documentation](https://ros-controls.github.io/control.ros.org/) for more details..
 
 ### Example Commands for Testing the Driver
 
@@ -97,24 +69,31 @@ The most relevant arguments are the following:
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true
    ```
-   If you want to do "offline" test with the emulated hardware you can just copy-paste this line.
-   To run on the hardware, write correct IP-address of your robot and omit `use_fake_hardware` argument.
+   For an offline test with the emulated hardware you can just copy-paste this line.
+   To run on the hardware, write the IP address of your robot and omit the `use_fake_hardware` argument.
 
-2. Send some goal to the Joint Trajectory Controller by using a demo node form [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
+2. Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
    ros2 launch ur_bringup test_joint_trajectory_controller.launch.py
    ```
-   After few seconds the robot should move.
+   After a few seconds the robot should move.
 
-3. To test an another controller, simply define it using `robot_controller` argument:
+3. To test another controller, simply define it using `robot_controller` argument:
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=forward_position_controller use_fake_hardware:=true
    ```
-   And send command using demo node:
+   And send the command using demo node:
    ```
    ros2 launch ur_bringup test_forward_position_controller.launch.py
    ```
-   After few seconds the robot should move (or jump when using emulation).
+   After a few seconds the robot should move (or jump when using emulation).
+
+
+## Expected Changes in the Near Future
+
+- Using upstream `force_torque_sensor_broadcaster` (ros-controls/ros2_controllers#152)
+
+- Trajectory control currently only supports position commands. In the future, velocity control will be added.
 
 
 ## Contributor Guidelines
@@ -128,6 +107,7 @@ Prepare the pre-commit formatting to run like this:
   ```
   pre-commit install`
   ```
+
 
 ## References
 
