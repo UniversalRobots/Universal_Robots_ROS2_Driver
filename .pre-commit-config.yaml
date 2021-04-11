@@ -41,20 +41,21 @@ repos:
   - repo: https://github.com/pycqa/flake8
     rev: 3.9.0
     hooks:
-    -   id: flake8
+    - id: flake8
+      args: ["--ignore=E501"]
 
   - repo: https://github.com/psf/black
     rev: 20.8b1
     hooks:
       - id: black
-        args: [--line-length=100]
+        args: ["--line-length=100"]
 
   # CPP hooks
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.1.1
     hooks:
       - id: cppcheck
-        args: [--enable=all]
+        args: ["--enable=all --error-exitcode=1"]
 
   # Maybe use https://github.com/cpplint/cpplint instead
   - repo: local
@@ -119,4 +120,4 @@ repos:
     rev: v2.0.0
     hooks:
       - id: codespell
-        args: ['--write-changes', '--skip="*.svg"']
+        args: ['--write-changes --skip="*.svg"']
