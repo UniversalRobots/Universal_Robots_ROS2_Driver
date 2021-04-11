@@ -75,7 +75,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_package",
             default_value="ur_description",
-            description="Description package with robot URDF/xacro files. Usually the argument \
+            description="Description package with robot URDF/XACRO files. Usually the argument \
         is not set, it enables use of a custom description.",
         )
     )
@@ -229,7 +229,7 @@ def generate_launch_description():
         },
     )
 
-    robot_state_pub_node = Node(
+    robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
@@ -283,7 +283,7 @@ def generate_launch_description():
 
     nodes_to_start = [
         control_node,
-        robot_state_pub_node,
+        robot_state_publisher_node,
         rviz_node,
         joint_state_broadcaster_spawner,
         io_and_status_controller_spawner,
@@ -292,6 +292,7 @@ def generate_launch_description():
         robot_controller_spawner,
     ]
 
+    # NOTE: This probably does not work properly!
     if use_fake_hardware == "false":
 
         dashboard_client_node = Node(

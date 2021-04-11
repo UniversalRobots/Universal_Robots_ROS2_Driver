@@ -14,6 +14,10 @@
 #
 # Author: Denis Stogl
 
+import os
+
+import yaml
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
@@ -70,7 +74,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "runtime_config_package",
-            default_value="ur_ros2_control_demos",
+            default_value="ur_bringup",
             description='Package with the controller\'s configuration in "config" folder. \
         Usually the argument is not set, it enables use of a custom setup.',
         )
@@ -260,10 +264,36 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
-    joint_state_controller_spawner = Node(
+    joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner.py",
-        arguments=["joint_state_controller", "--controller-manager", "/controller_manager"],
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
+
+    io_and_status_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=["io_and_status_controller", "-c", "/controller_manager"],
+    )
+
+    speed_scaling_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=[
+            "speed_scaling_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+    )
+
+    force_torque_sensor_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=[
+            "force_torque_sensor_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
 
     robot_controller_spawner = Node(
@@ -275,10 +305,14 @@ def generate_launch_description():
     nodes_to_start = [
         control_node,
         robot_state_publisher_node,
-        joint_state_controller_spawner,
+        joint_state_broadcaster_spawner,
+        io_and_status_controller_spawner,
+        speed_scaling_state_broadcaster_spawner,
+        force_torque_sensor_broadcaster_spawner,
         robot_controller_spawner,
     ]
 
+    # NOTE: This probably does not work properly!
     if use_fake_hardware == "false":
         dashboard_client_node = Node(
             package="ur_robot_driver",
@@ -290,7 +324,7 @@ def generate_launch_description():
         )
         nodes_to_start.append(dashboard_client_node)
 
-    ## MoveIt Configuration
+    # MoveIt Configuration
     robot_description_semantic_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -300,7 +334,9 @@ def generate_launch_description():
             ),
             " ",
             "name:=",
-            ur_type,
+            # Also ur_type could be used but then the planning group names in yaml configs has
+            # to be updated!
+            "ur",
             " ",
             "prefix:=",
             prefix,
@@ -309,7 +345,7 @@ def generate_launch_description():
     )
     robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
-    kinematics_yaml = load_yaml(robot_name + "_moveit_config", "config/kinematics.yaml")
+    kinematics_yaml = load_yaml("ur_moveit_config", "config/kinematics.yaml")
     robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
 
     # Planning Configuration
@@ -320,13 +356,15 @@ def generate_launch_description():
             "start_state_max_bounds_error": 0.1,
         }
     }
-    ompl_planning_yaml = load_yaml(robot_name + "_moveit_config", "config/ompl_planning.yaml")
+    ompl_planning_yaml = load_yaml("ur_moveit_config", "config/ompl_planning.yaml")
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
     # Trajectory Execution Configuration
-    # controllers_yaml = load_yaml('ur_ros2_control_demos', 'config/move_group/controllers.yaml')
-    # moveit_controllers = { 'moveit_simple_controller_manager' : controllers_yaml,
-    #'moveit_controller_manager': 'moveit_simple_controller_manager/MoveItSimpleControllerManager'}
+    controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
+    moveit_controllers = {
+        "moveit_simple_controller_manager": controllers_yaml,
+        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
+    }
 
     trajectory_execution = {
         "moveit_manage_controllers": False,
@@ -353,22 +391,22 @@ def generate_launch_description():
             robot_description_kinematics,
             ompl_planning_pipeline_config,
             trajectory_execution,
-            # moveit_controllers,
+            moveit_controllers,
             planning_scene_monitor_parameters,
         ],
     )
 
-    # Warehouse mongodb server
-    mongodb_server_node = Node(
-        package="warehouse_ros_mongo",
-        executable="mongo_wrapper_ros.py",
-        parameters=[
-            {"warehouse_port": 33829},
-            {"warehouse_host": "localhost"},
-            {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-        ],
-        output="screen",
-    )
+    ## Warehouse mongodb server
+    # mongodb_server_node = Node(
+    # package="warehouse_ros_mongo",
+    # executable="mongo_wrapper_ros.py",
+    # parameters=[
+    # {"warehouse_port": 33829},
+    # {"warehouse_host": "localhost"},
+    # {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
+    # ],
+    # output="screen",
+    # )
 
     # rviz with moveit configuration
     rviz_config_file = PathJoinSubstitution(
@@ -397,6 +435,7 @@ def generate_launch_description():
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "base_link"],
     )
 
-    nodes_to_start.extend([move_group_node, mongodb_server_node, rviz_node, static_tf])
+    nodes_to_start.extend([move_group_node, rviz_node, static_tf])
+    # nodes_to_start.extend([move_group_node, mongodb_server_node, rviz_node, static_tf])
 
     return LaunchDescription(declared_arguments + nodes_to_start)
