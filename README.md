@@ -56,7 +56,7 @@ The most relevant arguments are the following:
   - `fake_sensor_commands` (default: *false*) - enables setting sensor values for the hardware emulators.
     Useful for offline testing of controllers.
   - `robot_controller` (default: *joint_trajectory_controller*) - controller for robot joints to be started.
-    Available controllers: *joint_trajectory_controller*, *scaled_joint_trajectory_controller*, *forward_position_controller*, and *forward_velocity_controller*.
+    Available controllers: *joint_trajectory_controller*, *scaled_joint_trajectory_controller*.
     Note: *JointStateBroadcaster*, *SpeedScalingStateBroadcaster*, *ForceTorqueStateBroadcaster*, and *IO/StatusController* will always start.
 
     *HINT*: list all loaded controllers using `ros2 control list_controllers` command.
@@ -72,6 +72,12 @@ The most relevant arguments are the following:
    For an offline test with the emulated hardware you can just copy-paste this line.
    To run on the hardware, write the IP address of your robot and omit the `use_fake_hardware` argument.
 
+   **NOTE**: If controllers are not starting automatically, i.e., the robot state is not shown in rviz, you can start them manually using:
+   ```
+   ros2 control load_controller --state joint_state_broadcaster
+   ros2 control load_controller --state joint_trajectory_controller
+   ```
+
 2. Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
    ros2 launch ur_bringup test_joint_trajectory_controller.launch.py
@@ -80,11 +86,11 @@ The most relevant arguments are the following:
 
 3. To test another controller, simply define it using `robot_controller` argument:
    ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=forward_position_controller use_fake_hardware:=true
+   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=scaled_joint_trajectory_controller use_fake_hardware:=true
    ```
    And send the command using demo node:
    ```
-   ros2 launch ur_bringup test_forward_position_controller.launch.py
+   ros2 launch ur_bringup test_scaled_joint_trajectory_controller.launch.py
    ```
    After a few seconds the robot should move (or jump when using emulation).
 

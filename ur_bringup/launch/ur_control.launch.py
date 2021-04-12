@@ -293,16 +293,16 @@ def generate_launch_description():
         robot_controller_spawner,
     ]
 
-    if not IfCondition(use_fake_hardware):
+    #if not IfCondition(use_fake_hardware):
 
-        dashboard_client_node = Node(
-            package="ur_robot_driver",
-            executable="dashboard_client",
-            name="dashboard_client",
-            output="screen",
-            emulate_tty=True,
-            parameters=[{"robot_ip": robot_ip}],
-        )
-        nodes_to_start.append(dashboard_client_node)
+        #dashboard_client_node = Node(
+            #package="ur_robot_driver",
+            #executable="dashboard_client",
+            #name="dashboard_client",
+            #output="screen",
+            #emulate_tty=True,
+            #parameters=[{"robot_ip": robot_ip}],
+        #)
+        #nodes_to_start.append(dashboard_client_node)
 
     return LaunchDescription(declared_arguments + nodes_to_start)
