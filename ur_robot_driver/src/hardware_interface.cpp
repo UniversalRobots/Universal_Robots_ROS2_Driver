@@ -202,11 +202,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "io_async_success", &io_async_success_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface("gpio", "scaling_async_success", &scaling_async_success_));
-
   return state_interfaces;
 }
 
@@ -226,8 +221,13 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
   }
 
+  command_interfaces.emplace_back(hardware_interface::CommandInterface("gpio", "io_async_success", &io_async_success_));
+
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface("speed_scaling", "speed_scaling_factor_cmd", &speed_scaling_cmd_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("speed_scaling", "scaling_async_success", &scaling_async_success_));
 
   for (size_t i = 0; i < 18; ++i)
   {

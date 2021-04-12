@@ -44,7 +44,7 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   config.names.emplace_back("speed_scaling/speed_scaling_factor_cmd");
 
-  config.names.emplace_back("gpio/scaling_async_success");
+  config.names.emplace_back("speed_scaling/scaling_async_success");
 
   return config;
 }

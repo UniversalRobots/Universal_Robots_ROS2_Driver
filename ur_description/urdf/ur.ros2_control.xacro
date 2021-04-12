@@ -130,6 +130,8 @@
       <!-- NOTE The following are joints used only for testing with fake hardware and will change in the future -->
       <joint name="speed_scaling">
         <state_interface name="speed_scaling_factor"/>
+        <command_interface name="speed_scaling_factor_cmd"/>
+        <command_interface name="scaling_async_success"/>
       </joint>
 
       <joint name="gpio">
@@ -156,9 +158,6 @@
         <command_interface name="standard_analog_output_cmd_1"/>
 
         <command_interface name="io_async_success"/>
-
-        <command_interface name="speed_scaling_factor_cmd"/>
-        <command_interface name="scaling_async_success"/>
 
         <state_interface name="digital_output_0"/>
         <state_interface name="digital_output_1"/>
