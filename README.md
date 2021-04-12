@@ -57,7 +57,7 @@ The most relevant arguments are the following:
     Useful for offline testing of controllers.
   - `robot_controller` (default: *joint_trajectory_controller*) - controller for robot joints to be started.
     Available controllers: *joint_trajectory_controller*, *scaled_joint_trajectory_controller*.
-    Note: *JointStateBroadcaster*, *SpeedScalingStateBroadcaster*, *ForceTorqueStateBroadcaster*, and *IO/StatusController* will always start.
+    Note: *joint_state_broadcaster*, *speed_scaling_state_broadcaster*, *force_torque_sensor_broadcaster*, and *io_and_status_controller* will always start.
 
     *HINT*: list all loaded controllers using `ros2 control list_controllers` command.
 
@@ -72,7 +72,7 @@ The most relevant arguments are the following:
    For an offline test with the emulated hardware you can just copy-paste this line.
    To run on the hardware, write the IP address of your robot and omit the `use_fake_hardware` argument.
 
-   **NOTE**: If controllers are not starting automatically, i.e., the robot state is not shown in rviz, you can start them manually using:
+   **NOTE**: If controllers are not starting automatically, i.e., the robot state is not shown in rviz, you can start them manually:
    ```
    ros2 control load_controller --state joint_state_broadcaster
    ros2 control load_controller --state joint_trajectory_controller
