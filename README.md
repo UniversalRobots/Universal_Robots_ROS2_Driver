@@ -103,7 +103,6 @@ The most relevant arguments are the following:
    Now you should be able to use MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
    **NOTE**: This results in two instances of rviz2. You can safely close the one without *MotionPlanning* panel.
 
-
 ## Expected Changes in the Near Future
 
 - Using upstream `force_torque_sensor_broadcaster` (ros-controls/ros2_controllers#152)
