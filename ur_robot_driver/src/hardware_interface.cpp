@@ -51,9 +51,14 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
   controllers_initialized_ = false;
+  first_pass_ = true;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints)
   {
+    if (joint.name == "gpio" || joint.name == "speed_scaling")
+    {
+      continue;
+    }
     if (joint.command_interfaces.size() != 2)
     {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
@@ -120,6 +125,10 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling")
+    {
+      continue;
+    }
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
 
@@ -142,6 +151,57 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
     }
   }
 
+  for (size_t i = 0; i < 18; ++i)
+  {
+    state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "digital_output_" + std::to_string(i),
+                                                                     &actual_dig_out_bits_copy_[i]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface("gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
+  }
+
+  for (size_t i = 0; i < 11; ++i)
+  {
+    state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "safety_status_bit_" + std::to_string(i),
+                                                                     &safety_status_bits_copy_[i]));
+  }
+
+  for (size_t i = 0; i < 4; ++i)
+  {
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface("gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "robot_status_bit_" + std::to_string(i),
+                                                                     &robot_status_bits_copy_[i]));
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
+
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface("gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
+
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
+
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
+  }
+
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "tool_output_voltage", &tool_output_voltage_copy_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "robot_mode", &robot_mode_copy_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "safety_mode", &safety_mode_copy_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_mode", &tool_mode_copy_));
+
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "tool_output_current", &tool_output_current_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
+
   return state_interfaces;
 }
 
@@ -150,11 +210,35 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i)
   {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling")
+    {
+      continue;
+    }
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_position_commands_[i]));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
+  }
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface("gpio", "io_async_success", &io_async_success_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("speed_scaling", "speed_scaling_factor_cmd", &speed_scaling_cmd_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("speed_scaling", "scaling_async_success", &scaling_async_success_));
+
+  for (size_t i = 0; i < 18; ++i)
+  {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
 
   return command_interfaces;
@@ -416,6 +500,16 @@ return_type URPositionHardwareInterface::read()
       speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
     }
 
+    if (first_pass_)
+    {
+      initAsyncIO();
+      // initialize commands
+      urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+      speed_scaling_cmd_ = speed_scaling_;
+    }
+
+    updateNonDoubleValues();
+
     return return_type::OK;
   }
 
@@ -459,6 +553,18 @@ return_type URPositionHardwareInterface::write()
 
     packet_read_ = false;
 
+    // remember old values
+    urcl_position_commands_old_ = urcl_position_commands_;
+
+    if (first_pass_)
+    {
+      first_pass_ = false;
+    }
+    else
+    {
+      checkAsyncIO();
+    }
+
     return return_type::OK;
   }
   else
@@ -476,5 +582,96 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
     position_interface_in_use_ = false;
   }
   robot_program_running_ = program_running;
+}
+
+void URPositionHardwareInterface::initAsyncIO()
+{
+  for (size_t i = 0; i < 18; ++i)
+  {
+    standard_dig_out_bits_cmd_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
+    standard_analog_output_cmd_[i] = standard_analog_output_[i];
+  }
+}
+
+void URPositionHardwareInterface::checkAsyncIO()
+{
+  for (size_t i = 0; i < 18; ++i)
+  {
+    if (standard_dig_out_bits_cmd_[i] != static_cast<double>(actual_dig_out_bits_[i]))
+    {
+      if (i <= 7)
+      {
+        io_async_success_ =
+            ur_driver_->getRTDEWriter().sendStandardDigitalOutput(i, static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+      }
+      else if (i <= 15)
+      {
+        io_async_success_ = ur_driver_->getRTDEWriter().sendConfigurableDigitalOutput(
+            static_cast<uint8_t>(i - 8), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+      }
+      else
+      {
+        io_async_success_ = ur_driver_->getRTDEWriter().sendToolDigitalOutput(
+            static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+      }
+
+      if (io_async_success_ != 2.0)
+        return;
+    }
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
+    if (standard_analog_output_cmd_[i] != standard_analog_output_[i])
+    {
+      io_async_success_ = ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i]);
+
+      if (io_async_success_ != 2.0)
+        return;
+    }
+  }
+
+  if (speed_scaling_cmd_ != speed_scaling_ && ur_driver_ != nullptr)
+  {
+    scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(speed_scaling_cmd_);
+  }
+  else
+  {
+    scaling_async_success_ = false;
+  }
+}
+
+void URPositionHardwareInterface::updateNonDoubleValues()
+{
+  for (size_t i = 0; i < 18; ++i)
+  {
+    actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+    actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
+  }
+
+  for (size_t i = 0; i < 11; ++i)
+  {
+    safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
+  }
+
+  for (size_t i = 0; i < 4; ++i)
+  {
+    analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
+    robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
+  }
+
+  for (size_t i = 0; i < 2; ++i)
+  {
+    tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
+  }
+
+  tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
+  robot_mode_copy_ = static_cast<double>(robot_mode_);
+  safety_mode_copy_ = static_cast<double>(safety_mode_);
+  tool_mode_copy_ = static_cast<double>(tool_mode_);
 }
 }  // namespace ur_robot_driver

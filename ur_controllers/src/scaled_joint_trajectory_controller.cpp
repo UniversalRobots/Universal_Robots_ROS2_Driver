@@ -150,7 +150,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
         }
       }
 
-      if (rt_active_goal_)
+      const auto active_goal = *rt_active_goal_.readFromRT();
+      if (active_goal)
       {
         // send feedback
         auto feedback = std::make_shared<FollowJTrajAction::Feedback>();
@@ -160,7 +161,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
         feedback->actual = state_current;
         feedback->desired = state_desired;
         feedback->error = state_error;
-        rt_active_goal_->setFeedback(feedback);
+        active_goal->setFeedback(feedback);
 
         // check abort
         if (abort || outside_goal_tolerance)
@@ -177,8 +178,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
             RCLCPP_WARN(node_->get_logger(), "Aborted due to goal tolerance violation");
             result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
           }
-          rt_active_goal_->setAborted(result);
-          rt_active_goal_.reset();
+          active_goal->setAborted(result);
+          rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
         }
 
         // check goal tolerance
@@ -188,8 +189,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
           {
             auto res = std::make_shared<FollowJTrajAction::Result>();
             res->set__error_code(FollowJTrajAction::Result::SUCCESSFUL);
-            rt_active_goal_->setSucceeded(res);
-            rt_active_goal_.reset();
+            active_goal->setSucceeded(res);
+            rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
 
             RCLCPP_INFO(node_->get_logger(), "Goal reached, success!");
           }
@@ -206,8 +207,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
             {
               auto result = std::make_shared<FollowJTrajAction::Result>();
               result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
-              rt_active_goal_->setAborted(result);
-              rt_active_goal_.reset();
+              active_goal->setAborted(result);
+              rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
               RCLCPP_WARN(node_->get_logger(), "Aborted due goal_time_tolerance exceeding by %f seconds", difference);
             }
           }
