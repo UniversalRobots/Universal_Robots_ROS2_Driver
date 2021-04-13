@@ -20,7 +20,7 @@ into the default `ros_control` controller set at some future point.
 ## Controller description
 This packages offers a couple of specific controllers that will be explained in the following
 sections.
-### ur_controllers/SpeedScalingStateController
+### ur_controllers/SpeedScalingStateBroadcaster
 This controller publishes the current actual execution speed as reported by the robot. Values are
 floating points between 0 and 1.
 

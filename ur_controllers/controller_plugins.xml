@@ -1,17 +1,22 @@
 <library path="ur_controllers">
-  <class name="ur_controllers/ForceTorqueStateController" type="ur_controllers::ForceTorqueStateController" base_class_type="controller_interface::ControllerInterface">
+  <class name="ur_controllers/ForceTorqueStateBroadcaster" type="ur_controllers::ForceTorqueStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
     <description>
       The force torque state controller publishes the current force and torques
     </description>
   </class>
-  <class name="ur_controllers/SpeedScalingStateController" type="ur_controllers::SpeedScalingStateController" base_class_type="controller_interface::ControllerInterface">
-  <description>
-    This controller publishes the readings of all available speed scaling factors.
-  </description>
+  <class name="ur_controllers/SpeedScalingStateBroadcaster" type="ur_controllers::SpeedScalingStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller publishes the readings of all available speed scaling factors.
+    </description>
   </class>
   <class name="ur_controllers/ScaledJointTrajectoryController" type="ur_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerInterface">
-  <description>
-    Scaled position-based joint trajectory controller
-  </description>
+    <description>
+      Scaled position-based joint trajectory controller.
+    </description>
+  </class>
+  <class name="ur_controllers/GPIOController" type="ur_controllers::GPIOController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller publishes the Tool IO.
+    </description>
   </class>
 </library>

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <xacro:macro name="ur5_system_position_only" params="name prefix
-    use_fake_hardware:=^|false fake_sensor_commands:=^|false
+  <xacro:macro name="ur_ros2_control" params="name prefix
+    use_fake_hardware:=false fake_sensor_commands:=false
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
     hash_kinematics robot_ip">
@@ -126,6 +126,119 @@
         <state_interface name="torque.y"/>
         <state_interface name="torque.z"/>
       </sensor>
+
+      <!-- NOTE The following are joints used only for testing with fake hardware and will change in the future -->
+      <joint name="speed_scaling">
+        <state_interface name="speed_scaling_factor"/>
+        <command_interface name="speed_scaling_factor_cmd"/>
+        <command_interface name="scaling_async_success"/>
+      </joint>
+
+      <joint name="gpio">
+        <command_interface name="standard_digital_output_cmd_0"/>
+        <command_interface name="standard_digital_output_cmd_1"/>
+        <command_interface name="standard_digital_output_cmd_2"/>
+        <command_interface name="standard_digital_output_cmd_3"/>
+        <command_interface name="standard_digital_output_cmd_4"/>
+        <command_interface name="standard_digital_output_cmd_5"/>
+        <command_interface name="standard_digital_output_cmd_6"/>
+        <command_interface name="standard_digital_output_cmd_7"/>
+        <command_interface name="standard_digital_output_cmd_8"/>
+        <command_interface name="standard_digital_output_cmd_9"/>
+        <command_interface name="standard_digital_output_cmd_10"/>
+        <command_interface name="standard_digital_output_cmd_11"/>
+        <command_interface name="standard_digital_output_cmd_12"/>
+        <command_interface name="standard_digital_output_cmd_13"/>
+        <command_interface name="standard_digital_output_cmd_14"/>
+        <command_interface name="standard_digital_output_cmd_15"/>
+        <command_interface name="standard_digital_output_cmd_16"/>
+        <command_interface name="standard_digital_output_cmd_17"/>
+
+        <command_interface name="standard_analog_output_cmd_0"/>
+        <command_interface name="standard_analog_output_cmd_1"/>
+
+        <command_interface name="io_async_success"/>
+
+        <state_interface name="digital_output_0"/>
+        <state_interface name="digital_output_1"/>
+        <state_interface name="digital_output_2"/>
+        <state_interface name="digital_output_3"/>
+        <state_interface name="digital_output_4"/>
+        <state_interface name="digital_output_5"/>
+        <state_interface name="digital_output_6"/>
+        <state_interface name="digital_output_7"/>
+        <state_interface name="digital_output_8"/>
+        <state_interface name="digital_output_9"/>
+        <state_interface name="digital_output_10"/>
+        <state_interface name="digital_output_11"/>
+        <state_interface name="digital_output_12"/>
+        <state_interface name="digital_output_13"/>
+        <state_interface name="digital_output_14"/>
+        <state_interface name="digital_output_15"/>
+        <state_interface name="digital_output_16"/>
+        <state_interface name="digital_output_17"/>
+
+        <state_interface name="digital_input_0"/>
+        <state_interface name="digital_input_1"/>
+        <state_interface name="digital_input_2"/>
+        <state_interface name="digital_input_3"/>
+        <state_interface name="digital_input_4"/>
+        <state_interface name="digital_input_5"/>
+        <state_interface name="digital_input_6"/>
+        <state_interface name="digital_input_7"/>
+        <state_interface name="digital_input_8"/>
+        <state_interface name="digital_input_9"/>
+        <state_interface name="digital_input_10"/>
+        <state_interface name="digital_input_11"/>
+        <state_interface name="digital_input_12"/>
+        <state_interface name="digital_input_13"/>
+        <state_interface name="digital_input_14"/>
+        <state_interface name="digital_input_15"/>
+        <state_interface name="digital_input_16"/>
+        <state_interface name="digital_input_17"/>
+
+        <state_interface name="standard_analog_output_0"/>
+        <state_interface name="standard_analog_output_1"/>
+
+        <state_interface name="standard_analog_input_0"/>
+        <state_interface name="standard_analog_input_1"/>
+
+        <state_interface name="analog_io_type_0"/>
+        <state_interface name="analog_io_type_1"/>
+        <state_interface name="analog_io_type_2"/>
+        <state_interface name="analog_io_type_3"/>
+
+        <state_interface name="tool_mode"/>
+        <state_interface name="tool_output_voltage"/>
+        <state_interface name="tool_output_current"/>
+        <state_interface name="tool_temperature"/>
+
+        <state_interface name="tool_analog_input_0"/>
+        <state_interface name="tool_analog_input_1"/>
+
+        <state_interface name="tool_analog_input_type_0"/>
+        <state_interface name="tool_analog_input_type_1"/>
+
+        <state_interface name="robot_mode"/>
+        <state_interface name="robot_status_bit_0"/>
+        <state_interface name="robot_status_bit_1"/>
+        <state_interface name="robot_status_bit_2"/>
+        <state_interface name="robot_status_bit_3"/>
+
+        <state_interface name="safety_mode"/>
+        <state_interface name="safety_status_bit_0"/>
+        <state_interface name="safety_status_bit_1"/>
+        <state_interface name="safety_status_bit_2"/>
+        <state_interface name="safety_status_bit_3"/>
+        <state_interface name="safety_status_bit_4"/>
+        <state_interface name="safety_status_bit_5"/>
+        <state_interface name="safety_status_bit_6"/>
+        <state_interface name="safety_status_bit_7"/>
+        <state_interface name="safety_status_bit_8"/>
+        <state_interface name="safety_status_bit_9"/>
+        <state_interface name="safety_status_bit_10"/>
+      </joint>
+
     </ros2_control>
   </xacro:macro>
 

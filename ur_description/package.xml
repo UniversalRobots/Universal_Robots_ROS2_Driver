@@ -4,7 +4,7 @@
   <name>ur_description</name>
   <version>0.0.0</version>
   <description>
-    URDF description for Universal UR5/10 robot arms
+    URDF description for Universal Robots
   </description>
 
   <maintainer email="g.a.vanderhoorn@tudelft.nl">G.A. vd. Hoorn</maintainer>

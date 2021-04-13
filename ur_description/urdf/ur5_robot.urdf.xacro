@@ -15,7 +15,7 @@
     <xacro:arg name="input_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
     <xacro:arg name="robot_ip" default="10.0.1.186"/>
     <!-- ros2 control include -->
-    <xacro:include filename="$(find ur_ros2_control_demos)/urdf/ur5_system_position_only.ros2_control.xacro" />
+    <xacro:include filename="$(find ur_bringup)/urdf/ur5_system_position_only.ros2_control.xacro" />
     <!-- ros2 control instance -->
     <xacro:ur5_system_position_only name="URPositionHardwareInterface" prefix=""
                                     script_filename="$(arg script_filename)"
