@@ -14,7 +14,7 @@ Standalone launchfile to startup a ur3e. This requires a robot reachable via a n
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 
@@ -108,7 +108,7 @@ Standalone launchfile to startup a ur10 robot. This requires a robot reachable v
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 
@@ -162,7 +162,7 @@ Robot bringup launchfile without the robot description. Include this, if you wan
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller vel_based_pos_joint_traj_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster vel_based_pos_joint_traj_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 
@@ -260,7 +260,7 @@ Launchfile that starts a robot description with robot_state publisher and the dr
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 
@@ -350,7 +350,7 @@ Standalone launchfile to startup a ur5 robot. This requires a robot reachable vi
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 
@@ -404,7 +404,7 @@ Standalone launchfile to startup a ur5e robot. This requires a robot reachable v
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 
@@ -494,7 +494,7 @@ Standalone launchfile to startup a ur3 robot. This requires a robot reachable vi
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 
@@ -548,7 +548,7 @@ Standalone launchfile to startup a ur10e robot. This requires a robot reachable 
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_controller scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
 
 Controllers that are activated by default.
 

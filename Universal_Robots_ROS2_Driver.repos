@@ -3,18 +3,18 @@ repositories:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
     version: foxy-devel
-  geometric_shapes:
+  moveit2:
     type: git
-    url: https://github.com/ros-planning/geometric_shapes.git
-    version: ros2
-  realtime_tools:
-    type: git
-    url: https://github.com/ros-controls/realtime_tools.git
-    version: foxy-devel
+    url: https://github.com/ros-planning/moveit2.git
+    version: main
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
     version: master
+  ros2_control_demos:
+    type: git
+    url: https://github.com/ros-controls/ros2_control_demos.git
+    version: add_demo_nodes
   ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
@@ -27,7 +27,11 @@ repositories:
     type: git
     url: https://github.com/PickNikRobotics/Universal_Robots_Client_Library.git
     version: foxy-devel
-  warehouse_ros:
+  ur_msgs:
     type: git
-    url: https://github.com/ros-planning/warehouse_ros.git
+    url: https://github.com/destogl/ur_msgs.git
+    version: ros2
+  warehouse_ros_mongo:
+    type: git
+    url: https://github.com/ros-planning/warehouse_ros_mongo
     version: ros2

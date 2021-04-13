@@ -13,37 +13,39 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(controller_interface REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(joint_trajectory_controller REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
+find_package(rcutils REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(rcutils REQUIRED)
+find_package(ur_dashboard_msgs REQUIRED)
+find_package(ur_msgs REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   controller_interface
+  geometry_msgs
   joint_trajectory_controller
   pluginlib
   rclcpp_lifecycle
+  rcutils
   realtime_tools
   sensor_msgs
   std_msgs
-  geometry_msgs
-  rclcpp_lifecycle
-  rcutils
+  ur_dashboard_msgs
+  ur_msgs
 )
 
 include_directories(include)
 
 add_library(${PROJECT_NAME} SHARED
   src/scaled_joint_trajectory_controller.cpp
-  src/speed_scaling_state_controller.cpp
-  src/force_torque_sensor_controller.cpp
-  src/force_torque_sensor_controller.cpp)
+  src/speed_scaling_state_broadcaster.cpp
+  src/force_torque_sensor_broadcaster.cpp
+  src/gpio_controller.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
