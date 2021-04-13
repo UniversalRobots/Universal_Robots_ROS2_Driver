@@ -349,7 +349,7 @@ def generate_launch_description():
     )
     rviz_node = Node(
         package="rviz2",
-        condition=IfCondition(LaunchConfiguration("launch_rviz")),
+        condition=IfCondition(launch_rviz),
         executable="rviz2",
         name="rviz2_moveit",
         output="log",
