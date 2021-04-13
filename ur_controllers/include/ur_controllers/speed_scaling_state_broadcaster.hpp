@@ -21,11 +21,14 @@
  */
 //----------------------------------------------------------------------
 
-#ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
-#define UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
+#ifndef UR_CONTROLLERS__SPEED_SCALING_STATE_BROADCASTER_HPP_
+#define UR_CONTROLLERS__SPEED_SCALING_STATE_BROADCASTER_HPP_
+
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "std_msgs/msg/float64.hpp"
@@ -61,4 +64,4 @@ protected:
   std_msgs::msg::Float64 speed_scaling_state_msg_;
 };
 }  // namespace ur_controllers
-#endif  // ifndef UR_CONTROLLERS_SPEED_SCALING_STATE_CONTROLLER_H_INCLUDED
+#endif  // UR_CONTROLLERS__SPEED_SCALING_STATE_BROADCASTER_HPP_

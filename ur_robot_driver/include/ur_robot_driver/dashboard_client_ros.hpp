@@ -23,29 +23,31 @@
  */
 //----------------------------------------------------------------------
 
-#pragma once
+#ifndef UR_ROBOT_DRIVER__DASHBOARD_CLIENT_ROS_HPP_
+#define UR_ROBOT_DRIVER__DASHBOARD_CLIENT_ROS_HPP_
 
 // System
 #include <regex>
+#include <string>
+#include <memory>
 
 // ROS
-#include <rclcpp/rclcpp.hpp>
-#include <std_srvs/srv/trigger.hpp>
-
+#include "rclcpp/rclcpp.hpp"
+#include "std_srvs/srv/trigger.hpp"
 // UR client library
-#include <ur_client_library/ur/dashboard_client.h>
-#include <ur_client_library/exceptions.h>
-#include <ur_dashboard_msgs/msg/program_state.hpp>
-#include <ur_dashboard_msgs/srv/add_to_log.hpp>
-#include <ur_dashboard_msgs/srv/get_loaded_program.hpp>
-#include <ur_dashboard_msgs/srv/get_program_state.hpp>
-#include <ur_dashboard_msgs/srv/get_robot_mode.hpp>
-#include <ur_dashboard_msgs/srv/get_safety_mode.hpp>
-#include <ur_dashboard_msgs/srv/is_program_running.hpp>
-#include <ur_dashboard_msgs/srv/is_program_saved.hpp>
-#include <ur_dashboard_msgs/srv/load.hpp>
-#include <ur_dashboard_msgs/srv/popup.hpp>
-#include <ur_dashboard_msgs/srv/raw_request.hpp>
+#include "ur_client_library/ur/dashboard_client.h"
+#include "ur_client_library/exceptions.h"
+#include "ur_dashboard_msgs/msg/program_state.hpp"
+#include "ur_dashboard_msgs/srv/add_to_log.hpp"
+#include "ur_dashboard_msgs/srv/get_loaded_program.hpp"
+#include "ur_dashboard_msgs/srv/get_program_state.hpp"
+#include "ur_dashboard_msgs/srv/get_robot_mode.hpp"
+#include "ur_dashboard_msgs/srv/get_safety_mode.hpp"
+#include "ur_dashboard_msgs/srv/is_program_running.hpp"
+#include "ur_dashboard_msgs/srv/is_program_saved.hpp"
+#include "ur_dashboard_msgs/srv/load.hpp"
+#include "ur_dashboard_msgs/srv/popup.hpp"
+#include "ur_dashboard_msgs/srv/raw_request.hpp"
 
 namespace ur_robot_driver
 {
@@ -75,13 +77,10 @@ private:
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr service = node_->create_service<std_srvs::srv::Trigger>(
         topic, [&, command, expected](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
                                       const std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
-          try
-          {
+          try {
             resp->message = this->client_.sendAndReceive(command);
             resp->success = std::regex_match(resp->message, std::regex(expected));
-          }
-          catch (const urcl::UrException& e)
-          {
+          } catch (const urcl::UrException& e) {
             RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
             resp->message = e.what();
             resp->success = false;
@@ -137,3 +136,5 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::GetRobotMode>::SharedPtr robot_mode_service_;
 };
 }  // namespace ur_robot_driver
+
+#endif  // UR_ROBOT_DRIVER__DASHBOARD_CLIENT_ROS_HPP_

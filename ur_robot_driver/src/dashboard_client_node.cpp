@@ -21,8 +21,11 @@
  */
 //----------------------------------------------------------------------
 
-#include <rclcpp/rclcpp.hpp>
-#include <ur_robot_driver/dashboard_client_ros.hpp>
+#include "ur_robot_driver/dashboard_client_ros.hpp"
+
+#include <string>
+
+#include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char** argv)
 {
