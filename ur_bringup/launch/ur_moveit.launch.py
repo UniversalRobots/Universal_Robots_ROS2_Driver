@@ -220,7 +220,9 @@ def generate_launch_description():
             safety_k_position,
             " ",
             "name:=",
-            ur_type,
+            # Also ur_type parameter could be used but then the planning group names in yaml
+            # configs has to be updated!
+            "ur",
             " ",
             "script_filename:=",
             script_filename,
@@ -323,9 +325,9 @@ def generate_launch_description():
             ),
             " ",
             "name:=",
-            # Also ur_type could be used but then the planning group names in yaml configs has
-            # to be updated!
-            ur_type,
+            # Also ur_type parameter could be used but then the planning group names in yaml
+            # configs has to be updated!
+            "ur",
             " ",
             "prefix:=",
             prefix,
@@ -406,7 +408,7 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         output="log",
-        arguments=["-d", ""],
+        arguments=["-d", rviz_config_file],
         parameters=[
             robot_description,
             robot_description_semantic,
