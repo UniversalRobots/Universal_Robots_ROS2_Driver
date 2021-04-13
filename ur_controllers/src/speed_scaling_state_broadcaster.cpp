@@ -75,7 +75,7 @@ SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*prev
   try
   {
     speed_scaling_state_publisher_ =
-        get_node()->create_publisher<std_msgs::msg::Float64>("~/speed_scaling_factor", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<std_msgs::msg::Float64>("~/speed_scaling", rclcpp::SystemDefaultsQoS());
   }
   catch (const std::exception& e)
   {
@@ -104,7 +104,7 @@ controller_interface::return_type SpeedScalingStateBroadcaster::update()
   if (publish_rate_ > 0.0 && (node_->now() - last_publish_time_) > rclcpp::Duration(1.0 / publish_rate_, 0.0))
   {
     // Speed scaling is the only interface of the controller
-    speed_scaling_state_msg_.data = state_interfaces_[0].get_value();
+    speed_scaling_state_msg_.data = state_interfaces_[0].get_value() * 100.0;
 
     // publish
     speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);
