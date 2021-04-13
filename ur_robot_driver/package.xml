@@ -4,29 +4,31 @@
   <name>ur_robot_driver</name>
   <version>0.0.0</version>
   <description>The new driver for Universal Robots UR3, UR5 and UR10 robots with CB3 controllers and the e-series.</description>
+
   <author>Thomas Timm Andersen</author>
   <author>Simon Rasmussen</author>
   <author>Felix Exner</author>
   <author>Lea Steffen</author>
   <author>Tristan Schnell</author>
-  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <!-- TODO(andyz): look into license situation -->
-  <license>Apache-2.0</license>
-  <license>BSD-2-Clause</license>
-  <license>Zlib</license>
 
-  <url type="website">http://wiki.ros.org/ur_robot_driver</url>
-  <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS_Driver/issues</url>
-  <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS_Driver</url>
+  <maintainer email="grosse@fzi.de">Marvin Große Besselmann</maintainer>
+  <maintainer email="lovro.ivanov@gmail.com">Lovro Ivanov</maintainer>
+  <maintainer email="denis.stogl@picknik.ai">Denis Stogl</maintainer>
+  <maintainer email="zelenak@picknik.ai">Andy Zelenak</maintainer>
+
+  <license>Apache License 2.0</license>
+
+  <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
+  <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>hardware_interface</buildtool_depend>
-  <buildtool_depend>pluginlib</buildtool_depend>
-  <buildtool_depend>rclcpp</buildtool_depend>
 
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>std_srvs</depend>
-  <depend>ur_client_library</depend>
+  <!-- TODO: rosdep cannot find ur_client_library -->
+<!--   <depend>ur_client_library</depend> -->
   <depend>ur_dashboard_msgs</depend>
 
   <exec_depend>controller_manager</exec_depend>
