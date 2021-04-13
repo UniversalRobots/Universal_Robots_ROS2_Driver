@@ -61,18 +61,18 @@ target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::ur
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(
-        TARGETS dashboard_client
-        DESTINATION lib/${PROJECT_NAME}
+  TARGETS dashboard_client
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # INSTALL
 install(
-        TARGETS ur_robot_driver_plugin
-        DESTINATION lib
+  TARGETS ur_robot_driver_plugin
+  DESTINATION lib
 )
 install(
-        DIRECTORY include/
-        DESTINATION include
+  DIRECTORY include/
+  DESTINATION include
 )
 
 
@@ -88,7 +88,7 @@ install(PROGRAMS scripts/tool_communication
   DESTINATION bin
 )
 
-install(DIRECTORY config launch resources
+install(DIRECTORY resources
   DESTINATION share/${PROJECT_NAME}
 )
 
@@ -98,10 +98,10 @@ install(DIRECTORY include/
 )
 
 ament_export_dependencies(
-        hardware_interface
-        pluginlib
-        rclcpp
-        ${THIS_PACKAGE_INCLUDE_DEPENDS}
+  hardware_interface
+  pluginlib
+  rclcpp
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
 ament_package()

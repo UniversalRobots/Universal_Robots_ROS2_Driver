@@ -1,4 +1,4 @@
-name: Build Source
+name: Source Build
 on:
   push:
     branches:
@@ -21,8 +21,6 @@ jobs:
           target-ros2-distro: foxy
           # build all packages listed in the meta package
           package-name:
-            ur5_e_moveit_config
-            ur5_moveit_config
             ur_bringup
             ur_controllers
             ur_dashboard_msgs

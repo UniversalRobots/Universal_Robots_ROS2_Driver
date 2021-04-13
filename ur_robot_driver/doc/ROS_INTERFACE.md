@@ -1,3 +1,5 @@
+**NOTE**: This documentation is obsolete and does not cover in full the current state of driver.
+
 # ur_robot_driver
 
 The new driver for Universal Robots UR3, UR5 and UR10 robots with CB3 controllers and the e-series.
@@ -260,7 +262,7 @@ Launchfile that starts a robot description with robot_state publisher and the dr
 
 Config file used for defining the ROS-Control controllers.
 
-##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_controller force_torque_sensor_controller")
+##### controllers (default: "joint_state_broadcaster scaled_pos_joint_traj_controller speed_scaling_state_broadcaster force_torque_sensor_broadcaster")
 
 Controllers that are activated by default.
 
