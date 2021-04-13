@@ -103,6 +103,8 @@ The most relevant arguments are the following:
    Now you should be able to use MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
    **NOTE**: This results in two instances of rviz2. You can safely close the one without *MotionPlanning* panel.
 
+   If you have **issues** shows the correct configuration5 of the robot, try removing and re-adding *MotionPlanning* display.
+
 
 ## Expected Changes in the Near Future
 
