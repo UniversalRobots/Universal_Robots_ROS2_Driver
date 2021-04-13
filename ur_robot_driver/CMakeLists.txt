@@ -88,7 +88,7 @@ install(PROGRAMS scripts/tool_communication
   DESTINATION bin
 )
 
-install(DIRECTORY config launch resources
+install(DIRECTORY resources
   DESTINATION share/${PROJECT_NAME}
 )
 
