@@ -3,12 +3,8 @@
 <package format="3">
   <name>ur_bringup</name>
   <version>0.0.0</version>
-<<<<<<< HEAD
   <description>Launch file and run-time configurations, e.g. controllers.</description>
-=======
-  <description>Bringup package for UR robots.</description>
 
->>>>>>> Consolidate package.xml files
   <author>Lovro Ivanov</author>
   <author>Denis Stogl</author>
 

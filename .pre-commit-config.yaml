@@ -56,7 +56,7 @@ repos:
     #rev: v1.1.1
     #hooks:
       #- id: cppcheck
-        #args: ['-f', '--inline-suppr', '-q', '-rp', '--xml', '--xml-version=2', '--suppress=internalAstError', '--suppress=unknownMacro']
+        #args: ['--error-exitcode=1', '-f', '--inline-suppr', '-q', '-rp', '--suppress=internalAstError', '--suppress=unknownMacro', '--verbose']
 
   - repo: local
     hooks:
@@ -123,8 +123,9 @@ repos:
 
   # Spellcheck in comments and docs
   # skipping of *.svg files is not working...
-  #- repo: https://github.com/codespell-project/codespell
-    #rev: v2.0.0
-    #hooks:
-      #- id: codespell
-        #args: ['--write-changes', '--skip="*.svg"']
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.0.0
+    hooks:
+      - id: codespell
+        args: ['--write-changes']
+        exclude: \.(svg|pyc)$
