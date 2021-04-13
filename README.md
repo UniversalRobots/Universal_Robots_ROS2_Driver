@@ -78,6 +78,8 @@ The most relevant arguments are the following:
    ros2 control load_controller --state joint_trajectory_controller
    ```
 
+   To check the controllers' state use `ros2 control list_controllers` command.
+
 2. Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
    ros2 launch ur_bringup test_joint_trajectory_controller.launch.py
@@ -94,11 +96,12 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move (or jump when using emulation).
 
-4. To test the driver with example MoveIt-setup use the following command:
+4. To test the driver with example MoveIt-setup, start `ur_control` launch file and then start MoveIt using the following command:
    ```
    ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true
    ```
    Now you should be able to use MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
+   **NOTE**: This results in two instances of rviz2. You can safely close the one without *MotionPlanning* panel.
 
 
 ## Expected Changes in the Near Future

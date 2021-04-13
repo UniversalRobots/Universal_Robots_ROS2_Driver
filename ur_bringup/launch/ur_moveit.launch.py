@@ -246,75 +246,6 @@ def generate_launch_description():
     )
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
-    )
-
-    control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[robot_description, robot_controllers],
-        output={
-            "stdout": "screen",
-            "stderr": "screen",
-        },
-    )
-
-    robot_state_publisher_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[robot_description],
-    )
-
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
-
-    io_and_status_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=["io_and_status_controller", "-c", "/controller_manager"],
-    )
-
-    speed_scaling_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=[
-            "speed_scaling_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    force_torque_sensor_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=[
-            "force_torque_sensor_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    robot_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=[robot_controller, "-c", "/controller_manager"],
-    )
-
-    nodes_to_start = [
-        control_node,
-        robot_state_publisher_node,
-        joint_state_broadcaster_spawner,
-        io_and_status_controller_spawner,
-        speed_scaling_state_broadcaster_spawner,
-        force_torque_sensor_broadcaster_spawner,
-        robot_controller_spawner,
-    ]
-
     # MoveIt Configuration
     robot_description_semantic_content = Command(
         [
@@ -369,6 +300,12 @@ def generate_launch_description():
         "publish_geometry_updates": True,
         "publish_state_updates": True,
         "publish_transforms_updates": True,
+        "planning_scene_monitor_options": {
+            "name": "planning_scene_monitor",
+            "robot_description": "robot_description",
+            "joint_state_topic": "/joint_states",
+            "wait_for_initial_state_timeout": 10.0,
+        },
     }
 
     # Start the actual move_group node/action server
@@ -406,7 +343,7 @@ def generate_launch_description():
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
-        name="rviz2",
+        name="rviz2_moveit",
         output="log",
         arguments=["-d", rviz_config_file],
         parameters=[
@@ -426,6 +363,11 @@ def generate_launch_description():
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "base_link"],
     )
 
-    nodes_to_start.extend([move_group_node, mongodb_server_node, rviz_node, static_tf])
+    nodes_to_start = [
+        move_group_node,
+        mongodb_server_node,
+        rviz_node,
+        static_tf,
+    ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
