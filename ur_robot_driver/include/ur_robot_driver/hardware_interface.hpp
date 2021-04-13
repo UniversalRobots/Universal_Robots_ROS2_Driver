@@ -1,6 +1,3 @@
-// this is for emacs file handling -*- mode: c++; indent-tabs-mode: nil -*-
-
-// -- BEGIN LICENSE BLOCK ----------------------------------------------
 // Copyright 2019 FZI Forschungszentrum Informatik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// -- END LICENSE BLOCK ------------------------------------------------
 
 //----------------------------------------------------------------------
 /*!\file
@@ -26,10 +22,12 @@
  *
  */
 //----------------------------------------------------------------------
-#pragma once
+#ifndef UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
+#define UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
 
 // System
 #include <memory>
+#include <string>
 #include <vector>
 
 // ros2_control hardware_interface
@@ -40,9 +38,9 @@
 #include "hardware_interface/visibility_control.h"
 
 // UR stuff
-#include <ur_client_library/ur/ur_driver.h>
-#include <ur_robot_driver/dashboard_client_ros.hpp>
-#include <ur_dashboard_msgs/msg/robot_mode.hpp>
+#include "ur_client_library/ur/ur_driver.h"
+#include "ur_robot_driver/dashboard_client_ros.hpp"
+#include "ur_dashboard_msgs/msg/robot_mode.hpp"
 
 // ROS
 #include "rclcpp/macros.hpp"
@@ -179,6 +177,4 @@ protected:
 };
 }  // namespace ur_robot_driver
 
-#include "pluginlib/class_list_macros.hpp"
-
-PLUGINLIB_EXPORT_CLASS(ur_robot_driver::URPositionHardwareInterface, hardware_interface::SystemInterface)
+#endif  // UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_

@@ -62,23 +62,17 @@ SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*prev
 {
   node_->declare_parameter("state_publish_rate");
 
-  if (!node_->get_parameter("state_publish_rate", publish_rate_))
-  {
+  if (!node_->get_parameter("state_publish_rate", publish_rate_)) {
     RCLCPP_INFO(get_node()->get_logger(), "Parameter 'state_publish_rate' not set");
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
-  else
-  {
+  } else {
     RCLCPP_INFO(get_node()->get_logger(), "Publisher rate set to : %.1f Hz", publish_rate_);
   }
 
-  try
-  {
+  try {
     speed_scaling_state_publisher_ =
         get_node()->create_publisher<std_msgs::msg::Float64>("~/speed_scaling", rclcpp::SystemDefaultsQoS());
-  }
-  catch (const std::exception& e)
-  {
+  } catch (const std::exception& e) {
     // get_node() may throw, logging raw here
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
@@ -101,8 +95,7 @@ SpeedScalingStateBroadcaster::on_deactivate(const rclcpp_lifecycle::State& /*pre
 
 controller_interface::return_type SpeedScalingStateBroadcaster::update()
 {
-  if (publish_rate_ > 0.0 && (node_->now() - last_publish_time_) > rclcpp::Duration(1.0 / publish_rate_, 0.0))
-  {
+  if (publish_rate_ > 0.0 && (node_->now() - last_publish_time_) > rclcpp::Duration(1.0 / publish_rate_, 0.0)) {
     // Speed scaling is the only interface of the controller
     speed_scaling_state_msg_.data = state_interfaces_[0].get_value() * 100.0;
 

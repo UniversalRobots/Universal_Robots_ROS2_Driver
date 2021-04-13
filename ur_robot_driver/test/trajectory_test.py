@@ -1,6 +1,19 @@
 #!/usr/bin/env python
+# Copyright 2019, FZI Forschungszentrum Informatik
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import sys
-import time
 import unittest
 
 import actionlib
@@ -10,7 +23,7 @@ from control_msgs.msg import (
     FollowJointTrajectoryGoal,
     FollowJointTrajectoryResult,
 )
-from std_srvs.srv import Trigger, TriggerRequest
+from std_srvs.srv import Trigger
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 from ur_dashboard_msgs.msg import RobotMode, SetModeAction, SetModeGoal
@@ -97,9 +110,8 @@ class TrajectoryTest(unittest.TestCase):
         rospy.loginfo("Received result SUCCESSFUL")
 
     def test_illegal_trajectory(self):
-        """Test trajectory server. This is more of a validation test that the testing suite does the
-        right thing."""
-
+        """Test trajectory server."""
+        """This is more of a validation test that the testing suite does the right thing."""
         goal = FollowJointTrajectoryGoal()
 
         goal.trajectory.joint_names = [
@@ -132,7 +144,7 @@ class TrajectoryTest(unittest.TestCase):
         rospy.loginfo("Received result INVALID_GOAL")
 
     def test_scaled_trajectory(self):
-        """Test robot movement"""
+        """Test robot movement."""
         goal = FollowJointTrajectoryGoal()
 
         goal.trajectory.joint_names = [

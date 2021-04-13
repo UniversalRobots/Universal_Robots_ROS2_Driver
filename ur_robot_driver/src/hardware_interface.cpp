@@ -22,13 +22,18 @@
  *
  */
 //----------------------------------------------------------------------
-#include <ur_robot_driver/hardware_interface.hpp>
-#include <hardware_interface/types/hardware_interface_type_values.hpp>
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <ur_client_library/ur/tool_communication.h>
-#include <ur_client_library/exceptions.h>
+#include "ur_client_library/exceptions.h"
+#include "ur_client_library/ur/tool_communication.h"
 
 #include "rclcpp/rclcpp.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "ur_robot_driver/hardware_interface.hpp"
 
 namespace rtde = urcl::rtde_interface;
 
@@ -53,61 +58,52 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   controllers_initialized_ = false;
   first_pass_ = true;
 
-  for (const hardware_interface::ComponentInfo& joint : info_.joints)
-  {
-    if (joint.name == "gpio" || joint.name == "speed_scaling")
-    {
+  for (const hardware_interface::ComponentInfo& joint : info_.joints) {
+    if (joint.name == "gpio" || joint.name == "speed_scaling") {
       continue;
     }
-    if (joint.command_interfaces.size() != 2)
-    {
+    if (joint.command_interfaces.size() != 2) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' has %d command interfaces found. 2 expected.", joint.name.c_str(),
                    joint.command_interfaces.size());
       return return_type::ERROR;
     }
 
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
+    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s command interfaces found as first command interface. '%s' expected.",
                    joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return return_type::ERROR;
     }
 
-    if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-    {
+    if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s command interfaces found as second command interface. '%s' expected.",
                    joint.name.c_str(), joint.command_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces.size() != 3)
-    {
+    if (joint.state_interfaces.size() != 3) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"), "Joint '%s' has %d state interface. 3 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
+    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as first state interface. '%s' expected.", joint.name.c_str(),
                    joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-    {
+    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as second state interface. '%s' expected.", joint.name.c_str(),
                    joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_POSITION);
       return return_type::ERROR;
     }
 
-    if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT)
-    {
+    if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as third state interface. '%s' expected.", joint.name.c_str(),
                    joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_POSITION);
@@ -123,10 +119,8 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (size_t i = 0; i < info_.joints.size(); ++i)
-  {
-    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling")
-    {
+  for (size_t i = 0; i < info_.joints.size(); ++i) {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling") {
       continue;
     }
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -142,39 +136,33 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface("speed_scaling", "speed_scaling_factor", &speed_scaling_combined_));
 
-  for (auto& sensor : info_.sensors)
-  {
-    for (uint j = 0; j < sensor.state_interfaces.size(); ++j)
-    {
+  for (auto& sensor : info_.sensors) {
+    for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
       state_interfaces.emplace_back(hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name,
                                                                        &urcl_ft_sensor_measurements_[j]));
     }
   }
 
-  for (size_t i = 0; i < 18; ++i)
-  {
+  for (size_t i = 0; i < 18; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "digital_output_" + std::to_string(i),
                                                                      &actual_dig_out_bits_copy_[i]));
     state_interfaces.emplace_back(
         hardware_interface::StateInterface("gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
   }
 
-  for (size_t i = 0; i < 11; ++i)
-  {
+  for (size_t i = 0; i < 11; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "safety_status_bit_" + std::to_string(i),
                                                                      &safety_status_bits_copy_[i]));
   }
 
-  for (size_t i = 0; i < 4; ++i)
-  {
+  for (size_t i = 0; i < 4; ++i) {
     state_interfaces.emplace_back(
         hardware_interface::StateInterface("gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "robot_status_bit_" + std::to_string(i),
                                                                      &robot_status_bits_copy_[i]));
   }
 
-  for (size_t i = 0; i < 2; ++i)
-  {
+  for (size_t i = 0; i < 2; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
 
@@ -208,10 +196,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  for (size_t i = 0; i < info_.joints.size(); ++i)
-  {
-    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling")
-    {
+  for (size_t i = 0; i < info_.joints.size(); ++i) {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling") {
       continue;
     }
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -229,14 +215,12 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface("speed_scaling", "scaling_async_success", &scaling_async_success_));
 
-  for (size_t i = 0; i < 18; ++i)
-  {
+  for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
   }
 
-  for (size_t i = 0; i < 2; ++i)
-  {
+  for (size_t i = 0; i < 2; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
@@ -293,8 +277,7 @@ return_type URPositionHardwareInterface::start()
   std::string calibration_checksum = info_.hardware_parameters["kinematics/hash"];
 
   std::unique_ptr<urcl::ToolCommSetup> tool_comm_setup;
-  if (use_tool_communication)
-  {
+  if (use_tool_communication) {
     tool_comm_setup = std::make_unique<urcl::ToolCommSetup>();
 
     using ToolVoltageT = std::underlying_type<urcl::ToolVoltage>::type;
@@ -358,22 +341,17 @@ return_type URPositionHardwareInterface::start()
   dashboard_client_.reset(new ur_robot_driver::DashboardClientROS(dashboard_node, robot_ip));
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
-  try
-  {
+  try {
     ur_driver_ = std::make_unique<urcl::UrDriver>(
         robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
         std::move(tool_comm_setup), calibration_checksum, (uint32_t)reverse_port, (uint32_t)script_sender_port,
         servoj_gain, servoj_lookahead_time, non_blocking_read_);
-  }
-  catch (urcl::ToolCommNotAvailable& e)
-  {
+  } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
     return return_type::ERROR;
-  }
-  catch (urcl::UrException& e)
-  {
+  } catch (urcl::UrException& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
     return return_type::ERROR;
   }
@@ -408,8 +386,7 @@ template <typename T>
 void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
                                            const std::string& var_name, T& data)
 {
-  if (!data_pkg->getData(var_name, data))
-  {
+  if (!data_pkg->getData(var_name, data)) {
     // This throwing should never happen unless misconfigured
     std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
     throw std::runtime_error(error_msg);
@@ -420,8 +397,7 @@ template <typename T, size_t N>
 void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
                                                  const std::string& var_name, std::bitset<N>& data)
 {
-  if (!data_pkg->getData<T, N>(var_name, data))
-  {
+  if (!data_pkg->getData<T, N>(var_name, data)) {
     // This throwing should never happen unless misconfigured
     std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
     throw std::runtime_error(error_msg);
@@ -432,8 +408,7 @@ return_type URPositionHardwareInterface::read()
 {
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
-  if (data_pkg)
-  {
+  if (data_pkg) {
     packet_read_ = true;
     readData(data_pkg, "actual_q", urcl_joint_positions_);
     readData(data_pkg, "actual_qd", urcl_joint_velocities_);
@@ -463,45 +438,35 @@ return_type URPositionHardwareInterface::read()
     readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
     readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
-    // TODO logic for sending other stuff to higher level interface
+    // TODO(anyone): logic for sending other stuff to higher level interface
 
     // pausing state follows runtime state when pausing
-    if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED))
-    {
+    if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED)) {
       pausing_state_ = PausingState::PAUSED;
-    }
-    // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
-    else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
-             pausing_state_ == PausingState::PAUSED)
-    {
+    } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
+               pausing_state_ == PausingState::PAUSED) {
+      // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
       speed_scaling_combined_ = 0.0;
       pausing_state_ = PausingState::RAMPUP;
     }
 
-    if (pausing_state_ == PausingState::RAMPUP)
-    {
+    if (pausing_state_ == PausingState::RAMPUP) {
       double speed_scaling_ramp = speed_scaling_combined_ + pausing_ramp_up_increment_;
       speed_scaling_combined_ = std::min(speed_scaling_ramp, speed_scaling_ * target_speed_fraction_);
 
-      if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_)
-      {
+      if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_) {
         pausing_state_ = PausingState::RUNNING;
       }
-    }
-    else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING))
-    {
+    } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING)) {
       // We have to keep speed scaling on ROS side at 0 during RESUMING to prevent controllers from
       // continuing to interpolate
       speed_scaling_combined_ = 0.0;
-    }
-    else
-    {
+    } else {
       // Normal case
       speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
     }
 
-    if (first_pass_)
-    {
+    if (first_pass_) {
       initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
@@ -520,10 +485,8 @@ return_type URPositionHardwareInterface::write()
 {
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
-      robot_program_running_ && (!non_blocking_read_ || packet_read_))
-  {
-    if (!position_interface_in_use_)
-    {
+      robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
+    if (!position_interface_in_use_) {
       // create a lambda subtract functor
       std::function<double(double, double)> substractor = [](double a, double b) { return std::abs(a - b); };
 
@@ -540,14 +503,11 @@ return_type URPositionHardwareInterface::write()
         position_interface_in_use_ = true;
     }
 
-    if (position_interface_in_use_)
-    {
+    if (position_interface_in_use_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
       // remember old values
       urcl_position_commands_old_ = urcl_position_commands_;
-    }
-    else
-    {
+    } else {
       ur_driver_->writeKeepalive();
     }
 
@@ -556,28 +516,22 @@ return_type URPositionHardwareInterface::write()
     // remember old values
     urcl_position_commands_old_ = urcl_position_commands_;
 
-    if (first_pass_)
-    {
+    if (first_pass_) {
       first_pass_ = false;
-    }
-    else
-    {
+    } else {
       checkAsyncIO();
     }
 
     return return_type::OK;
-  }
-  else
-  {
-    // TODO could not read from the driver --> reset controllers
+  } else {
+    // TODO(anyone): could not read from the driver --> reset controllers
     return return_type::ERROR;
   }
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
-  if (!robot_program_running_ && program_running)
-  {
+  if (!robot_program_running_ && program_running) {
     urcl_position_commands_old_ = urcl_position_commands_;
     position_interface_in_use_ = false;
   }
@@ -586,35 +540,26 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 
 void URPositionHardwareInterface::initAsyncIO()
 {
-  for (size_t i = 0; i < 18; ++i)
-  {
+  for (size_t i = 0; i < 18; ++i) {
     standard_dig_out_bits_cmd_[i] = static_cast<double>(actual_dig_out_bits_[i]);
   }
 
-  for (size_t i = 0; i < 2; ++i)
-  {
+  for (size_t i = 0; i < 2; ++i) {
     standard_analog_output_cmd_[i] = standard_analog_output_[i];
   }
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
 {
-  for (size_t i = 0; i < 18; ++i)
-  {
-    if (standard_dig_out_bits_cmd_[i] != static_cast<double>(actual_dig_out_bits_[i]))
-    {
-      if (i <= 7)
-      {
+  for (size_t i = 0; i < 18; ++i) {
+    if (standard_dig_out_bits_cmd_[i] != static_cast<double>(actual_dig_out_bits_[i])) {
+      if (i <= 7) {
         io_async_success_ =
             ur_driver_->getRTDEWriter().sendStandardDigitalOutput(i, static_cast<bool>(standard_dig_out_bits_cmd_[i]));
-      }
-      else if (i <= 15)
-      {
+      } else if (i <= 15) {
         io_async_success_ = ur_driver_->getRTDEWriter().sendConfigurableDigitalOutput(
             static_cast<uint8_t>(i - 8), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
-      }
-      else
-      {
+      } else {
         io_async_success_ = ur_driver_->getRTDEWriter().sendToolDigitalOutput(
             static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
       }
@@ -624,10 +569,8 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
   }
 
-  for (size_t i = 0; i < 2; ++i)
-  {
-    if (standard_analog_output_cmd_[i] != standard_analog_output_[i])
-    {
+  for (size_t i = 0; i < 2; ++i) {
+    if (standard_analog_output_cmd_[i] != standard_analog_output_[i]) {
       io_async_success_ = ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i]);
 
       if (io_async_success_ != 2.0)
@@ -635,37 +578,30 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
   }
 
-  if (speed_scaling_cmd_ != speed_scaling_ && ur_driver_ != nullptr)
-  {
+  if (speed_scaling_cmd_ != speed_scaling_ && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(speed_scaling_cmd_);
-  }
-  else
-  {
+  } else {
     scaling_async_success_ = false;
   }
 }
 
 void URPositionHardwareInterface::updateNonDoubleValues()
 {
-  for (size_t i = 0; i < 18; ++i)
-  {
+  for (size_t i = 0; i < 18; ++i) {
     actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
     actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
   }
 
-  for (size_t i = 0; i < 11; ++i)
-  {
+  for (size_t i = 0; i < 11; ++i) {
     safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
   }
 
-  for (size_t i = 0; i < 4; ++i)
-  {
+  for (size_t i = 0; i < 4; ++i) {
     analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
     robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
   }
 
-  for (size_t i = 0; i < 2; ++i)
-  {
+  for (size_t i = 0; i < 2; ++i) {
     tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
   }
 
@@ -675,3 +611,7 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   tool_mode_copy_ = static_cast<double>(tool_mode_);
 }
 }  // namespace ur_robot_driver
+
+#include "pluginlib/class_list_macros.hpp"
+
+PLUGINLIB_EXPORT_CLASS(ur_robot_driver::URPositionHardwareInterface, hardware_interface::SystemInterface)

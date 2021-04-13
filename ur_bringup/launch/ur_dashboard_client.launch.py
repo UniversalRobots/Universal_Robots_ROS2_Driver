@@ -40,9 +40,4 @@ def generate_launch_description():
         parameters=[{"robot_ip": robot_ip}],
     )
 
-    return LaunchDescription(
-        declared_arguments
-        + [
-            dashboard_client_node,
-        ]
-    )
+    return LaunchDescription(declared_arguments + [dashboard_client_node])

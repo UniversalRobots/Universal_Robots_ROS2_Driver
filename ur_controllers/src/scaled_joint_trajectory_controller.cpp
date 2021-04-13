@@ -21,6 +21,8 @@
  */
 //----------------------------------------------------------------------
 
+#include <memory>
+
 #include "ur_controllers/scaled_joint_trajectory_controller.hpp"
 
 namespace ur_controllers
@@ -46,19 +48,14 @@ ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& stat
 
 controller_interface::return_type ScaledJointTrajectoryController::update()
 {
-  if (state_interfaces_.back().get_name() == "speed_scaling")
-  {
+  if (state_interfaces_.back().get_name() == "speed_scaling") {
     scaling_factor_ = state_interfaces_.back().get_value();
-  }
-  else
-  {
+  } else {
     RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface not found in hardware interface.");
   }
 
-  if (get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
-  {
-    if (!is_halted)
-    {
+  if (get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    if (!is_halted) {
       halt();
       is_halted = true;
     }
@@ -81,8 +78,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   // Check if a new external message has been received from nonRT threads
   auto current_external_msg = traj_external_point_ptr_->get_trajectory_msg();
   auto new_external_msg = traj_msg_external_point_ptr_.readFromRT();
-  if (current_external_msg != *new_external_msg)
-  {
+  if (current_external_msg != *new_external_msg) {
     fill_partial_goal(*new_external_msg);
     sort_to_local_joint_order(*new_external_msg);
     traj_external_point_ptr_->update(*new_external_msg);
@@ -93,8 +89,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   resize_joint_trajectory_point(state_current, joint_num);
 
   // current state update
-  for (size_t index = 0; index < joint_num; ++index)
-  {
+  for (auto index = 0ul; index < joint_num; ++index) {
     state_current.positions[index] = joint_position_state_interface_[index].get().get_value();
     state_current.velocities[index] = joint_velocity_state_interface_[index].get().get_value();
     state_current.accelerations[index] = 0.0;
@@ -102,11 +97,9 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   state_current.time_from_start.set__sec(0);
 
   // currently carrying out a trajectory
-  if (traj_point_active_ptr_ && !(*traj_point_active_ptr_)->has_trajectory_msg())
-  {
+  if (traj_point_active_ptr_ && !(*traj_point_active_ptr_)->has_trajectory_msg()) {
     // if sampling the first time, set the point before you sample
-    if (!(*traj_point_active_ptr_)->is_sampled_already())
-    {
+    if (!(*traj_point_active_ptr_)->is_sampled_already()) {
       (*traj_point_active_ptr_)->set_point_before_trajectory_msg(node_->now(), state_current);
     }
     resize_joint_trajectory_point(state_error, joint_num);
@@ -126,33 +119,28 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
     const bool valid_point =
         (*traj_point_active_ptr_)->sample(traj_time, state_desired, start_segment_itr, end_segment_itr);
 
-    if (valid_point)
-    {
+    if (valid_point) {
       bool abort = false;
       bool outside_goal_tolerance = false;
       const bool before_last_point = end_segment_itr != (*traj_point_active_ptr_)->end();
-      for (size_t index = 0; index < joint_num; ++index)
-      {
+      for (auto index = 0ul; index < joint_num; ++index) {
         // set values for next hardware write()
         joint_position_command_interface_[index].get().set_value(state_desired.positions[index]);
         compute_error_for_joint(state_error, index, state_current, state_desired);
 
         if (before_last_point &&
-            !check_state_tolerance_per_joint(state_error, index, default_tolerances_.state_tolerance[index], true))
-        {
+            !check_state_tolerance_per_joint(state_error, index, default_tolerances_.state_tolerance[index], true)) {
           abort = true;
         }
         // past the final point, check that we end up inside goal tolerance
-        if (!before_last_point &&
-            !check_state_tolerance_per_joint(state_error, index, default_tolerances_.goal_state_tolerance[index], true))
-        {
+        if (!before_last_point && !check_state_tolerance_per_joint(
+                                      state_error, index, default_tolerances_.goal_state_tolerance[index], true)) {
           outside_goal_tolerance = true;
         }
       }
 
       const auto active_goal = *rt_active_goal_.readFromRT();
-      if (active_goal)
-      {
+      if (active_goal) {
         // send feedback
         auto feedback = std::make_shared<FollowJTrajAction::Feedback>();
         feedback->header.stamp = node_->now();
@@ -164,17 +152,13 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
         active_goal->setFeedback(feedback);
 
         // check abort
-        if (abort || outside_goal_tolerance)
-        {
+        if (abort || outside_goal_tolerance) {
           auto result = std::make_shared<FollowJTrajAction::Result>();
 
-          if (abort)
-          {
+          if (abort) {
             RCLCPP_WARN(node_->get_logger(), "Aborted due to state tolerance violation");
             result->set__error_code(FollowJTrajAction::Result::PATH_TOLERANCE_VIOLATED);
-          }
-          else if (outside_goal_tolerance)
-          {
+          } else if (outside_goal_tolerance) {
             RCLCPP_WARN(node_->get_logger(), "Aborted due to goal tolerance violation");
             result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
           }
@@ -183,28 +167,23 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
         }
 
         // check goal tolerance
-        if (!before_last_point)
-        {
-          if (!outside_goal_tolerance)
-          {
+        if (!before_last_point) {
+          if (!outside_goal_tolerance) {
             auto res = std::make_shared<FollowJTrajAction::Result>();
             res->set__error_code(FollowJTrajAction::Result::SUCCESSFUL);
             active_goal->setSucceeded(res);
             rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
 
             RCLCPP_INFO(node_->get_logger(), "Goal reached, success!");
-          }
-          else if (default_tolerances_.goal_time_tolerance != 0.0)
-          {
+          } else if (default_tolerances_.goal_time_tolerance != 0.0) {
             // if we exceed goal_time_toleralance set it to aborted
             const rclcpp::Time traj_start = (*traj_point_active_ptr_)->get_trajectory_start_time();
             const rclcpp::Time traj_end = traj_start + start_segment_itr->time_from_start;
 
-            // TODO This will break in speed scaling we have to discuss how to handle the goal
+            // TODO(anyone): This will break in speed scaling we have to discuss how to handle the goal
             // time when the robot scales itself down.
             const double difference = node_->now().seconds() - traj_end.seconds();
-            if (difference > default_tolerances_.goal_time_tolerance)
-            {
+            if (difference > default_tolerances_.goal_time_tolerance) {
               auto result = std::make_shared<FollowJTrajAction::Result>();
               result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
               active_goal->setAborted(result);

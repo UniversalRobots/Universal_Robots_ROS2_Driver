@@ -53,13 +53,13 @@ BreakBeforeBraces: Custom
 BraceWrapping:
     AfterCaseLabel: 'true'
     AfterClass: 'true'
-    AfterControlStatement: 'true'
+    AfterControlStatement: Never
     AfterEnum : 'true'
     AfterFunction : 'true'
     AfterNamespace : 'true'
     AfterStruct : 'true'
     AfterUnion : 'true'
-    BeforeCatch : 'true'
-    BeforeElse : 'true'
+    BeforeCatch : 'false'
+    BeforeElse : 'false'
     IndentBraces : 'false'
 ...
