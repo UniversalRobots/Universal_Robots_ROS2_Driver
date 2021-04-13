@@ -5,12 +5,20 @@
   <version>0.0.0</version>
   <description>Provides controllers that use the speed scaling interface of Universal Robots.</description>
 
-  <maintainer email="grosse@fzi.de">Marvin Große Besselmann</maintainer>
+  <author>Marvin Große Besselmann</author>
+  <author>Lovro Ivanov</author>
 
-  <license>Apache-2.0</license>
+  <maintainer email="grosse@fzi.de">Marvin Große Besselmann</maintainer>
+  <maintainer email="lovro.ivanov@gmail.com">Lovro Ivanov</maintainer>
+  <maintainer email="denis.stogl@picknik.ai">Denis Stogl</maintainer>
+  <maintainer email="zelenak@picknik.ai">Andy Zelenak</maintainer>
+
+  <license>Apache License 2.0</license>
+
+  <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
+  <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-
 
   <depend>control_msgs</depend>
   <depend>controller_interface</depend>
@@ -23,7 +31,8 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
-  <depend>ur_client_library</depend>
+  <!-- TODO: rosdep cannot find ur_client_library -->
+<!--   <depend>ur_client_library</depend> -->
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_msgs</depend>
 

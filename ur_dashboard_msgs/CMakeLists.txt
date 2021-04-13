@@ -7,26 +7,26 @@ find_package(action_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 
 set(msg_files
-  "msg/ProgramState.msg"
-  "msg/RobotMode.msg"
-  "msg/SafetyMode.msg"
+  msg/ProgramState.msg
+  msg/RobotMode.msg
+  msg/SafetyMode.msg
 )
 
 set(srv_files
-  "srv/AddToLog.srv"
-  "srv/GetLoadedProgram.srv"
-  "srv/GetProgramState.srv"
-  "srv/GetRobotMode.srv"
-  "srv/GetSafetyMode.srv"
-  "srv/IsProgramRunning.srv"
-  "srv/IsProgramSaved.srv"
-  "srv/Load.srv"
-  "srv/Popup.srv"
-  "srv/RawRequest.srv"
+  srv/AddToLog.srv
+  srv/GetLoadedProgram.srv
+  srv/GetProgramState.srv
+  srv/GetRobotMode.srv
+  srv/GetSafetyMode.srv
+  srv/IsProgramRunning.srv
+  srv/IsProgramSaved.srv
+  srv/Load.srv
+  srv/Popup.srv
+  srv/RawRequest.srv
 )
 
 set(action_files
-  "action/SetMode.action"
+  action/SetMode.action
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

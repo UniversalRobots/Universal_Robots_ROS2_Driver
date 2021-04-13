@@ -5,9 +5,14 @@
   <version>0.0.0</version>
   <description>Messages around the UR Dashboard server.</description>
 
-  <maintainer email="exner@FZI.de">Felix Exner</maintainer>
+  <author>Felix Exner</author>
 
-  <license>Apache-2.0</license>
+  <maintainer email="grosse@fzi.de">Marvin Große Besselmann</maintainer>
+
+  <license>Apache License 2.0</license>
+
+  <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
+  <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
