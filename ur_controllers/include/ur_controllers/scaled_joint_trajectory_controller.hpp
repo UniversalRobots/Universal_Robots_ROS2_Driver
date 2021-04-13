@@ -20,8 +20,8 @@
  *
  */
 //----------------------------------------------------------------------
-#ifndef UR_CONTROLLERS_SCALED_TRAJECTORY_CONTROLLER_H_INCLUDED
-#define UR_CONTROLLERS_SCALED_TRAJECTORY_CONTROLLER_H_INCLUDED
+#ifndef UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
+#define UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
 
 #include "joint_trajectory_controller/joint_trajectory_controller.hpp"
 #include "joint_trajectory_controller/trajectory.hpp"
@@ -59,4 +59,4 @@ private:
 };
 }  // namespace ur_controllers
 
-#endif  // ifndef UR_CONTROLLERS_SCALED_TRAJECTORY_CONTROLLER_H_INCLUDED
+#endif  // UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_

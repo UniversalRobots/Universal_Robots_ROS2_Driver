@@ -69,9 +69,4 @@ def generate_launch_description():
         }.items(),
     )
 
-    return LaunchDescription(
-        declared_arguments
-        + [
-            base_launch,
-        ]
-    )
+    return LaunchDescription(declared_arguments + [base_launch])
