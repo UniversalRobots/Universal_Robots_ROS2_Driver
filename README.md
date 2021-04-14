@@ -88,7 +88,7 @@ The most relevant arguments are the following:
 
 - To test another controller, simply define it using `robot_controller` argument:
    ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=scaled_joint_trajectory_controller use_fake_hardware:=true
+   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=scaled_joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
    ```
    And send the command using demo node:
    ```
