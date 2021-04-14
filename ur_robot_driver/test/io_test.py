@@ -27,7 +27,7 @@ NAME = "io_test"
 
 class IOTest(unittest.TestCase):
     def __init__(self, *args):
-        super(IOTest, self).__init__(*args)
+        super().__init__(*args)
         rospy.init_node("io_test")
 
         timeout = 10
@@ -53,9 +53,7 @@ class IOTest(unittest.TestCase):
 
         while pin_state:
             if messages >= maximum_messages:
-                self.fail(
-                    "Could not read desired state after {} messages.".format(maximum_messages)
-                )
+                self.fail(f"Could not read desired state after {maximum_messages} messages.")
             io_state = rospy.wait_for_message("/ur_hardware_interface/io_states", IOStates)
             pin_state = io_state.digital_out_states[pin].state
             messages += 1
@@ -67,9 +65,7 @@ class IOTest(unittest.TestCase):
 
         while not pin_state:
             if messages >= maximum_messages:
-                self.fail(
-                    "Could not read desired state after {} messages.".format(maximum_messages)
-                )
+                self.fail(f"Could not read desired state after {maximum_messages} messages.")
             io_state = rospy.wait_for_message("/ur_hardware_interface/io_states", IOStates)
             pin_state = io_state.digital_out_states[pin].state
             messages += 1
