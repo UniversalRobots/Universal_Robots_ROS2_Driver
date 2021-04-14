@@ -39,6 +39,13 @@ def load_yaml(package_name, file_path):
 
 def generate_launch_description():
     declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_rviz",
+            default_value="True",
+            description="Launch RViz?"
+        )
+    )
     # UR specific arguments
     declared_arguments.append(
         DeclareLaunchArgument("ur_type", description="Type/series of used UR robot.")
@@ -150,6 +157,7 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
+    launch_rviz = LaunchConfiguration("launch_rviz")
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
     safety_limits = LaunchConfiguration("safety_limits")
@@ -345,6 +353,7 @@ def generate_launch_description():
     )
     rviz_node = Node(
         package="rviz2",
+        condition=IfCondition(LaunchConfiguration("launch_rviz")),
         executable="rviz2",
         name="rviz2_moveit",
         output="log",
