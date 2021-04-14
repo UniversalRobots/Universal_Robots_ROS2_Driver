@@ -31,6 +31,18 @@ repos:
       - id: trailing-whitespace
 
   # Python hooks
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.2
+    hooks:
+    -   id: pyupgrade
+        args: [--py36-plus]
+
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        args: ["--line-length=100"]
+
   # PEP 257
   - repo: https://github.com/FalconSocial/pre-commit-mirrors-pep257
     rev: v0.3.3
@@ -43,12 +55,6 @@ repos:
     hooks:
     - id: flake8
       args: ["--ignore=E501"]
-
-  - repo: https://github.com/psf/black
-    rev: 20.8b1
-    hooks:
-      - id: black
-        args: ["--line-length=100"]
 
   # CPP hooks
   # The same options as in ament_cppcheck are used, but its not working...
