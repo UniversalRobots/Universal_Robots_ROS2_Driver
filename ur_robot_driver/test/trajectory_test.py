@@ -34,7 +34,7 @@ NAME = "trajectory_test"
 
 class TrajectoryTest(unittest.TestCase):
     def __init__(self, *args):
-        super(TrajectoryTest, self).__init__(*args)
+        super().__init__(*args)
         rospy.init_node("trajectory_testing_client")
         self.client = actionlib.SimpleActionClient(
             "follow_joint_trajectory", FollowJointTrajectoryAction

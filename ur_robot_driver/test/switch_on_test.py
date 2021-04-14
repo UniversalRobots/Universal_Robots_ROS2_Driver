@@ -27,7 +27,7 @@ NAME = "switch_on_test"
 
 class IOTest(unittest.TestCase):
     def __init__(self, *args):
-        super(IOTest, self).__init__(*args)
+        super().__init__(*args)
 
         rospy.init_node("switch_on_robot")
         self.client = actionlib.SimpleActionClient("/ur_hardware_interface/set_mode", SetModeAction)
