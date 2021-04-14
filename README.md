@@ -65,9 +65,9 @@ The most relevant arguments are the following:
 
 ### Example Commands for Testing the Driver
 
-1. To start the robot driver and controllers, use:
+- To start the robot driver and controllers, use:
    ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true
+   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
    ```
    For an offline test with the emulated hardware you can just copy-paste this line.
    To run on the hardware, write the IP address of your robot and omit the `use_fake_hardware` argument.
@@ -80,13 +80,13 @@ The most relevant arguments are the following:
 
    To check the controllers' state use `ros2 control list_controllers` command.
 
-2. Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
+- Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
    ros2 launch ur_bringup test_joint_trajectory_controller.launch.py
    ```
    After a few seconds the robot should move.
 
-3. To test another controller, simply define it using `robot_controller` argument:
+- To test another controller, simply define it using `robot_controller` argument:
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=scaled_joint_trajectory_controller use_fake_hardware:=true
    ```
@@ -96,9 +96,11 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move (or jump when using emulation).
 
-4. To test the driver with example MoveIt-setup, start `ur_control` launch file and then start MoveIt using the following command:
+- To test the driver with example MoveIt-setup, first start the controllers then start MoveIt:
    ```
-   ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true
+   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false
+
+   ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true launch_rviz:=true
    ```
    Now you should be able to use MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
    **NOTE**: This results in two instances of rviz2. You can safely close the one without *MotionPlanning* panel.
