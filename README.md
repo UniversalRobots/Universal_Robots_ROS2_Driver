@@ -38,7 +38,7 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 
 ### How to Setup the UR Robot
 
-1. To enable external control of a UR robot from a remote PC, [install URCap] (https://github.com/PickNikRobotics/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/install_urcap_e_series.md)
+1. To enable external control of a UR robot from a remote PC, [install URCap](/ur_robot_driver/doc/install_urcap_e_series.md).
 
 2. Switch to Remote Control by clicking on the teach pendant logo on the upper right corner.
 
