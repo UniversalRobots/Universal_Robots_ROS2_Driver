@@ -89,7 +89,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   resize_joint_trajectory_point(state_current, joint_num);
 
   // current state update
-  for (auto index = 0ul; index < joint_num; ++index) {
+  for (size_t index = 0; index < joint_num; ++index)
+  {
     state_current.positions[index] = joint_position_state_interface_[index].get().get_value();
     state_current.velocities[index] = joint_velocity_state_interface_[index].get().get_value();
     state_current.accelerations[index] = 0.0;
@@ -123,7 +124,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
       bool abort = false;
       bool outside_goal_tolerance = false;
       const bool before_last_point = end_segment_itr != (*traj_point_active_ptr_)->end();
-      for (auto index = 0ul; index < joint_num; ++index) {
+      for (size_t index = 0; index < joint_num; ++index)
+      {
         // set values for next hardware write()
         joint_position_command_interface_[index].get().set_value(state_desired.positions[index]);
         compute_error_for_joint(state_error, index, state_current, state_desired);
