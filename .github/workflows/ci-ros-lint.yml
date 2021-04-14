@@ -17,6 +17,7 @@ jobs:
       with:
         distribution: foxy
         linter: ${{ matrix.linter }}
+        arguments: "--linelength=120"
         package-name:
           ros2_control_demo_hardware
           ros2_control_demo_robot
