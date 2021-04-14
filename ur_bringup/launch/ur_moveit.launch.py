@@ -39,13 +39,6 @@ def load_yaml(package_name, file_path):
 
 def generate_launch_description():
     declared_arguments = []
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "launch_rviz",
-            default_value="True",
-            description="Launch RViz?"
-        )
-    )
     # UR specific arguments
     declared_arguments.append(
         DeclareLaunchArgument("ur_type", description="Type/series of used UR robot.")
@@ -155,9 +148,11 @@ def generate_launch_description():
             description="Robot controller to start.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
+    )
 
     # Initialize Arguments
-    launch_rviz = LaunchConfiguration("launch_rviz")
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
     safety_limits = LaunchConfiguration("safety_limits")
@@ -174,6 +169,7 @@ def generate_launch_description():
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
+    launch_rviz = LaunchConfiguration("launch_rviz")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
