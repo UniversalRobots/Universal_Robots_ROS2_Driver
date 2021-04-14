@@ -19,6 +19,7 @@ Please try to include as much information as you can. Details like these are inc
 * Any modifications you've made relevant to the bug
 * Anything unusual about your environment or deployment
 
+
 ## Contributing via Pull Requests
 Contributions via pull requests are much appreciated.
 Before sending us a pull request, please ensure that:
@@ -39,3 +40,17 @@ To send us a pull request, please:
 
 GitHub provides additional documentation on [forking a repository](https://help.github.com/articles/fork-a-repo/) and
 [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).
+
+
+## Licensing
+Any contribution that you make to this repository will be under the Apache 2 License, as dictated by that [license]:
+
+~~~
+5. Submission of Contributions. Unless You explicitly state otherwise,
+   any Contribution intentionally submitted for inclusion in the Work
+   by You to the Licensor shall be under the terms and conditions of
+   this License, without any additional terms or conditions.
+   Notwithstanding the above, nothing herein shall supersede or modify
+   the terms of any separate license agreement you may have executed
+   with Licensor regarding such Contributions.
+~~~
