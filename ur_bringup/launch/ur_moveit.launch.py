@@ -148,6 +148,9 @@ def generate_launch_description():
             description="Robot controller to start.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
+    )
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
@@ -166,6 +169,7 @@ def generate_launch_description():
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
+    launch_rviz = LaunchConfiguration("launch_rviz")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -345,6 +349,7 @@ def generate_launch_description():
     )
     rviz_node = Node(
         package="rviz2",
+        condition=IfCondition(LaunchConfiguration("launch_rviz")),
         executable="rviz2",
         name="rviz2_moveit",
         output="log",
