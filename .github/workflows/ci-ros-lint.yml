@@ -18,9 +18,12 @@ jobs:
         distribution: foxy
         linter: ${{ matrix.linter }}
         package-name:
-          ros2_control_demo_hardware
-          ros2_control_demo_robot
-          ros2_control_demos
+          ur_bringup
+          ur_controllers
+          ur_dashboard_msgs
+          ur_description
+          ur_moveit_config
+          ur_robot_driver
 
   ament_lint_120:
     name: ament_${{ matrix.linter }}
@@ -38,6 +41,9 @@ jobs:
         linter: cpplint
         arguments: "--linelength=120"
         package-name:
-          ros2_control_demo_hardware
-          ros2_control_demo_robot
-          ros2_control_demos
+          ur_bringup
+          ur_controllers
+          ur_dashboard_msgs
+          ur_description
+          ur_moveit_config
+          ur_robot_driver
