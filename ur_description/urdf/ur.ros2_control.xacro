@@ -130,6 +130,7 @@
       <!-- NOTE The following are joints used only for testing with fake hardware and will change in the future -->
       <joint name="speed_scaling">
         <state_interface name="speed_scaling_factor"/>
+        <param name="initial_speed_scaling_factor">1</param>
         <command_interface name="speed_scaling_factor_cmd"/>
         <command_interface name="scaling_async_success"/>
       </joint>
