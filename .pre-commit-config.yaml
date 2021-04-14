@@ -29,6 +29,7 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
+      - id: check-byte-order-marker  # Forbid UTF-8 byte-order markers
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
@@ -69,6 +70,7 @@ repos:
       - id: ament_cppcheck
         name: ament_cppcheck
         description: Static code analysis of C/C++ files.
+        stages: [commit]
         entry: ament_cppcheck
         language: system
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
@@ -79,6 +81,7 @@ repos:
       - id: ament_cpplint
         name: ament_cpplint
         description: Static code analysis of C/C++ files.
+        stages: [commit]
         entry: ament_cpplint
         language: system
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
@@ -100,6 +103,7 @@ repos:
       - id: ament_lint_cmake
         name: ament_lint_cmake
         description: Check format of CMakeLists.txt files.
+        stages: [commit]
         entry: ament_lint_cmake
         language: system
         files: CMakeLists.txt$
@@ -110,6 +114,7 @@ repos:
       - id: ament_copyright
         name: ament_copyright
         description: Check if copyright notice is available in all files.
+        stages: [commit]
         entry: ament_copyright
         language: system
 

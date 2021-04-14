@@ -16,15 +16,10 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-    - uses: ros-tooling/setup-ros@0.0.26
-      with:
-        required-ros-distributions: foxy
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
     - name: Install system hooks
       run: sudo apt-get install clang-format-10 cppcheck
-    - name: Source ROS2 environemnt to get access to ament_* hooks
-      run: source /opt/ros/foxy/setup.bash
-    - name: Check if there are ament hooks
-      run: ament_copyright
     - uses: pre-commit/action@v2.0.2
+      with:
+        extra_args: --all-files --hook-stage manual
