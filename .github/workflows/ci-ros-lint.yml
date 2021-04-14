@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-          linter: [cppcheck, cpplint, copyright, lint_cmake]
+          linter: [cppcheck, copyright, lint_cmake]
     steps:
     - uses: actions/checkout@v1
     - uses: ros-tooling/setup-ros@v0.1
@@ -17,6 +17,14 @@ jobs:
       with:
         distribution: foxy
         linter: ${{ matrix.linter }}
+        package-name: 
+          ros2_control_demo_hardware
+          ros2_control_demo_robot
+          ros2_control_demos
+    - uses: ros-tooling/action-ros-lint@v0.1
+      with:
+        distribution: foxy
+        linter: cpplint
         arguments: "--linelength=120"
         package-name:
           ros2_control_demo_hardware
