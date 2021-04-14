@@ -36,13 +36,13 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 **NOTE**: If you are a ROS2 beginner and get lost consult the [references - section](#references).
 
 
-### How to Setup the UR Robot
+## How to Setup the UR Robot
 
 1. To enable external control of a UR robot from a remote PC, [install URCap](/ur_robot_driver/doc/install_urcap_e_series.md).
 
 2. Switch to Remote Control by clicking on the teach pendant logo on the upper right corner.
 
-3. Create a new program. In the Installation tab of the teach pendant, select the UPCaps option on the left and adjust the IP address and port number. The remote host's IP can be found using `ifconfig`.
+3. Create a new program. In the Installation tab of the teach pendant, select the URCaps option on the left and adjust the IP address and port number. The remote host's IP can be found using `ifconfig`.
 
 4. On the remote PC, launch the suitable launch file which starts the robot driver and controllers.
 
@@ -119,7 +119,7 @@ The most relevant arguments are the following:
 
    If you have **issues** shows the correct configuration5 of the robot, try removing and re-adding *MotionPlanning* display.
 
-5. If you just want to test description of the UR robots, e.g., after changes you can use the following command:
+- If you just want to test the description of the UR robots, e.g., after changes you can use the following command:
    ```
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
