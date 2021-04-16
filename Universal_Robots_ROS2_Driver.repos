@@ -3,10 +3,6 @@ repositories:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
     version: foxy-devel
-  moveit2:
-    type: git
-    url: https://github.com/ros-planning/moveit2.git
-    version: main
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
@@ -19,10 +15,6 @@ repositories:
     type: git
     url: https://github.com/ros-controls/ros2_controllers.git
     version: master
-  srdfdom:
-    type: git
-    url: https://github.com/ros-planning/srdfdom.git
-    version: ros2
   ur_client_library:
     type: git
     url: https://github.com/PickNikRobotics/Universal_Robots_Client_Library.git
@@ -30,8 +22,4 @@ repositories:
   ur_msgs:
     type: git
     url: https://github.com/destogl/ur_msgs.git
-    version: ros2
-  warehouse_ros_mongo:
-    type: git
-    url: https://github.com/ros-planning/warehouse_ros_mongo
     version: ros2

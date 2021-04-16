@@ -2,6 +2,13 @@
 
 Beta version of the ROS2 Universal Robots driver. Should be transferred to the Universal Robots org when ready.
 
+## Known Issues
+
+- **ATTENTION**: The robot could move to all-zero joint positions when starting.
+
+- **ATTENTION**: If the robot is connected to the ROS2 driver then moved using the teach pendant its position will not always be updated in the driver. This can cause unexpected movement of the robot when connected to the ROS2 driver again.
+
+- GPIO outputs are set continuously from the ROS2 driver therefore there is no possibility to change them from the teach pendant.
 
 ## Packages in the Repository:
 
@@ -26,17 +33,26 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 3. Pull relevant packages, install dependencies, compile, and source the workspace by using:
    ```
    cd $COLCON_WS
-   git clone git@github.com:PickNikRobotics/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver --branch develop
+   git clone git@github.com:PickNikRobotics/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
    vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
    rosdep install --ignore-src --from-paths src -y -r
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
    source install/setup.bash
    ```
 
-**NOTE**: If you are a ROS2 beginner and get lost consult the [references - section](#references).
+## Using MoveIt
 
+To use MoveIt some additional packages should be added into workspace:
+   ```
+   cd $COLCON_WS
+   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/MoveIt_Support.repos
+   vcs import src --skip-existing --input src/moveit2/moveit2.repos
+   rosdep install --ignore-src --from-paths src -y -r
+   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+   source install/setup.bash
+   ```
 
-## How to Setup the UR Robot
+## Hardware Setup
 
 1. To enable external control of a UR robot from a remote PC, [install URCap](/ur_robot_driver/doc/install_urcap_e_series.md).
 
@@ -48,7 +64,7 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 
 5. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
 
-## How to Use the ROS2 Driver for UR Robots
+## Usage
 
 For starting the driver there are three main launch files in the `ur_bringup` package.
 
@@ -73,7 +89,7 @@ The most relevant arguments are the following:
 
     *HINT*: list all loaded controllers using `ros2 control list_controllers` command.
 
-**NOTE**: The package can simulate hardware with the ros2_control `FakeSystem`. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see [ros2_control documentation](https://ros-controls.github.io/control.ros.org/) for more details..
+**NOTE**: The package can simulate hardware with the ros2_control `FakeSystem`. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see [ros2_control documentation](https://ros-controls.github.io/control.ros.org/) for more details.
 
 ### Example Commands for Testing the Driver
 
@@ -86,8 +102,8 @@ The most relevant arguments are the following:
 
    **NOTE**: If controllers are not starting automatically, i.e., the robot state is not shown in rviz, you can start them manually:
    ```
-   ros2 control load_controller --state joint_state_broadcaster
-   ros2 control load_controller --state joint_trajectory_controller
+   ros2 control load_controller --state start joint_state_broadcaster
+   ros2 control load_controller --state start joint_trajectory_controller
    ```
 
    To check the controllers' state use `ros2 control list_controllers` command.
@@ -108,18 +124,15 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move (or jump when using emulation).
 
-- To test the driver with example MoveIt-setup, first start the controllers then start MoveIt:
+- To test the driver with the example MoveIt-setup, first start the controllers then start MoveIt. (This requires a `vcs import` of MoveIt packages):
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false
 
    ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true launch_rviz:=true
    ```
-   Now you should be able to use MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
-   **NOTE**: This results in two instances of rviz2. You can safely close the one without *MotionPlanning* panel.
+   Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
 
-   If you have **issues** shows the correct configuration5 of the robot, try removing and re-adding *MotionPlanning* display.
-
-- If you just want to test the description of the UR robots, e.g., after changes you can use the following command:
+5. If you just want to test description of the UR robots, e.g., after changes you can use the following command:
    ```
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
@@ -131,7 +144,7 @@ The most relevant arguments are the following:
 
 
 ## Contributor Guidelines
-Code is auto-formatted with clang-format 10 whenever a git commit is made. Please ensure these dependencies are installed so pre-commit formatting works:
+Code is auto-formatted with clang-format 10 whenever a git commit is made. Please ensure these dependencies are installed:
   ```
   pip3 install pre-commit
   sudo apt install clang-format-10
@@ -141,18 +154,3 @@ Prepare the pre-commit formatting to run like this:
   ```
   pre-commit install`
   ```
-
-
-## References
-
-Here are some useful references for developing with ROS2:
-
- - [Official ROS2 Tutorials](https://index.ros.org/doc/ros2/Tutorials/)
-   * [Luanchfile](https://index.ros.org/doc/ros2/Tutorials/Launch-Files/Creating-Launch-Files/)
-   * [Package](https://index.ros.org/doc/ros2/Tutorials/Creating-Your-First-ROS2-Package/)
-   * [Parameters](https://index.ros.org/doc/ros2/Tutorials/Parameters/Understanding-ROS2-Parameters/)
-   * [Workspace](https://index.ros.org/doc/ros2/Tutorials/Workspace/Creating-A-Workspace/)
- - [Example ROS packages](https://github.com/ros2/examples)
- - [Colcon Documentation](https://colcon.readthedocs.io/en/released/#)
- - [ROS2 Design Documentation](https://design.ros2.org/)
- - [ROS2 Launch Architecture](https://github.com/ros2/launch/blob/master/launch/doc/source/architecture.rst)
