@@ -52,7 +52,19 @@ To use MoveIt some additional packages should be added into workspace:
    source install/setup.bash
    ```
 
-## How to Use the Driver on Hardware Robots
+## Hardware Setup
+
+1. To enable external control of a UR robot from a remote PC, [install URCap](/ur_robot_driver/doc/install_urcap_e_series.md).
+
+2. Switch to Remote Control by clicking on the teach pendant logo on the upper right corner.
+
+3. Create a new program. In the Installation tab of the teach pendant, select the URCaps option on the left and adjust the IP address and port number. The remote host's IP can be found using `ifconfig`.
+
+4. On the remote PC, launch the suitable launch file which starts the robot driver and controllers.
+
+5. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
+
+## Usage
 
 For starting the driver there are three main launch files in the `ur_bringup` package.
 
@@ -77,7 +89,7 @@ The most relevant arguments are the following:
 
     *HINT*: list all loaded controllers using `ros2 control list_controllers` command.
 
-**NOTE**: The package can simulate hardware with the ros2_control `FakeSystem`. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see [ros2_control documentation](https://ros-controls.github.io/control.ros.org/) for more details..
+**NOTE**: The package can simulate hardware with the ros2_control `FakeSystem`. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see [ros2_control documentation](https://ros-controls.github.io/control.ros.org/) for more details.
 
 ### Example Commands for Testing the Driver
 
