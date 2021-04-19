@@ -54,15 +54,15 @@ To use MoveIt some additional packages should be added into workspace:
 
 ## Hardware Setup
 
-1. To enable external control of a UR robot from a remote PC, [install URCap](/ur_robot_driver/doc/install_urcap_e_series.md).
+1. To enable external control of the UR robot from a remote PC you need to install the **externalcontrol-1.0.5.urcap** which can be found inside the **resources** folder of this driver.
 
-2. Switch to Remote Control by clicking on the teach pendant logo on the upper right corner.
+**Note:** For installing this URCap a minimal PolyScope version of 3.7 or 5.1 (in case of e-Series) is necessary.
 
-3. Create a new program. In the Installation tab of the teach pendant, select the URCaps option on the left and adjust the IP address and port number. The remote host's IP can be found using `ifconfig`.
+2. For installing the necessary URCap and creating a program, please see the individual tutorial on how to [setup a CB3 robot](/ur_robot_driver/doc/install_urcap_cb3.md) or how to [setup an e-Series robot](/ur_robot_driver/doc/install_urcap_e_series.md)  
 
-4. On the remote PC, launch the suitable launch file which starts the robot driver and controllers.
-
-5. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
+3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers.  
+  
+4. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
 
 ## Usage
 
