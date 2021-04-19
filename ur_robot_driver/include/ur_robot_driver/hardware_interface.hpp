@@ -167,7 +167,6 @@ protected:
 
   bool robot_program_running_;
   bool non_blocking_read_;
-  bool position_interface_in_use_;
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
