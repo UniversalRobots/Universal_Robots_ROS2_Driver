@@ -4,10 +4,6 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 
 ## Known Issues
 
-- **ATTENTION**: The robot could move to all-zero joint positions when starting.
-
-- **ATTENTION**: If the robot is connected to the ROS2 driver then moved using the teach pendant its position will not always be updated in the driver. This can cause unexpected movement of the robot when connected to the ROS2 driver again.
-
 - GPIO outputs are set continuously from the ROS2 driver therefore there is no possibility to change them from the teach pendant.
 
 ## Packages in the Repository:

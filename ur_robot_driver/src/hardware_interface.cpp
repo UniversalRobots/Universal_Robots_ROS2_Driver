@@ -232,8 +232,6 @@ return_type URPositionHardwareInterface::start()
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
 
-  position_interface_in_use_ = false;
-
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
   // The robot's IP address.
@@ -369,8 +367,6 @@ return_type URPositionHardwareInterface::stop()
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
 
-  position_interface_in_use_ = false;
-
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
   ur_driver_.reset();
@@ -486,24 +482,24 @@ return_type URPositionHardwareInterface::write()
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
-    if (!position_interface_in_use_) {
-      // create a lambda subtract functor
-      std::function<double(double, double)> substractor = [](double a, double b) { return std::abs(a - b); };
+    bool new_data_available = false;
+    // create a lambda subtract functor
+    std::function<double(double, double)> substractor = [](double a, double b) { return std::abs(a - b); };
 
-      // create a position difference vector
-      std::vector<double> pos_diff;
-      pos_diff.resize(urcl_position_commands_.size());
-      std::transform(urcl_position_commands_.begin(), urcl_position_commands_.end(),
-                     urcl_position_commands_old_.begin(), pos_diff.begin(), substractor);
+    // create a position difference vector
+    std::vector<double> pos_diff;
+    pos_diff.resize(urcl_position_commands_.size());
+    std::transform(urcl_position_commands_.begin(), urcl_position_commands_.end(), urcl_position_commands_old_.begin(),
+                   pos_diff.begin(), substractor);
 
-      double pos_diff_sum = 0.0;
-      std::for_each(pos_diff.begin(), pos_diff.end(), [&pos_diff_sum](double a) { return pos_diff_sum += a; });
+    double pos_diff_sum = 0.0;
+    std::for_each(pos_diff.begin(), pos_diff.end(), [&pos_diff_sum](double a) { return pos_diff_sum += a; });
 
-      if (pos_diff_sum != 0.0)
-        position_interface_in_use_ = true;
+    if (pos_diff_sum != 0.0) {
+      new_data_available = true;
     }
 
-    if (position_interface_in_use_) {
+    if (new_data_available) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
       // remember old values
       urcl_position_commands_old_ = urcl_position_commands_;
@@ -531,10 +527,6 @@ return_type URPositionHardwareInterface::write()
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
-  if (!robot_program_running_ && program_running) {
-    urcl_position_commands_old_ = urcl_position_commands_;
-    position_interface_in_use_ = false;
-  }
   robot_program_running_ = program_running;
 }
 
