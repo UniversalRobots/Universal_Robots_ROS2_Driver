@@ -263,13 +263,13 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                                     ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp)
 {
-  if (req->speed_slider_fraction >= 0 && req->speed_slider_fraction <= 100) {
-    RCLCPP_INFO(node_->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction);
+  if (req->speed_slider_fraction >= 0 && req->speed_slider_fraction <= 1.0) {
+    RCLCPP_INFO(node_->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction * 100.0);
     // reset success flag
     command_interfaces_[CommandInterfaces::SCALING_ASYNC_SUCCESS].set_value(2.0);
     // set commanding value for speed slider
     command_interfaces_[CommandInterfaces::SPEED_SCALING_CMD].set_value(
-        static_cast<double>(req->speed_slider_fraction / 100.0));
+        static_cast<double>(req->speed_slider_fraction));
 
     while (command_interfaces_[CommandInterfaces::SCALING_ASYNC_SUCCESS].get_value() != 2.0) {
       // TODO(anyone): setting the value is not yet finished
@@ -278,6 +278,8 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
 
     resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::SCALING_ASYNC_SUCCESS].get_value());
   } else {
+    RCLCPP_WARN(node_->get_logger(), "The desired speed slider fraction must be within range [0; 1.0]. Request "
+                                     "ignored.");
     resp->success = false;
     return false;
   }
