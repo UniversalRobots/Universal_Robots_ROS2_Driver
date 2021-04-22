@@ -58,10 +58,10 @@ To use MoveIt some additional packages should be added into workspace:
 
 **Note:** For installing this URCap a minimal PolyScope version of 3.7 or 5.1 (in case of e-Series) is necessary.
 
-2. For installing the necessary URCap and creating a program, please see the individual tutorial on how to [setup a CB3 robot](/ur_robot_driver/doc/install_urcap_cb3.md) or how to [setup an e-Series robot](/ur_robot_driver/doc/install_urcap_e_series.md)  
+2. For installing the necessary URCap and creating a program, please see the individual tutorial on how to [setup a CB3 robot](/ur_robot_driver/doc/install_urcap_cb3.md) or how to [setup an e-Series robot](/ur_robot_driver/doc/install_urcap_e_series.md)
 
-3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers.  
-  
+3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers.
+
 4. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
 
 ## Usage
