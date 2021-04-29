@@ -28,7 +28,7 @@
   <depend>rclcpp</depend>
   <depend>std_srvs</depend>
   <!-- TODO: rosdep cannot find ur_client_library -->
-<!--   <depend>ur_client_library</depend> -->
+  <depend>ur_client_library</depend>
   <depend>ur_dashboard_msgs</depend>
 
   <exec_depend>controller_manager</exec_depend>
