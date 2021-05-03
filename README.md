@@ -4,7 +4,7 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 
 ## Known Issues
 
-- GPIO outputs are set continuously from the ROS2 driver therefore there is no possibility to change them from the teach pendant.
+-
 
 ## Packages in the Repository:
 
