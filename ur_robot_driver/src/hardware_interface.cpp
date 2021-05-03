@@ -466,7 +466,8 @@ return_type URPositionHardwareInterface::read()
       initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
-      speed_scaling_cmd_ = speed_scaling_;
+      speed_scaling_cmd_ = target_speed_fraction_;
+      speed_scaling_cmd_old_ = speed_scaling_cmd_;
     }
 
     updateNonDoubleValues();
@@ -570,8 +571,9 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
   }
 
-  if (speed_scaling_cmd_ != speed_scaling_ && ur_driver_ != nullptr) {
+  if (speed_scaling_cmd_ != speed_scaling_cmd_old_ && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(speed_scaling_cmd_);
+    speed_scaling_cmd_old_ = speed_scaling_cmd_;
   } else {
     scaling_async_success_ = false;
   }

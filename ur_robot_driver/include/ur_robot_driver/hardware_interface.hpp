@@ -150,6 +150,7 @@ protected:
   std::array<double, 2> standard_analog_output_cmd_;
   double io_async_success_;
   double speed_scaling_cmd_;
+  double speed_scaling_cmd_old_;
   double scaling_async_success_;
   bool first_pass_;
 
