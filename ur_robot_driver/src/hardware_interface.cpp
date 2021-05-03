@@ -466,8 +466,7 @@ return_type URPositionHardwareInterface::read()
       initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
-      target_speed_fraction_cmd_ = target_speed_fraction_;
-      target_speed_fraction_cmd_old_ = target_speed_fraction_cmd_;
+      target_speed_fraction_cmd_ = -1;
     }
 
     updateNonDoubleValues();
@@ -571,9 +570,9 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
   }
 
-  if (target_speed_fraction_cmd_ != target_speed_fraction_cmd_old_ && ur_driver_ != nullptr) {
+  if (target_speed_fraction_cmd_ != -1 && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
-    target_speed_fraction_cmd_old_ = target_speed_fraction_cmd_;
+    target_speed_fraction_cmd_ = -1;
   } else {
     scaling_async_success_ = false;
   }
