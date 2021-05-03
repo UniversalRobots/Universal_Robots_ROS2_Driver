@@ -533,18 +533,18 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 void URPositionHardwareInterface::initAsyncIO()
 {
   for (size_t i = 0; i < 18; ++i) {
-    standard_dig_out_bits_cmd_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+    standard_dig_out_bits_cmd_[i] = -1;
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    standard_analog_output_cmd_[i] = standard_analog_output_[i];
+    standard_analog_output_cmd_[i] = -1;
   }
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
 {
   for (size_t i = 0; i < 18; ++i) {
-    if (standard_dig_out_bits_cmd_[i] != static_cast<double>(actual_dig_out_bits_[i])) {
+    if (standard_dig_out_bits_cmd_[i] != -1) {
       if (i <= 7) {
         io_async_success_ =
             ur_driver_->getRTDEWriter().sendStandardDigitalOutput(i, static_cast<bool>(standard_dig_out_bits_cmd_[i]));
@@ -555,16 +555,16 @@ void URPositionHardwareInterface::checkAsyncIO()
         io_async_success_ = ur_driver_->getRTDEWriter().sendToolDigitalOutput(
             static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
       }
-
+      standard_dig_out_bits_cmd_[i] = -1;
       if (io_async_success_ != 2.0)
         return;
     }
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    if (standard_analog_output_cmd_[i] != standard_analog_output_[i]) {
+    if (standard_analog_output_cmd_[i] != -1) {
       io_async_success_ = ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i]);
-
+      standard_analog_output_cmd_[i] = -1;
       if (io_async_success_ != 2.0)
         return;
     }
