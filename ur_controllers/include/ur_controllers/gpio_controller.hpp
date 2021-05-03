@@ -44,8 +44,8 @@ enum CommandInterfaces
   DIGITAL_OUTPUTS_CMD = 0u,
   ANALOG_OUTPUTS_CMD = 18,
   IO_ASYNC_SUCCESS = 20,
-  SPEED_SCALING_CMD = 21,
-  SCALING_ASYNC_SUCCESS = 22
+  TARGET_SPEED_FRACTION_CMD = 21,
+  TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 22
 };
 
 enum StateInterfaces
@@ -106,7 +106,7 @@ protected:
   // internal commands
   std::array<double, 18> standard_digital_output_cmd_;
   std::array<double, 18> standard_analog_output_cmd_;
-  double speed_scaling_factor_cmd_;
+  double target_speed_fraction_cmd_;
 
   // services
   rclcpp::Service<ur_msgs::srv::SetSpeedSliderFraction>::SharedPtr set_speed_slider_srv_;

@@ -149,8 +149,8 @@ protected:
   std::array<double, 18> standard_dig_out_bits_cmd_;
   std::array<double, 2> standard_analog_output_cmd_;
   double io_async_success_;
-  double speed_scaling_cmd_;
-  double speed_scaling_cmd_old_;
+  double target_speed_fraction_cmd_;
+  double target_speed_fraction_cmd_old_;
   double scaling_async_success_;
   bool first_pass_;
 
