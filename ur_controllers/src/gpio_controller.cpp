@@ -152,12 +152,16 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 void GPIOController::publishIO()
 {
   for (size_t i = 0; i < 18; ++i) {
+    io_msg_.digital_out_states[i].pin = i;
     io_msg_.digital_out_states[i].state = static_cast<bool>(state_interfaces_[i].get_value());
+
+    io_msg_.digital_in_states[i].pin = i;
     io_msg_.digital_in_states[i].state =
         static_cast<bool>(state_interfaces_[i + StateInterfaces::DIGITAL_INPUTS].get_value());
   }
 
   for (size_t i = 0; i < 2; ++i) {
+    io_msg_.analog_in_states[i].pin = i;
     io_msg_.analog_in_states[i].state =
         static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_INPUTS].get_value());
     io_msg_.analog_in_states[i].domain =
@@ -165,6 +169,7 @@ void GPIOController::publishIO()
   }
 
   for (size_t i = 0; i < 2; ++i) {
+    io_msg_.analog_out_states[i].pin = i;
     io_msg_.analog_out_states[i].state =
         static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_OUTPUTS].get_value());
     io_msg_.analog_out_states[i].domain =
