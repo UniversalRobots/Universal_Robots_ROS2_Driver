@@ -22,4 +22,5 @@
 | send custom script commands to robot                  | yes                       |
 | Reconnect on a disconnected robot                     | yes                       |
 
-<sup>1</sup> Currently not possible in ROS2 control. The driver will be extended as soon as the velocity controller is available
+<sup>1</sup> Velocity-based control is currently not supported by ros2_control 
+
