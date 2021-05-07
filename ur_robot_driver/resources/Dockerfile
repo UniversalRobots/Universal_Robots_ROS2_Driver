@@ -31,10 +31,9 @@
 FROM ros:foxy
 
 ARG COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
-RUN mkdir -p $COLCON_WS/src
-RUN cd $COLCON_WS \
-    && git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver \
-    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos \
+WORKDIR $COLCON_WS
+RUN git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver \
+    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
     # First fix, adding rosdep update
     && apt-get update && rosdep update \
     && rosdep install --ignore-src --from-paths src -y -r \
