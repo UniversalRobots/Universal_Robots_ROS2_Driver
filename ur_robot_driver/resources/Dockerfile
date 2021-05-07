@@ -30,7 +30,7 @@
 
 FROM ros:foxy
 
-ENV COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
+ARG COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
 RUN mkdir -p $COLCON_WS/src
 RUN cd $COLCON_WS \
     && git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver \
