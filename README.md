@@ -1,6 +1,12 @@
 # Universal Robots ROS2 Driver
+Universal Robots have become a dominant supplier of lightweight, robotic manipulators for industry, as well as for scientific research and education. 
+<center><img src="ur_robot_driver/doc/initial_setup_images/e-Series.jpg" alt="Universal Robot e-Series family" style="width: 80%;"/></center>
 
-Beta version of the ROS2 Universal Robots driver. Should be transferred to the Universal Robots org when ready.
+This is one of the very first ROS2 manipulator drivers. Some of the new features are enabled by ROS2 and includes decreased latency, improved security, and more flexibility regarding middleware configuration. Launch files to get started quickly and easily with MoveIt2 are included. 
+
+This driver is developed on top of [Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) and support some key cobot functionalities like; pause at emergency stop, safeguard stop, automatic speed scaling to avoid violate the safety setting and manually speed scaling from the teach pendant. In addition the externalControl URCap makes it possible to include ROS2 behaviors in the robot program,
+
+The  driver is compatible across the entire line of UR robots -- from 3 kg payload to 16 kg payload and include both the CB3 and the E-series.
 
 ## Known Issues
 
@@ -50,7 +56,7 @@ To use MoveIt some additional packages should be added into workspace:
 
 ## Hardware Setup
 
-1. To enable external control of the UR robot from a remote PC you need to install the **externalcontrol-1.0.5.urcap** which can be found inside the **resources** folder of this driver.
+1. To enable external control of the UR robot from a remote PC you need to install the **externalcontrol-1.0.5.urcap** which can be found inside the **resources** folder of this driver or download the latest from [Universal_Robots_ExternalControl_URCap](https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases).
 
 **Note:** For installing this URCap a minimal PolyScope version of 3.7 or 5.1 (in case of e-Series) is necessary.
 
