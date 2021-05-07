@@ -1,6 +1,6 @@
 # Universal Robots ROS2 Driver
 
-Beta version of the ROS2 Universal Robots driver. Should be transferred to the Universal Robots org when ready.
+Beta version of the ROS2 Universal Robots driver.
 
 ## Known Issues
 
@@ -29,7 +29,7 @@ Beta version of the ROS2 Universal Robots driver. Should be transferred to the U
 3. Pull relevant packages, install dependencies, compile, and source the workspace by using:
    ```
    cd $COLCON_WS
-   git clone git@github.com:PickNikRobotics/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
+   git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
    vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
    rosdep install --ignore-src --from-paths src -y -r
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
