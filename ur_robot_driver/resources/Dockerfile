@@ -33,12 +33,10 @@ FROM ros:foxy
 ARG COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
 WORKDIR $COLCON_WS
 RUN git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver \
-    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
+    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos \
     # First fix, adding rosdep update
     && apt-get update && rosdep update \
     && rosdep install --ignore-src --from-paths src -y -r \
     && /bin/bash -c "source /opt/ros/foxy/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release" \
     && echo "source install/setup.bash" >> /root/.bashrc \
     && rm -rf /var/lib/apt/lists/*
-
-WORKDIR $COLCON_WS
