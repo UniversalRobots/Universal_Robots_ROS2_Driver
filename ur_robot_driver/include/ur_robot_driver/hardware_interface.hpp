@@ -97,6 +97,8 @@ public:
    */
   void handleRobotProgramState(bool program_running);
 
+  static constexpr double NO_NEW_CMD_ = std::numeric_limits<double>::quiet_NaN();
+
 protected:
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
