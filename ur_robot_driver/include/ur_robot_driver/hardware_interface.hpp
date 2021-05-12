@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <limits>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
@@ -96,6 +97,8 @@ public:
    * \param program_running True when the URCap program is running on the robot.
    */
   void handleRobotProgramState(bool program_running);
+
+  static constexpr double NO_NEW_CMD_ = std::numeric_limits<double>::quiet_NaN();
 
 protected:
   template <typename T>
