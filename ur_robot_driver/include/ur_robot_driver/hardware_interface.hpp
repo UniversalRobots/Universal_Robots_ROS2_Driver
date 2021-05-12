@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <limits>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
