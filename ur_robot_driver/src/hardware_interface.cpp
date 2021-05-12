@@ -573,8 +573,6 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(target_speed_fraction_cmd_) && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
     target_speed_fraction_cmd_ = NO_NEW_CMD_;
-  } else {
-    scaling_async_success_ = false;
   }
 }
 
