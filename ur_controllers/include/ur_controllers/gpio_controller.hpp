@@ -122,6 +122,7 @@ protected:
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
 
+  static constexpr double ASYNC_WAITING = 2.0;
   // TODO(anyone) publishers to add: program_state_pub_, tcp_pose_pub_
   // TODO(anyone) subscribers to add: script_command_sub_
   // TODO(anyone) service servers to add: resend_robot_program_srv_, deactivate_srv_, set_payload_srv_, tare_sensor_srv_

@@ -233,27 +233,27 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 {
   if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= 17) {
     // io async success
-    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(2.0);
+    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
 
     RCLCPP_INFO(node_->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
-    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0) {
-      // TODO(anyone): setting the value is not yet finished
+    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+      // Asynchronous wait until the hardware interface has set the io value
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
-    resp->success = static_cast<bool>(command_interfaces_[20].get_value());
+    resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_value());
     return resp->success;
   } else if (req->fun == req->FUN_SET_ANALOG_OUT && req->pin >= 0 && req->pin <= 2) {
     // io async success
-    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(2.0);
+    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->pin].set_value(static_cast<double>(req->state));
 
     RCLCPP_INFO(node_->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
 
-    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0) {
-      // TODO(anyone): setting the value is not yet finished
+    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+      // Asynchronous wait until the hardware interface has set the io value
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
