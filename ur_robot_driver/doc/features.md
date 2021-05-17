@@ -22,5 +22,5 @@
 | send custom script commands to robot                  | yes                       |
 | Reconnect on a disconnected robot                     | yes                       |
 
-<sup>1</sup> Velocity-based control is currently not supported by ros2_control 
+<sup>1</sup> Velocity-based control is currently not supported by ros2_control
 
