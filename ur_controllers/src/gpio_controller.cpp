@@ -42,9 +42,9 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   config.names.emplace_back("gpio/io_async_success");
 
-  config.names.emplace_back("speed_scaling/speed_scaling_factor_cmd");
+  config.names.emplace_back("speed_scaling/target_speed_fraction_cmd");
 
-  config.names.emplace_back("speed_scaling/scaling_async_success");
+  config.names.emplace_back("speed_scaling/target_speed_fraction_async_success");
 
   return config;
 }
@@ -263,22 +263,22 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                                     ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp)
 {
-  if (req->speed_slider_fraction >= 0 && req->speed_slider_fraction <= 1.0) {
+  if (req->speed_slider_fraction >= 0.01 && req->speed_slider_fraction <= 1.0) {
     RCLCPP_INFO(node_->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction * 100.0);
     // reset success flag
-    command_interfaces_[CommandInterfaces::SCALING_ASYNC_SUCCESS].set_value(2.0);
+    command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     // set commanding value for speed slider
-    command_interfaces_[CommandInterfaces::SPEED_SCALING_CMD].set_value(
+    command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_CMD].set_value(
         static_cast<double>(req->speed_slider_fraction));
 
-    while (command_interfaces_[CommandInterfaces::SCALING_ASYNC_SUCCESS].get_value() != 2.0) {
-      // TODO(anyone): setting the value is not yet finished
+    while (command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+      // Asynchronouse wait until the hardware interface has set the slider value
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-
-    resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::SCALING_ASYNC_SUCCESS].get_value());
+    resp->success =
+        static_cast<bool>(command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value());
   } else {
-    RCLCPP_WARN(node_->get_logger(), "The desired speed slider fraction must be within range [0; 1.0]. Request "
+    RCLCPP_WARN(node_->get_logger(), "The desired speed slider fraction must be within range (0; 1.0]. Request "
                                      "ignored.");
     resp->success = false;
     return false;

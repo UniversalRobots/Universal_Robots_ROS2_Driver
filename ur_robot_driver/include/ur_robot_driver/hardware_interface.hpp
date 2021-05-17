@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <limits>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
@@ -97,6 +98,8 @@ public:
    */
   void handleRobotProgramState(bool program_running);
 
+  static constexpr double NO_NEW_CMD_ = std::numeric_limits<double>::quiet_NaN();
+
 protected:
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
@@ -149,7 +152,7 @@ protected:
   std::array<double, 18> standard_dig_out_bits_cmd_;
   std::array<double, 2> standard_analog_output_cmd_;
   double io_async_success_;
-  double speed_scaling_cmd_;
+  double target_speed_fraction_cmd_;
   double scaling_async_success_;
   bool first_pass_;
 
