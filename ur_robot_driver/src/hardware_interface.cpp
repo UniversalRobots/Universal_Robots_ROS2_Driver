@@ -479,6 +479,12 @@ return_type URPositionHardwareInterface::read()
 
 return_type URPositionHardwareInterface::write()
 {
+  if (first_pass_) {
+    first_pass_ = false;
+  } else {
+    checkAsyncIO();
+  }
+
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
@@ -511,12 +517,6 @@ return_type URPositionHardwareInterface::write()
 
     // remember old values
     urcl_position_commands_old_ = urcl_position_commands_;
-
-    if (first_pass_) {
-      first_pass_ = false;
-    } else {
-      checkAsyncIO();
-    }
 
     return return_type::OK;
   } else {
