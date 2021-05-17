@@ -23,4 +23,3 @@
 | Reconnect on a disconnected robot                     | yes                       |
 
 <sup>1</sup> Velocity-based control is currently not supported by ros2_control
-
