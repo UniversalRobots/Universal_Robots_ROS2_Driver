@@ -152,12 +152,16 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 void GPIOController::publishIO()
 {
   for (size_t i = 0; i < 18; ++i) {
+    io_msg_.digital_out_states[i].pin = i;
     io_msg_.digital_out_states[i].state = static_cast<bool>(state_interfaces_[i].get_value());
+
+    io_msg_.digital_in_states[i].pin = i;
     io_msg_.digital_in_states[i].state =
         static_cast<bool>(state_interfaces_[i + StateInterfaces::DIGITAL_INPUTS].get_value());
   }
 
   for (size_t i = 0; i < 2; ++i) {
+    io_msg_.analog_in_states[i].pin = i;
     io_msg_.analog_in_states[i].state =
         static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_INPUTS].get_value());
     io_msg_.analog_in_states[i].domain =
@@ -165,6 +169,7 @@ void GPIOController::publishIO()
   }
 
   for (size_t i = 0; i < 2; ++i) {
+    io_msg_.analog_out_states[i].pin = i;
     io_msg_.analog_out_states[i].state =
         static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_OUTPUTS].get_value());
     io_msg_.analog_out_states[i].domain =
@@ -228,27 +233,27 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 {
   if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= 17) {
     // io async success
-    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(2.0);
+    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
 
     RCLCPP_INFO(node_->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
-    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0) {
-      // TODO(anyone): setting the value is not yet finished
+    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+      // Asynchronous wait until the hardware interface has set the io value
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
-    resp->success = static_cast<bool>(command_interfaces_[20].get_value());
+    resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_value());
     return resp->success;
   } else if (req->fun == req->FUN_SET_ANALOG_OUT && req->pin >= 0 && req->pin <= 2) {
     // io async success
-    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(2.0);
+    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->pin].set_value(static_cast<double>(req->state));
 
     RCLCPP_INFO(node_->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
 
-    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() != 2.0) {
-      // TODO(anyone): setting the value is not yet finished
+    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+      // Asynchronous wait until the hardware interface has set the io value
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 

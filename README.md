@@ -11,7 +11,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 ## Known Issues
 
-- GPIO outputs are set continuously from the ROS2 driver therefore there is no possibility to change them from the teach pendant.
+-
 
 ## Packages in the Repository:
 
