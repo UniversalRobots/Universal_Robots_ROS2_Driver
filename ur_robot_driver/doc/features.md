@@ -12,7 +12,7 @@
 | continue trajectories after protective stop           | yes                       |
 | panel interaction in between possible                 | yes                       |
 | get and set IO states                                 | yes                       |
-| use tool communication on e-series                    | not yet tested            |
+| use [tool communication forwarder](https://github.com/UniversalRobots/Universal_Robots_ToolComm_Forwarder_URCap) on e-series | should work, not yet tested with ROS2            |
 | use the driver without a teach pendant necessary      | yes                       |
 | support of CB2 robots                                 | -                         |
 | trajectory extrapolation on robot on missing packages | yes                       |
