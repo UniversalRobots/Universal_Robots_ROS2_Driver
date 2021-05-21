@@ -234,6 +234,15 @@ def generate_launch_description():
         },
     )
 
+    dashboard_client_node = Node(
+        package="ur_robot_driver",
+        executable="dashboard_client",
+        name="dashboard_client",
+        output="screen",
+        emulate_tty=True,
+        parameters=[{"robot_ip": robot_ip}],
+    )
+
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -290,6 +299,7 @@ def generate_launch_description():
 
     nodes_to_start = [
         control_node,
+        dashboard_client_node,
         robot_state_publisher_node,
         rviz_node,
         joint_state_broadcaster_spawner,
