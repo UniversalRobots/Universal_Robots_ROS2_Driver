@@ -175,7 +175,6 @@ protected:
   double pausing_ramp_up_increment_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
-  std::unique_ptr<ur_robot_driver::DashboardClientROS> dashboard_client_;
 };
 }  // namespace ur_robot_driver
 
