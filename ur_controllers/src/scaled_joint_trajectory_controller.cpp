@@ -55,24 +55,28 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   }
 
   if (get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-    if (!is_halted) {
-      halt();
-      is_halted = true;
-    }
     return controller_interface::return_type::OK;
   }
 
-  auto resize_joint_trajectory_point = [](trajectory_msgs::msg::JointTrajectoryPoint& point, size_t size) {
+  auto resize_joint_trajectory_point = [&](trajectory_msgs::msg::JointTrajectoryPoint& point, size_t size) {
     point.positions.resize(size);
-    point.velocities.resize(size);
-    point.accelerations.resize(size);
+if (has_velocity_state_interface_) {
+        point.velocities.resize(size);
+      }
+      if (has_acceleration_state_interface_) {
+        point.accelerations.resize(size);
+      }
   };
-  auto compute_error_for_joint = [](JointTrajectoryPoint& error, int index, const JointTrajectoryPoint& current,
+  auto compute_error_for_joint = [&](JointTrajectoryPoint& error, int index, const JointTrajectoryPoint& current,
                                     const JointTrajectoryPoint& desired) {
     // error defined as the difference between current and desired
     error.positions[index] = angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
-    error.velocities[index] = desired.velocities[index] - current.velocities[index];
-    error.accelerations[index] = 0.0;
+      if (has_velocity_state_interface_ && has_velocity_command_interface_) {
+        error.velocities[index] = desired.velocities[index] - current.velocities[index];
+      }
+      if (has_acceleration_state_interface_ && has_acceleration_command_interface_) {
+        error.accelerations[index] = desired.accelerations[index] - current.accelerations[index];
+      }
   };
 
   // Check if a new external message has been received from nonRT threads
@@ -89,12 +93,43 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   resize_joint_trajectory_point(state_current, joint_num);
 
   // current state update
-  for (size_t index = 0; index < joint_num; ++index) {
-    state_current.positions[index] = joint_position_state_interface_[index].get().get_value();
-    state_current.velocities[index] = joint_velocity_state_interface_[index].get().get_value();
-    state_current.accelerations[index] = 0.0;
-  }
+  auto assign_point_from_interface = [&, joint_num](
+    std::vector<double> & trajectory_point_interface, const auto & joint_inteface)
+    {
+      for (auto index = 0ul; index < joint_num; ++index) {
+        trajectory_point_interface[index] = joint_inteface[index].get().get_value();
+      }
+    };
+  // TODO(anyone): can I here also use const on joint_interface since the reference_wrapper is not
+  // changed, but its value only?
+  auto assign_interface_from_point = [&, joint_num](
+    auto & joint_inteface, const std::vector<double> & trajectory_point_interface)
+    {
+      for (auto index = 0ul; index < joint_num; ++index) {
+        joint_inteface[index].get().set_value(trajectory_point_interface[index]);
+      }
+    };
+
   state_current.time_from_start.set__sec(0);
+
+// Assign values from the hardware
+  // Position states always exist
+  assign_point_from_interface(state_current.positions, joint_state_interface_[0]);
+  // velocity and acceleration states are optional
+  if (has_velocity_state_interface_) {
+    assign_point_from_interface(state_current.velocities, joint_state_interface_[1]);
+    // Acceleration is used only in combination with velocity
+    if (has_acceleration_state_interface_) {
+      assign_point_from_interface(state_current.accelerations, joint_state_interface_[2]);
+    } else {
+      // Make empty so the property is ignored during interpolation
+      state_current.accelerations.clear();
+    }
+  } else {
+    // Make empty so the property is ignored during interpolation
+    state_current.velocities.clear();
+    state_current.accelerations.clear();
+  }
 
   // currently carrying out a trajectory
   if (traj_point_active_ptr_ && !(*traj_point_active_ptr_)->has_trajectory_msg()) {
@@ -123,9 +158,26 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
       bool abort = false;
       bool outside_goal_tolerance = false;
       const bool before_last_point = end_segment_itr != (*traj_point_active_ptr_)->end();
+
+
+      // set values for next hardware write()
+      if (has_position_command_interface_) {
+        assign_interface_from_point(joint_command_interface_[0], state_desired.positions);
+      }
+      if (has_velocity_command_interface_) {
+        assign_interface_from_point(joint_command_interface_[1], state_desired.velocities);
+      }
+      if (has_acceleration_command_interface_) {
+        assign_interface_from_point(joint_command_interface_[2], state_desired.accelerations);
+      }
+      // TODO(anyone): Add here "if using_closed_loop_hw_interface_adapter" (see ROS1) - #171
+//       if (check_if_interface_type_exist(
+//           command_interface_types_, hardware_interface::HW_IF_EFFORT)) {
+//         assign_interface_from_point(joint_command_interface_[3], state_desired.effort);
+//       }
+
       for (size_t index = 0; index < joint_num; ++index) {
         // set values for next hardware write()
-        joint_position_command_interface_[index].get().set_value(state_desired.positions[index]);
         compute_error_for_joint(state_error, index, state_current, state_desired);
 
         if (before_last_point &&
