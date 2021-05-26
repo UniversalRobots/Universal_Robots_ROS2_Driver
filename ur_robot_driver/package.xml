@@ -30,6 +30,7 @@
   <!-- TODO: rosdep cannot find ur_client_library -->
   <depend>ur_client_library</depend>
   <depend>ur_dashboard_msgs</depend>
+  <depend>launch_testing_ament_cmake</depend>
 
   <exec_depend>controller_manager</exec_depend>
 

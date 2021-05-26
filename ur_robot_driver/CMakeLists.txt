@@ -107,3 +107,8 @@ ament_export_dependencies(
 )
 
 ament_package()
+
+if(BUILD_TESTING)
+  find_package(launch_testing_ament_cmake)
+  add_launch_test(test/integration_test.py)
+endif()
