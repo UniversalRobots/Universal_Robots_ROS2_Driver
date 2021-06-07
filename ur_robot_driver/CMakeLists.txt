@@ -36,6 +36,7 @@ add_library(ur_robot_driver_plugin
   SHARED
   src/dashboard_client_ros.cpp
   src/hardware_interface.cpp
+  src/urcl_log_handler.cpp
 )
 target_link_libraries(
   ur_robot_driver_plugin
@@ -56,6 +57,7 @@ pluginlib_export_plugin_description_file(hardware_interface hardware_interface_p
 add_executable(dashboard_client
   src/dashboard_client_ros.cpp
   src/dashboard_client_node.cpp
+  src/urcl_log_handler.cpp
 )
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
