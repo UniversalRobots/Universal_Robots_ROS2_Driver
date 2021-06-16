@@ -1,4 +1,3 @@
-// -- BEGIN LICENSE BLOCK ----------------------------------------------
 // Copyright 2021 Universal Robots A/S
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +25,6 @@
 // published, e.g. “2021”] Universal Robots A/S and/or its licensors”) along with the capitalized section of this notice
 // in all copies of the Source Code. By using the Source Code, you agree to the above terms. For more information,
 // please contact legal@universal-robots.com.
-// -- END LICENSE BLOCK ------------------------------------------------
 
 #ifndef UR_ROBOT_DRIVER__URCL_LOG_HANDLER_HPP_
 #define UR_ROBOT_DRIVER__URCL_LOG_HANDLER_HPP_
