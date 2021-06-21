@@ -100,8 +100,6 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
         trajectory_point_interface[index] = joint_inteface[index].get().get_value();
       }
     };
-  // TODO(anyone): can I here also use const on joint_interface since the reference_wrapper is not
-  // changed, but its value only?
   auto assign_interface_from_point = [&, joint_num](
     auto & joint_inteface, const std::vector<double> & trajectory_point_interface)
     {
