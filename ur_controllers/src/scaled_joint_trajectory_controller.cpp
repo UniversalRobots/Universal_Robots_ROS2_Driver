@@ -60,7 +60,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
 
   auto resize_joint_trajectory_point = [&](trajectory_msgs::msg::JointTrajectoryPoint& point, size_t size) {
     point.positions.resize(size);
-if (has_velocity_state_interface_) {
+    if (has_velocity_state_interface_) {
         point.velocities.resize(size);
       }
       if (has_acceleration_state_interface_) {
