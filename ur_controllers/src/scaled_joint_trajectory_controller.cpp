@@ -167,11 +167,6 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
       if (has_acceleration_command_interface_) {
         assign_interface_from_point(joint_command_interface_[2], state_desired.accelerations);
       }
-      // TODO(anyone): Add here "if using_closed_loop_hw_interface_adapter" (see ROS1) - #171
-//       if (check_if_interface_type_exist(
-//           command_interface_types_, hardware_interface::HW_IF_EFFORT)) {
-//         assign_interface_from_point(joint_command_interface_[3], state_desired.effort);
-//       }
 
       for (size_t index = 0; index < joint_num; ++index) {
         // set values for next hardware write()
