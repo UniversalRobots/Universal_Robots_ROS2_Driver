@@ -132,7 +132,7 @@ if (has_velocity_state_interface_) {
   }
 
   // currently carrying out a trajectory
-  if (traj_point_active_ptr_ && !(*traj_point_active_ptr_)->has_trajectory_msg()) {
+  if (traj_point_active_ptr_ && (*traj_point_active_ptr_)->has_trajectory_msg()) {
     // Main Speed scaling difference...
     // Adjust time with scaling factor
     TimeData time_data;
