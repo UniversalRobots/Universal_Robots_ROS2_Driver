@@ -157,7 +157,6 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
       bool outside_goal_tolerance = false;
       const bool before_last_point = end_segment_itr != (*traj_point_active_ptr_)->end();
 
-
       // set values for next hardware write()
       if (has_position_command_interface_) {
         assign_interface_from_point(joint_command_interface_[0], state_desired.positions);
