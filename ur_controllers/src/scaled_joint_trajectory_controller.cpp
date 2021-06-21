@@ -110,7 +110,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
 
   state_current.time_from_start.set__sec(0);
 
-// Assign values from the hardware
+  // Assign values from the hardware
   // Position states always exist
   assign_point_from_interface(state_current.positions, joint_state_interface_[0]);
   // velocity and acceleration states are optional
