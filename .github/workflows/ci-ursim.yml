@@ -1,9 +1,9 @@
 name: UR Sim
 on:
-  # pull_request:
+  pull_request:
   push:
     branches:
-      - devel
+      - main
 
 jobs:
   ci_binary:
