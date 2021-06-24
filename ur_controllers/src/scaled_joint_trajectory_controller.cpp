@@ -22,6 +22,7 @@
 //----------------------------------------------------------------------
 
 #include <memory>
+#include <vector>
 
 #include "ur_controllers/scaled_joint_trajectory_controller.hpp"
 
@@ -61,22 +62,22 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   auto resize_joint_trajectory_point = [&](trajectory_msgs::msg::JointTrajectoryPoint& point, size_t size) {
     point.positions.resize(size);
     if (has_velocity_state_interface_) {
-        point.velocities.resize(size);
-      }
-      if (has_acceleration_state_interface_) {
-        point.accelerations.resize(size);
-      }
+      point.velocities.resize(size);
+    }
+    if (has_acceleration_state_interface_) {
+      point.accelerations.resize(size);
+    }
   };
   auto compute_error_for_joint = [&](JointTrajectoryPoint& error, int index, const JointTrajectoryPoint& current,
-                                    const JointTrajectoryPoint& desired) {
+                                     const JointTrajectoryPoint& desired) {
     // error defined as the difference between current and desired
     error.positions[index] = angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
-      if (has_velocity_state_interface_ && has_velocity_command_interface_) {
-        error.velocities[index] = desired.velocities[index] - current.velocities[index];
-      }
-      if (has_acceleration_state_interface_ && has_acceleration_command_interface_) {
-        error.accelerations[index] = desired.accelerations[index] - current.accelerations[index];
-      }
+    if (has_velocity_state_interface_ && has_velocity_command_interface_) {
+      error.velocities[index] = desired.velocities[index] - current.velocities[index];
+    }
+    if (has_acceleration_state_interface_ && has_acceleration_command_interface_) {
+      error.accelerations[index] = desired.accelerations[index] - current.accelerations[index];
+    }
   };
 
   // Check if a new external message has been received from nonRT threads
@@ -93,20 +94,18 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
   resize_joint_trajectory_point(state_current, joint_num);
 
   // current state update
-  auto assign_point_from_interface = [&, joint_num](
-    std::vector<double> & trajectory_point_interface, const auto & joint_inteface)
-    {
-      for (auto index = 0ul; index < joint_num; ++index) {
-        trajectory_point_interface[index] = joint_inteface[index].get().get_value();
-      }
-    };
-  auto assign_interface_from_point = [&, joint_num](
-    auto & joint_inteface, const std::vector<double> & trajectory_point_interface)
-    {
-      for (auto index = 0ul; index < joint_num; ++index) {
-        joint_inteface[index].get().set_value(trajectory_point_interface[index]);
-      }
-    };
+  auto assign_point_from_interface = [&, joint_num](std::vector<double>& trajectory_point_interface,
+                                                    const auto& joint_inteface) {
+    for (auto index = 0ul; index < joint_num; ++index) {
+      trajectory_point_interface[index] = joint_inteface[index].get().get_value();
+    }
+  };
+  auto assign_interface_from_point = [&, joint_num](auto& joint_inteface,
+                                                    const std::vector<double>& trajectory_point_interface) {
+    for (auto index = 0ul; index < joint_num; ++index) {
+      joint_inteface[index].get().set_value(trajectory_point_interface[index]);
+    }
+  };
 
   state_current.time_from_start.set__sec(0);
 
