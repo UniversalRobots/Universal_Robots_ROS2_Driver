@@ -26,6 +26,7 @@
 #include <string>
 
 #include "rclcpp/rclcpp.hpp"
+#include "ur_robot_driver/urcl_log_handler.hpp"
 
 int main(int argc, char** argv)
 {
@@ -35,6 +36,8 @@ int main(int argc, char** argv)
   // The IP address under which the robot is reachable.
   std::string robot_ip = node->declare_parameter<std::string>("robot_ip", "192.168.56.101");
   node->get_parameter<std::string>("robot_ip", robot_ip);
+
+  ur_robot_driver::registerUrclLogHandler();
 
   ur_robot_driver::DashboardClientROS client(node, robot_ip);
 
