@@ -29,7 +29,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 2. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```
-   sudo apt install python3-colcon-common-extensions python3-vcstool 
+   sudo apt install python3-colcon-common-extensions python3-vcstool
    ```
 
 3. Create a new ROS2 workspace:
