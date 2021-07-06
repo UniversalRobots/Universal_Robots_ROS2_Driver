@@ -27,13 +27,18 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 1. [Install ROS2 Foxy](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/).
 
-2. Create a new ROS2 workspace:
+2. Make sure that `colcon`, its extensions and `vcs` are installed:
+   ```
+   sudo apt install python3-colcon-common-extensions python3-vcstool
+   ```
+
+3. Create a new ROS2 workspace:
    ```
    export COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
    mkdir -p $COLCON_WS/src
    ```
 
-3. Pull relevant packages, install dependencies, compile, and source the workspace by using:
+4. Pull relevant packages, install dependencies, compile, and source the workspace by using:
    ```
    cd $COLCON_WS
    git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
@@ -63,7 +68,7 @@ To use MoveIt some additional packages should be added into workspace:
 
 2. For installing the necessary URCap and creating a program, please see the individual tutorial on how to [setup a CB3 robot](/ur_robot_driver/doc/install_urcap_cb3.md) or how to [setup an e-Series robot](/ur_robot_driver/doc/install_urcap_e_series.md)
 
-3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers.
+3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers (see details in [Usage](#usage) section).
 
 4. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
 
