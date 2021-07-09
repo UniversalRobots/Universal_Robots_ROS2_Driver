@@ -1,0 +1,15 @@
+name: 'Set issue state'
+
+on:
+  project_card:
+    types: [created, edited, moved]
+
+jobs:
+  set-state:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/issue-states@v2
+        with:
+          github-token: ${{ github.token }}
+          open-issue-columns: 'To do, In progress, Under Review'
+          closed-issue-columns: 'Done'
