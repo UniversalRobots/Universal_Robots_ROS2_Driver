@@ -1,4 +1,4 @@
-name: Source Build foxy
+name: Source Build
 on:
   push:
     branches:
