@@ -1,12 +1,6 @@
 name: Coverage Build
 on:
   pull_request:
-  push:
-    branches:
-      - main
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '58 8 * * *'
 
 jobs:
   coverage:
