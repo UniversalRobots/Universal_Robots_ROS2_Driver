@@ -40,4 +40,7 @@
      fake_sensor_commands="$(arg fake_sensor_commands)"
      headless_mode="$(arg headless_mode)"
      initial_positions="${load_yaml(initial_positions_file)}" />
+
+  <!-- Ignition -->
+  <xacro:include filename="ur_ignition_plugins.xacro" />
 </robot>
