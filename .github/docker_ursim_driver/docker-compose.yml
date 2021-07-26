@@ -1,0 +1,28 @@
+version: "3.3"
+services:
+  ursim:
+   image: ursim_image_compose
+   privileged: true
+   environment:
+    - ROBOT_MODEL=UR5
+    - DISPLAY=:1
+   networks:
+    static_test_net:
+     ipv4_address: 192.168.56.101
+   ports:
+      - "5900:5900"
+      - "29999:29999"
+      - "8080:8080"
+      - "30001-30004:30001-30004"   
+   build:
+    context: ursim/.
+    dockerfile: g5/Dockerfile
+    args:
+     URSIM: "https://s3-eu-west-1.amazonaws.com/ur-support-site/118926/URSim_Linux-5.11.1.108318.tar.gz"
+     VERSION: 5.11.1.108318
+networks:
+ static_test_net:
+  driver: bridge
+  ipam:
+   config:
+    - subnet: 192.168.0.0/16
