@@ -1,7 +1,20 @@
 version: "3.3"
 services:
+  driver:
+   image: driver_img
+   privileged: true
+   environment:
+    - DISPLAY=:1
+   networks:
+    static_test_net:
+     ipv4_address: 192.168.56.1
+   ports:
+      - "5566:5566"
+   build:
+    context: driver/.
+    dockerfile: Dockerfile
   ursim:
-   image: ursim_image_compose
+   image: ursim_img
    privileged: true
    environment:
     - ROBOT_MODEL=UR5
