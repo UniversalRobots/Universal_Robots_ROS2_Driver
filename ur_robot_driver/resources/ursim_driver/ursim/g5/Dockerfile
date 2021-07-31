@@ -61,7 +61,7 @@ RUN \
     tar xvzf URSim-Linux.tar.gz && \
     # Remove the tarball
     rm URSim-Linux.tar.gz && \
-    # Rename the URSim folder to jus ursim
+    # Rename the URSim folder to just ursim
     mv  /ursim* /ursim
 
 RUN \
