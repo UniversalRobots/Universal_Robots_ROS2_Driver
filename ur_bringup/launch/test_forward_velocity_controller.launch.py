@@ -28,16 +28,17 @@ def generate_launch_description():
         [FindPackageShare("ur_bringup"), "config", "test_velocity_goal_publishers_config.yaml"]
     )
 
-    return LaunchDescription([
-      Node(
-        package='ros2_control_test_nodes',
-        executable='publisher_forward_position_controller',
-        name='publisher_forward_velocity_controller',
-        parameters=[velocity_goals],
-        output={
-          'stdout': 'screen',
-          'stderr': 'screen',
-          },
-        )
-
-    ])
+    return LaunchDescription(
+        [
+            Node(
+                package="ros2_control_test_nodes",
+                executable="publisher_forward_position_controller",
+                name="publisher_forward_velocity_controller",
+                parameters=[velocity_goals],
+                output={
+                  "stdout": "screen",
+                  "stderr": "screen",
+                  },
+            )
+        ]
+    )
