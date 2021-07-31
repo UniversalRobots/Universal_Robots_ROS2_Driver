@@ -111,4 +111,4 @@ ADD ./aux/ros_control.urscript /ursim/programs.UR5/
 
 # This wil start the simulator
 ENTRYPOINT ["/entrypoint.sh"]
-#CMD ["bash"]
+

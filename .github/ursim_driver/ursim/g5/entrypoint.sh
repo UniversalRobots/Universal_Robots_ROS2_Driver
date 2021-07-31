@@ -7,3 +7,4 @@ x11vnc -create -bg -quiet -forever -shared -display :1
 
 # Execute URSim
 /ursim/start-ursim.sh ${ROBOT_MODEL}
+

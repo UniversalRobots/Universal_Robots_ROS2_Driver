@@ -11,8 +11,9 @@ docker-compose up
 ```
 
 
+
 Start vncviewer by typing `vncviewer` in the terminal. When the containers are up and running, you should be 
-able to see active connections.
+able to see active connections. Use 0.0.0.0:5900 for ursim and 0.0.0.0:5566 for driver connection.
  
  ![vncviewer_list](resources/vncviewer_list.png)
  

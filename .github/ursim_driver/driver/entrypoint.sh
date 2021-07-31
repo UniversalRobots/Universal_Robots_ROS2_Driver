@@ -10,3 +10,4 @@ source /~/workspace/ros_ws_foxy_ur_driver/install/setup.bash && ros2 launch ur_b
 
 
 
+
