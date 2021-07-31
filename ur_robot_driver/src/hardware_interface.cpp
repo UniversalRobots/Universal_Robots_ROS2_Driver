@@ -508,6 +508,8 @@ return_type URPositionHardwareInterface::write()
 
     return return_type::OK;
   }
+
+  return return_type::ERROR;
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
