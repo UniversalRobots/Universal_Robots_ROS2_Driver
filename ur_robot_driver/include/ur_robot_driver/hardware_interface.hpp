@@ -59,6 +59,14 @@ enum class PausingState
   RAMPUP
 };
 
+enum StoppingInterface
+{
+  NONE,
+  STOP_POSITION,
+  STOP_VELOCITY
+
+};
+
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
  * driver. It contains the read and write methods of the main control loop and registers various ROS
@@ -181,7 +189,7 @@ protected:
   double pausing_ramp_up_increment_;
 
   // resources switching aux vars
-  std::vector<bool> stop_modes_;
+  std::vector<uint> stop_modes_;
   std::vector<std::string> start_modes_;
   bool position_controller_running_;
   bool velocity_controller_running_;

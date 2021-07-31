@@ -53,7 +53,8 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  stop_modes_ = { false, false, false, false, false, false };
+  stop_modes_ = { StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE,
+                  StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE };
   start_modes_ = { hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
                    hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
                    hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION };
@@ -606,7 +607,7 @@ return_type URPositionHardwareInterface::prepare_command_mode_switch(const std::
     }
   }
   // set new mode to all interfaces at the same time
-  if (start_modes_.size() != 0 && start_modes_.size() != info_.joints.size()) {
+  if (start_modes_.size() != 0 && start_modes_.size() != 6) {
     ret_val = hardware_interface::return_type::ERROR;
   }
 
@@ -619,15 +620,17 @@ return_type URPositionHardwareInterface::prepare_command_mode_switch(const std::
   // add stop interface per joint in tmp var for later check
   for (const auto& key : stop_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
-      if (key.find(info_.joints[i].name) != std::string::npos) {
-        stop_modes_.push_back(true);
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
+        stop_modes_.push_back(StoppingInterface::STOP_POSITION);
+      }
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
+        stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
       }
     }
   }
-
   // stop all interfaces at the same time
-  if (stop_modes_.size() != 0 && stop_modes_.size() != info_.joints.size() &&
-      !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin())) {
+  if (stop_modes_.size() != 0 &&
+      (stop_modes_.size() != 6 || !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin()))) {
     ret_val = hardware_interface::return_type::ERROR;
   }
 
@@ -640,17 +643,17 @@ return_type URPositionHardwareInterface::perform_command_mode_switch(const std::
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-  if (start_interfaces.size() == 0) {
-    ret_val = hardware_interface::return_type::ERROR;
-  } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
-                                                   hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
+  if (start_modes_.size() != 0 &&
+      std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
     position_controller_running_ = true;
     velocity_controller_running_ = false;
+    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
 
   } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
                                                    hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
     velocity_controller_running_ = true;
     position_controller_running_ = false;
+    urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   }
   return ret_val;
 }
