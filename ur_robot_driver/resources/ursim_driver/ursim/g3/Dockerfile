@@ -70,11 +70,11 @@ RUN \
     cd /ursim && \
     # Stop install of unnecessary packages and install required ones quietly
     sed -i 's|apt-get -y install|apt-get -qy install --no-install-recommends|g' ./install.sh && \
-    # Skip xterm command. We dont have a desktop
+    # Skip xterm command. We don't have a desktop
     sed -i 's|tty -s|(exit 0)|g' install.sh && \
     # Skip Check of Java Version as we have the correct installed and the command will fail
     sed -i 's|needToInstallJava$|(exit 0)|g' install.sh && \
-    # Skip install of desktop shortcuts - we dont have a desktop
+    # Skip install of desktop shortcuts - we don't have a desktop
     sed -i '/for TYPE in UR3 UR5 UR10/,$ d' ./install.sh  && \
     # Replace libcurl3 with libcurl4 else the installation will fail
     sed -i 's/libcurl3/libcurl4/g' ./install.sh  && \
