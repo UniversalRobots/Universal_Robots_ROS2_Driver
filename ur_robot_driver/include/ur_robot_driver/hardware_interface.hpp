@@ -64,7 +64,6 @@ enum StoppingInterface
   NONE,
   STOP_POSITION,
   STOP_VELOCITY
-
 };
 
 /*!
