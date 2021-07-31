@@ -63,7 +63,3 @@ will result with the following app status and report:
 
 ## Driver only
 ...
-
-
-
-
