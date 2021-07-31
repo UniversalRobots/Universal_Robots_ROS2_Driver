@@ -36,9 +36,9 @@ def generate_launch_description():
                 name="publisher_forward_velocity_controller",
                 parameters=[velocity_goals],
                 output={
-                  "stdout": "screen",
-                  "stderr": "screen",
-                  },
+                    "stdout": "screen",
+                    "stderr": "screen",
+                },
             )
         ]
     )
