@@ -90,6 +90,12 @@ public:
   return_type read() final;
   return_type write() final;
 
+  return_type prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                          const std::vector<std::string>& stop_interfaces) final;
+
+  return_type perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                          const std::vector<std::string>& stop_interfaces) final;
+
   /*!
    * \brief Callback to handle a change in the current state of the URCaps program running on the
    * robot. Executed only on the state change.
@@ -173,6 +179,12 @@ protected:
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
+
+  // resources switching aux vars
+  std::vector<bool> stop_modes_;
+  std::vector<std::string> start_modes_;
+  bool position_controller_running_;
+  bool velocity_controller_running_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
 };
