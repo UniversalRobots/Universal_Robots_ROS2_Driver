@@ -88,6 +88,8 @@ RUN \
     #
     echo "Installed URSim"
 
+    ENV PATH "$PATH:/ursim/usr/bin"
+
 RUN \
     echo "**** Clean Up ****" && \
     rm -rf \
