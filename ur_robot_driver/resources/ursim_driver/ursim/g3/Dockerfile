@@ -93,7 +93,7 @@ RUN \
     /var/tmp/*
 
 # Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
+COPY g3/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # VNC viewer
@@ -103,5 +103,8 @@ EXPOSE 502
 # Interface Ports
 EXPOSE 29999
 EXPOSE 30001-30004
+
+# Install the ExternalControl URCap
+ADD ./aux/externalcontrol-1.0.5.urcap /ursim/GUI/bundle/com.fzi.externalcontrol-1.0.5.jar
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -88,6 +88,8 @@ RUN \
     #
     echo "Installed URSim"
 
+    ENV PATH "$PATH:/ursim/usr/bin"
+
 RUN \
     echo "**** Clean Up ****" && \
     rm -rf \
@@ -106,8 +108,9 @@ EXPOSE 502
 # Interface Ports
 EXPOSE 29999
 EXPOSE 30001-30004
-ADD ./aux/externalcontrol-1.0.5.urcap /ursim/programs.UR5/
-ADD ./aux/ros_control.urscript /ursim/programs.UR5/
+
+# Install the ExternalControl URCap
+ADD ./aux/externalcontrol-1.0.5.urcap /ursim/GUI/bundle/com.fzi.externalcontrol-1.0.5.jar
 
 # This will start the simulator
 ENTRYPOINT ["/entrypoint.sh"]
