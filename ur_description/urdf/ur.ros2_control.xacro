@@ -91,6 +91,7 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
+        <param name="initial_position">-1.57</param>  <!-- initial position for the FakeSystem -->
       </joint>
       <joint name="${prefix}wrist_2_joint">
         <command_interface name="position">

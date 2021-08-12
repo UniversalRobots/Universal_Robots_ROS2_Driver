@@ -23,7 +23,7 @@ publisher_scaled_joint_trajectory_controller:
       shoulder_pan_joint: [-0.1,0.1]
       shoulder_lift_joint: [-1.6,-1.5]
       elbow_joint: [-0.1,0.1]
-      wrist_1_joint: [-0.1,0.1]
+      wrist_1_joint: [-1.6,-1.5]
       wrist_2_joint: [-0.1,0.1]
       wrist_3_joint: [-0.1,0.1]
 
@@ -52,6 +52,6 @@ publisher_joint_trajectory_controller:
       shoulder_pan_joint: [-0.1,0.1]
       shoulder_lift_joint: [-1.6,-1.5]
       elbow_joint: [-0.1,0.1]
-      wrist_1_joint: [-0.1,0.1]
+      wrist_1_joint: [-1.6,-1.5]
       wrist_2_joint: [-0.1,0.1]
       wrist_3_joint: [-0.1,0.1]
