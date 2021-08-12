@@ -13,6 +13,8 @@ services:
    build:
     context: driver/.
     dockerfile: Dockerfile
+   depends_on:
+      - "ursim"
   ursim:
    image: ursim_img
    privileged: true
@@ -27,6 +29,8 @@ services:
       - "29999:29999"
       - "8080:8080"
       - "30001-30004:30001-30004"
+   volumes:
+      - ./ursim/aux/.vol/:/ursim/programs
    build:
     context: ursim/.
     dockerfile: g5/Dockerfile
