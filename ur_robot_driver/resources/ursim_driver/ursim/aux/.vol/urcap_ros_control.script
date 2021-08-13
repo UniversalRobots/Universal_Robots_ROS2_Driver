@@ -12,7 +12,7 @@ def urcap_ros_control():
   set_tool_digital_output_mode(1, 1)
   set_tool_voltage(0)
   set_gravity([0.0, 0.0, 9.82])
-  set_pos([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+  set_pos([0.0, -1.57, 0.0, -1.57, 0.0, 0.0])
   step_count_83d7dc13_a399_4436_b1a3_80225de6fe99 = 0.0
   thread Step_Counter_Thread_57f93aa2_2866_4238_bbd0_a430062f9a61():
     while (True):
@@ -134,7 +134,7 @@ def urcap_ros_control():
  # NODE_CONTROL_LOOP_BEGINS
 
  socket_open("192.168.56.1", 50001, "reverse_socket")
-
+ 
  control_mode = MODE_UNINITIALIZED
  thread_move = 0
  global keepalive = -2

@@ -42,12 +42,17 @@ RUN git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.gi
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y xvfb \
-    x11vnc
+    x11vnc \
+    netcat \
+    && rm -rf /var/lib/apt/lists/*
 
 # VNC viewer
 EXPOSE 5566
 
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+COPY ./wait_dashboard_server.sh /wait_dashboard_server.sh
+RUN chmod 755 /wait_dashboard_server.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
