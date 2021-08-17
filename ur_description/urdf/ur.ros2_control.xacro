@@ -51,6 +51,7 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
+        <param name="initial_position">0.0</param>  <!-- initial position for the FakeSystem -->
       </joint>
       <joint name="${prefix}shoulder_lift_joint">
         <command_interface name="position">
@@ -78,6 +79,7 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
+        <param name="initial_position">0.0</param>  <!-- initial position for the FakeSystem -->
       </joint>
       <joint name="${prefix}wrist_1_joint">
         <command_interface name="position">
@@ -105,6 +107,7 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
+        <param name="initial_position">0.0</param>  <!-- initial position for the FakeSystem -->
       </joint>
       <joint name="${prefix}wrist_3_joint">
         <command_interface name="position">
@@ -118,6 +121,7 @@
         <state_interface name="position"/>
         <state_interface name="velocity"/>
         <state_interface name="effort"/>
+        <param name="initial_position">0.0</param>  <!-- initial position for the FakeSystem -->
       </joint>
       <sensor name="tcp_fts_sensor">
         <state_interface name="force.x"/>
