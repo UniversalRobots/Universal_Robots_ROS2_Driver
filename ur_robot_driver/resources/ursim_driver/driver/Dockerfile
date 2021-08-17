@@ -34,6 +34,9 @@ ARG COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
 WORKDIR $COLCON_WS
 RUN git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver \
     && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos \
+    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/MoveIt_Support.repos \
+    && cd src/moveit2 && git checkout foxy && cd ../../ \
+    && vcs import src --skip-existing --input src/moveit2/moveit2.repos \
     # First fix, adding rosdep update
     && apt-get update && rosdep update \
     && rosdep install --ignore-src --from-paths src -y -r \

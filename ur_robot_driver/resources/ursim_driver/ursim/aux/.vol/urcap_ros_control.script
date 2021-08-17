@@ -134,7 +134,7 @@ def urcap_ros_control():
  # NODE_CONTROL_LOOP_BEGINS
 
  socket_open("192.168.56.1", 50001, "reverse_socket")
- 
+
  control_mode = MODE_UNINITIALIZED
  thread_move = 0
  global keepalive = -2
