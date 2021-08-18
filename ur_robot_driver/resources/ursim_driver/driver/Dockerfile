@@ -28,19 +28,38 @@
 # please contact legal@universal-robots.com.
 # -- END LICENSE BLOCK ------------------------------------------------
 
-FROM ros:foxy
+ARG ROS2_DISTRO
 
-ARG COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
+FROM ros:$ROS2_DISTRO
+
+ARG ROS2_DISTRO
+ARG BUILD_MOVEIT2=0
+
+#ENV ROS2_DISTRO_ENV=$ROS2_DISTRO
+#ENV BUILD_MOVEIT2_ENV=$BUILD_MOVEIT2
+
+RUN echo "${ROS2_DISTRO}"
+RUN echo "${BUILD_MOVEIT2}"
+
+ARG COLCON_WS=~/workspace/ros_ws_ur_driver
 WORKDIR $COLCON_WS
 RUN git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver \
-    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos \
-    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/MoveIt_Support.repos \
-    && cd src/moveit2 && git checkout foxy && cd ../../ \
-    && vcs import src --skip-existing --input src/moveit2/moveit2.repos \
-    # First fix, adding rosdep update
-    && apt-get update && rosdep update \
+    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
+
+RUN if [ $BUILD_MOVEIT2 = 1 ] ; then \
+        echo 'BUILDING MOVEIT2!!' ; \
+    	vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/MoveIt_Support.repos; \
+        if [ "$ROS2_DISTRO" = "foxy" ] ; then \
+    		echo 'CHECKING OUT MOVEIT2 ON FOXY BRANCH!'; \
+		cd src/moveit2 && git checkout foxy && cd ../../; \
+    	fi; \
+        vcs import src --skip-existing --input src/moveit2/moveit2.repos; \
+    else echo 'NOT BUILDING MOVEIT2!!'; \
+    fi;
+
+RUN apt-get update && rosdep update \
     && rosdep install --ignore-src --from-paths src -y -r \
-    && /bin/bash -c "source /opt/ros/foxy/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release" \
+    && /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release" \
     && echo "source install/setup.bash" >> /root/.bashrc \
     && rm -rf /var/lib/apt/lists/*
 

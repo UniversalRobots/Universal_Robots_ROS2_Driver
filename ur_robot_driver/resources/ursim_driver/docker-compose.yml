@@ -13,6 +13,9 @@ services:
    build:
     context: driver/.
     dockerfile: Dockerfile
+    args:
+    - ROS2_DISTRO=${ROS2_DISTRO}
+    - BUILD_MOVEIT2=${BUILD_MOVEIT2}
    depends_on:
       - "ursim"
   ursim:
