@@ -144,6 +144,8 @@ The most relevant arguments are the following:
    ```
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
+## Usage with official UR simulator
+The docker-compose setup is prepared for usage of driver with the official UR simulator. Follow instructions [here](ur_robot_driver/resources/ursim_driver/README.md).
 
 ## Expected Changes in the Near Future
 
