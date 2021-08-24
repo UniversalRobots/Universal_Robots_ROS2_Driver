@@ -13,8 +13,8 @@ scale:
   joint: 0.01
 
 ## Properties of outgoing commands
-#publish_period: 0.002  # 1/Nominal publish rate [seconds]
-publish_period: 0.034  # 1/Nominal publish rate [seconds]
+publish_period: 0.002  # 1/Nominal publish rate [seconds]
+#publish_period: 0.034  # 1/Nominal publish rate [seconds]
 
 # What type of topic does your robot driver expect?
 # Currently supported are std_msgs/Float64MultiArray or trajectory_msgs/JointTrajectory
