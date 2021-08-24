@@ -35,9 +35,9 @@ def load_file(package_name, file_path):
     absolute_file_path = os.path.join(package_path, file_path)
 
     try:
-        with open(absolute_file_path, "r") as file:
+        with open(absolute_file_path) as file:
             return file.read()
-    except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+    except OSError:  # parent of IOError, OSError *and* WindowsError where available
         return None
 
 
@@ -46,9 +46,9 @@ def load_yaml(package_name, file_path):
     absolute_file_path = os.path.join(package_path, file_path)
 
     try:
-        with open(absolute_file_path, "r") as file:
+        with open(absolute_file_path) as file:
             return yaml.safe_load(file)
-    except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+    except OSError:  # parent of IOError, OSError *and* WindowsError where available
         return None
 
 
@@ -266,9 +266,7 @@ def generate_launch_description():
     pose_tracking_params = {"moveit_servo": pose_tracking_yaml}
 
     # Get parameters for the Servo node
-    servo_yaml = load_yaml(
-        "ur_moveit_config", "config/ur_servo.yaml"
-    )
+    servo_yaml = load_yaml("ur_moveit_config", "config/ur_servo.yaml")
     servo_params = {"moveit_servo": servo_yaml}
 
     kinematics_yaml = load_yaml("ur_moveit_config", "config/kinematics.yaml")
@@ -277,8 +275,7 @@ def generate_launch_description():
 
     # RViz
     rviz_config_file = (
-        get_package_share_directory("moveit_servo")
-        + "/config/demo_rviz_pose_tracking.rviz"
+        get_package_share_directory("moveit_servo") + "/config/demo_rviz_pose_tracking.rviz"
     )
     rviz_node = Node(
         package="rviz2",
@@ -326,4 +323,3 @@ def generate_launch_description():
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
-
