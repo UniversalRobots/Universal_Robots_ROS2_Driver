@@ -12,14 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Author: Denis Stogl
+# Author: Lovro Ivanov
+#
+# Description: After a robot has been loaded, if velocity controller is up
+# and running, moveit servo will take control of the robot by  gradually
+# increasing z-component of the robot_link_command_frame
 
+import os
+import yaml
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+
+
+def load_file(package_name, file_path):
+    package_path = get_package_share_directory(package_name)
+    absolute_file_path = os.path.join(package_path, file_path)
+
+    try:
+        with open(absolute_file_path, "r") as file:
+            return file.read()
+    except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+        return None
+
+
+def load_yaml(package_name, file_path):
+    package_path = get_package_share_directory(package_name)
+    absolute_file_path = os.path.join(package_path, file_path)
+
+    try:
+        with open(absolute_file_path, "r") as file:
+            return yaml.safe_load(file)
+    except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+        return None
 
 
 def generate_launch_description():
@@ -59,21 +89,6 @@ def generate_launch_description():
     # General arguments
     declared_arguments.append(
         DeclareLaunchArgument(
-            "runtime_config_package",
-            default_value="ur_bringup",
-            description='Package with the controller\'s configuration in "config" folder. \
-        Usually the argument is not set, it enables use of a custom setup.',
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "controllers_file",
-            default_value="ur_controllers.yaml",
-            description="YAML file with the controllers configuration.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "description_package",
             default_value="ur_description",
             description="Description package with robot URDF/XACRO files. Usually the argument \
@@ -85,6 +100,21 @@ def generate_launch_description():
             "description_file",
             default_value="ur.urdf.xacro",
             description="URDF/XACRO description file with the robot.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "moveit_config_package",
+            default_value="ur_moveit_config",
+            description="MoveIt config package with robot SRDF/XACRO files. Usually the argument \
+        is not set, it enables use of a custom moveit config.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "moveit_config_file",
+            default_value="ur.srdf.xacro",
+            description="MoveIt SRDF/XACRO description file with the robot.",
         )
     )
     declared_arguments.append(
@@ -112,13 +142,6 @@ def generate_launch_description():
         )
     )
     declared_arguments.append(
-        DeclareLaunchArgument(
-            "robot_controller",
-            default_value="joint_trajectory_controller",
-            description="Robot controller to start.",
-        )
-    )
-    declared_arguments.append(
         DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
     )
 
@@ -129,14 +152,13 @@ def generate_launch_description():
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
     # General arguments
-    runtime_config_package = LaunchConfiguration("runtime_config_package")
-    controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
+    moveit_config_package = LaunchConfiguration("moveit_config_package")
+    moveit_config_file = LaunchConfiguration("moveit_config_file")
     prefix = LaunchConfiguration("prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
-    robot_controller = LaunchConfiguration("robot_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
 
     joint_limit_params = PathJoinSubstitution(
@@ -192,7 +214,9 @@ def generate_launch_description():
             safety_k_position,
             " ",
             "name:=",
-            ur_type,
+            # Also ur_type parameter could be used but then the planning group names in yaml
+            # configs has to be updated!
+            "ur",
             " ",
             "script_filename:=",
             script_filename,
@@ -216,105 +240,90 @@ def generate_launch_description():
     )
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+    # MoveIt Configuration
+    robot_description_semantic_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution(
+                [FindPackageShare(moveit_config_package), "srdf", moveit_config_file]
+            ),
+            " ",
+            "name:=",
+            # Also ur_type parameter could be used but then the planning group names in yaml
+            # configs has to be updated!
+            "ur",
+            " ",
+            "prefix:=",
+            prefix,
+            " ",
+        ]
     )
+    robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(description_package), "rviz", "view_robot.rviz"]
+    # Get parameters for the Pose Tracking node
+    pose_tracking_yaml = load_yaml("moveit_servo", "config/pose_tracking_settings.yaml")
+    pose_tracking_params = {"moveit_servo": pose_tracking_yaml}
+
+    # Get parameters for the Servo node
+    servo_yaml = load_yaml(
+        "ur_moveit_config", "config/ur_servo.yaml"
     )
+    servo_params = {"moveit_servo": servo_yaml}
 
-    control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[robot_description, robot_controllers],
-        output={
-            "stdout": "screen",
-            "stderr": "screen",
-        },
+    kinematics_yaml = load_yaml("ur_moveit_config", "config/kinematics.yaml")
+
+    joint_limits_yaml = {"robot_description_planning": joint_limit_params}
+
+    # RViz
+    rviz_config_file = (
+        get_package_share_directory("moveit_servo")
+        + "/config/demo_rviz_pose_tracking.rviz"
     )
-
-    dashboard_client_node = Node(
-        package="ur_robot_driver",
-        executable="dashboard_client",
-        name="dashboard_client",
-        output="screen",
-        emulate_tty=True,
-        parameters=[{"robot_ip": robot_ip}],
-    )
-
-    robot_state_publisher_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[robot_description],
-    )
-
     rviz_node = Node(
         package="rviz2",
         condition=IfCondition(launch_rviz),
         executable="rviz2",
         name="rviz2",
+        # prefix=['xterm -e gdb -ex run --args'],
         output="log",
         arguments=["-d", rviz_config_file],
-    )
-
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
-
-    io_and_status_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=["io_and_status_controller", "-c", "/controller_manager"],
-    )
-
-    speed_scaling_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=[
-            "speed_scaling_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
+        parameters=[
+            robot_description,
+            robot_description_semantic,
+            kinematics_yaml,
+            joint_limits_yaml,
         ],
     )
 
-    force_torque_sensor_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=[
-            "force_torque_sensor_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
+    # Publishes tf's for the robot
+    robot_state_publisher = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        output="screen",
+        parameters=[robot_description],
+    )
+
+    pose_tracking_node = Node(
+        package="moveit_servo",
+        executable="servo_pose_tracking_demo",
+        # prefix=['xterm -e gdb -ex run --args'],
+        output="screen",
+        parameters=[
+            robot_description,
+            robot_description_semantic,
+            kinematics_yaml,
+            pose_tracking_params,
+            servo_params,
+            joint_limits_yaml,
         ],
-    )
-
-    robot_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner.py",
-        arguments=[robot_controller, "-c", "/controller_manager"],
-    )
-
-    velocity_controller_spawner = Node(
-        package="controller_manager",
-        condition=IfCondition(str(robot_controller != "forward_velocity_controller").lower()),
-        executable="spawner.py",
-        arguments=["forward_velocity_controller", "-c", "/controller_manager", "--stopped"],
     )
 
     nodes_to_start = [
-        control_node,
-        dashboard_client_node,
-        robot_state_publisher_node,
         rviz_node,
-        joint_state_broadcaster_spawner,
-        io_and_status_controller_spawner,
-        speed_scaling_state_broadcaster_spawner,
-        force_torque_sensor_broadcaster_spawner,
-        robot_controller_spawner,
-        velocity_controller_spawner,
+        pose_tracking_node,
+        robot_state_publisher,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
+

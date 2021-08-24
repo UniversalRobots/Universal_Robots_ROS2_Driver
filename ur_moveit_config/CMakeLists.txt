@@ -3,7 +3,7 @@ project(ur_moveit_config)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY config rviz srdf
+install(DIRECTORY config rviz srdf launch
   DESTINATION share/${PROJECT_NAME}
 )
 
