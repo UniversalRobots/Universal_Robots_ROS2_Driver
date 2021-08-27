@@ -123,29 +123,6 @@ controller_interface::return_type ur_controllers::GPIOController::update()
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  try {
-    // register publisher
-    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
-
-    tool_data_pub_ =
-        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
-
-    robot_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", rclcpp::SystemDefaultsQoS());
-
-    safety_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", rclcpp::SystemDefaultsQoS());
-
-    set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
-        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
-
-    set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
-        "~/set_speed_slider",
-        std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
-  } catch (...) {
-    return LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
-
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -220,12 +197,45 @@ void GPIOController::publishSafetyMode()
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  try {
+    // register publisher
+    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
+
+    tool_data_pub_ =
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
+
+    robot_mode_pub_ =
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", rclcpp::SystemDefaultsQoS());
+
+    safety_mode_pub_ =
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", rclcpp::SystemDefaultsQoS());
+
+    set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
+        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
+        "~/set_speed_slider",
+        std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
+  } catch (...) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  try {
+    // reset publisher
+    io_pub_.reset();
+    tool_data_pub_.reset();
+    robot_mode_pub_.reset();
+    safety_mode_pub_.reset();
+    set_io_srv_.reset();
+    set_speed_slider_srv_.reset();
+  } catch (...) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
