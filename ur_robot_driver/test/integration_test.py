@@ -115,24 +115,20 @@ class IOTest(unittest.TestCase):
         empty_req = Trigger.Request()
         get_robot_mode_req = GetRobotMode.Request()
 
-        self.power_on_client.call_async(empty_req)
+        self.call_service(self.power_on_client, empty_req)
         end_time = time.time() + 10
         mode = RobotMode.DISCONNECTED
         while mode not in (RobotMode.IDLE, RobotMode.RUNNING) and time.time() < end_time:
-            future = self.get_robot_mode_client.call_async(get_robot_mode_req)
-            while future.done() is False:
-                rclpy.spin_once(self.node, timeout_sec=0.1)
-            mode = future.result().robot_mode.mode
+            result = self.call_service(self.get_robot_mode_client, get_robot_mode_req)
+            mode = result.robot_mode.mode
 
         self.assertIn(mode, (RobotMode.IDLE, RobotMode.RUNNING))
 
-        self.brake_release_client.call_async(empty_req)
+        self.call_service(self.brake_release_client, empty_req)
         end_time = time.time() + 10
         while mode != RobotMode.RUNNING and time.time() < end_time:
-            future = self.get_robot_mode_client.call_async(get_robot_mode_req)
-            while future.done() is False:
-                rclpy.spin_once(self.node, timeout_sec=0.1)
-            mode = future.result().robot_mode.mode
+            result = self.call_service(self.get_robot_mode_client, get_robot_mode_req)
+            mode = result.robot_mode.mode
 
         self.assertEqual(mode, RobotMode.RUNNING)
 
@@ -152,7 +148,7 @@ class IOTest(unittest.TestCase):
         set_io_req.pin = pin
         set_io_req.state = 1.0
 
-        self.set_io_client.call_async(set_io_req)
+        self.call_service(self.set_io_client, set_io_req)
         pin_state = False
 
         end_time = time.time() + 5
@@ -164,7 +160,7 @@ class IOTest(unittest.TestCase):
         self.assertEqual(pin_state, 1)
 
         set_io_req.state = 0.0
-        self.set_io_client.call_async(set_io_req)
+        self.call_service(self.set_io_client, set_io_req)
 
         end_time = time.time() + 5
         while pin_state and time.time() < end_time:
@@ -178,3 +174,11 @@ class IOTest(unittest.TestCase):
 
     def io_msg_cb(self, msg):
         self.io_msg = msg
+
+    def call_service(self, client, request):
+        future = client.call_async(request)
+        rclpy.spin_until_future_complete(self.node, future)
+        if future.result() is not None:
+            return future.result()
+        else:
+            raise Exception(f"Exception while calling service: {future.exception()}")
