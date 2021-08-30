@@ -30,17 +30,6 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
-def load_file(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-
-    try:
-        with open(absolute_file_path) as file:
-            return file.read()
-    except OSError:  # parent of IOError, OSError *and* WindowsError where available
-        return None
-
-
 def load_yaml(package_name, file_path):
     package_path = get_package_share_directory(package_name)
     absolute_file_path = os.path.join(package_path, file_path)
@@ -274,8 +263,8 @@ def generate_launch_description():
     joint_limits_yaml = {"robot_description_planning": joint_limit_params}
 
     # RViz
-    rviz_config_file = (
-        get_package_share_directory("moveit_servo") + "/config/demo_rviz_pose_tracking.rviz"
+    rviz_config_file = PathJoinSubstitution(
+        [FindPackageShare("moveit_servo"), "config", "demo_rviz_pose_tracking.rviz"]
     )
     rviz_node = Node(
         package="rviz2",
