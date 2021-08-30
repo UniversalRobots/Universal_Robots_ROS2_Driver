@@ -297,13 +297,6 @@ def generate_launch_description():
         arguments=[robot_controller, "-c", "/controller_manager"],
     )
 
-    velocity_controller_spawner = Node(
-        package="controller_manager",
-        condition=IfCondition(str(robot_controller != "forward_velocity_controller").lower()),
-        executable="spawner.py",
-        arguments=["forward_velocity_controller", "-c", "/controller_manager", "--stopped"],
-    )
-
     nodes_to_start = [
         control_node,
         dashboard_client_node,
@@ -314,7 +307,6 @@ def generate_launch_description():
         speed_scaling_state_broadcaster_spawner,
         force_torque_sensor_broadcaster_spawner,
         robot_controller_spawner,
-        velocity_controller_spawner,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)

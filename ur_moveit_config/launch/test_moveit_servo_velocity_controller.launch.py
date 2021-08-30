@@ -282,14 +282,6 @@ def generate_launch_description():
         ],
     )
 
-    # Publishes tf's for the robot
-    robot_state_publisher = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        output="screen",
-        parameters=[robot_description],
-    )
-
     pose_tracking_node = Node(
         package="moveit_servo",
         executable="servo_pose_tracking_demo",
@@ -308,7 +300,6 @@ def generate_launch_description():
     nodes_to_start = [
         rviz_node,
         pose_tracking_node,
-        robot_state_publisher,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
