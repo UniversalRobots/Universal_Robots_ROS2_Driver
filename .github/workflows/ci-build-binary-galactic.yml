@@ -1,4 +1,4 @@
-name: Binary Build
+name: Binary Build - Galactic
 on:
   pull_request:
   push:
