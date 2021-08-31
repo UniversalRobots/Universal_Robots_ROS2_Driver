@@ -1,4 +1,4 @@
-name: Binary Build
+name: Binary Build - Foxy
 on:
   pull_request:
   push:
