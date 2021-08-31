@@ -1,6 +1,8 @@
 name: Semi-Binary Build
 on:
   pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -15,8 +17,6 @@ jobs:
     strategy:
       matrix:
         env:
-          - {ROS_DISTRO: foxy, ROS_REPO: main}
-          - {ROS_DISTRO: foxy, ROS_REPO: testing}
           - {ROS_DISTRO: galactic, ROS_REPO: main}
           - {ROS_DISTRO: galactic, ROS_REPO: testing}
           - {ROS_DISTRO: rolling, ROS_REPO: main}

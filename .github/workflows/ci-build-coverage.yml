@@ -1,6 +1,8 @@
 name: Coverage Build
 on:
   pull_request:
+    branches:
+      - main
 
 jobs:
   coverage:
