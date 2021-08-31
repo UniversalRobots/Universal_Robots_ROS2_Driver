@@ -41,7 +41,7 @@ ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& stat
 {
   TimeData time_data;
   time_data.time = node_->now();
-  time_data.period = rclcpp::Duration(0, 0);
+  time_data.period = rclcpp::Duration::from_nanoseconds(0);
   time_data.uptime = node_->now();
   time_data_.initRT(time_data);
   return JointTrajectoryController::on_activate(state);
@@ -135,7 +135,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
     TimeData time_data;
     time_data.time = node_->now();
     rcl_duration_value_t period = (time_data.time - time_data_.readFromRT()->time).nanoseconds();
-    time_data.period = rclcpp::Duration(scaling_factor_ * period);
+    time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * period);
     time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
     rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration(period);
     time_data_.writeFromNonRT(time_data);
