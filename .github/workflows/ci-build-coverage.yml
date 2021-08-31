@@ -1,6 +1,8 @@
 name: Coverage Build
 on:
   pull_request:
+    branches:
+      - foxy
 
 jobs:
   coverage:
@@ -11,14 +13,14 @@ jobs:
     steps:
       - uses: ros-tooling/setup-ros@v0.2
         with:
-          required-ros-distributions: rolling
+          required-ros-distributions: foxy
       - uses: actions/checkout@v1
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
-          target-ros2-distro: rolling
+          target-ros2-distro: foxy
           # build all packages listed in the meta package
           package-name:
             ur_bringup

@@ -1,9 +1,11 @@
 name: Binary Build - Foxy
 on:
   pull_request:
+    branches:
+      - foxy
   push:
     branches:
-      - main
+      - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '43 8 * * *'

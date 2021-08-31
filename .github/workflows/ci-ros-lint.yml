@@ -1,6 +1,8 @@
 name: ROS2 Lint
 on:
   pull_request:
+    branches:
+      - foxy
 
 jobs:
   ament_lint:
