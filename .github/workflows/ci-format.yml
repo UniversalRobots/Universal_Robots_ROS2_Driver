@@ -8,8 +8,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
-      - develop
+      - foxy
 
 jobs:
   pre-commit:

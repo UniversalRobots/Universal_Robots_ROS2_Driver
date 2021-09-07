@@ -2,20 +2,25 @@ name: Source Build
 on:
   push:
     branches:
-      - master
-      - develop
+      - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '43 1 * * *'
 
 jobs:
-  source:
-    name: source build
+  foxy_source:
+    name: foxy source build
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
     steps:
       - uses: ros-tooling/setup-ros@v0.2
+        with:
+          required-ros-distributions: foxy
+      - uses: actions/checkout@v1
+      - name: start ursim
+        run: |
+          .github/dockerursim/build_and_run_docker_ursim.sh
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
           target-ros2-distro: foxy
