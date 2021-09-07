@@ -7,6 +7,7 @@
 ## Driver and URsim
 Driver and URsim can be run together by following command  which will build necessary docker images and start the containers.
 With appropriate arguments set the ROS2 distro and the Moveit2! build is required.
+Run following command in `ur_robot_driver/resources/ursim_driver` folder of this package.
 ```
 ROS2_DISTRO=foxy BUILD_MOVEIT2=0 docker-compose up --build
 ```
@@ -18,4 +19,4 @@ able to see active connections. Use 0.0.0.0:5900 for ursim and 0.0.0.0:5566 for 
 
  ![vncviewer_list](resources/vncviewer_list.png)
 
- Open the URsim vnc connection to see the simulator window.
+ Open the URsim vnc connection to see the simulator window.\	
