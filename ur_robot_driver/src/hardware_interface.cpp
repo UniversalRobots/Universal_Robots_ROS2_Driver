@@ -65,7 +65,7 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
     }
     if (joint.command_interfaces.size() != 2) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
-                   "Joint '%s' has %d command interfaces found. 2 expected.", joint.name.c_str(),
+                   "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
                    joint.command_interfaces.size());
       return return_type::ERROR;
     }
@@ -85,7 +85,7 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
     }
 
     if (joint.state_interfaces.size() != 3) {
-      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"), "Joint '%s' has %d state interface. 3 expected.",
+      RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"), "Joint '%s' has %zu state interface. 3 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
       return return_type::ERROR;
     }

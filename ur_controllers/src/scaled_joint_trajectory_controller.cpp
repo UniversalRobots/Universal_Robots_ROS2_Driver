@@ -55,7 +55,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
     RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface not found in hardware interface.");
   }
 
-  if (get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     return controller_interface::return_type::OK;
   }
 
