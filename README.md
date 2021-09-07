@@ -9,6 +9,23 @@ This driver is developed on top of [Universal_Robots_Client_Library](https://git
 
 The driver is compatible across the entire line of UR robots -- from 3 kg payload to 16 kg payload and includes both the CB3 and the E-series.
 
+
+## Build Status
+
+ROS2 Distro | Foxy  | Galactic <br /> Rolling
+:---------: | :---: | :---------------------:
+**Branch** | [foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main)
+**Build Status** | [![Binary Build - Foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-foxy.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-foxy.yml) <br /> [![Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml) <br /> [![Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml) | 
+
+**NOTE**: There are three build stages checking current and future compatibility of the driver.
+
+1. Binary builds - against released packages (main and testing) in ROS distributions. Shows that direct local build is possible.
+
+1. Semi-binary builds - against released core ROS packages (main and testing), but the immediate dependencies are pulled from source.
+   Shows that local build with dependencies is possible and if fails there we can expect that after the next package sync we will not be able to build.
+
+1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
+
 ## Known Issues
 
 -
