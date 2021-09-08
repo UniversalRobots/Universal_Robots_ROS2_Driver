@@ -43,8 +43,14 @@ RUN echo "${BUILD_MOVEIT2}"
 
 ARG COLCON_WS=~/workspace/ros_ws_ur_driver
 WORKDIR $COLCON_WS
-RUN git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver \
-    && vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
+
+RUN if [ "$ROS2_DISTRO" = "foxy" ] ; then \
+	echo 'USING UR driver FOXY BRANCH!'; \
+	git clone --branch foxy https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver; \
+    else git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver; \
+    fi;
+
+RUN vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
 
 RUN if [ $BUILD_MOVEIT2 = 1 ] ; then \
         echo 'BUILDING MOVEIT2!!' ; \
