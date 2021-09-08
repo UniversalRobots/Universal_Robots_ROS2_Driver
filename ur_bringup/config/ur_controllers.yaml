@@ -20,6 +20,9 @@ controller_manager:
     scaled_joint_trajectory_controller:
       type: ur_controllers/ScaledJointTrajectoryController
 
+    forward_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
 
 speed_scaling_state_broadcaster:
   ros__parameters:
@@ -82,3 +85,14 @@ scaled_joint_trajectory_controller:
     constraints:
       stopped_velocity_tolerance: 0.2
       goal_time: 0.0
+
+forward_velocity_controller:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+    interface_name: velocity

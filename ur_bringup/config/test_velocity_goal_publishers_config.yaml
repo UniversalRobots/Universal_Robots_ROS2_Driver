@@ -1,0 +1,10 @@
+publisher_forward_velocity_controller:
+  ros__parameters:
+
+    controller_name: "forward_velocity_controller"
+    wait_sec_between_publish: 5
+
+    goal_names: ["pos1", "pos2", "pos3"]
+    pos1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.05]
+    pos2: [0.0, 0.0, 0.0, 0.0, 0.0, -0.05]
+    pos3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

@@ -53,6 +53,13 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  stop_modes_ = { StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE,
+                  StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE };
+  start_modes_ = { hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
+                   hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
+                   hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION };
+  position_controller_running_ = false;
+  velocity_controller_running_ = false;
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
@@ -464,6 +471,7 @@ return_type URPositionHardwareInterface::read()
       initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+      urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
     }
 
@@ -472,6 +480,7 @@ return_type URPositionHardwareInterface::read()
     return return_type::OK;
   }
 
+  // TODO(anyone): could not read from the driver --> reset controllers
   return return_type::ERROR;
 }
 
@@ -486,41 +495,22 @@ return_type URPositionHardwareInterface::write()
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
-    bool new_data_available = false;
-    // create a lambda subtract functor
-    std::function<double(double, double)> substractor = [](double a, double b) { return std::abs(a - b); };
-
-    // create a position difference vector
-    std::vector<double> pos_diff;
-    pos_diff.resize(urcl_position_commands_.size());
-    std::transform(urcl_position_commands_.begin(), urcl_position_commands_.end(), urcl_position_commands_old_.begin(),
-                   pos_diff.begin(), substractor);
-
-    double pos_diff_sum = 0.0;
-    std::for_each(pos_diff.begin(), pos_diff.end(), [&pos_diff_sum](double a) { return pos_diff_sum += a; });
-
-    if (pos_diff_sum != 0.0) {
-      new_data_available = true;
-    }
-
-    if (new_data_available) {
+    if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
-      // remember old values
-      urcl_position_commands_old_ = urcl_position_commands_;
+
+    } else if (velocity_controller_running_) {
+      ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
+
     } else {
       ur_driver_->writeKeepalive();
     }
 
     packet_read_ = false;
 
-    // remember old values
-    urcl_position_commands_old_ = urcl_position_commands_;
-
     return return_type::OK;
-  } else {
-    // TODO(anyone): could not read from the driver --> reset controllers
-    return return_type::ERROR;
   }
+
+  return return_type::ERROR;
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
@@ -594,6 +584,79 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   robot_mode_copy_ = static_cast<double>(robot_mode_);
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
+}
+
+return_type URPositionHardwareInterface::prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                                                     const std::vector<std::string>& stop_interfaces)
+{
+  hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+
+  start_modes_.clear();
+  stop_modes_.clear();
+
+  // Starting interfaces
+  // add start interface per joint in tmp var for later check
+  for (const auto& key : start_interfaces) {
+    for (auto i = 0u; i < info_.joints.size(); i++) {
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
+        start_modes_.push_back(hardware_interface::HW_IF_POSITION);
+      }
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
+        start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
+      }
+    }
+  }
+  // set new mode to all interfaces at the same time
+  if (start_modes_.size() != 0 && start_modes_.size() != 6) {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // all start interfaces must be the same - can't mix position and velocity control
+  if (start_modes_.size() != 0 && !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin())) {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // Stopping interfaces
+  // add stop interface per joint in tmp var for later check
+  for (const auto& key : stop_interfaces) {
+    for (auto i = 0u; i < info_.joints.size(); i++) {
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
+        stop_modes_.push_back(StoppingInterface::STOP_POSITION);
+      }
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
+        stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
+      }
+    }
+  }
+  // stop all interfaces at the same time
+  if (stop_modes_.size() != 0 &&
+      (stop_modes_.size() != 6 || !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin()))) {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  controllers_initialized_ = true;
+  return ret_val;
+}
+
+return_type URPositionHardwareInterface::perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                                                     const std::vector<std::string>& stop_interfaces)
+{
+  hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+
+  position_controller_running_ = false;
+  velocity_controller_running_ = false;
+
+  if (start_modes_.size() != 0 &&
+      std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
+    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+    position_controller_running_ = true;
+
+  } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
+                                                   hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
+    urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+    velocity_controller_running_ = true;
+  }
+  return ret_val;
 }
 }  // namespace ur_robot_driver
 
