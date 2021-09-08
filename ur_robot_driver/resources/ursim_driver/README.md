@@ -19,4 +19,4 @@ able to see active connections. Use 0.0.0.0:5900 for ursim and 0.0.0.0:5566 for 
 
  ![vncviewer_list](resources/vncviewer_list.png)
 
- Open the URsim vnc connection to see the simulator window.\	
+ Open the URsim vnc connection to see the simulator window.\
