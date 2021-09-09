@@ -45,7 +45,7 @@ public:
 protected:
   struct TimeData
   {
-    TimeData() : time(0.0), period(0.0), uptime(0.0)
+    TimeData() : time(0.0), period(rclcpp::Duration::from_nanoseconds(0.0)), uptime(0.0)
     {
     }
     rclcpp::Time time;
