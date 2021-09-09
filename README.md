@@ -25,7 +25,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 ## Getting Started
 
-1. [Install ROS2 Foxy](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/).
+1. [Install ROS2 Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html).
 
 2. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```
