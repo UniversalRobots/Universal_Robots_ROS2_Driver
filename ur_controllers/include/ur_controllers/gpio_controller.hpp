@@ -84,6 +84,8 @@ public:
 
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
+  CallbackReturn on_init() override;
+
 private:
   bool setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp);
 

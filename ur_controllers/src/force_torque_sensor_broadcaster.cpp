@@ -24,13 +24,8 @@ ForceTorqueStateBroadcaster::ForceTorqueStateBroadcaster()
 {
 }
 
-controller_interface::return_type ForceTorqueStateBroadcaster::init(const std::string& controller_name)
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn ForceTorqueStateBroadcaster::on_init()
 {
-  auto ret = ControllerInterface::init(controller_name);
-  if (ret != controller_interface::return_type::OK) {
-    return ret;
-  }
-
   try {
     auto_declare<std::vector<std::string>>("state_interface_names", {});
     auto_declare<std::string>("sensor_name", "");
@@ -38,7 +33,17 @@ controller_interface::return_type ForceTorqueStateBroadcaster::init(const std::s
     auto_declare<std::string>("frame_id", "");
   } catch (const std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
-    return controller_interface::return_type::ERROR;
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::return_type ForceTorqueStateBroadcaster::init(const std::string& controller_name)
+{
+  auto ret = ControllerInterface::init(controller_name);
+  if (ret != controller_interface::return_type::OK) {
+    return ret;
   }
 
   return controller_interface::return_type::OK;

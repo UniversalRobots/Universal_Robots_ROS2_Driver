@@ -76,6 +76,8 @@ public:
 
   controller_interface::return_type init(const std::string& controller_name) override;
 
+  CallbackReturn on_init() override;
+
 protected:
   // param storage
   FTStateControllerParams fts_params_;

@@ -27,6 +27,11 @@
 
 namespace ur_controllers
 {
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn GPIOController::on_init()
+{
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
 controller_interface::InterfaceConfiguration GPIOController::command_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;

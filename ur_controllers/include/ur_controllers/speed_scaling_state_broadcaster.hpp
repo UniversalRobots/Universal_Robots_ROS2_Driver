@@ -55,6 +55,8 @@ public:
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init() override;
+
 protected:
   std::vector<std::string> sensor_names_;
   rclcpp::Time last_publish_time_;
