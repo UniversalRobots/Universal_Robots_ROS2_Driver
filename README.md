@@ -25,7 +25,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 ## Getting Started
 
-1. [Install ROS2 Foxy](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/).
+1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html) or [Install ROS2 Galactic](https://docs.ros.org/en/galactic/Installation.html). This branch will support both distributions until API breaking changes are made, at which point a `galactic` branch will be forked.
 
 2. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```
@@ -34,7 +34,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 3. Create a new ROS2 workspace:
    ```
-   export COLCON_WS=~/workspace/ros_ws_foxy_ur_driver
+   export COLCON_WS=~/workspace/ros_ur_driver
    mkdir -p $COLCON_WS/src
    ```
 
