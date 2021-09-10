@@ -74,9 +74,9 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  controller_interface::return_type init(const std::string& controller_name) override;
-
   controller_interface::return_type update() override;
+
+  CallbackReturn on_init() override;
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
 

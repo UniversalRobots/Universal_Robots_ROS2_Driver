@@ -55,7 +55,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
     RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface not found in hardware interface.");
   }
 
-  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (lifecycle_state_.id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     return controller_interface::return_type::OK;
   }
 
@@ -137,7 +137,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
     rcl_duration_value_t period = (time_data.time - time_data_.readFromRT()->time).nanoseconds();
     time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * period);
     time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
-    rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration(period);
+    rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration::from_nanoseconds(period);
     time_data_.writeFromNonRT(time_data);
 
     // if sampling the first time, set the point before you sample

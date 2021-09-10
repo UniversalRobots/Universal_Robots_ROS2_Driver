@@ -104,11 +104,11 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   return config;
 }
 
-controller_interface::return_type ur_controllers::GPIOController::init(const std::string& controller_name)
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn ur_controllers::GPIOController::on_init()
 {
   initMsgs();
 
-  return ControllerInterface::init(controller_name);
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 controller_interface::return_type ur_controllers::GPIOController::update()
