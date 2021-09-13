@@ -44,6 +44,18 @@ SpeedScalingStateBroadcaster::SpeedScalingStateBroadcaster()
 {
 }
 
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn SpeedScalingStateBroadcaster::on_init()
+{
+  try {
+    auto_declare<double>("state_publish_rate", 100.0);
+  } catch (std::exception& e) {
+    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+
+  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
 controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::command_interface_configuration() const
 {
   return controller_interface::InterfaceConfiguration{ controller_interface::interface_configuration_type::NONE };
@@ -60,8 +72,6 @@ controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::state
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  auto_declare<double>("state_publish_rate", 100.0);
-
   if (!node_->get_parameter("state_publish_rate", publish_rate_)) {
     RCLCPP_INFO(get_node()->get_logger(), "Parameter 'state_publish_rate' not set");
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;

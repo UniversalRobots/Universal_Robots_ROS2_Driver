@@ -36,8 +36,7 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
   return conf;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
+CallbackReturn ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
 {
   TimeData time_data;
   time_data.time = node_->now();
@@ -137,7 +136,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
     rcl_duration_value_t period = (time_data.time - time_data_.readFromRT()->time).nanoseconds();
     time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * period);
     time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
-    rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration(period);
+    rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration::from_nanoseconds(period);
     time_data_.writeFromNonRT(time_data);
 
     // if sampling the first time, set the point before you sample
