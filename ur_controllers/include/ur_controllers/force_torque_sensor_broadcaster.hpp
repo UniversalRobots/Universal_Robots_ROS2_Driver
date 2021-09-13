@@ -25,6 +25,7 @@
 
 namespace ur_controllers
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 using FbkType = geometry_msgs::msg::WrenchStamped;
 
 struct FTStateControllerParams
@@ -73,8 +74,6 @@ public:
   CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
 
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
-
-  controller_interface::return_type init(const std::string& controller_name) override;
 
   CallbackReturn on_init() override;
 

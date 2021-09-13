@@ -24,7 +24,7 @@ ForceTorqueStateBroadcaster::ForceTorqueStateBroadcaster()
 {
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn ForceTorqueStateBroadcaster::on_init()
+CallbackReturn ForceTorqueStateBroadcaster::on_init()
 {
   try {
     auto_declare<std::vector<std::string>>("state_interface_names", {});
@@ -33,20 +33,10 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn ForceT
     auto_declare<std::string>("frame_id", "");
   } catch (const std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+    return CallbackReturn::ERROR;
   }
 
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
-controller_interface::return_type ForceTorqueStateBroadcaster::init(const std::string& controller_name)
-{
-  auto ret = ControllerInterface::init(controller_name);
-  if (ret != controller_interface::return_type::OK) {
-    return ret;
-  }
-
-  return controller_interface::return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
 controller_interface::InterfaceConfiguration ForceTorqueStateBroadcaster::command_interface_configuration() const
@@ -113,7 +103,7 @@ controller_interface::return_type ur_controllers::ForceTorqueStateBroadcaster::u
   return controller_interface::return_type::OK;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+CallbackReturn
 ForceTorqueStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   fts_params_.state_interfaces_names_ = node_->get_parameter("state_interface_names").as_string_array();
@@ -146,22 +136,22 @@ ForceTorqueStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previ
     wrench_state_publisher_ = get_node()->create_publisher<geometry_msgs::msg::WrenchStamped>(
         fts_params_.topic_name, rclcpp::SystemDefaultsQoS());
   } catch (...) {
-    return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
+    return CallbackReturn::ERROR;
   }
 
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  return CallbackReturn::SUCCESS;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+CallbackReturn
 ForceTorqueStateBroadcaster::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  return CallbackReturn::SUCCESS;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+CallbackReturn
 ForceTorqueStateBroadcaster::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  return CallbackReturn::SUCCESS;
 }
 
 }  // namespace ur_controllers

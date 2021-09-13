@@ -23,12 +23,15 @@
 #ifndef UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
 #define UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
 
+#include "angles/angles.h"
 #include "joint_trajectory_controller/joint_trajectory_controller.hpp"
 #include "joint_trajectory_controller/trajectory.hpp"
-#include "angles/angles.h"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
 namespace ur_controllers
 {
+using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+
 class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
 {
 public:
@@ -37,7 +40,7 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  CallbackReturn
   on_activate(const rclcpp_lifecycle::State& state) override;
 
   controller_interface::return_type update() override;
