@@ -40,8 +40,7 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  CallbackReturn
-  on_activate(const rclcpp_lifecycle::State& state) override;
+  CallbackReturn on_activate(const rclcpp_lifecycle::State& state) override;
 
   controller_interface::return_type update() override;
 

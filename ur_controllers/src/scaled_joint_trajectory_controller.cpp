@@ -36,8 +36,7 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
   return conf;
 }
 
-CallbackReturn
-ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
+CallbackReturn ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
 {
   TimeData time_data;
   time_data.time = node_->now();

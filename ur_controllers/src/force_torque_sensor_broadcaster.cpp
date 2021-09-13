@@ -103,8 +103,7 @@ controller_interface::return_type ur_controllers::ForceTorqueStateBroadcaster::u
   return controller_interface::return_type::OK;
 }
 
-CallbackReturn
-ForceTorqueStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
+CallbackReturn ForceTorqueStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   fts_params_.state_interfaces_names_ = node_->get_parameter("state_interface_names").as_string_array();
 
@@ -142,14 +141,12 @@ ForceTorqueStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previ
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn
-ForceTorqueStateBroadcaster::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
+CallbackReturn ForceTorqueStateBroadcaster::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn
-ForceTorqueStateBroadcaster::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
+CallbackReturn ForceTorqueStateBroadcaster::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return CallbackReturn::SUCCESS;
 }
