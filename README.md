@@ -9,6 +9,28 @@ This driver is developed on top of [Universal_Robots_Client_Library](https://git
 
 The driver is compatible across the entire line of UR robots -- from 3 kg payload to 16 kg payload and includes both the CB3 and the E-series.
 
+
+## Build Status
+
+ROS2 Distro | Foxy  | Galactic | Rolling
+:---------: | :---: | :------: | :-----:
+**Branch** | [foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main)
+**Build Status** | [![Binary Build - Foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-foxy.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-foxy.yml) <br /> [![Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml) <br /> [![Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml) | [![Binary Build - Galactic](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-galactic.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-galactic.yml) <br /> [![Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml) <br /> [![Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml) | [![Binary Build - Rolling](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-rolling.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-binary-rolling.yml) <br /> [![Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-semi-binary.yml) <br /> [![Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/ci-build-source.yml)
+
+**NOTE**: There are three build stages checking current and future compatibility of the driver.
+
+1. Binary builds - against released packages (main and testing) in ROS distributions. Shows that direct local build is possible.
+
+   Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.<ros-distro>.repos`
+
+1. Semi-binary builds - against released core ROS packages (main and testing), but the immediate dependencies are pulled from source.
+   Shows that local build with dependencies is possible and if fails there we can expect that after the next package sync we will not be able to build.
+
+   Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos`
+
+1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
+
+
 ## Known Issues
 
 -
@@ -25,7 +47,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 ## Getting Started
 
-1. [Install ROS2 Foxy](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/).
+1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html) or [Install ROS2 Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html). This branch will support both distributions until API breaking changes are made, at which point a `galactic` branch will be forked. For using this driver with ROS2 `foxy` checkout [foxy branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy).
 
 2. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```
