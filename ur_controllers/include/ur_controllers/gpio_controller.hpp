@@ -36,6 +36,8 @@
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_msgs/srv/set_io.hpp"
 #include "ur_msgs/srv/set_speed_slider_fraction.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp/duration.hpp"
 
 namespace ur_controllers
 {
@@ -74,7 +76,7 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  controller_interface::return_type update() override;
+  controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
 

@@ -46,7 +46,8 @@ CallbackReturn ScaledJointTrajectoryController::on_activate(const rclcpp_lifecyc
   return JointTrajectoryController::on_activate(state);
 }
 
-controller_interface::return_type ScaledJointTrajectoryController::update()
+controller_interface::return_type ScaledJointTrajectoryController::update(const rclcpp::Time& time,
+                                                                          const rclcpp::Duration& /*period*/)
 {
   if (state_interfaces_.back().get_name() == "speed_scaling") {
     scaling_factor_ = state_interfaces_.back().get_value();
@@ -132,7 +133,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
     // Main Speed scaling difference...
     // Adjust time with scaling factor
     TimeData time_data;
-    time_data.time = node_->now();
+    time_data.time = time;
     rcl_duration_value_t period = (time_data.time - time_data_.readFromRT()->time).nanoseconds();
     time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * period);
     time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
@@ -185,7 +186,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
       if (active_goal) {
         // send feedback
         auto feedback = std::make_shared<FollowJTrajAction::Feedback>();
-        feedback->header.stamp = node_->now();
+        feedback->header.stamp = time;
         feedback->joint_names = joint_names_;
 
         feedback->actual = state_current;
@@ -224,7 +225,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update()
 
             // TODO(anyone): This will break in speed scaling we have to discuss how to handle the goal
             // time when the robot scales itself down.
-            const double difference = node_->now().seconds() - traj_end.seconds();
+            const double difference = time.seconds() - traj_end.seconds();
             if (difference > default_tolerances_.goal_time_tolerance) {
               auto result = std::make_shared<FollowJTrajAction::Result>();
               result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);

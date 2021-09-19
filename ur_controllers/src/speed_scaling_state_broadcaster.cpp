@@ -93,8 +93,7 @@ SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*prev
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 SpeedScalingStateBroadcaster::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  last_publish_time_ = node_->now();
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  //   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
@@ -103,15 +102,15 @@ SpeedScalingStateBroadcaster::on_deactivate(const rclcpp_lifecycle::State& /*pre
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::return_type SpeedScalingStateBroadcaster::update()
+controller_interface::return_type SpeedScalingStateBroadcaster::update(const rclcpp::Time& /*time*/,
+                                                                       const rclcpp::Duration& period)
 {
-  if (publish_rate_ > 0.0 && (node_->now() - last_publish_time_) > rclcpp::Duration(1.0 / publish_rate_, 0.0)) {
+  if (publish_rate_ > 0.0 && period > rclcpp::Duration(1.0 / publish_rate_, 0.0)) {
     // Speed scaling is the only interface of the controller
     speed_scaling_state_msg_.data = state_interfaces_[0].get_value() * 100.0;
 
     // publish
     speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);
-    last_publish_time_ = node_->now();
   }
   return controller_interface::return_type::OK;
 }
