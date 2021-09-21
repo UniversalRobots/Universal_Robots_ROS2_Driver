@@ -2,7 +2,7 @@ repositories:
   moveit2:
     type: git
     url: https://github.com/ros-planning/moveit2.git
-    version: main
+    version: foxy
   srdfdom:
     type: git
     url: https://github.com/ros-planning/srdfdom.git
