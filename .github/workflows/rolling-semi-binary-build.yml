@@ -11,8 +11,8 @@ on:
     - cron: '03 5 * * *'
 
 jobs:
-  galactic_semi_binary:
-    name: binary build
+  rolling_semi_binary:
+    name: rolling semi-binary build
     runs-on: ubuntu-latest
     strategy:
       matrix:
