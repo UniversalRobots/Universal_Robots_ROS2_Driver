@@ -1,4 +1,4 @@
-name: Binary Build - Galactic
+name: Rolling Binary Build
 on:
   pull_request:
     branches:
@@ -8,17 +8,17 @@ on:
       - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '43 8 * * *'
+    - cron: '13 4 * * *'
 
 jobs:
-  galactic_binary:
-    name: galactic binary build
+  rolling_binary:
+    name: rolling binary build
     runs-on: ubuntu-latest
     strategy:
       matrix:
         env:
-          - {ROS_DISTRO: galactic, ROS_REPO: main}
-          - {ROS_DISTRO: galactic, ROS_REPO: testing}
+          - {ROS_DISTRO: rolling, ROS_REPO: main}
+          - {ROS_DISTRO: rolling, ROS_REPO: testing}
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.env.ROS_DISTRO }}.repos
       DOCKER_RUN_OPTS: --network static_test_net
