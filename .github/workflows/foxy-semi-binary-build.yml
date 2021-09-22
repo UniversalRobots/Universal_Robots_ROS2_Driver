@@ -1,24 +1,24 @@
-name: Galactic Semi-Binary Build
+name: Foxy Semi-Binary Build
 on:
   pull_request:
     branches:
-      - main
+      - foxy
   push:
     branches:
-      - main
+      - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '23 5 * * *'
 
 jobs:
-  galactic_semi_binary:
-    name: galacitc semi-binary build
+  foxy_semi_binary:
+    name: foxy semi-binary build
     runs-on: ubuntu-latest
     strategy:
       matrix:
         env:
-          - {ROS_DISTRO: galactic, ROS_REPO: main}
-          - {ROS_DISTRO: galactic, ROS_REPO: testing}
+          - {ROS_DISTRO: foxy, ROS_REPO: main}
+          - {ROS_DISTRO: foxy, ROS_REPO: testing}
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.repos
       DOCKER_RUN_OPTS: --network static_test_net
