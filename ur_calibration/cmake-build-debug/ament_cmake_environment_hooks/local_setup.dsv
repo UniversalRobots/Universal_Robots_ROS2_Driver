@@ -1,0 +1,2 @@
+source;share/ur_calibration/environment/ament_prefix_path.sh
+source;share/ur_calibration/environment/path.sh
