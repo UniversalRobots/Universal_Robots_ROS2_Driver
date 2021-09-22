@@ -111,7 +111,8 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   return config;
 }
 
-controller_interface::return_type ur_controllers::GPIOController::update()
+controller_interface::return_type ur_controllers::GPIOController::update(const rclcpp::Time& /*time*/,
+                                                                         const rclcpp::Duration& /*period*/)
 {
   publishIO();
   publishToolData();

@@ -27,6 +27,8 @@
 #include "joint_trajectory_controller/joint_trajectory_controller.hpp"
 #include "joint_trajectory_controller/trajectory.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp/duration.hpp"
 
 namespace ur_controllers
 {
@@ -42,7 +44,7 @@ public:
 
   CallbackReturn on_activate(const rclcpp_lifecycle::State& state) override;
 
-  controller_interface::return_type update() override;
+  controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
 protected:
   struct TimeData

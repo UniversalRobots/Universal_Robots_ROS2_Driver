@@ -57,7 +57,8 @@ controller_interface::InterfaceConfiguration ForceTorqueStateBroadcaster::state_
   return config;
 }
 
-controller_interface::return_type ur_controllers::ForceTorqueStateBroadcaster::update()
+controller_interface::return_type
+ur_controllers::ForceTorqueStateBroadcaster::update(const rclcpp::Time& time, const rclcpp::Duration& /*period*/)
 {
   geometry_msgs::msg::Vector3 f_vec;
   geometry_msgs::msg::Vector3 t_vec;
@@ -90,7 +91,7 @@ controller_interface::return_type ur_controllers::ForceTorqueStateBroadcaster::u
     }
   }
 
-  wrench_state_msg_.header.stamp = get_node()->get_clock()->now();
+  wrench_state_msg_.header.stamp = time;
   wrench_state_msg_.header.frame_id = fts_params_.frame_id;
 
   // update wrench state message

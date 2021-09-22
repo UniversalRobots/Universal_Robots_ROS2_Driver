@@ -22,6 +22,8 @@
 
 #include "controller_interface/controller_interface.hpp"
 #include "geometry_msgs/msg/wrench_stamped.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp/duration.hpp"
 
 namespace ur_controllers
 {
@@ -67,7 +69,7 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  controller_interface::return_type update() override;
+  controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
 
