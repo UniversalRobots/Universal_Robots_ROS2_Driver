@@ -1,4 +1,4 @@
-name: Binary Build
+name: Foxy Binary Build
 on:
   pull_request:
     branches:
@@ -8,7 +8,7 @@ on:
       - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '43 8 * * *'
+    - cron: '43 5 * * *'
 
 jobs:
   foxy_binary:

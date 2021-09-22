@@ -1,4 +1,4 @@
-name: Semi-Binary Build
+name: Foxy Semi-Binary Build
 on:
   pull_request:
     branches:
@@ -8,11 +8,11 @@ on:
       - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '43 8 * * *'
+    - cron: '23 5 * * *'
 
 jobs:
-  binary:
-    name: binary build
+  foxy_semi_binary:
+    name: foxy semi-binary build
     runs-on: ubuntu-latest
     strategy:
       matrix:
