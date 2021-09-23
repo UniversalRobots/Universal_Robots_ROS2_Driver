@@ -39,9 +39,10 @@
 
 #include <ur_robot_driver/urcl_log_handler.hpp>
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+#include <rclcpp/exceptions/exceptions.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_ros/transform_listener.h>
-#include <ament_index_cpp/get_package_share_directory.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -51,14 +52,14 @@ using namespace urcl;
 using namespace primary_interface;
 using namespace ur_calibration;
 
-class ParamaterMissingException : public ros::Exception
-{
-public:
-  ParamaterMissingException(const std::string& name)
-    : Exception("Cannot find required parameter " + name + " on the parameter server.")
-  {
-  }
-};
+//class ParamaterMissingException : public rclcpp::exceptions::Par
+//{
+//public:
+//  ParamaterMissingException(const std::string& name)
+//    : Exception("Cannot find required parameter " + name + " on the parameter server.")
+//  {
+//  }
+//};
 
 class CalibrationCorrection
 {
@@ -74,7 +75,7 @@ public:
       // The target file where the calibration data is written to
       output_filename_ = getRequiredParameter<std::string>("output_filename");
     }
-    catch (const ParamaterMissingException& e)
+    catch (const rclcpp::exceptions::ParameterUninitializedException& e)
     {
       ROS_FATAL_STREAM(e.what());
       exit(1);
