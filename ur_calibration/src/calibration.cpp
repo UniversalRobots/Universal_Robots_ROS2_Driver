@@ -83,11 +83,13 @@ void Calibration::correctAxis(const size_t link_index)
   Eigen::ParametrizedLine<double, 3> next_line;
   next_line = Eigen::ParametrizedLine<double, 3>::Through(eigen_passive, eigen_next);
 
-  ROS_DEBUG_STREAM("next_line:" << std::endl
-                                << "Base:" << std::endl
-                                << next_line.origin() << std::endl
-                                << "Direction:" << std::endl
-                                << next_line.direction());
+  RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "next_line:" << std::endl
+                                                                             << "Base:" << std::endl
+                                                                             << next_line.origin() << std::endl
+                                                                             << "Direction:" << std::endl
+                                                                             << next_line.direction() );
+
+
 
   // XY-Plane of first segment's start
   Eigen::Hyperplane<double, 3> plane(fk_current.topLeftCorner(3, 3) * Eigen::Vector3d(0, 0, 1), current_passive);
@@ -101,10 +103,10 @@ void Calibration::correctAxis(const size_t link_index)
   double new_theta = std::atan(intersection.y() / intersection.x());
   // Upper and lower arm segments on URs all have negative length due to dh params
   double new_length = -1 * intersection.norm();
-  ROS_DEBUG_STREAM("Wrist line intersecting at " << std::endl << intersection);
-  ROS_DEBUG_STREAM("Angle is " << new_theta);
-  ROS_DEBUG_STREAM("Length is " << new_length);
-  ROS_DEBUG_STREAM("Intersection param is " << intersection_param);
+    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Wrist line intersecting at " << std::endl << intersection);
+    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Angle is " << new_theta);
+    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Length is " << new_length);
+    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Intersection param is " << intersection_param);
 
   // as we move the passive segment towards the first segment, we have to move away the next segment
   // again, to keep the same kinematic structure.
