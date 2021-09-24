@@ -42,8 +42,7 @@ template <class Scalar_, int dim_>
 void doubleEqVec(const Eigen::Matrix<Scalar_, dim_, 1> vec1, const Eigen::Matrix<Scalar_, dim_, 1> vec2,
                  const double precision)
 {
-  for (size_t i = 0; i < dim_; ++i)
-  {
+  for (size_t i = 0; i < dim_; ++i) {
     EXPECT_NEAR(vec1[i], vec2[i], precision);
   }
 }
@@ -164,8 +163,7 @@ TEST(UrRtdeDriver, calibration)
   Eigen::Matrix<double, 6, 1> jointvalues;
   jointvalues << 0, 0, 0, 0, 0, 0;
 
-  for (size_t i = 0; i < 1000; ++i)
-  {
+  for (size_t i = 0; i < 1000; ++i) {
     Calibration calibration(my_robot + my_robot_calibration);
     jointvalues = 2 * pi * Eigen::Matrix<double, 6, 1>::Random();
     Eigen::Matrix4d fk_orig = calibration.calcForwardKinematics(jointvalues);

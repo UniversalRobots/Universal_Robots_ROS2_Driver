@@ -16,44 +16,46 @@ saves it into a .yaml file.
 In the launch folder of the ur_calibration package is a helper script:
 
 ```bash
-$ roslaunch ur_calibration calibration_correction.launch \
+$ ros2 launch ur_calibration calibration_correction.py.launch \
 robot_ip:=<robot_ip> target_filename:="${HOME}/my_robot_calibration.yaml"
 ```
 
 For the parameter `robot_ip` insert the IP address on which the ROS pc can reach the robot. As
 `target_filename` provide an absolute path where the result will be saved to.
-    
+
 ## Creating a calibration / launch package for all local robots
 When dealing with multiple robots in one organization it might make sense to store calibration data
 into a package dedicated to that purpose only. To do so, create a new package (if it doesn't already
 exist)
 
 ```bash
-# Replace your actual catkin_ws folder
-$ cd <catkin_ws>/src
-$ catkin_create_pkg example_organization_ur_launch ur_client_library \
--D "Package containing calibrations and launch files for our UR robots."
+# Replace your actual colcon_ws folder
+$ cd <colcon_ws>/src
+$ ros2 pkg  create example_organization_ur_launch --build-type ament_cmake  --dependencies ur_client_library \
+--description "Package containing calibrations and launch files for our UR robots."
 # Create a skeleton package
 $ mkdir -p example_organization_ur_launch/etc
 $ mkdir -p example_organization_ur_launch/launch
+$ echo 'install(DIRECTORY etc launch DESTINATION share/${PROJECT_NAME})' >> example_organization_ur_launch/CMakeLists.txt
+$ colcon build --packages-select example_organization_ur_launch
 ```
 
 We can use the new package to store the calibration data in that package. We recommend naming each
 robot individually, e.g. *ex-ur10-1*.
 
 ```bash
-$ roslaunch ur_calibration calibration_correction.launch \
+$ ros2 launch ur_calibration calibration_correction.py.launch \
 robot_ip:=<robot_ip> \
-target_filename:="$(rospack find example_organization_ur_launch)/etc/ex-ur10-1_calibration.yaml"
+target_filename:="$(ros2 pkg prefix example_organization_ur_launch)/etc/ex-ur10-1_calibration.yaml"
 ```
 
 To make life easier, we create a launchfile for this particular robot. We base it upon the
 respective launchfile in the driver:
 
 ```bash
-# Replace your actual catkin_ws folder
-$ cd <catkin_ws>/src/example_organization_ur_launch/launch
-$ roscp ur_robot_driver ur10_bringup.launch ex-ur10-1.launch
+# Replace your actual colcon_ws folder
+$ cd <colcon_ws>/src/example_organization_ur_launch/launch
+$ roscp ur_robot_driver ur10_bringup.py.launch ex-ur10-1.py.launch
 ```
 
 Next, modify the parameter section of the new launchfile to match your actual calibration:
@@ -68,5 +70,5 @@ Next, modify the parameter section of the new launchfile to match your actual ca
 Then, anybody cloning this repository can startup the robot simply by launching
 
 ```bash
-$ roslaunch example_organization_ur_launch ex-ur10-1.launch
+$ ros2 launch example_organization_ur_launch ex-ur10-1.py.launch
 ```

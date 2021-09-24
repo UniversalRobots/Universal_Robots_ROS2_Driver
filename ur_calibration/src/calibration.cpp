@@ -64,8 +64,7 @@ void Calibration::correctAxis(const size_t link_index)
   //   - The length of moving along the next segment's rotational axis is calculated by intersecting
   //   the rotational axis with the XY-plane of the first segment.
 
-  if (chain_[2 * link_index](2, 3) == 0.0)
-  {
+  if (chain_[2 * link_index](2, 3) == 0.0) {
     // Nothing to do here.
     return;
   }
@@ -84,12 +83,10 @@ void Calibration::correctAxis(const size_t link_index)
   next_line = Eigen::ParametrizedLine<double, 3>::Through(eigen_passive, eigen_next);
 
   RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "next_line:" << std::endl
-                                                                             << "Base:" << std::endl
-                                                                             << next_line.origin() << std::endl
-                                                                             << "Direction:" << std::endl
-                                                                             << next_line.direction() );
-
-
+                                                                                << "Base:" << std::endl
+                                                                                << next_line.origin() << std::endl
+                                                                                << "Direction:" << std::endl
+                                                                                << next_line.direction());
 
   // XY-Plane of first segment's start
   Eigen::Hyperplane<double, 3> plane(fk_current.topLeftCorner(3, 3) * Eigen::Vector3d(0, 0, 1), current_passive);
@@ -103,10 +100,11 @@ void Calibration::correctAxis(const size_t link_index)
   double new_theta = std::atan(intersection.y() / intersection.x());
   // Upper and lower arm segments on URs all have negative length due to dh params
   double new_length = -1 * intersection.norm();
-    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Wrist line intersecting at " << std::endl << intersection);
-    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Angle is " << new_theta);
-    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Length is " << new_length);
-    RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Intersection param is " << intersection_param);
+  RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Wrist line intersecting at " << std::endl
+                                                                                                 << intersection);
+  RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Angle is " << new_theta);
+  RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Length is " << new_length);
+  RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_calibration_logger"), "Intersection param is " << intersection_param);
 
   // as we move the passive segment towards the first segment, we have to move away the next segment
   // again, to keep the same kinematic structure.
@@ -137,8 +135,7 @@ Eigen::Matrix4d Calibration::calcForwardKinematics(const Eigen::Matrix<double, 6
   Eigen::Matrix4d output = Eigen::Matrix4d::Identity();
 
   std::vector<Eigen::Matrix4d> simplified_chain = getSimplified();
-  for (size_t i = 0; i < link_nr; ++i)
-  {
+  for (size_t i = 0; i < link_nr; ++i) {
     Eigen::Matrix4d rotation = Eigen::Matrix4d::Identity();
     rotation.topLeftCorner(3, 3) = Eigen::AngleAxisd(joint_values(i), Eigen::Vector3d::UnitZ()).toRotationMatrix();
     output *= simplified_chain[i] * rotation;
@@ -150,8 +147,7 @@ Eigen::Matrix4d Calibration::calcForwardKinematics(const Eigen::Matrix<double, 6
 void Calibration::buildChain()
 {
   chain_.clear();
-  for (size_t i = 0; i < robot_parameters_.segments_.size(); ++i)
-  {
+  for (size_t i = 0; i < robot_parameters_.segments_.size(); ++i) {
     Eigen::Matrix4d seg1_mat = Eigen::Matrix4d::Identity();
     seg1_mat.topLeftCorner(3, 3) =
         Eigen::AngleAxisd(robot_parameters_.segments_[i].theta_, Eigen::Vector3d::UnitZ()).toRotationMatrix();
@@ -172,8 +168,7 @@ std::vector<Eigen::Matrix4d> Calibration::getSimplified() const
 {
   std::vector<Eigen::Matrix4d> simplified_chain;
   simplified_chain.push_back(chain_[0]);
-  for (size_t i = 1; i < chain_.size() - 1; i += 2)
-  {
+  for (size_t i = 1; i < chain_.size() - 1; i += 2) {
     simplified_chain.push_back(chain_[i] * chain_[i + 1]);
     Eigen::Matrix3d rot_a = chain_[i].topLeftCorner(3, 3);
     Eigen::Vector3d rpy_a = rot_a.eulerAngles(0, 1, 2);
@@ -195,8 +190,7 @@ YAML::Node Calibration::toYaml() const
 
   std::vector<Eigen::Matrix4d> chain = getSimplified();
 
-  for (std::size_t i = 0; i < link_names_.size(); ++i)
-  {
+  for (std::size_t i = 0; i < link_names_.size(); ++i) {
     YAML::Node link;
     link["x"] = chain[i](0, 3);
     link["y"] = chain[i](1, 3);

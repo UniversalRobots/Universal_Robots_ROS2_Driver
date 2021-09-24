@@ -53,127 +53,101 @@ using namespace urcl;
 using namespace primary_interface;
 using namespace ur_calibration;
 
-
 class CalibrationCorrection : public rclcpp::Node
 {
 public:
+  CalibrationCorrection() : Node("ur_calibration")
+  {
+    std::string output_package_name;
 
-    CalibrationCorrection(): Node("ur_calibration"){
+    try {
+      // The robot's IP address
+      robot_ip_ = this->get_parameter("robot_ip").as_string();
+      // The target file where the calibration data is written to
+      output_filename_ = this->get_parameter("output_filename").as_string();
 
-        std::string output_package_name;
+    } catch (rclcpp::exceptions::ParameterNotDeclaredException& e) {
+      RCLCPP_FATAL_STREAM(this->get_logger(), e.what());
+      exit(1);
+    }
+  }
 
-        try {
-            // The robot's IP address
-            robot_ip_ = this->get_parameter("robot_ip").as_string();
-            // The target file where the calibration data is written to
-            output_filename_ = this->get_parameter("output_filename").as_string();
+  virtual ~CalibrationCorrection() = default;
 
-        }catch(rclcpp::exceptions::ParameterNotDeclaredException &e) {
+  void run()
+  {
+    comm::URStream<PrimaryPackage> stream(robot_ip_, UR_PRIMARY_PORT);
+    primary_interface::PrimaryParser parser;
+    comm::URProducer<PrimaryPackage> prod(stream, parser);
+    CalibrationConsumer consumer;
 
-            RCLCPP_FATAL_STREAM(this->get_logger(), e.what());
-            exit(1);
-        }
+    comm::INotifier notifier;
 
+    comm::Pipeline<PrimaryPackage> pipeline(prod, &consumer, "Pipeline", notifier);
+    pipeline.run();
+    while (!consumer.isCalibrated()) {
+      rclcpp::sleep_for(rclcpp::Duration::from_seconds(0.1).to_chrono<std::chrono::nanoseconds>());
+    }
+    calibration_data_.reset(new YAML::Node);
+    *calibration_data_ = consumer.getCalibrationParameters();
+  }
 
-
-
-
-
-
+  bool writeCalibrationData()
+  {
+    if (calibration_data_ == nullptr) {
+      RCLCPP_ERROR_STREAM(this->get_logger(), "Calibration data not yet set.");
+      return false;
     }
 
+    fs::path out_path = fs::complete(output_filename_);
 
-    virtual ~CalibrationCorrection() = default;
-
-    void run()
-    {
-        comm::URStream<PrimaryPackage> stream(robot_ip_, UR_PRIMARY_PORT);
-        primary_interface::PrimaryParser parser;
-        comm::URProducer<PrimaryPackage> prod(stream, parser);
-        CalibrationConsumer consumer;
-
-        comm::INotifier notifier;
-
-        comm::Pipeline<PrimaryPackage> pipeline(prod, &consumer, "Pipeline", notifier);
-        pipeline.run();
-        while (!consumer.isCalibrated())
-        {
-            rclcpp::sleep_for(rclcpp::Duration::from_seconds(0.1).to_chrono<std::chrono::nanoseconds>());
-        }
-        calibration_data_.reset(new YAML::Node);
-        *calibration_data_ = consumer.getCalibrationParameters();
+    fs::path dst_path = out_path.parent_path();
+    if (!fs::exists(dst_path)) {
+      RCLCPP_ERROR_STREAM(this->get_logger(), "Parent folder " << dst_path << " does not exist.");
+      return false;
     }
-
-    bool writeCalibrationData()
-    {
-        if (calibration_data_ == nullptr)
-        {
-            RCLCPP_ERROR_STREAM(this->get_logger(), "Calibration data not yet set.");
-            return false;
-        }
-
-        fs::path out_path = fs::complete(output_filename_);
-
-        fs::path dst_path = out_path.parent_path();
-        if (!fs::exists(dst_path))
-        {
-            RCLCPP_ERROR_STREAM(this->get_logger(), "Parent folder " << dst_path << " does not exist.");
-            return false;
-        }
-        RCLCPP_INFO_STREAM(this->get_logger(), "Writing calibration data to " << out_path);
-        if (fs::exists(output_filename_))
-        {
-            RCLCPP_WARN_STREAM(this->get_logger(), "Output file " << output_filename_ << " already exists. Overwriting.");
-        }
-        std::ofstream file(output_filename_);
-        if (file.is_open())
-        {
-            file << *calibration_data_;
-        }
-        else
-        {
-            RCLCPP_ERROR_STREAM(this->get_logger(), "Failed writing the file. Do you have the correct rights?");
-            return false;
-        }
-        RCLCPP_INFO_STREAM(this->get_logger(), "Wrote output.");
-
-        return true;
+    RCLCPP_INFO_STREAM(this->get_logger(), "Writing calibration data to " << out_path);
+    if (fs::exists(output_filename_)) {
+      RCLCPP_WARN_STREAM(this->get_logger(), "Output file " << output_filename_ << " already exists. Overwriting.");
     }
+    std::ofstream file(output_filename_);
+    if (file.is_open()) {
+      file << *calibration_data_;
+    } else {
+      RCLCPP_ERROR_STREAM(this->get_logger(), "Failed writing the file. Do you have the correct rights?");
+      return false;
+    }
+    RCLCPP_INFO_STREAM(this->get_logger(), "Wrote output.");
+
+    return true;
+  }
+
 private:
-
-    std::string robot_ip_;
-    std::string output_filename_;
-    std::shared_ptr<YAML::Node> calibration_data_;
+  std::string robot_ip_;
+  std::string output_filename_;
+  std::shared_ptr<YAML::Node> calibration_data_;
 };
-
-
 
 int main(int argc, char* argv[])
 {
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<CalibrationCorrection>());
-    rclcpp::shutdown();
+  rclcpp::init(argc, argv);
 
-  ur_driver::registerUrclLogHandler();
+  rclcpp::shutdown();
 
-  try
-  {
-    CalibrationCorrection my_calibration_correction(nh);
-    my_calibration_correction.run();
-    if (!my_calibration_correction.writeCalibrationData())
-    {
-        RCLCPP_ERROR_STREAM("Failed writing calibration data. See errors above for details.");
+  ur_robot_driver::registerUrclLogHandler();
+
+  try {
+    auto calib_node = std::make_shared<CalibrationCorrection>();
+    calib_node->run();
+    if (!calib_node->writeCalibrationData()) {
+      RCLCPP_ERROR_STREAM(calib_node->get_logger(), "Failed writing calibration data. See errors above for details.");
       return -1;
     }
-      RCLCPP_INFO_STREAM("Calibration correction done");
-  }
-  catch (const UrException& e)
-  {
-      RCLCPP_ERROR_STREAM(e.what());
-  }
-  catch (const std::exception& e)
-  {
-      RCLCPP_ERROR_STREAM(e.what());
+    RCLCPP_INFO_STREAM(calib_node->get_logger(), "Calibration correction done");
+  } catch (const UrException& e) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("ur_calibration"), e.what());
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("ur_calibration"), e.what());
   }
   return 0;
 }

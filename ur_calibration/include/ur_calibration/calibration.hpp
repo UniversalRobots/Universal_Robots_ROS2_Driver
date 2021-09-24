@@ -111,8 +111,7 @@ struct DHRobot
   {
     assert(this->segments_.size() == other.segments_.size());
     DHRobot ret;
-    for (size_t i = 0; i < this->segments_.size(); ++i)
-    {
+    for (size_t i = 0; i < this->segments_.size(); ++i) {
       ret.segments_.push_back(this->segments_[i] + other.segments_[i]);
     }
     return ret;
@@ -170,7 +169,7 @@ public:
    * \brief Generates a yaml representation of all transformation matrices as returned by
    * getSimplified()
    *
-   * \returns A YAML tree representing all tranformation matrices.
+   * \returns A YAML tree representing all transformation matrices.
    */
   YAML::Node toYaml() const;
 
