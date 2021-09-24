@@ -44,6 +44,7 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_ros/transform_listener.h>
 
+#include <memory>
 #include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
@@ -52,121 +53,106 @@ using namespace urcl;
 using namespace primary_interface;
 using namespace ur_calibration;
 
-//class ParamaterMissingException : public rclcpp::exceptions::Par
-//{
-//public:
-//  ParamaterMissingException(const std::string& name)
-//    : Exception("Cannot find required parameter " + name + " on the parameter server.")
-//  {
-//  }
-//};
 
-class CalibrationCorrection
+class CalibrationCorrection : public rclcpp::Node
 {
 public:
-  CalibrationCorrection(const ros::NodeHandle& nh) : nh_(nh)
-  {
-    std::string output_package_name;
-    try
-    {
-      // The robot's IP address
-      robot_ip_ = getRequiredParameter<std::string>("robot_ip");
 
-      // The target file where the calibration data is written to
-      output_filename_ = getRequiredParameter<std::string>("output_filename");
-    }
-    catch (const rclcpp::exceptions::ParameterUninitializedException& e)
-    {
-      ROS_FATAL_STREAM(e.what());
-      exit(1);
-    }
-  }
+    CalibrationCorrection(): Node("ur_calibration"){
 
-  virtual ~CalibrationCorrection() = default;
+        std::string output_package_name;
 
-  void run()
-  {
-    comm::URStream<PrimaryPackage> stream(robot_ip_, UR_PRIMARY_PORT);
-    primary_interface::PrimaryParser parser;
-    comm::URProducer<PrimaryPackage> prod(stream, parser);
-    CalibrationConsumer consumer;
+        try {
+            // The robot's IP address
+            robot_ip_ = this->get_parameter("robot_ip").as_string();
+            // The target file where the calibration data is written to
+            output_filename_ = this->get_parameter("output_filename").as_string();
 
-    comm::INotifier notifier;
+        }catch(rclcpp::exceptions::ParameterNotDeclaredException &e) {
 
-    comm::Pipeline<PrimaryPackage> pipeline(prod, &consumer, "Pipeline", notifier);
-    pipeline.run();
-    while (!consumer.isCalibrated())
-    {
-      ros::Duration(0.1).sleep();
-    }
-    calibration_data_.reset(new YAML::Node);
-    *calibration_data_ = consumer.getCalibrationParameters();
-  }
+            RCLCPP_FATAL_STREAM(this->get_logger(), e.what());
+            exit(1);
+        }
 
-  bool writeCalibrationData()
-  {
-    if (calibration_data_ == nullptr)
-    {
-      ROS_ERROR_STREAM("Calibration data not yet set.");
-      return false;
+
+
+
+
+
+
     }
 
-    fs::path out_path = fs::complete(output_filename_);
 
-    fs::path dst_path = out_path.parent_path();
-    if (!fs::exists(dst_path))
-    {
-      ROS_ERROR_STREAM("Parent folder " << dst_path << " does not exist.");
-      return false;
-    }
-    ROS_INFO_STREAM("Writing calibration data to " << out_path);
-    if (fs::exists(output_filename_))
-    {
-      ROS_WARN_STREAM("Output file " << output_filename_ << " already exists. Overwriting.");
-    }
-    std::ofstream file(output_filename_);
-    if (file.is_open())
-    {
-      file << *calibration_data_;
-    }
-    else
-    {
-      ROS_ERROR_STREAM("Failed writing the file. Do you have the correct rights?");
-      return false;
-    }
-    ROS_INFO_STREAM("Wrote output.");
+    virtual ~CalibrationCorrection() = default;
 
-    return true;
-  }
+    void run()
+    {
+        comm::URStream<PrimaryPackage> stream(robot_ip_, UR_PRIMARY_PORT);
+        primary_interface::PrimaryParser parser;
+        comm::URProducer<PrimaryPackage> prod(stream, parser);
+        CalibrationConsumer consumer;
 
+        comm::INotifier notifier;
+
+        comm::Pipeline<PrimaryPackage> pipeline(prod, &consumer, "Pipeline", notifier);
+        pipeline.run();
+        while (!consumer.isCalibrated())
+        {
+            rclcpp::sleep_for(rclcpp::Duration::from_seconds(0.1).to_chrono<std::chrono::nanoseconds>());
+        }
+        calibration_data_.reset(new YAML::Node);
+        *calibration_data_ = consumer.getCalibrationParameters();
+    }
+
+    bool writeCalibrationData()
+    {
+        if (calibration_data_ == nullptr)
+        {
+            RCLCPP_ERROR_STREAM(this->get_logger(), "Calibration data not yet set.");
+            return false;
+        }
+
+        fs::path out_path = fs::complete(output_filename_);
+
+        fs::path dst_path = out_path.parent_path();
+        if (!fs::exists(dst_path))
+        {
+            RCLCPP_ERROR_STREAM(this->get_logger(), "Parent folder " << dst_path << " does not exist.");
+            return false;
+        }
+        RCLCPP_INFO_STREAM(this->get_logger(), "Writing calibration data to " << out_path);
+        if (fs::exists(output_filename_))
+        {
+            RCLCPP_WARN_STREAM(this->get_logger(), "Output file " << output_filename_ << " already exists. Overwriting.");
+        }
+        std::ofstream file(output_filename_);
+        if (file.is_open())
+        {
+            file << *calibration_data_;
+        }
+        else
+        {
+            RCLCPP_ERROR_STREAM(this->get_logger(), "Failed writing the file. Do you have the correct rights?");
+            return false;
+        }
+        RCLCPP_INFO_STREAM(this->get_logger(), "Wrote output.");
+
+        return true;
+    }
 private:
-  template <typename T>
-  T getRequiredParameter(const std::string& param_name) const
-  {
-    T ret_val;
-    if (nh_.hasParam(param_name))
-    {
-      nh_.getParam(param_name, ret_val);
-    }
-    else
-    {
-      throw ParamaterMissingException(nh_.resolveName(param_name));
-    }
 
-    return ret_val;
-  }
-
-  ros::NodeHandle nh_;
-  std::string robot_ip_;
-  std::string output_filename_;
-
-  std::unique_ptr<YAML::Node> calibration_data_;
+    std::string robot_ip_;
+    std::string output_filename_;
+    std::shared_ptr<YAML::Node> calibration_data_;
 };
+
+
 
 int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "ur_calibration");
-  ros::NodeHandle nh("~");
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<CalibrationCorrection>());
+    rclcpp::shutdown();
 
   ur_driver::registerUrclLogHandler();
 
@@ -176,18 +162,18 @@ int main(int argc, char* argv[])
     my_calibration_correction.run();
     if (!my_calibration_correction.writeCalibrationData())
     {
-      ROS_ERROR_STREAM("Failed writing calibration data. See errors above for details.");
+        RCLCPP_ERROR_STREAM("Failed writing calibration data. See errors above for details.");
       return -1;
     }
-    ROS_INFO("Calibration correction done");
+      RCLCPP_INFO_STREAM("Calibration correction done");
   }
   catch (const UrException& e)
   {
-    ROS_ERROR_STREAM(e.what());
+      RCLCPP_ERROR_STREAM(e.what());
   }
   catch (const std::exception& e)
   {
-    ROS_ERROR_STREAM(e.what());
+      RCLCPP_ERROR_STREAM(e.what());
   }
   return 0;
 }
