@@ -82,9 +82,11 @@ To use MoveIt some additional packages should be added into workspace:
    source install/setup.bash
    ```
 
-## Hardware Setup
+## Connect to External Control via URCap
 
-1. To enable external control of the UR robot from a remote PC you need to install the **externalcontrol-1.0.5.urcap** which can be found inside the **resources** folder of this driver or download the latest from [Universal_Robots_ExternalControl_URCap](https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases).
+This section describes installation and launching of the URCap program from the pendant. It allows ROS to control the robot externally. Generally, you will launch the driver via ROS then start URCap from the pendant.
+
+1. To enable external control of the UR robot from a remote PC you need to install the **externalcontrol-1.0.5.urcap** which can be downloaded from [Universal_Robots_ExternalControl_URCap](https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases).
 
 **Note:** For installing this URCap a minimal PolyScope version of 3.7 or 5.1 (in case of e-Series) is necessary.
 
@@ -92,7 +94,9 @@ To use MoveIt some additional packages should be added into workspace:
 
 3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers (see details in [Usage](#usage) section).
 
-4. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
+4. From the Program Robot tab of the teach pendant, load `external_control.urp`. Click on the "Control by..." section of the program to check the Host IP of the external PC. If it needs to be modified, make the modification under the Installation tab (as prompted on screen). You do not need to modify the Custom Port.
+
+5. When the Host IP is correct, click the play button to connect with the external PC.
 
 ## Usage
 
@@ -126,6 +130,8 @@ The most relevant arguments are the following:
 - To start the robot driver and controllers, use:
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+
+   (then start the external_control URCap program from the pendant, as described above)
    ```
    For an offline test with the emulated hardware you can just copy-paste this line.
    To run on the hardware, write the IP address of your robot and omit the `use_fake_hardware` argument.
@@ -157,6 +163,8 @@ The most relevant arguments are the following:
 - To test the driver with the example MoveIt-setup, first start the controllers then start MoveIt. (This requires a `vcs import` of MoveIt packages):
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false
+
+   (then start the external_control URCap program from the pendant, as described above)
 
    ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true launch_rviz:=true
    ```
