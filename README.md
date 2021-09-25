@@ -82,6 +82,30 @@ To use MoveIt some additional packages should be added into workspace:
    source install/setup.bash
    ```
 
+## Network Setup
+
+There are many possible ways to connect a UR robot. This section describes a good method to reduce latency.
+
+Connect the UR control box directly to the remote PC with an ethernet cable. Open the network settings from the UR teach pendant (Setup Robot -> Network) and enter these settings:
+
+```
+IP address: 192.168.1.102
+Subnet mask: 255.255.255.0
+Default gateway: 192.168.1.1
+Preferred DNS server: 192.168.1.1
+Alternative DNS server: 0.0.0.0
+```
+
+On the remote PC, turn off all network devices except the "wired connection." Open Network Settings and create a new Wired connection with these settings. You may want to name this new connection `UR` or something similar:
+
+```
+IPv4
+Manual
+Address: 192.168.1.101
+Netmask: 255.255.255.0
+Gateway: 192.168.1.1
+```
+
 ## Connect to External Control via URCap
 
 This section describes installation and launching of the URCap program from the pendant. It allows ROS to control the robot externally. Generally, you will launch the driver via ROS then start URCap from the pendant.
