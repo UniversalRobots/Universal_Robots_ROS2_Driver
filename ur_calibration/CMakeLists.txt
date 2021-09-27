@@ -74,13 +74,25 @@ install(DIRECTORY launch
 ## Add gtest based cpp test target and link libraries
 if (BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
+  find_package(ament_cmake_gmock REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+
   ament_lint_auto_find_test_dependencies()
+
+  # Get the first item (it will be the build space version of the build path).
+  list(GET ament_index_build_path 0 ament_index_build_path)
+  if(WIN32)
+    # On Windows prevent CMake errors and prevent it being evaluated as a list.
+    string(REPLACE "\\" "/" ament_index_build_path "${ament_index_build_path}")
+  endif()
+
+  ament_add_gmock(
+          calibration_test
+          test/calibration_test.cpp
+          src/calibration.cpp
+  )
+  target_include_directories(calibration_test PRIVATE include ${EIGEN3_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
+  target_link_libraries(calibration_test ${rclcpp_LIBRARIES} ${EIGEN3_LIBRARIES} ${YAML_CPP_LIBRARIES} ur_client_library::urcl)
 endif()
 
 ament_export_include_directories(

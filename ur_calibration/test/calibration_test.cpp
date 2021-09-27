@@ -22,6 +22,8 @@
  *
  * \author  Felix Exner exner@fzi.de
  * \date    2019-03-11
+ * \author  Lovro Ivanov lovro.ivanov@gmail.com
+ * \date    2021-09-27
  *
  */
 //----------------------------------------------------------------------
