@@ -31,7 +31,7 @@
 #include <gtest/gtest.h>
 #include <ur_calibration/calibration.hpp>
 
-using namespace ur_calibration;
+using ur_calibration;
 
 namespace
 {

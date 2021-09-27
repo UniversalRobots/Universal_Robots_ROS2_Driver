@@ -29,6 +29,7 @@
 //----------------------------------------------------------------------
 
 #include <ur_calibration/calibration.hpp>
+#include <vector>
 
 namespace ur_calibration
 {

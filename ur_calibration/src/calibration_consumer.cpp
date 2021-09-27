@@ -30,6 +30,8 @@
 
 #include <ur_calibration/calibration_consumer.hpp>
 
+#include <memory>
+
 namespace ur_calibration
 {
 CalibrationConsumer::CalibrationConsumer() : calibrated_(false)

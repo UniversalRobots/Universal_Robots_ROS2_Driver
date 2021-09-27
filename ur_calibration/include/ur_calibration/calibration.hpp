@@ -28,13 +28,16 @@
  */
 //----------------------------------------------------------------------
 
-#ifndef UR_RTDE_DRIVER_CALIBRATION_H_INCLUDED
-#define UR_RTDE_DRIVER_CALIBRATION_H_INCLUDED
+#ifndef UR_CALIBRATION__CALIBRATION_HPP_
+#define UR_CALIBRATION__CALIBRATION_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 #include <Eigen/Dense>
 #include <yaml-cpp/yaml.h>
+
 #include <fstream>
+#include <string>
+#include <vector>
 
 namespace ur_calibration
 {
@@ -95,7 +98,7 @@ struct DHRobot
   /*!
    * \brief Create a new robot representation giving a set of \ref DHSegment objects
    */
-  DHRobot(const std::vector<DHSegment>& segments)
+  explicit DHRobot(const std::vector<DHSegment>& segments)
   {
     delta_theta_correction2_ = 0;
     delta_theta_correction3_ = 0;
@@ -132,7 +135,7 @@ struct DHRobot
 class Calibration
 {
 public:
-  Calibration(const DHRobot& robot);
+  explicit Calibration(const DHRobot& robot);
   virtual ~Calibration();
 
   /*!
@@ -198,4 +201,4 @@ private:
   std::vector<Eigen::Matrix4d> chain_;
 };
 }  // namespace ur_calibration
-#endif  // ifndef UR_RTDE_DRIVER_CALIBRATION_H_INCLUDED
+#endif  // UR_CALIBRATION__CALIBRATION_HPP_

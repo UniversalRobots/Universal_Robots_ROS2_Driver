@@ -67,15 +67,15 @@ install(DIRECTORY launch
         DESTINATION share/${PROJECT_NAME}
 )
 
-#############
-## Testing ##
-#############
-
 ## Add gtest based cpp test target and link libraries
-if (BUILD_TESTING)
+if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE
+          ament_cmake_uncrustify
+          ament_cmake_cpplint
+  )
 
   ament_lint_auto_find_test_dependencies()
 
