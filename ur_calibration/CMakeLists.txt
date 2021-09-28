@@ -69,8 +69,6 @@ install(DIRECTORY launch
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
-  set(ament_cmake_copyright_FOUND TRUE)
-  set(ament_cmake_cpplint_FOUND TRUE)
   list(APPEND AMENT_LINT_AUTO_EXCLUDE
           ament_cmake_uncrustify
           ament_cmake_cpplint

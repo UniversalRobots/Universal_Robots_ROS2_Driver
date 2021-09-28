@@ -1,8 +1,6 @@
-// this is for emacs file handling -*- mode: c++; indent-tabs-mode: nil -*-
-
 // -- BEGIN LICENSE BLOCK ----------------------------------------------
-// Copyright 2019 FZI Forschungszentrum Informatik
 // Created on behalf of Universal Robots A/S
+// Copyright 2019 FZI Forschungszentrum Informatik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

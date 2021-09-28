@@ -1,8 +1,6 @@
-// this is for emacs file handling -*- mode: c++; indent-tabs-mode: nil -*-
-
 // -- BEGIN LICENSE BLOCK ----------------------------------------------
-// Copyright 2019 FZI Forschungszentrum Informatik
 // Created on behalf of Universal Robots A/S
+// Copyright 2019 FZI Forschungszentrum Informatik
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,14 +42,22 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_ros/transform_listener.h>
 
-#include <memory>
 #include <boost/filesystem.hpp>
+#include <memory>
+#include <string>
 
 namespace fs = boost::filesystem;
 
-using namespace urcl;
-using namespace primary_interface;
-using namespace ur_calibration;
+using urcl::UrException;
+using urcl::comm::INotifier;
+using urcl::comm::Pipeline;
+using urcl::comm::URProducer;
+using urcl::comm::URStream;
+using urcl::primary_interface::PrimaryPackage;
+using urcl::primary_interface::PrimaryParser;
+using urcl::primary_interface::UR_PRIMARY_PORT;
+
+using ur_calibration::CalibrationConsumer;
 
 class CalibrationCorrection : public rclcpp::Node
 {
@@ -68,7 +74,6 @@ public:
       robot_ip_ = this->get_parameter("robot_ip").as_string();
       // The target file where the calibration data is written to
       output_filename_ = this->get_parameter("output_filename").as_string();
-
     } catch (rclcpp::exceptions::ParameterNotDeclaredException& e) {
       RCLCPP_FATAL_STREAM(this->get_logger(), e.what());
       exit(1);
@@ -79,14 +84,14 @@ public:
 
   void run()
   {
-    comm::URStream<PrimaryPackage> stream(robot_ip_, UR_PRIMARY_PORT);
-    primary_interface::PrimaryParser parser;
-    comm::URProducer<PrimaryPackage> prod(stream, parser);
+    URStream<PrimaryPackage> stream(robot_ip_, UR_PRIMARY_PORT);
+    PrimaryParser parser;
+    URProducer<PrimaryPackage> prod(stream, parser);
     CalibrationConsumer consumer;
 
-    comm::INotifier notifier;
+    INotifier notifier;
 
-    comm::Pipeline<PrimaryPackage> pipeline(prod, &consumer, "Pipeline", notifier);
+    Pipeline<PrimaryPackage> pipeline(prod, &consumer, "Pipeline", notifier);
     pipeline.run();
     while (!consumer.isCalibrated()) {
       rclcpp::sleep_for(rclcpp::Duration::from_seconds(0.1).to_chrono<std::chrono::nanoseconds>());
