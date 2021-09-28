@@ -250,10 +250,6 @@ def generate_launch_description():
     )
     robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
-    # Get parameters for the Pose Tracking node
-    pose_tracking_yaml = load_yaml("moveit_servo", "config/pose_tracking_settings.yaml")
-    pose_tracking_params = {"moveit_servo": pose_tracking_yaml}
-
     # Get parameters for the Servo node
     servo_yaml = load_yaml("ur_moveit_config", "config/ur_servo.yaml")
     servo_params = {"moveit_servo": servo_yaml}
@@ -282,24 +278,23 @@ def generate_launch_description():
         ],
     )
 
-    pose_tracking_node = Node(
+    servo_node = Node(
         package="moveit_servo",
-        executable="servo_pose_tracking_demo",
-        # prefix=['xterm -e gdb -ex run --args'],
-        output="screen",
+        executable="servo_server_node",
         parameters=[
+            servo_params,
             robot_description,
             robot_description_semantic,
-            kinematics_yaml,
-            pose_tracking_params,
-            servo_params,
-            joint_limits_yaml,
         ],
+        output={
+            "stdout": "screen",
+            "stderr": "screen",
+        },
     )
 
     nodes_to_start = [
         rviz_node,
-        pose_tracking_node,
+        servo_node,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
