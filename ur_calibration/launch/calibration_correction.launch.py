@@ -32,7 +32,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "target_filename",
             default_value="robot_calibration.yaml",
-            description="The extracted calibration information will be written to this target file.",
+            description="The extracted calibration information "
+            "will be written to this target file.",
         )
     )
 
