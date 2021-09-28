@@ -46,7 +46,7 @@ robot individually, e.g. *ex-ur10-1*.
 ```bash
 $ ros2 launch ur_calibration calibration_correction.py.launch \
 robot_ip:=<robot_ip> \
-target_filename:="$(ros2 pkg prefix example_organization_ur_launch)/etc/ex-ur10-1_calibration.yaml"
+target_filename:="$(ros2 pkg prefix example_organization_ur_launch)/share/example_organization_ur_launch/etc/ex-ur10-1_calibration.yaml"
 ```
 
 To make life easier, we create a launchfile for this particular robot. We base it upon the
@@ -55,20 +55,21 @@ respective launchfile in the driver:
 ```bash
 # Replace your actual colcon_ws folder
 $ cd <colcon_ws>/src/example_organization_ur_launch/launch
-$ roscp ur_robot_driver ur10_bringup.py.launch ex-ur10-1.py.launch
+$ cp $(ros2 pkg prefix ur_bringup)/share/ur_bringup/launch/ur_control.launch.py ex-ur10-1.launch.py
 ```
 
 Next, modify the parameter section of the new launchfile to match your actual calibration:
 
-```xml
-<!-- Note: Only the relevant lines are printed here-->
-  <arg name="robot_ip" default="192.168.0.101"/> <!-- if there is a default IP scheme for your
-  robots -->
-  <arg name="kinematics_config" default="$(find example_organization_ur_launch)/etc/ex-ur10-1_calibration.yaml"/>
+```py
+kinematics_params = PathJoinSubstitution(
+        [FindPackageShare("example_organization_ur_launch"), "config", "", "ex-ur10-1_calibration.yaml"]
+    )
+
 ```
 
 Then, anybody cloning this repository can startup the robot simply by launching
 
 ```bash
+$ colcon build --packages-select example_organization_ur_launch
 $ ros2 launch example_organization_ur_launch ex-ur10-1.py.launch
 ```

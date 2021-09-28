@@ -56,7 +56,10 @@ using namespace ur_calibration;
 class CalibrationCorrection : public rclcpp::Node
 {
 public:
-  CalibrationCorrection() : Node("ur_calibration")
+  CalibrationCorrection()
+    : Node(
+          "ur_calibration",
+          rclcpp::NodeOptions().allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true))
   {
     std::string output_package_name;
 
