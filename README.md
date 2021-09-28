@@ -84,9 +84,11 @@ To use MoveIt some additional packages should be added into workspace:
 
 ## Network Setup
 
-There are many possible ways to connect a UR robot. This section describes a good method to reduce latency.
+There are many possible ways to connect a UR robot. This section describes a good example using static IP adresses and a direct connection from the PC to the Robot to minimize latency introduced by network hardware. Though a good network switch usually works fine, as well.
 
-Connect the UR control box directly to the remote PC with an ethernet cable. Open the network settings from the UR teach pendant (Setup Robot -> Network) and enter these settings:
+1. Connect the UR control box directly to the remote PC with an ethernet cable.
+
+2. Open the network settings from the UR teach pendant (Setup Robot -> Network) and enter these settings:
 
 ```
 IP address: 192.168.1.102
@@ -96,7 +98,9 @@ Preferred DNS server: 192.168.1.1
 Alternative DNS server: 0.0.0.0
 ```
 
-On the remote PC, turn off all network devices except the "wired connection." Open Network Settings and create a new Wired connection with these settings. You may want to name this new connection `UR` or something similar:
+3. On the remote PC, turn off all network devices except the "wired connection", e.g. turn off wifi.
+
+4. Open Network Settings and create a new Wired connection with these settings. You may want to name this new connection `UR` or something similar:
 
 ```
 IPv4
@@ -104,6 +108,12 @@ Manual
 Address: 192.168.1.101
 Netmask: 255.255.255.0
 Gateway: 192.168.1.1
+```
+
+5. Verify the connection from the PC with e.g. ping.
+
+```
+ping 192.168.1.102
 ```
 
 ## Connect to External Control via URCap
