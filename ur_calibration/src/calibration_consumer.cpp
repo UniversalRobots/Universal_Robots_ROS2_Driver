@@ -42,7 +42,7 @@ bool CalibrationConsumer::consume(std::shared_ptr<urcl::primary_interface::Prima
 {
   auto kin_info = std::dynamic_pointer_cast<urcl::primary_interface::KinematicsInfo>(product);
   if (kin_info != nullptr) {
-    RCLCPP_INFO(rclcpp::get_logger("ur_calibration_logger"), "%s", product->toString().c_str());
+    RCLCPP_INFO(rclcpp::get_logger("ur_calibration"), "%s", product->toString().c_str());
     DHRobot my_robot;
     for (size_t i = 0; i < kin_info->dh_a_.size(); ++i) {
       my_robot.segments_.push_back(
