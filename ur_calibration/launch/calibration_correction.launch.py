@@ -30,7 +30,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "target_filename",
+            "output_filename",
             default_value="robot_calibration.yaml",
             description="The extracted calibration information will be written to this target file.",
         )
@@ -38,7 +38,7 @@ def generate_launch_description():
 
     # Initialize Arguments
     robot_ip = LaunchConfiguration("robot_ip")
-    target_filename = LaunchConfiguration("target_filename")
+    target_filename = LaunchConfiguration("output_filename")
 
     calibration_correction = Node(
         package="ur_calibration",
