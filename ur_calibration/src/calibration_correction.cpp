@@ -132,8 +132,6 @@ int main(int argc, char* argv[])
 {
   rclcpp::init(argc, argv);
 
-  rclcpp::shutdown();
-
   ur_robot_driver::registerUrclLogHandler();
 
   try {
@@ -149,5 +147,8 @@ int main(int argc, char* argv[])
   } catch (const std::exception& e) {
     RCLCPP_ERROR_STREAM(rclcpp::get_logger("ur_calibration"), e.what());
   }
+
+  rclcpp::shutdown();
+
   return 0;
 }
