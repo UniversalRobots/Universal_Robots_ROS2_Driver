@@ -31,14 +31,16 @@
 #include <gtest/gtest.h>
 #include <ur_calibration/calibration.hpp>
 
-using ur_calibration;
+using namespace ur_calibration;
 
 namespace
 {
+/*
 bool isApproximately(const double val1, const double val2, const double precision)
 {
-  return std::abs(val1 - val2) < precision;
+return std::abs(val1 - val2) < precision;
 }
+ */
 
 template <class Scalar_, int dim_>
 void doubleEqVec(const Eigen::Matrix<Scalar_, dim_, 1> vec1, const Eigen::Matrix<Scalar_, dim_, 1> vec2,

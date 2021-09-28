@@ -170,7 +170,8 @@ std::vector<Eigen::Matrix4d> Calibration::getSimplified() const
   std::vector<Eigen::Matrix4d> simplified_chain;
   simplified_chain.push_back(chain_[0]);
   for (size_t i = 1; i < chain_.size() - 1; i += 2) {
-    simplified_chain.push_back(chain_[i] * chain_[i + 1]);
+    simplified_chain.emplace_back(chain_[i] * chain_[i + 1]);
+    /*
     Eigen::Matrix3d rot_a = chain_[i].topLeftCorner(3, 3);
     Eigen::Vector3d rpy_a = rot_a.eulerAngles(0, 1, 2);
 
@@ -180,6 +181,7 @@ std::vector<Eigen::Matrix4d> Calibration::getSimplified() const
     Eigen::Matrix3d rot = simplified_chain.back().topLeftCorner(3, 3);
     Eigen::Vector3d rpy = rot.eulerAngles(0, 1, 2);
     Eigen::Quaterniond quat(rot);
+     */
   }
   simplified_chain.push_back(chain_.back());
   return simplified_chain;

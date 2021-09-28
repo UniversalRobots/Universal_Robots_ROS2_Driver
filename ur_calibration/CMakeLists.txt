@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(ur_calibration)
 
-add_compile_options(-std=c++11)
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -71,7 +69,6 @@ install(DIRECTORY launch
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
-  find_package(ament_cmake_gtest REQUIRED)
   list(APPEND AMENT_LINT_AUTO_EXCLUDE
           ament_cmake_uncrustify
           ament_cmake_cpplint
