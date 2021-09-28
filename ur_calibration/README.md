@@ -62,7 +62,7 @@ Next, modify the parameter section of the new launchfile to match your actual ca
 
 ```py
 kinematics_params = PathJoinSubstitution(
-        [FindPackageShare("example_organization_ur_launch"), "config", "", "ex-ur10-1_calibration.yaml"]
+        [FindPackageShare("example_organization_ur_launch"), "etc", "", "ex-ur10-1_calibration.yaml"]
     )
 
 ```
@@ -70,6 +70,8 @@ kinematics_params = PathJoinSubstitution(
 Then, anybody cloning this repository can startup the robot simply by launching
 
 ```bash
+# Replace your actual colcon_ws folder
+$ cd <colcon_ws>
 $ colcon build --packages-select example_organization_ur_launch
-$ ros2 launch example_organization_ur_launch ex-ur10-1.py.launch
+$ ros2 launch example_organization_ur_launch ex-ur10-1.launch.py robot_ip:=xxx.yyy.zzz.www ur_type:=ur5e  use_fake_hardware:=false launch_rviz:=true
 ```
