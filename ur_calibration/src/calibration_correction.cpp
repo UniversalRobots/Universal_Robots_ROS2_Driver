@@ -42,7 +42,6 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <tf2_ros/transform_listener.h>
 
-#include <boost/filesystem.hpp>
 #include <filesystem>
 #include <memory>
 #include <string>
