@@ -40,8 +40,13 @@ namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
-hardware_interface::return_type URPositionHardwareInterface::configure(const HardwareInfo& system_info)
+    CallbackReturn URPositionHardwareInterface::on_init(const HardwareInfo& system_info)
 {
+  if (hardware_interface::SystemInterface::on_init(system_info) != CallbackReturn::SUCCESS)
+  {
+    return CallbackReturn::ERROR;
+  }
+
   info_ = system_info;
 
   // initialize
@@ -74,54 +79,53 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
                    joint.command_interfaces.size());
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     if (joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s command interfaces found as first command interface. '%s' expected.",
                    joint.name.c_str(), joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     if (joint.command_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s command interfaces found as second command interface. '%s' expected.",
                    joint.name.c_str(), joint.command_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces.size() != 3) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"), "Joint '%s' has %zu state interface. 3 expected.",
                    joint.name.c_str(), joint.state_interfaces.size());
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as first state interface. '%s' expected.", joint.name.c_str(),
                    joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as second state interface. '%s' expected.", joint.name.c_str(),
                    joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as third state interface. '%s' expected.", joint.name.c_str(),
                    joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return return_type::ERROR;
+      return CallbackReturn::ERROR;
     }
   }
 
-  status_ = status::CONFIGURED;
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;;
 }
 
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
@@ -236,8 +240,10 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   return command_interfaces;
 }
 
-return_type URPositionHardwareInterface::start()
+
+CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State & previous_state)
 {
+      if (previous_state.label())
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -353,22 +359,21 @@ return_type URPositionHardwareInterface::start()
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
-    return return_type::ERROR;
+    return CallbackReturn::ERROR;
   } catch (urcl::UrException& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
-    return return_type::ERROR;
+    return CallbackReturn::ERROR;
   }
 
   ur_driver_->startRTDECommunication();
 
-  status_ = hardware_interface::status::STARTED;
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
-return_type URPositionHardwareInterface::stop()
+CallbackReturn URPositionHardwareInterface::on_deactivate(const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
 
@@ -376,11 +381,10 @@ return_type URPositionHardwareInterface::stop()
 
   ur_driver_.reset();
 
-  status_ = hardware_interface::status::STOPPED;
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully stopped!");
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
 template <typename T>

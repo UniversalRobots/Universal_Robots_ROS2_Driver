@@ -35,7 +35,6 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "hardware_interface/types/hardware_interface_status_values.hpp"
 #include "hardware_interface/visibility_control.h"
 
 // UR stuff
@@ -45,10 +44,10 @@
 
 // ROS
 #include "rclcpp/macros.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 
 using hardware_interface::HardwareInfo;
 using hardware_interface::return_type;
-using hardware_interface::status;
 
 namespace ur_robot_driver
 {
@@ -76,24 +75,20 @@ class URPositionHardwareInterface : public hardware_interface::SystemInterface
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
 
-  return_type configure(const HardwareInfo& system_info) final;
+    CallbackReturn on_init(const HardwareInfo& system_info) final;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
-
-  status get_status() const final
-  {
-    return status_;
-  }
 
   std::string get_name() const final
   {
     return info_.name;
   }
 
-  return_type start() final;
-  return_type stop() final;
+    CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) final;
+    CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) final;
+
   return_type read() final;
   return_type write() final;
 
@@ -126,7 +121,6 @@ protected:
   void updateNonDoubleValues();
 
   HardwareInfo info_;
-  status status_;
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
