@@ -37,30 +37,30 @@
     <xacro:property name="sec_kinematics" value="${config_kinematics_parameters['kinematics']}" />
 
     <!-- JOINTS LIMIT PARAMETERS -->
-    <xacro:property name="shoulder_pan_lower_limit" value="${sec_limits['shoulder_pan']['min_position']}" scope="parent"/>
-    <xacro:property name="shoulder_pan_upper_limit" value="${sec_limits['shoulder_pan']['max_position']}" scope="parent"/>
-    <xacro:property name="shoulder_pan_velocity_limit" value="${sec_limits['shoulder_pan']['max_velocity']}" scope="parent"/>
-    <xacro:property name="shoulder_pan_effort_limit" value="${sec_limits['shoulder_pan']['max_effort']}" scope="parent"/>
-    <xacro:property name="shoulder_lift_lower_limit" value="${sec_limits['shoulder_lift']['min_position']}" scope="parent"/>
-    <xacro:property name="shoulder_lift_upper_limit" value="${sec_limits['shoulder_lift']['max_position']}" scope="parent"/>
-    <xacro:property name="shoulder_lift_velocity_limit" value="${sec_limits['shoulder_lift']['max_velocity']}" scope="parent"/>
-    <xacro:property name="shoulder_lift_effort_limit" value="${sec_limits['shoulder_lift']['max_effort']}" scope="parent"/>
+    <xacro:property name="shoulder_pan_lower_limit" value="${sec_limits['shoulder_pan_joint']['min_position']}" scope="parent"/>
+    <xacro:property name="shoulder_pan_upper_limit" value="${sec_limits['shoulder_pan_joint']['max_position']}" scope="parent"/>
+    <xacro:property name="shoulder_pan_velocity_limit" value="${sec_limits['shoulder_pan_joint']['max_velocity']}" scope="parent"/>
+    <xacro:property name="shoulder_pan_effort_limit" value="${sec_limits['shoulder_pan_joint']['max_effort']}" scope="parent"/>
+    <xacro:property name="shoulder_lift_lower_limit" value="${sec_limits['shoulder_lift_joint']['min_position']}" scope="parent"/>
+    <xacro:property name="shoulder_lift_upper_limit" value="${sec_limits['shoulder_lift_joint']['max_position']}" scope="parent"/>
+    <xacro:property name="shoulder_lift_velocity_limit" value="${sec_limits['shoulder_lift_joint']['max_velocity']}" scope="parent"/>
+    <xacro:property name="shoulder_lift_effort_limit" value="${sec_limits['shoulder_lift_joint']['max_effort']}" scope="parent"/>
     <xacro:property name="elbow_joint_lower_limit" value="${sec_limits['elbow_joint']['min_position']}" scope="parent"/>
     <xacro:property name="elbow_joint_upper_limit" value="${sec_limits['elbow_joint']['max_position']}" scope="parent"/>
     <xacro:property name="elbow_joint_velocity_limit" value="${sec_limits['elbow_joint']['max_velocity']}" scope="parent"/>
     <xacro:property name="elbow_joint_effort_limit" value="${sec_limits['elbow_joint']['max_effort']}" scope="parent"/>
-    <xacro:property name="wrist_1_lower_limit" value="${sec_limits['wrist_1']['min_position']}" scope="parent"/>
-    <xacro:property name="wrist_1_upper_limit" value="${sec_limits['wrist_1']['max_position']}" scope="parent"/>
-    <xacro:property name="wrist_1_velocity_limit" value="${sec_limits['wrist_1']['max_velocity']}" scope="parent"/>
-    <xacro:property name="wrist_1_effort_limit" value="${sec_limits['wrist_1']['max_effort']}" scope="parent"/>
-    <xacro:property name="wrist_2_lower_limit" value="${sec_limits['wrist_2']['min_position']}" scope="parent"/>
-    <xacro:property name="wrist_2_upper_limit" value="${sec_limits['wrist_2']['max_position']}" scope="parent"/>
-    <xacro:property name="wrist_2_velocity_limit" value="${sec_limits['wrist_2']['max_velocity']}" scope="parent"/>
-    <xacro:property name="wrist_2_effort_limit" value="${sec_limits['wrist_2']['max_effort']}" scope="parent"/>
-    <xacro:property name="wrist_3_lower_limit" value="${sec_limits['wrist_3']['min_position']}" scope="parent"/>
-    <xacro:property name="wrist_3_upper_limit" value="${sec_limits['wrist_3']['max_position']}" scope="parent"/>
-    <xacro:property name="wrist_3_velocity_limit" value="${sec_limits['wrist_3']['max_velocity']}" scope="parent"/>
-    <xacro:property name="wrist_3_effort_limit" value="${sec_limits['wrist_3']['max_effort']}" scope="parent"/>
+    <xacro:property name="wrist_1_lower_limit" value="${sec_limits['wrist_1_joint']['min_position']}" scope="parent"/>
+    <xacro:property name="wrist_1_upper_limit" value="${sec_limits['wrist_1_joint']['max_position']}" scope="parent"/>
+    <xacro:property name="wrist_1_velocity_limit" value="${sec_limits['wrist_1_joint']['max_velocity']}" scope="parent"/>
+    <xacro:property name="wrist_1_effort_limit" value="${sec_limits['wrist_1_joint']['max_effort']}" scope="parent"/>
+    <xacro:property name="wrist_2_lower_limit" value="${sec_limits['wrist_2_joint']['min_position']}" scope="parent"/>
+    <xacro:property name="wrist_2_upper_limit" value="${sec_limits['wrist_2_joint']['max_position']}" scope="parent"/>
+    <xacro:property name="wrist_2_velocity_limit" value="${sec_limits['wrist_2_joint']['max_velocity']}" scope="parent"/>
+    <xacro:property name="wrist_2_effort_limit" value="${sec_limits['wrist_2_joint']['max_effort']}" scope="parent"/>
+    <xacro:property name="wrist_3_lower_limit" value="${sec_limits['wrist_3_joint']['min_position']}" scope="parent"/>
+    <xacro:property name="wrist_3_upper_limit" value="${sec_limits['wrist_3_joint']['max_position']}" scope="parent"/>
+    <xacro:property name="wrist_3_velocity_limit" value="${sec_limits['wrist_3_joint']['max_velocity']}" scope="parent"/>
+    <xacro:property name="wrist_3_effort_limit" value="${sec_limits['wrist_3_joint']['max_effort']}" scope="parent"/>
 
     <!-- DH PARAMETERS -->
     <xacro:property name="d1" value="${sec_dh_parameters['d1']}" scope="parent"/>
