@@ -20,8 +20,6 @@ find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(ur_client_library REQUIRED)
 
-find_package(Boost REQUIRED COMPONENTS filesystem)
-
 set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
 
 ###########
@@ -32,7 +30,6 @@ include_directories(
   include
   ${EIGEN3_INCLUDE_DIRS}
   ${YAML_CPP_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
 )
 
 add_executable(calibration_correction
@@ -40,15 +37,13 @@ add_executable(calibration_correction
   src/calibration_consumer.cpp
   src/calibration_correction.cpp
 )
-target_include_directories(calibration_correction PRIVATE include ${Boost_INCLUDE_DIRS})
+target_include_directories(calibration_correction PRIVATE include)
 target_link_libraries(calibration_correction
-        ${Boost_LIBRARIES}
         ${YAML_CPP_LIBRARIES}
         ur_client_library::urcl
 )
 ament_target_dependencies(
         calibration_correction
-        ${${PROJECT_NAME}_EXPORTED_TARGETS}
         rclcpp
         ur_robot_driver
 )
@@ -67,14 +62,7 @@ install(DIRECTORY launch
 
 ## Add gtest based cpp test target and link libraries
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gmock REQUIRED)
-  list(APPEND AMENT_LINT_AUTO_EXCLUDE
-          ament_cmake_uncrustify
-          ament_cmake_cpplint
-  )
-
-  ament_lint_auto_find_test_dependencies()
 
   # Get the first item (it will be the build space version of the build path).
   list(GET ament_index_build_path 0 ament_index_build_path)
