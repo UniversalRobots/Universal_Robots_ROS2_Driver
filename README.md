@@ -84,7 +84,7 @@ To use MoveIt some additional packages should be added into workspace:
 
 ## Network Setup
 
-There are many possible ways to connect a UR robot. This section describes a good example using static IP adresses and a direct connection from the PC to the Robot to minimize latency introduced by network hardware. Though a good network switch usually works fine, as well.
+There are many possible ways to connect a UR robot. This section describes a good example using static IP addresses and a direct connection from the PC to the Robot to minimize latency introduced by network hardware. Though a good network switch usually works fine, as well.
 
 1. Connect the UR control box directly to the remote PC with an ethernet cable.
 
@@ -120,7 +120,7 @@ ping 192.168.1.102
 
 This section describes installation and launching of the URCap program from the pendant. It allows ROS to control the robot externally. Generally, you will launch the driver via ROS then start URCap from the pendant.
 
-1. To enable external control of the UR robot from a remote PC you need to install the **externalcontrol-1.0.5.urcap** which can be downloaded from [Universal_Robots_ExternalControl_URCap](https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases).
+1. To enable external control of the UR robot from a remote PC you need to install the [**externalcontrol-1.0.5.urcap**](/ur_robot_driver/resources) which can be downloaded from [Universal_Robots_ExternalControl_URCap](https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases).
 
 **Note:** For installing this URCap a minimal PolyScope version of 3.7 or 5.1 (in case of e-Series) is necessary.
 
