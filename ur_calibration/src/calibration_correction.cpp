@@ -43,10 +43,11 @@
 #include <tf2_ros/transform_listener.h>
 
 #include <boost/filesystem.hpp>
+#include <filesystem>
 #include <memory>
 #include <string>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 using urcl::UrException;
 using urcl::comm::INotifier;
@@ -107,7 +108,7 @@ public:
       return false;
     }
 
-    fs::path out_path = fs::complete(output_filename_);
+    fs::path out_path = fs::absolute(output_filename_);
 
     fs::path dst_path = out_path.parent_path();
     if (!fs::exists(dst_path)) {
