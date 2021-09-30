@@ -643,19 +643,22 @@ return_type URPositionHardwareInterface::perform_command_mode_switch(const std::
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-  position_controller_running_ = false;
-  velocity_controller_running_ = false;
-
   if (start_modes_.size() != 0 &&
       std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
+    velocity_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
 
   } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
                                                    hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
+    position_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
   }
+
+  start_modes_.clear();
+  stop_modes_.clear();
+
   return ret_val;
 }
 }  // namespace ur_robot_driver
