@@ -113,7 +113,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "robot_controller",
+            "initial_joint_controller",
             default_value="joint_trajectory_controller",
             description="Robot controller to start.",
         )
@@ -136,7 +136,7 @@ def generate_launch_description():
     prefix = LaunchConfiguration("prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
-    robot_controller = LaunchConfiguration("robot_controller")
+    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
 
     joint_limit_params = PathJoinSubstitution(
@@ -216,7 +216,7 @@ def generate_launch_description():
     )
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = PathJoinSubstitution(
+    initial_joint_controllers = PathJoinSubstitution(
         [FindPackageShare(runtime_config_package), "config", controllers_file]
     )
 
@@ -227,7 +227,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description, robot_controllers],
+        parameters=[robot_description, initial_joint_controllers],
         output={
             "stdout": "screen",
             "stderr": "screen",
@@ -291,10 +291,11 @@ def generate_launch_description():
         ],
     )
 
-    robot_controller_spawner = Node(
+    # There may be other controllers of the joints, but this is the initially-started one
+    initial_joint_controller_spawner = Node(
         package="controller_manager",
         executable="spawner.py",
-        arguments=[robot_controller, "-c", "/controller_manager"],
+        arguments=[initial_joint_controller, "-c", "/controller_manager"],
     )
 
     nodes_to_start = [
@@ -306,7 +307,7 @@ def generate_launch_description():
         io_and_status_controller_spawner,
         speed_scaling_state_broadcaster_spawner,
         force_torque_sensor_broadcaster_spawner,
-        robot_controller_spawner,
+        initial_joint_controller_spawner,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
