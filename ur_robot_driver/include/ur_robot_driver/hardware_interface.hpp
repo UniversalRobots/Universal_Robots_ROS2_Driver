@@ -46,9 +46,6 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
-using hardware_interface::HardwareInfo;
-using hardware_interface::return_type;
-
 namespace ur_robot_driver
 {
 enum class PausingState
@@ -75,28 +72,23 @@ class URPositionHardwareInterface : public hardware_interface::SystemInterface
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
 
-    CallbackReturn on_init(const HardwareInfo& system_info) final;
+  CallbackReturn on_init(const hardware_interface::HardwareInfo& system_info) final;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
 
-  std::string get_name() const final
-  {
-    return info_.name;
-  }
+  CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) final;
 
-    CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) final;
-    CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) final;
+  hardware_interface::return_type read() final;
+  hardware_interface::return_type write() final;
 
-  return_type read() final;
-  return_type write() final;
+  hardware_interface::return_type prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                                              const std::vector<std::string>& stop_interfaces) final;
 
-  return_type prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
-                                          const std::vector<std::string>& stop_interfaces) final;
-
-  return_type perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
-                                          const std::vector<std::string>& stop_interfaces) final;
+  hardware_interface::return_type perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                                              const std::vector<std::string>& stop_interfaces) final;
 
   /*!
    * \brief Callback to handle a change in the current state of the URCaps program running on the
@@ -119,8 +111,6 @@ protected:
   void initAsyncIO();
   void checkAsyncIO();
   void updateNonDoubleValues();
-
-  HardwareInfo info_;
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;

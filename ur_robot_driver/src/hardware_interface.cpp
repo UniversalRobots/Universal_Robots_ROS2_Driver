@@ -40,10 +40,9 @@ namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
-    CallbackReturn URPositionHardwareInterface::on_init(const HardwareInfo& system_info)
+CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& system_info)
 {
-  if (hardware_interface::SystemInterface::on_init(system_info) != CallbackReturn::SUCCESS)
-  {
+  if (hardware_interface::SystemInterface::on_init(system_info) != CallbackReturn::SUCCESS) {
     return CallbackReturn::ERROR;
   }
 
@@ -124,8 +123,8 @@ namespace ur_robot_driver
     }
   }
 
-
-  return CallbackReturn::SUCCESS;;
+  return CallbackReturn::SUCCESS;
+  ;
 }
 
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
@@ -240,10 +239,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   return command_interfaces;
 }
 
-
-CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State & previous_state)
+CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous_state)
 {
-      if (previous_state.label())
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -367,20 +364,18 @@ CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::
 
   ur_driver_->startRTDECommunication();
 
-
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
   return CallbackReturn::SUCCESS;
 }
 
-CallbackReturn URPositionHardwareInterface::on_deactivate(const rclcpp_lifecycle::State & previous_state)
+CallbackReturn URPositionHardwareInterface::on_deactivate(const rclcpp_lifecycle::State& previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
   ur_driver_.reset();
-
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully stopped!");
 
@@ -409,7 +404,7 @@ void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::Dat
   }
 }
 
-return_type URPositionHardwareInterface::read()
+hardware_interface::return_type URPositionHardwareInterface::read()
 {
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
@@ -481,14 +476,14 @@ return_type URPositionHardwareInterface::read()
 
     updateNonDoubleValues();
 
-    return return_type::OK;
+    return hardware_interface::return_type::OK;
   }
 
   // TODO(anyone): could not read from the driver --> reset controllers
-  return return_type::ERROR;
+  return hardware_interface::return_type::ERROR;
 }
 
-return_type URPositionHardwareInterface::write()
+hardware_interface::return_type URPositionHardwareInterface::write()
 {
   if (first_pass_) {
     first_pass_ = false;
@@ -511,10 +506,10 @@ return_type URPositionHardwareInterface::write()
 
     packet_read_ = false;
 
-    return return_type::OK;
+    return hardware_interface::return_type::OK;
   }
 
-  return return_type::ERROR;
+  return hardware_interface::return_type::ERROR;
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
@@ -590,8 +585,8 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   tool_mode_copy_ = static_cast<double>(tool_mode_);
 }
 
-return_type URPositionHardwareInterface::prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
-                                                                     const std::vector<std::string>& stop_interfaces)
+hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
+    const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
@@ -642,8 +637,8 @@ return_type URPositionHardwareInterface::prepare_command_mode_switch(const std::
   return ret_val;
 }
 
-return_type URPositionHardwareInterface::perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
-                                                                     const std::vector<std::string>& stop_interfaces)
+hardware_interface::return_type URPositionHardwareInterface::perform_command_mode_switch(
+    const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
