@@ -110,7 +110,7 @@ EXPOSE 29999
 EXPOSE 30001-30004
 
 # Install the ExternalControl URCap
-ADD ./aux/externalcontrol-1.0.5.urcap /ursim/GUI/bundle/com.fzi.externalcontrol-1.0.5.jar
+ADD ./externalcontrol-1.0.5.urcap /ursim/GUI/bundle/com.fzi.externalcontrol-1.0.5.jar
 
 # This will start the simulator
 ENTRYPOINT ["/entrypoint.sh"]
