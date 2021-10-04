@@ -21,16 +21,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM ubuntu:latest
+FROM lsiobase/guacgui:latest
 
 # Set Version Information
-ARG VERSION
-ARG URSIM
-LABEL build_version="URSim Version: ${VERSION}"
-LABEL description="UR simulator e-series"
+ARG BUILD_DATE="15/08/19"
+ARG VERSION="5.8.0.10253"
+LABEL build_version="URSim Version: ${VERSION} Build Date: ${BUILD_DATE}"
+LABEL maintainer="Arran Hobson Sayers"
+LABEL MAINTAINER="Arran Hobson Sayers"
+ENV APPNAME="URSim"
 
 # Set Timezone
-ENV TZ "Europe/Copenhagen"
+ARG TZ="Europe/London"
+ENV TZ ${TZ}
+
+# Setup Environment
+ENV DEBIAN_FRONTEND noninteractive
 
 # Set Home Directory
 ENV HOME /ursim
@@ -38,16 +44,12 @@ ENV HOME /ursim
 # Set robot model - Can be UR3, UR5 or UR10
 ENV ROBOT_MODEL UR5
 
-# Set display
-ENV DISPLAY :1
-
 RUN \
     echo "**** Installing Dependencies ****" && \
     apt-get update && \
-    apt-get install -qy --no-install-recommends openjdk-8-jre psmisc && \
-    apt-get -y install curl && \
-    apt-get install -y x11vnc xvfb && \
-    # Change java alternatives so we use openjdk8 (required by URSim)
+    apt-get install -qy --no-install-recommends \
+    openjdk-8-jre psmisc && \
+    # Change java alternatives so we use openjdk8 (required by URSim) not openjdk11 that comes with guacgui
     update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java 10000
 
 # Setup JAVA_HOME
@@ -55,11 +57,14 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
 RUN \
     echo "**** Downloading URSim ****" && \
+    # Make sure we are in the root
+    cd / && \
     # Download URSim Linux tar.gz
-    curl ${URSIM} -o URSim-Linux.tar.gz && \
+    curl https://s3-eu-west-1.amazonaws.com/ur-support-site/69987/URSim_Linux-5.8.0.10253.tar.gz -o URSim-Linux.tar.gz && \
+    #curl https://s3-eu-west-1.amazonaws.com/ur-support-site/54411/URSim_Linux-5.4.2.76197.tar.gz -o URSim-Linux.tar.gz && \
     # Extract tarball
     tar xvzf URSim-Linux.tar.gz && \
-    # Remove the tarball
+    #Remove the tarball
     rm URSim-Linux.tar.gz && \
     # Rename the URSim folder to just ursim
     mv  /ursim* /ursim
@@ -68,16 +73,17 @@ RUN \
     echo "**** Installing URSim ****" && \
     # cd to ursim folder
     cd /ursim && \
+    # Make URControl and all sh files executable
+    chmod +x ./*.sh ./URControl && \
+    #
     # Stop install of unnecessary packages and install required ones quietly
     sed -i 's|apt-get -y install|apt-get -qy install --no-install-recommends|g' ./install.sh && \
-    # Skip xterm command. We don't have a desktop
+    # Skip xterm command. We dont have a desktop
     sed -i 's|tty -s|(exit 0)|g' install.sh && \
     # Skip Check of Java Version as we have the correct installed and the command will fail
     sed -i 's|needToInstallJava$|(exit 0)|g' install.sh && \
-    # Skip install of desktop shortcuts - we don't have a desktop
+    # Skip install of desktop shortcuts - we dont have a desktop
     sed -i '/for TYPE in UR3 UR5 UR10/,$ d' ./install.sh  && \
-    # Replace libcurl3 with libcurl4 else the installation will fail
-    sed -i 's/libcurl3/libcurl4/g' ./install.sh  && \
     # Remove commands that are not relevant on docker as we are root user
     sed -i 's|pkexec ||g' ./install.sh && \
     sed -i 's|sudo ||g' ./install.sh && \
@@ -88,8 +94,6 @@ RUN \
     #
     echo "Installed URSim"
 
-    ENV PATH "$PATH:/ursim/usr/bin"
-
 RUN \
     echo "**** Clean Up ****" && \
     rm -rf \
@@ -97,20 +101,21 @@ RUN \
     /var/lib/apt/lists/* \
     /var/tmp/*
 
-# Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
+# Copy ursim run service script
+COPY ursim /etc/services.d/ursim
+COPY safety.conf.UR5 /ursim/.urcontrol/
+# Expose ports
+# Guacamole web browser viewer
+EXPOSE 8080
 # VNC viewer
-EXPOSE 5900
+EXPOSE 3389
 # Modbus Port
 EXPOSE 502
 # Interface Ports
 EXPOSE 29999
 EXPOSE 30001-30004
 
-# Install the ExternalControl URCap
-ADD ./aux/externalcontrol-1.0.5.urcap /ursim/GUI/bundle/com.fzi.externalcontrol-1.0.5.jar
+# Mount Volumes
+VOLUME /ursim
 
-# This will start the simulator
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/init"]
