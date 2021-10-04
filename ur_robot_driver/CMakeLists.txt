@@ -86,7 +86,7 @@ ament_export_libraries(
         ur_robot_driver_plugin
 )
 
-install(PROGRAMS scripts/tool_communication
+install(PROGRAMS scripts/tool_communication scripts/wait_dashboard_server.sh
   DESTINATION bin
 )
 

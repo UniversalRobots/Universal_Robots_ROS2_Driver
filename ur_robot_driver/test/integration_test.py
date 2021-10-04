@@ -20,7 +20,7 @@ import pytest
 
 import launch_testing
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -52,17 +52,40 @@ def generate_test_description():
         )
     )
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "initial_robot_controller",
+            default_value="scaled_joint_trajectory_controller",
+            description="Type/series of used UR robot.",
+        )
+    )
+
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
+    initial_robot_controller = LaunchConfiguration("initial_robot_controller")
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     launch_file = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([dir_path, "/../../ur_bringup/launch/ur_control.launch.py"]),
-        launch_arguments={"robot_ip": robot_ip, "ur_type": ur_type, "launch_rviz": "false"}.items(),
+        launch_arguments={
+            "robot_ip": robot_ip,
+            "ur_type": ur_type,
+            "launch_rviz": "false",
+            "initial_robot_controller": initial_robot_controller,
+        }.items(),
     )
 
+    wait_dashboard_server = [
+        ExecuteProcess(
+            cmd=["bash", "-c", '"$(ros2 pkg prefix ur_robot_driver)"/bin/wait_dashboard_server.sh'],
+            output="both",
+        )
+    ]
+
     return LaunchDescription(
-        declared_arguments + [launch_testing.actions.ReadyToTest(), launch_file]
+        wait_dashboard_server
+        + declared_arguments
+        + [launch_testing.actions.ReadyToTest(), launch_file]
     )
 
 
@@ -81,6 +104,7 @@ class IOTest(unittest.TestCase):
         rclpy.shutdown()
 
     def init_robot(self):
+
         # Initialize clients
         self.set_io_client = self.node.create_client(SetIO, "/io_and_status_controller/set_io")
         if self.set_io_client.wait_for_service(10) is False:
