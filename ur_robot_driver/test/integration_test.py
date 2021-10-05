@@ -29,8 +29,10 @@ from rclpy.node import Node
 
 from ur_msgs.srv import SetIO
 from ur_msgs.msg import IOStates
-from ur_dashboard_msgs.srv import GetRobotMode
-from ur_dashboard_msgs.msg import RobotMode
+from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState, GetRobotMode
+from ur_dashboard_msgs.srv import IsProgramRunning
+from ur_dashboard_msgs.srv import Load
+from ur_dashboard_msgs.msg import RobotMode, ProgramState
 from std_srvs.srv import Trigger
 
 
@@ -134,6 +136,75 @@ class IOTest(unittest.TestCase):
                 "Could not reach get robot mode service, make sure that the driver is actually running"
             )
 
+        self.load_installation_client = self.node.create_client(
+            Load, "/dashboard_client/load_installation"
+        )
+        if self.load_installation_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach load installation service, make sure that the driver is actually running"
+            )
+
+        self.load_program_client = self.node.create_client(Load, "/dashboard_client/load_program")
+        if self.load_program_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach load program service, make sure that the driver is actually running"
+            )
+
+        self.close_popup_client = self.node.create_client(Trigger, "/dashboard_client/close_popoup")
+        if self.load_program_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach close popup service, make sure that the driver is actually running"
+            )
+
+        self.get_loaded_program_client = self.node.create_client(
+            GetLoadedProgram, "/dashboard_client/get_loaded_program"
+        )
+        if self.get_loaded_program_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach get loaded program service, make sure that the driver is actually running"
+            )
+
+        self.get_program_state_client = self.node.create_client(
+            GetProgramState, "/dashboard_client/program_state"
+        )
+        if self.get_program_state_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach program state service, make sure that the driver is actually running"
+            )
+
+        self.is_program_running_client = self.node.create_client(
+            IsProgramRunning, "/dashboard_client/program_running"
+        )
+        if self.is_program_running_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach program running service, make sure that the driver is actually running"
+            )
+
+        self.play_program_client = self.node.create_client(
+            IsProgramRunning, "/dashboard_client/play"
+        )
+        if self.play_program_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach play service, make sure that the driver is actually running"
+            )
+
+    def test_load_installation_and_program(self):
+        """Test to load custom installation and program into the robot."""
+        # load installation
+        ld_req = Load.Request(filename="urcap_ros_control.installation")
+        result = self.call_service(self.load_installation_client, ld_req)
+        self.assertEqual(result.success, True)
+
+        # load program
+        ld_req = Load.Request(filename="urcap_ros_control.urp")
+        result = self.call_service(self.load_program_client, ld_req)
+        self.assertEqual(result.success, True)
+
+        # check loaded program
+        result = self.call_service(self.get_loaded_program_client, GetLoadedProgram.Request())
+        self.assertEqual(result.success, True)
+        self.assertEqual(result.program_name, "/ursim/programs/urcap_ros_control.urp")
+
     def test_switch_on(self):
         """Test power on a robot."""
         empty_req = Trigger.Request()
@@ -155,6 +226,27 @@ class IOTest(unittest.TestCase):
             mode = result.robot_mode.mode
 
         self.assertEqual(mode, RobotMode.RUNNING)
+
+    def test_close_popup(self):
+        """Test closing popup on teach pedant."""
+        result = self.call_service(self.close_popup_client, Trigger.Request())
+        self.assertEqual(result.success, True)
+
+    def test_play_program(self):
+        """Test playing robot program."""
+        result = self.call_service(self.play_program_client, Trigger.Request())
+        self.assertEqual(result.success, True)
+
+        # check program state
+        result = self.call_service(self.get_program_state_client, GetProgramState.Request())
+        self.assertEqual(result.success, True)
+        self.assertEqual(result.state.state, ProgramState.PLAYING)
+        self.assertEqual(result.program_name, "urcap_ros_control.urp")
+
+        # is program running
+        result = self.call_service(self.is_program_running_client, IsProgramRunning.Request())
+        self.assertEqual(result.success, True)
+        self.assertEqual(result.program_running, True)
 
     def test_set_io(self):
         """Test to set an IO and check whether it has been set."""
