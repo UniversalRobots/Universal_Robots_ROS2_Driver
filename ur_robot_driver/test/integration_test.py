@@ -315,6 +315,14 @@ class IOTest(unittest.TestCase):
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")
 
+    def call_action(self, ac_client, g):
+        future = ac_client.send_goal_async(g)
+        rclpy.spin_until_future_complete(self.node, future)
+        if future.result() is not None:
+            return future.result()
+        else:
+            raise Exception(f"Exception while calling service: {future.exception()}")
+
     def test_5_trajectory(self):
         """Test robot movement."""
         goal = FollowJointTrajectory.Goal()
@@ -340,7 +348,8 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Sending simple goal")
 
-        result = self.jtc_action_client.send_goal(goal)
+        result = self.call_action(self.jtc_action_client, goal)
+
         self.node.get_logger().info(result)
 
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
@@ -373,7 +382,7 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Sending illegal goal")
 
-        result = self.jtc_action_client.send_goal(goal)
+        result = self.call_action(self.jtc_action_client, goal)
 
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.INVALID_GOAL)
 
@@ -403,7 +412,7 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Sending scaled goal without time restrictions")
 
-        result = self.jtc_action_client.send_goal(goal)
+        result = self.call_action(self.jtc_action_client, goal)
 
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
@@ -413,7 +422,7 @@ class IOTest(unittest.TestCase):
         self.node.get_logger().info("Sending scaled goal with time restrictions")
 
         goal.goal_time_tolerance = Duration(nanosec=10000000)
-        result = self.jtc_action_client.send_goal(goal)
+        result = self.call_action(self.jtc_action_client, goal)
 
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
 
