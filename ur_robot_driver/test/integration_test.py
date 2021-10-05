@@ -155,7 +155,7 @@ class IOTest(unittest.TestCase):
                 "Could not reach load program service, make sure that the driver is actually running"
             )
 
-        self.close_popup_client = self.node.create_client(Trigger, "/dashboard_client/close_popoup")
+        self.close_popup_client = self.node.create_client(Trigger, "/dashboard_client/close_popup")
         if self.load_program_client.wait_for_service(10) is False:
             raise Exception(
                 "Could not reach close popup service, make sure that the driver is actually running"
