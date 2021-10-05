@@ -25,7 +25,12 @@ from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 import rclpy
+from rclpy.action import ActionClient
 from rclpy.node import Node
+
+from builtin_interfaces.msg import Duration
+from control_msgs.action import FollowJointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
 
 from ur_msgs.srv import SetIO
 from ur_msgs.msg import IOStates
@@ -85,9 +90,8 @@ def generate_test_description():
     ]
 
     return LaunchDescription(
-        wait_dashboard_server
-        + declared_arguments
-        + [launch_testing.actions.ReadyToTest(), launch_file]
+        declared_arguments
+        + [launch_testing.actions.ReadyToTest(), wait_dashboard_server, launch_file]
     )
 
 
@@ -186,6 +190,15 @@ class IOTest(unittest.TestCase):
         if self.play_program_client.wait_for_service(10) is False:
             raise Exception(
                 "Could not reach play service, make sure that the driver is actually running"
+            )
+
+        self.jtc_action_client = ActionClient(
+            self, FollowJointTrajectory, "follow_joint_trajectory"
+        )
+        if self.jtc_action_client.wait_for_server(10) is False:
+            raise Exception(
+                "Could not reach scaled_joint_trajectory_controller/follow_joint_trajectory action server,"
+                "make sure that controller is active (load + start)"
             )
 
     def test_load_installation_and_program(self):
@@ -298,3 +311,106 @@ class IOTest(unittest.TestCase):
             return future.result()
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")
+
+    def test_trajectory(self):
+        """Test robot movement."""
+        goal = FollowJointTrajectory.Goal()
+
+        goal.trajectory.joint_names = [
+            "elbow_joint",
+            "shoulder_lift_joint",
+            "shoulder_pan_joint",
+            "wrist_1_joint",
+            "wrist_2_joint",
+            "wrist_3_joint",
+        ]
+        position_list = [[0.0 for i in range(6)]]
+        position_list.append([-0.5 for i in range(6)])
+        position_list.append([-1.0 for i in range(6)])
+        duration_list = [6.0, 9.0, 12.0]
+
+        for i, position in enumerate(position_list):
+            point = JointTrajectoryPoint()
+            point.positions = position
+            point.time_from_start = Duration(sec=duration_list[i])
+            goal.trajectory.points.append(point)
+
+        self.node.get_logger().info("Sending simple goal")
+
+        result = self.jtc_action_client.send_goal(goal)
+
+        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+        self.node.get_logger().info("Received result SUCCESSFUL")
+
+    def test_illegal_trajectory(self):
+        """Test trajectory server."""
+        """This is more of a validation test that the testing suite does the right thing."""
+        goal = FollowJointTrajectory.Goal()
+
+        goal.trajectory.joint_names = [
+            "elbow_joint",
+            "shoulder_lift_joint",
+            "shoulder_pan_joint",
+            "wrist_1_joint",
+            "wrist_2_joint",
+            "wrist_3_joint",
+        ]
+        position_list = [[0.0 for i in range(6)]]
+        position_list.append([-0.5 for i in range(6)])
+        # Create illegal goal by making the second point come earlier than the first
+        duration_list = [6.0, 3.0]
+
+        for i, position in enumerate(position_list):
+            point = JointTrajectoryPoint()
+            point.positions = position
+            point.time_from_start = Duration(sec=duration_list[i])
+            goal.trajectory.points.append(point)
+
+        self.node.get_logger().info("Sending illegal goal")
+
+        result = self.jtc_action_client.send_goal(goal)
+
+        self.assertEqual(result.error_code, FollowJointTrajectory.Result.INVALID_GOAL)
+
+        self.node.get_logger().info("Received result INVALID_GOAL")
+
+    def test_scaled_trajectory(self):
+        """Test robot movement."""
+        goal = FollowJointTrajectory.Goal()
+
+        goal.trajectory.joint_names = [
+            "elbow_joint",
+            "shoulder_lift_joint",
+            "shoulder_pan_joint",
+            "wrist_1_joint",
+            "wrist_2_joint",
+            "wrist_3_joint",
+        ]
+        position_list = [[0.0 for i in range(6)]]
+        position_list.append([-1.0 for i in range(6)])
+        duration_list = [6.0, 6.5]
+
+        for i, position in enumerate(position_list):
+            point = JointTrajectoryPoint()
+            point.positions = position
+            point.time_from_start = Duration(sec=duration_list[i])
+            goal.trajectory.points.append(point)
+
+        self.node.get_logger().info("Sending scaled goal without time restrictions")
+
+        result = self.jtc_action_client.send_goal(goal)
+
+        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+        self.node.get_logger().info("Received result SUCCESSFUL")
+
+        # Now do the same again, but with a goal time constraint
+        self.node.get_logger().info("Sending scaled goal with time restrictions")
+
+        goal.goal_time_tolerance = Duration(sec=0.01)
+        result = self.jtc_action_client.send_goal(goal)
+
+        self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
+
+        self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
