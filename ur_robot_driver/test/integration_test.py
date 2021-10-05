@@ -330,12 +330,12 @@ class IOTest(unittest.TestCase):
         position_list = [[0.0 for i in range(6)]]
         position_list.append([-0.5 for i in range(6)])
         position_list.append([-1.0 for i in range(6)])
-        duration_list = [6.0, 9.0, 12.0]
+        duration_list = [Duration(sec=6, nanosec=0), Duration(sec=9, nanosec=0), Duration(sec=12, nanosec=0)]
 
         for i, position in enumerate(position_list):
             point = JointTrajectoryPoint()
             point.positions = position
-            point.time_from_start = Duration(sec=duration_list[i])
+            point.time_from_start = duration_list[i]
             goal.trajectory.points.append(point)
 
         self.node.get_logger().info("Sending simple goal")
@@ -362,12 +362,12 @@ class IOTest(unittest.TestCase):
         position_list = [[0.0 for i in range(6)]]
         position_list.append([-0.5 for i in range(6)])
         # Create illegal goal by making the second point come earlier than the first
-        duration_list = [6.0, 3.0]
+        duration_list = [Duration(sec=6, nanosec=0), Duration(sec=3, nanosec=0)]
 
         for i, position in enumerate(position_list):
             point = JointTrajectoryPoint()
             point.positions = position
-            point.time_from_start = Duration(sec=duration_list[i])
+            point.time_from_start = duration_list[i]
             goal.trajectory.points.append(point)
 
         self.node.get_logger().info("Sending illegal goal")
@@ -392,12 +392,12 @@ class IOTest(unittest.TestCase):
         ]
         position_list = [[0.0 for i in range(6)]]
         position_list.append([-1.0 for i in range(6)])
-        duration_list = [6.0, 6.5]
+        duration_list = [Duration(sec=6, nanosec=0), Duration(sec=6, nanosec=500000000)]
 
         for i, position in enumerate(position_list):
             point = JointTrajectoryPoint()
             point.positions = position
-            point.time_from_start = Duration(sec=duration_list[i])
+            point.time_from_start = duration_list[i]
             goal.trajectory.points.append(point)
 
         self.node.get_logger().info("Sending scaled goal without time restrictions")
@@ -411,7 +411,7 @@ class IOTest(unittest.TestCase):
         # Now do the same again, but with a goal time constraint
         self.node.get_logger().info("Sending scaled goal with time restrictions")
 
-        goal.goal_time_tolerance = Duration(sec=0.01)
+        goal.goal_time_tolerance = Duration(nanosec=10000000)
         result = self.jtc_action_client.send_goal(goal)
 
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
