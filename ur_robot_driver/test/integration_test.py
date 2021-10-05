@@ -90,8 +90,9 @@ def generate_test_description():
     ]
 
     return LaunchDescription(
-        declared_arguments
-        + [launch_testing.actions.ReadyToTest(), wait_dashboard_server, launch_file]
+        wait_dashboard_server
+        + declared_arguments
+        + [launch_testing.actions.ReadyToTest(), launch_file]
     )
 
 
