@@ -202,7 +202,7 @@ class IOTest(unittest.TestCase):
                 "make sure that controller is active (load + start)"
             )
 
-    def test_load_installation_and_program(self):
+    def test_1_load_installation_and_program(self):
         """Test to load custom installation and program into the robot."""
         # load installation
         ld_req = Load.Request(filename="urcap_ros_control.installation")
@@ -219,7 +219,7 @@ class IOTest(unittest.TestCase):
         self.assertEqual(result.success, True)
         self.assertEqual(result.program_name, "/ursim/programs/urcap_ros_control.urp")
 
-    def test_switch_on(self):
+    def test_2_switch_on(self):
         """Test power on a robot."""
         empty_req = Trigger.Request()
         get_robot_mode_req = GetRobotMode.Request()
@@ -241,7 +241,7 @@ class IOTest(unittest.TestCase):
 
         self.assertEqual(mode, RobotMode.RUNNING)
 
-    def test_play_program(self):
+    def test_3_play_program(self):
         """Test playing robot program."""
         result = self.call_service(self.close_popup_client, Trigger.Request())
         self.assertEqual(result.success, True)
@@ -260,7 +260,7 @@ class IOTest(unittest.TestCase):
         self.assertEqual(result.success, True)
         self.assertEqual(result.program_running, True)
 
-    def test_set_io(self):
+    def test_4_set_io(self):
         """Test to set an IO and check whether it has been set."""
         self.io_msg = None
         io_states_sub = self.node.create_subscription(
@@ -311,7 +311,7 @@ class IOTest(unittest.TestCase):
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")
 
-    def test_trajectory(self):
+    def test_5_trajectory(self):
         """Test robot movement."""
         goal = FollowJointTrajectory.Goal()
 
@@ -342,7 +342,7 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Received result SUCCESSFUL")
 
-    def test_trajectory_illegal(self):
+    def test_6_trajectory_illegal(self):
         """Test trajectory server."""
         """This is more of a validation test that the testing suite does the right thing."""
         goal = FollowJointTrajectory.Goal()
@@ -374,7 +374,7 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Received result INVALID_GOAL")
 
-    def test_trajectory_scaled(self):
+    def test_7_trajectory_scaled(self):
         """Test robot movement."""
         goal = FollowJointTrajectory.Goal()
 
