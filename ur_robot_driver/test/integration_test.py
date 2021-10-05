@@ -215,7 +215,8 @@ class IOTest(unittest.TestCase):
         self.assertEqual(result.success, True)
 
         # check loaded program
-        result = self.call_service(self.get_loaded_program_client, GetLoadedProgram.Request())
+        empty_req = GetLoadedProgram.Request()
+        result = self.call_service(self.get_loaded_program_client, empty_req)
         self.assertEqual(result.success, True)
         self.assertEqual(result.program_name, "/ursim/programs/urcap_ros_control.urp")
 
@@ -243,20 +244,23 @@ class IOTest(unittest.TestCase):
 
     def test_3_play_program(self):
         """Test playing robot program."""
-        result = self.call_service(self.close_popup_client, Trigger.Request())
+        empty_req = Trigger.Request()
+        result = self.call_service(self.close_popup_client, empty_req)
         self.assertEqual(result.success, True)
 
-        result = self.call_service(self.play_program_client, Trigger.Request())
+        result = self.call_service(self.play_program_client, empty_req)
         self.assertEqual(result.success, True)
 
         # check program state
-        result = self.call_service(self.get_program_state_client, GetProgramState.Request())
+        empty_req = GetProgramState.Request()
+        result = self.call_service(self.get_program_state_client, empty_req)
         self.assertEqual(result.success, True)
         self.assertEqual(result.state.state, ProgramState.PLAYING)
         self.assertEqual(result.program_name, "urcap_ros_control.urp")
 
         # is program running
-        result = self.call_service(self.is_program_running_client, IsProgramRunning.Request())
+        empty_req = IsProgramRunning.Request()
+        result = self.call_service(self.is_program_running_client, empty_req)
         self.assertEqual(result.success, True)
         self.assertEqual(result.program_running, True)
 
