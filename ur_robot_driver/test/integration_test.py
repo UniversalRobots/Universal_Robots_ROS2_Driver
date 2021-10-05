@@ -186,7 +186,7 @@ class IOTest(unittest.TestCase):
             )
 
         self.play_program_client = self.node.create_client(
-            IsProgramRunning, "/dashboard_client/play"
+            Trigger, "/dashboard_client/play"
         )
         if self.play_program_client.wait_for_service(10) is False:
             raise Exception(
@@ -194,7 +194,7 @@ class IOTest(unittest.TestCase):
             )
 
         self.jtc_action_client = ActionClient(
-            self, FollowJointTrajectory, "follow_joint_trajectory"
+            self, FollowJointTrajectory, "scaled_joint_trajectory/follow_joint_trajectory"
         )
         if self.jtc_action_client.wait_for_server(10) is False:
             raise Exception(
