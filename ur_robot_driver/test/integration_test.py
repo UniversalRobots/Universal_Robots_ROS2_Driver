@@ -194,11 +194,11 @@ class IOTest(unittest.TestCase):
             )
 
         self.jtc_action_client = ActionClient(
-            self.node, FollowJointTrajectory, "scaled_joint_trajectory/follow_joint_trajectory"
+            self.node, FollowJointTrajectory, "/scaled_joint_trajectory_controller/follow_joint_trajectory"
         )
         if self.jtc_action_client.wait_for_server(10) is False:
             raise Exception(
-                "Could not reach scaled_joint_trajectory_controller/follow_joint_trajectory action server,"
+                "Could not reach /scaled_joint_trajectory_controller/follow_joint_trajectory action server,"
                 "make sure that controller is active (load + start)"
             )
 
@@ -241,13 +241,11 @@ class IOTest(unittest.TestCase):
 
         self.assertEqual(mode, RobotMode.RUNNING)
 
-    def test_close_popup(self):
-        """Test closing popup on teach pedant."""
+    def test_play_program(self):
+        """Test playing robot program."""
         result = self.call_service(self.close_popup_client, Trigger.Request())
         self.assertEqual(result.success, True)
 
-    def test_play_program(self):
-        """Test playing robot program."""
         result = self.call_service(self.play_program_client, Trigger.Request())
         self.assertEqual(result.success, True)
 
@@ -344,7 +342,7 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Received result SUCCESSFUL")
 
-    def test_illegal_trajectory(self):
+    def test_trajectory_illegal(self):
         """Test trajectory server."""
         """This is more of a validation test that the testing suite does the right thing."""
         goal = FollowJointTrajectory.Goal()
@@ -376,7 +374,7 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Received result INVALID_GOAL")
 
-    def test_scaled_trajectory(self):
+    def test_trajectory_scaled(self):
         """Test robot movement."""
         goal = FollowJointTrajectory.Goal()
 
