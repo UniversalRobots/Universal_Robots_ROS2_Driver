@@ -61,7 +61,7 @@ def generate_test_description():
 
     declared_arguments.append(
         DeclareLaunchArgument(
-            "initial_robot_controller",
+            "initial_joint_controller",
             default_value="scaled_joint_trajectory_controller",
             description="Type/series of used UR robot.",
         )
@@ -69,7 +69,7 @@ def generate_test_description():
 
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
-    initial_robot_controller = LaunchConfiguration("initial_robot_controller")
+    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     launch_file = IncludeLaunchDescription(
@@ -78,7 +78,7 @@ def generate_test_description():
             "robot_ip": robot_ip,
             "ur_type": ur_type,
             "launch_rviz": "false",
-            "initial_robot_controller": initial_robot_controller,
+            "initial_joint_controller": initial_joint_controller,
         }.items(),
     )
 
