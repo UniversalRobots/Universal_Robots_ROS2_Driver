@@ -194,7 +194,7 @@ class IOTest(unittest.TestCase):
             )
 
         self.jtc_action_client = ActionClient(
-            self, FollowJointTrajectory, "scaled_joint_trajectory/follow_joint_trajectory"
+            self.node, FollowJointTrajectory, "scaled_joint_trajectory/follow_joint_trajectory"
         )
         if self.jtc_action_client.wait_for_server(10) is False:
             raise Exception(
