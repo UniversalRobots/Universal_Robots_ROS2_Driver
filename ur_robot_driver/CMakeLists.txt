@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
@@ -103,6 +104,7 @@ ament_export_dependencies(
   hardware_interface
   pluginlib
   rclcpp
+  rclcpp_lifecycle
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
