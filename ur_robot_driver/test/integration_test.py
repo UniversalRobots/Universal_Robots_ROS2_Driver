@@ -225,7 +225,7 @@ class URTest(unittest.TestCase):
             )
 
         self.resend_robot_program_client = self.node.create_client(
-            Trigger, "/gpio_controller/resend_robot_program"
+            Trigger, "/io_and_status_controller/resend_robot_program"
         )
         if self.resend_robot_program_client.wait_for_service(10) is False:
             raise Exception(
@@ -322,8 +322,8 @@ class URTest(unittest.TestCase):
         empty_req = Trigger.Request()
         self.call_service(self.resend_robot_program_client, empty_req)
 
-    def test_3_play_program(self):
-        """Test playing robot program."""
+    # def test_3_play_program(self):
+    #     """Test playing robot program."""
         # close popup
         # empty_req = Trigger.Request()
         # result = self.call_service(self.close_popup_client, empty_req)
