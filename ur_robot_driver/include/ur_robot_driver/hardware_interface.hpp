@@ -151,6 +151,8 @@ protected:
   double io_async_success_;
   double target_speed_fraction_cmd_;
   double scaling_async_success_;
+  double resend_robot_program_cmd_;
+  double resend_robot_program_async_success_;
   bool first_pass_;
 
   // copy of non double values

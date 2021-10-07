@@ -208,7 +208,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling") {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling" ||
+        info_.joints[i].name == "resend_robot_program") {
       continue;
     }
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -225,6 +226,12 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       "speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      "resend_robot_program", "resend_robot_program_cmd", &resend_robot_program_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -472,6 +479,7 @@ hardware_interface::return_type URPositionHardwareInterface::read()
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
       urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
+      resend_robot_program_cmd_ = NO_NEW_CMD_;
     }
 
     updateNonDoubleValues();
@@ -556,6 +564,15 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(target_speed_fraction_cmd_) && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
     target_speed_fraction_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(resend_robot_program_cmd_) && ur_driver_ != nullptr) {
+    try {
+      resend_robot_program_async_success_ = ur_driver_->sendRobotProgram();
+    } catch (const urcl::UrException& e) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
+    }
+    resend_robot_program_cmd_ = NO_NEW_CMD_;
   }
 }
 
