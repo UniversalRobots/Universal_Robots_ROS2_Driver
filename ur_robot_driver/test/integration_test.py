@@ -243,23 +243,23 @@ class URTest(unittest.TestCase):
                 "make sure that controller is active (load + start)"
             )
 
-    def test_1_load_installation_and_program(self):
-        """Test to load custom installation and program into the robot."""
-        # load installation
-        # ld_req = Load.Request(filename="urcap_ros_control.installation")
-        # result = self.call_service(self.load_installation_client, ld_req)
-        # self.assertEqual(result.success, True)
-        #
-        # # load program
-        # ld_req = Load.Request(filename="urcap_ros_control.urp")
-        # result = self.call_service(self.load_program_client, ld_req)
-        # self.assertEqual(result.success, True)
-        #
-        # # check loaded program
-        # empty_req = GetLoadedProgram.Request()
-        # result = self.call_service(self.get_loaded_program_client, empty_req)
-        # self.assertEqual(result.success, True)
-        # self.assertEqual(result.program_name, "/ursim/programs/urcap_ros_control.urp")
+    # def test_1_load_installation_and_program(self):
+    #     """Test to load custom installation and program into the robot."""
+    # load installation
+    # ld_req = Load.Request(filename="urcap_ros_control.installation")
+    # result = self.call_service(self.load_installation_client, ld_req)
+    # self.assertEqual(result.success, True)
+    #
+    # # load program
+    # ld_req = Load.Request(filename="urcap_ros_control.urp")
+    # result = self.call_service(self.load_program_client, ld_req)
+    # self.assertEqual(result.success, True)
+    #
+    # # check loaded program
+    # empty_req = GetLoadedProgram.Request()
+    # result = self.call_service(self.get_loaded_program_client, empty_req)
+    # self.assertEqual(result.success, True)
+    # self.assertEqual(result.program_name, "/ursim/programs/urcap_ros_control.urp")
 
     def switch_off_on_resend_helper(self):
         # stop the program
