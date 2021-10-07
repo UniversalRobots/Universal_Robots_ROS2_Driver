@@ -38,8 +38,8 @@ from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState, GetRobotMod
 from ur_dashboard_msgs.srv import IsProgramRunning
 from ur_dashboard_msgs.srv import Load
 from ur_dashboard_msgs.msg import RobotMode
+from ur_dashboard_msgs.msg import ProgramState
 
-# from ur_dashboard_msgs.msg import ProgramState
 from std_srvs.srv import Trigger
 
 
@@ -250,17 +250,21 @@ class IOTest(unittest.TestCase):
         result = self.call_service(self.close_popup_client, empty_req)
         self.assertEqual(result.success, True)
 
+        # sleep for one second
+        time.sleep(1.0)
         result = self.call_service(self.play_program_client, empty_req)
         self.assertEqual(result.success, True)
 
         # check program state
-        # empty_req = GetProgramState.Request()
-        # result = self.call_service(self.get_program_state_client, empty_req)
-        # self.assertEqual(result.success, True)
-        # self.assertEqual(result.state.state, ProgramState.PLAYING)
-        # self.assertEqual(result.program_name, "urcap_ros_control.urp")
+        time.sleep(1.0)
+        empty_req = GetProgramState.Request()
+        result = self.call_service(self.get_program_state_client, empty_req)
+        self.assertEqual(result.success, True)
+        self.assertEqual(result.state.state, ProgramState.PLAYING)
+        self.assertEqual(result.program_name, "urcap_ros_control.urp")
 
         # is program running
+        time.sleep(1.0)
         empty_req = IsProgramRunning.Request()
         result = self.call_service(self.is_program_running_client, empty_req)
         self.assertEqual(result.success, True)
@@ -438,16 +442,16 @@ class IOTest(unittest.TestCase):
             self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
             self.node.get_logger().info("Received result SUCCESSFUL")
 
-        # Now do the same again, but with a goal time constraint
-        self.node.get_logger().info("Sending scaled goal with time restrictions")
-
-        goal.goal_time_tolerance = Duration(nanosec=10000000)
-        goal_response = self.call_action(self.jtc_action_client, goal)
-
-        self.assertEqual(goal_response.accepted, True)
-
         # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
         # see https://github.com/ros-controls/ros2_controllers/issues/249
+        # Now do the same again, but with a goal time constraint
+        # self.node.get_logger().info("Sending scaled goal with time restrictions")
+        #
+        # goal.goal_time_tolerance = Duration(nanosec=10000000)
+        # goal_response = self.call_action(self.jtc_action_client, goal)
+        #
+        # self.assertEqual(goal_response.accepted, True)
+        #
         # if goal_response.accepted:
         #     result = self.get_result(self.jtc_action_client, goal_response)
         #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
