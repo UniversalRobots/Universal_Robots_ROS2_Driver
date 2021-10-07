@@ -53,6 +53,10 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   config.names.emplace_back("speed_scaling/target_speed_fraction_async_success");
 
+  config.names.emplace_back("resend_robot_program/resend_robot_program_cmd");
+
+  config.names.emplace_back("resend_robot_program/resend_robot_program_async_success");
+
   return config;
 }
 
@@ -217,6 +221,11 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
         "~/set_speed_slider",
         std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
+
+    resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/resend_robot_program",
+        std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
+
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -299,6 +308,34 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
     resp->success = false;
     return false;
   }
+  return true;
+}
+
+bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr req,
+                                        std_srvs::srv::Trigger::Response::SharedPtr resp)
+{
+  // reset success flag
+  command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+  // call the service in the hardware
+  command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_CMD].set_value(1.0);
+
+  while (command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+    // Asynchronous wait until the hardware interface has set the slider value
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  resp->success =
+      static_cast<bool>(command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value());
+
+  if (resp->success) {
+    RCLCPP_INFO(node_->get_logger(), "Successfully resent robot program");
+
+  }
+
+  else {
+    RCLCPP_ERROR(node_->get_logger(), "Could not resend robot program");
+    return false;
+  }
+
   return true;
 }
 

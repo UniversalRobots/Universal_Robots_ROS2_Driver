@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include <std_srvs/srv/trigger.hpp>
 #include "ur_msgs/msg/io_states.hpp"
 #include "ur_msgs/msg/tool_data_msg.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
@@ -47,7 +48,9 @@ enum CommandInterfaces
   ANALOG_OUTPUTS_CMD = 18,
   IO_ASYNC_SUCCESS = 20,
   TARGET_SPEED_FRACTION_CMD = 21,
-  TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 22
+  TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 22,
+  RESEND_ROBOT_PROGRAM_CMD = 23,
+  RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS = 24
 };
 
 enum StateInterfaces
@@ -92,6 +95,9 @@ private:
   bool setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                       ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp);
 
+  bool resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr req,
+                          std_srvs::srv::Trigger::Response::SharedPtr resp);
+
   void publishIO();
 
   void publishToolData();
@@ -111,6 +117,7 @@ protected:
   double target_speed_fraction_cmd_;
 
   // services
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr resend_robot_program_srv_;
   rclcpp::Service<ur_msgs::srv::SetSpeedSliderFraction>::SharedPtr set_speed_slider_srv_;
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
 
