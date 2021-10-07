@@ -82,6 +82,7 @@ def generate_test_description():
             "ur_type": ur_type,
             "launch_rviz": "false",
             "initial_joint_controller": initial_joint_controller,
+            "headless_mode": "true",
         }.items(),
     )
 
