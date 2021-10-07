@@ -251,12 +251,12 @@ class URTest(unittest.TestCase):
         self.assertEqual(result.success, True)
 
         # sleep for one second
-        time.sleep(1.0)
+        time.sleep(3.0)
         result = self.call_service(self.play_program_client, empty_req)
         self.assertEqual(result.success, True)
 
         # check program state
-        time.sleep(1.0)
+        time.sleep(3.0)
         empty_req = GetProgramState.Request()
         result = self.call_service(self.get_program_state_client, empty_req)
         self.assertEqual(result.success, True)
@@ -264,7 +264,7 @@ class URTest(unittest.TestCase):
         self.assertEqual(result.program_name, "urcap_ros_control.urp")
 
         # is program running
-        time.sleep(1.0)
+        time.sleep(3.0)
         empty_req = IsProgramRunning.Request()
         result = self.call_service(self.is_program_running_client, empty_req)
         self.assertEqual(result.success, True)
