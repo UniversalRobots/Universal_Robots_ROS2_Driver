@@ -98,7 +98,7 @@ def generate_test_description():
     )
 
 
-class IOTest(unittest.TestCase):
+class URTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the ROS context
