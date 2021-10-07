@@ -263,7 +263,10 @@ CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::
   // Start robot in headless mode. This does not require the 'External Control' URCap to be running
   // on the robot, but this will send the URScript to the robot directly. On e-Series robots this
   // requires the robot to run in 'remote-control' mode.
-  bool headless_mode = info_.hardware_parameters["headless_mode"] == "true" || info_.hardware_parameters["headless_mode"] == "True";
+  bool headless_mode = info_.hardware_parameters["headless_mode"] == "true" || info_.hardware_parameters["headless_"
+                                                                                                         "mode"] == "Tr"
+                                                                                                                    "u"
+                                                                                                                    "e";
   // Port that will be opened to communicate between the driver and the robot controller.
   int reverse_port = stoi(info_.hardware_parameters["reverse_port"]);
   // The driver will offer an interface to receive the program's URScript on this port.
