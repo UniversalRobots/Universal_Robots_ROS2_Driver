@@ -244,13 +244,15 @@ class URTest(unittest.TestCase):
 
         self.assertEqual(mode, RobotMode.RUNNING)
 
-    def test_3_play_program(self):
-        """Test playing robot program."""
+        # close popup
         empty_req = Trigger.Request()
         result = self.call_service(self.close_popup_client, empty_req)
         self.assertEqual(result.success, True)
 
+    def test_3_play_program(self):
+        """Test playing robot program."""
         # sleep for one second
+        empty_req = Trigger.Request()
         time.sleep(3.0)
         result = self.call_service(self.play_program_client, empty_req)
         self.assertEqual(result.success, True)
