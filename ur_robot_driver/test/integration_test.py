@@ -38,7 +38,8 @@ from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState, GetRobotMod
 from ur_dashboard_msgs.srv import IsProgramRunning
 from ur_dashboard_msgs.srv import Load
 from ur_dashboard_msgs.msg import RobotMode
-from ur_dashboard_msgs.msg import ProgramState
+
+# from ur_dashboard_msgs.msg import ProgramState
 
 from std_srvs.srv import Trigger
 
