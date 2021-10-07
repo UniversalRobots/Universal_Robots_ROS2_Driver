@@ -324,27 +324,27 @@ class URTest(unittest.TestCase):
 
     # def test_3_play_program(self):
     #     """Test playing robot program."""
-        # close popup
-        # empty_req = Trigger.Request()
-        # result = self.call_service(self.close_popup_client, empty_req)
-        # self.assertEqual(result.success, True)
-        # sleep for one second
-        # empty_req = Trigger.Request()
-        # result = self.call_service(self.play_program_client, empty_req)
-        # self.assertEqual(result.success, True)
+    # close popup
+    # empty_req = Trigger.Request()
+    # result = self.call_service(self.close_popup_client, empty_req)
+    # self.assertEqual(result.success, True)
+    # sleep for one second
+    # empty_req = Trigger.Request()
+    # result = self.call_service(self.play_program_client, empty_req)
+    # self.assertEqual(result.success, True)
 
-        # check program state
-        # empty_req = GetProgramState.Request()
-        # result = self.call_service(self.get_program_state_client, empty_req)
-        # self.assertEqual(result.success, True)
-        # self.assertEqual(result.state.state, ProgramState.PLAYING)
-        # self.assertEqual(result.program_name, "urcap_ros_control.urp")
-        #
-        # # is program running
-        # empty_req = IsProgramRunning.Request()
-        # result = self.call_service(self.is_program_running_client, empty_req)
-        # self.assertEqual(result.success, True)
-        # self.assertEqual(result.program_running, True)
+    # check program state
+    # empty_req = GetProgramState.Request()
+    # result = self.call_service(self.get_program_state_client, empty_req)
+    # self.assertEqual(result.success, True)
+    # self.assertEqual(result.state.state, ProgramState.PLAYING)
+    # self.assertEqual(result.program_name, "urcap_ros_control.urp")
+    #
+    # # is program running
+    # empty_req = IsProgramRunning.Request()
+    # result = self.call_service(self.is_program_running_client, empty_req)
+    # self.assertEqual(result.success, True)
+    # self.assertEqual(result.program_running, True)
 
     def test_4_set_io(self):
         """Test to set an IO and check whether it has been set."""
