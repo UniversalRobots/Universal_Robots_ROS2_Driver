@@ -64,7 +64,8 @@
     safety_pos_margin:=0.15
     safety_k_position:=20
     use_fake_hardware:=false
-    fake_sensor_commands:=false"
+    fake_sensor_commands:=false
+    headless_mode:=false"
   >
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
@@ -85,6 +86,7 @@
       name="URPositionHardwareInterface" prefix="${prefix}"
       use_fake_hardware="$(arg use_fake_hardware)"
       fake_sensor_commands="$(arg fake_sensor_commands)"
+      headless_mode="$(arg headless_mode)"
       script_filename="$(arg script_filename)"
       output_recipe_filename="$(arg output_recipe_filename)"
       input_recipe_filename="$(arg input_recipe_filename)"

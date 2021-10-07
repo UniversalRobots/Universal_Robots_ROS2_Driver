@@ -3,6 +3,7 @@
 
   <xacro:macro name="ur_ros2_control" params="name prefix
     use_fake_hardware:=false fake_sensor_commands:=false
+    headless_mode:=false
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
     hash_kinematics robot_ip">
@@ -20,7 +21,7 @@
           <param name="script_filename">${script_filename}</param>
           <param name="output_recipe_filename">${output_recipe_filename}</param>
           <param name="input_recipe_filename">${input_recipe_filename}</param>
-          <param name="headless_mode">0</param>
+          <param name="headless_mode">${headless_mode}</param>
           <param name="reverse_port">50001</param>
           <param name="script_sender_port">50002</param>
           <param name="tf_prefix">"${tf_prefix}"</param>
