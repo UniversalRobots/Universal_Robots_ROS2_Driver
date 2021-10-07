@@ -311,7 +311,7 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
   return true;
 }
 
-bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr req,
+bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                         std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
   // reset success flag
