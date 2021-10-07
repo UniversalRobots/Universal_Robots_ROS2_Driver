@@ -225,7 +225,6 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
         "~/resend_robot_program",
         std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
-
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -328,10 +327,7 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
 
   if (resp->success) {
     RCLCPP_INFO(node_->get_logger(), "Successfully resent robot program");
-
-  }
-
-  else {
+  } else {
     RCLCPP_ERROR(node_->get_logger(), "Could not resend robot program");
     return false;
   }
