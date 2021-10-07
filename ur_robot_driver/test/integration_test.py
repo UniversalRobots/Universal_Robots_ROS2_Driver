@@ -37,7 +37,9 @@ from ur_msgs.msg import IOStates
 from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState, GetRobotMode
 from ur_dashboard_msgs.srv import IsProgramRunning
 from ur_dashboard_msgs.srv import Load
-from ur_dashboard_msgs.msg import RobotMode, ProgramState
+from ur_dashboard_msgs.msg import RobotMode
+
+# from ur_dashboard_msgs.msg import ProgramState
 from std_srvs.srv import Trigger
 
 
@@ -185,16 +187,16 @@ class IOTest(unittest.TestCase):
                 "Could not reach program running service, make sure that the driver is actually running"
             )
 
-        self.play_program_client = self.node.create_client(
-            Trigger, "/dashboard_client/play"
-        )
+        self.play_program_client = self.node.create_client(Trigger, "/dashboard_client/play")
         if self.play_program_client.wait_for_service(10) is False:
             raise Exception(
                 "Could not reach play service, make sure that the driver is actually running"
             )
 
         self.jtc_action_client = ActionClient(
-            self.node, FollowJointTrajectory, "/scaled_joint_trajectory_controller/follow_joint_trajectory"
+            self.node,
+            FollowJointTrajectory,
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
         )
         if self.jtc_action_client.wait_for_server(10) is False:
             raise Exception(
@@ -252,17 +254,17 @@ class IOTest(unittest.TestCase):
         self.assertEqual(result.success, True)
 
         # check program state
-        empty_req = GetProgramState.Request()
-        result = self.call_service(self.get_program_state_client, empty_req)
-        self.assertEqual(result.success, True)
-        self.assertEqual(result.state.state, ProgramState.PLAYING)
-        self.assertEqual(result.program_name, "urcap_ros_control.urp")
+        # empty_req = GetProgramState.Request()
+        # result = self.call_service(self.get_program_state_client, empty_req)
+        # self.assertEqual(result.success, True)
+        # self.assertEqual(result.state.state, ProgramState.PLAYING)
+        # self.assertEqual(result.program_name, "urcap_ros_control.urp")
 
         # is program running
-        # empty_req = IsProgramRunning.Request()
-        # result = self.call_service(self.is_program_running_client, empty_req)
-        # self.assertEqual(result.success, True)
-        # self.assertEqual(result.program_running, True)
+        empty_req = IsProgramRunning.Request()
+        result = self.call_service(self.is_program_running_client, empty_req)
+        self.assertEqual(result.success, True)
+        self.assertEqual(result.program_running, True)
 
     def test_4_set_io(self):
         """Test to set an IO and check whether it has been set."""
@@ -318,10 +320,20 @@ class IOTest(unittest.TestCase):
     def call_action(self, ac_client, g):
         future = ac_client.send_goal_async(g)
         rclpy.spin_until_future_complete(self.node, future)
+
         if future.result() is not None:
             return future.result()
         else:
-            raise Exception(f"Exception while calling service: {future.exception()}")
+            raise Exception(f"Exception while calling action: {future.exception()}")
+
+    def get_result(self, ac_client, goal_response):
+
+        future_res = ac_client._get_result_async(goal_response)
+        rclpy.spin_until_future_complete(self.node, future_res)
+        if future_res.result() is not None:
+            return future_res.result().result
+        else:
+            raise Exception(f"Exception while calling action: {future_res.exception()}")
 
     def test_5_trajectory(self):
         """Test robot movement."""
@@ -338,7 +350,11 @@ class IOTest(unittest.TestCase):
         position_list = [[0.0 for i in range(6)]]
         position_list.append([-0.5 for i in range(6)])
         position_list.append([-1.0 for i in range(6)])
-        duration_list = [Duration(sec=6, nanosec=0), Duration(sec=9, nanosec=0), Duration(sec=12, nanosec=0)]
+        duration_list = [
+            Duration(sec=6, nanosec=0),
+            Duration(sec=9, nanosec=0),
+            Duration(sec=12, nanosec=0),
+        ]
 
         for i, position in enumerate(position_list):
             point = JointTrajectoryPoint()
@@ -348,13 +364,14 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Sending simple goal")
 
-        result = self.call_action(self.jtc_action_client, goal)
+        goal_response = self.call_action(self.jtc_action_client, goal)
 
-        self.node.get_logger().info(result)
+        self.assertEqual(goal_response.accepted, True)
 
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
-
-        self.node.get_logger().info("Received result SUCCESSFUL")
+        if goal_response.accepted:
+            result = self.get_result(self.jtc_action_client, goal_response)
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+            self.node.get_logger().info("Received result SUCCESSFUL")
 
     def test_6_trajectory_illegal(self):
         """Test trajectory server."""
@@ -382,11 +399,11 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Sending illegal goal")
 
-        result = self.call_action(self.jtc_action_client, goal)
+        goal_response = self.call_action(self.jtc_action_client, goal)
 
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.INVALID_GOAL)
+        self.assertEqual(goal_response.accepted, False)
 
-        self.node.get_logger().info("Received result INVALID_GOAL")
+        self.node.get_logger().info("Goal response REJECTED")
 
     def test_7_trajectory_scaled(self):
         """Test robot movement."""
@@ -412,18 +429,26 @@ class IOTest(unittest.TestCase):
 
         self.node.get_logger().info("Sending scaled goal without time restrictions")
 
-        result = self.call_action(self.jtc_action_client, goal)
+        goal_response = self.call_action(self.jtc_action_client, goal)
 
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+        self.assertEqual(goal_response.accepted, True)
 
-        self.node.get_logger().info("Received result SUCCESSFUL")
+        if goal_response.accepted:
+            result = self.get_result(self.jtc_action_client, goal_response)
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+            self.node.get_logger().info("Received result SUCCESSFUL")
 
         # Now do the same again, but with a goal time constraint
         self.node.get_logger().info("Sending scaled goal with time restrictions")
 
         goal.goal_time_tolerance = Duration(nanosec=10000000)
-        result = self.call_action(self.jtc_action_client, goal)
+        goal_response = self.call_action(self.jtc_action_client, goal)
 
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
+        self.assertEqual(goal_response.accepted, True)
 
-        self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
+        # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
+        # see https://github.com/ros-controls/ros2_controllers/issues/249
+        # if goal_response.accepted:
+        #     result = self.get_result(self.jtc_action_client, goal_response)
+        #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
+        #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
