@@ -129,12 +129,34 @@ class URTest(unittest.TestCase):
                 "Could not reach power on service, make sure that the driver is actually running"
             )
 
+        self.power_off_client = self.node.create_client(Trigger, "/dashboard_client/power_off")
+        if self.power_off_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach power off service, make sure that the driver is actually running"
+            )
+
         self.brake_release_client = self.node.create_client(
             Trigger, "/dashboard_client/brake_release"
         )
         if self.brake_release_client.wait_for_service(10) is False:
             raise Exception(
                 "Could not reach brake release service, make sure that the driver is actually running"
+            )
+
+        self.unlock_protective_stop_client = self.node.create_client(
+            Trigger, "/dashboard_client/unlock_protective_stop"
+        )
+        if self.unlock_protective_stop_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach unlock protective stop service, make sure that the driver is actually running"
+            )
+
+        self.restart_safety_client = self.node.create_client(
+            Trigger, "/dashboard_client/restart_safety"
+        )
+        if self.restart_safety_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach restart safety service, make sure that the driver is actually running"
             )
 
         self.get_robot_mode_client = self.node.create_client(
@@ -195,6 +217,20 @@ class URTest(unittest.TestCase):
                 "Could not reach play service, make sure that the driver is actually running"
             )
 
+        self.stop_program_client = self.node.create_client(Trigger, "/dashboard_client/stop")
+        if self.stop_program_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach stop service, make sure that the driver is actually running"
+            )
+
+        self.resend_robot_program_client = self.node.create_client(
+            Trigger, "/gpio_controller/resend_robot_program"
+        )
+        if self.resend_robot_program_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach stop service, make sure that the driver is actually running"
+            )
+
         self.jtc_action_client = ActionClient(
             self.node,
             FollowJointTrajectory,
@@ -209,20 +245,56 @@ class URTest(unittest.TestCase):
     def test_1_load_installation_and_program(self):
         """Test to load custom installation and program into the robot."""
         # load installation
-        ld_req = Load.Request(filename="urcap_ros_control.installation")
-        result = self.call_service(self.load_installation_client, ld_req)
-        self.assertEqual(result.success, True)
+        # ld_req = Load.Request(filename="urcap_ros_control.installation")
+        # result = self.call_service(self.load_installation_client, ld_req)
+        # self.assertEqual(result.success, True)
+        #
+        # # load program
+        # ld_req = Load.Request(filename="urcap_ros_control.urp")
+        # result = self.call_service(self.load_program_client, ld_req)
+        # self.assertEqual(result.success, True)
+        #
+        # # check loaded program
+        # empty_req = GetLoadedProgram.Request()
+        # result = self.call_service(self.get_loaded_program_client, empty_req)
+        # self.assertEqual(result.success, True)
+        # self.assertEqual(result.program_name, "/ursim/programs/urcap_ros_control.urp")
 
-        # load program
-        ld_req = Load.Request(filename="urcap_ros_control.urp")
-        result = self.call_service(self.load_program_client, ld_req)
-        self.assertEqual(result.success, True)
+    def switch_off_on_resend_helper(self):
+        # stop the program
+        empty_req = Trigger.Request()
+        self.call_service(self.stop_program_client, empty_req)
 
-        # check loaded program
-        empty_req = GetLoadedProgram.Request()
-        result = self.call_service(self.get_loaded_program_client, empty_req)
-        self.assertEqual(result.success, True)
-        self.assertEqual(result.program_name, "/ursim/programs/urcap_ros_control.urp")
+        # power off
+        empty_req = Trigger.Request()
+        self.call_service(self.power_off_client, empty_req)
+
+        # power on
+        empty_req = Trigger.Request()
+        self.call_service(self.power_on_client, empty_req)
+
+        # wait for mode to go to idle or running
+        get_robot_mode_req = GetRobotMode.Request()
+        end_time = time.time() + 10
+        mode = RobotMode.DISCONNECTED
+        while mode not in (RobotMode.IDLE, RobotMode.RUNNING) and time.time() < end_time:
+            result = self.call_service(self.get_robot_mode_client, get_robot_mode_req)
+            mode = result.robot_mode.mode
+
+        self.assertIn(mode, (RobotMode.IDLE, RobotMode.RUNNING))
+
+        # release brake
+        self.call_service(self.brake_release_client, empty_req)
+        end_time = time.time() + 10
+        while mode != RobotMode.RUNNING and time.time() < end_time:
+            result = self.call_service(self.get_robot_mode_client, get_robot_mode_req)
+            mode = result.robot_mode.mode
+
+        self.assertEqual(mode, RobotMode.RUNNING)
+
+        # resend program
+        empty_req = Trigger.Request()
+        self.call_service(self.resend_robot_program_client, empty_req)
 
     def test_2_switch_on(self):
         """Test power on a robot."""
@@ -246,15 +318,18 @@ class URTest(unittest.TestCase):
 
         self.assertEqual(mode, RobotMode.RUNNING)
 
+        empty_req = Trigger.Request()
+        self.call_service(self.resend_robot_program_client, empty_req)
+
     def test_3_play_program(self):
         """Test playing robot program."""
         # close popup
-        empty_req = Trigger.Request()
-        result = self.call_service(self.close_popup_client, empty_req)
-        self.assertEqual(result.success, True)
+        # empty_req = Trigger.Request()
+        # result = self.call_service(self.close_popup_client, empty_req)
+        # self.assertEqual(result.success, True)
         # sleep for one second
-        empty_req = Trigger.Request()
-        result = self.call_service(self.play_program_client, empty_req)
+        # empty_req = Trigger.Request()
+        # result = self.call_service(self.play_program_client, empty_req)
         # self.assertEqual(result.success, True)
 
         # check program state
@@ -341,6 +416,8 @@ class URTest(unittest.TestCase):
 
     def test_5_trajectory(self):
         """Test robot movement."""
+        self.switch_off_on_resend_helper()
+
         goal = FollowJointTrajectory.Goal()
 
         goal.trajectory.joint_names = [
@@ -380,6 +457,8 @@ class URTest(unittest.TestCase):
     def test_6_trajectory_illegal(self):
         """Test trajectory server."""
         """This is more of a validation test that the testing suite does the right thing."""
+        self.switch_off_on_resend_helper()
+
         goal = FollowJointTrajectory.Goal()
 
         goal.trajectory.joint_names = [
@@ -411,6 +490,8 @@ class URTest(unittest.TestCase):
 
     def test_7_trajectory_scaled(self):
         """Test robot movement."""
+        self.switch_off_on_resend_helper()
+
         goal = FollowJointTrajectory.Goal()
 
         goal.trajectory.joint_names = [
