@@ -18,7 +18,6 @@
 
 import math
 import os
-import sys
 import yaml
 
 from ament_index_python.packages import get_package_share_directory
@@ -68,8 +67,3 @@ def load_yaml_abs(absolute_file_path):
             return yaml.safe_load(file)
     except OSError:  # parent of IOError, OSError *and* WindowsError where available
         return None
-
-
-if __name__ == "__main__":
-    print(sys.argv[1])
-    print(load_yaml_abs(sys.argv[1]))

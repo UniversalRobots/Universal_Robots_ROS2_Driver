@@ -18,10 +18,6 @@
 # and running, moveit servo will take control of the robot by  gradually
 # increasing z-component of the robot_link_command_frame
 
-import os
-import yaml
-
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import OpaqueFunction
