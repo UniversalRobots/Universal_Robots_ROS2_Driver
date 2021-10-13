@@ -150,7 +150,7 @@ The most relevant arguments are the following:
   - `robot_ip` (*mandatory*) - IP address by which the root can be reached.
   - `use_fake_hardware` (default: *false*) - use simple hardware emulator from ros2_control.
     Useful for testing launch files, descriptions, etc. See explanation below.
-  - `initial_positions` (default: dictionary with all joint values set to 0) - Allows passing a dictionary to set the initial joint values for the hardware emulator.  It can also be set from a yaml file with the `load_yaml` commands as follows:  
+  - `initial_positions` (default: dictionary with all joint values set to 0) - Allows passing a dictionary to set the initial joint values for the fake hardware from [ros2_control](http://control.ros.org/).  It can also be set from a yaml file with the `load_yaml` commands as follows:  
       ```
       <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)}"/>
       ```
