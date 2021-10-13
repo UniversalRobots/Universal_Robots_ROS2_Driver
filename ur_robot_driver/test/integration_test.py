@@ -417,7 +417,7 @@ class URTest(unittest.TestCase):
 
     def test_5_trajectory(self):
         """Test robot movement."""
-        self.switch_off_on_resend_helper()
+        # self.switch_off_on_resend_helper()
 
         goal = FollowJointTrajectory.Goal()
 
@@ -458,7 +458,7 @@ class URTest(unittest.TestCase):
     def test_6_trajectory_illegal(self):
         """Test trajectory server."""
         """This is more of a validation test that the testing suite does the right thing."""
-        self.switch_off_on_resend_helper()
+        # self.switch_off_on_resend_helper()
 
         goal = FollowJointTrajectory.Goal()
 
@@ -491,7 +491,7 @@ class URTest(unittest.TestCase):
 
     def test_7_trajectory_scaled(self):
         """Test robot movement."""
-        self.switch_off_on_resend_helper()
+        # self.switch_off_on_resend_helper()
 
         goal = FollowJointTrajectory.Goal()
 
