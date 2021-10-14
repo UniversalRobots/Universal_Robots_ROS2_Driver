@@ -208,7 +208,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling") {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling" ||
+        info_.joints[i].name == "resend_robot_program") {
       continue;
     }
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -225,6 +226,12 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       "speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      "resend_robot_program", "resend_robot_program_cmd", &resend_robot_program_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -256,7 +263,8 @@ CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::
   // Start robot in headless mode. This does not require the 'External Control' URCap to be running
   // on the robot, but this will send the URScript to the robot directly. On e-Series robots this
   // requires the robot to run in 'remote-control' mode.
-  bool headless_mode = static_cast<bool>(stoi(info_.hardware_parameters["headless_mode"]));
+  bool headless_mode =
+      (info_.hardware_parameters["headless_mode"] == "true") || (info_.hardware_parameters["headless_mode"] == "True");
   // Port that will be opened to communicate between the driver and the robot controller.
   int reverse_port = stoi(info_.hardware_parameters["reverse_port"]);
   // The driver will offer an interface to receive the program's URScript on this port.
@@ -472,6 +480,7 @@ hardware_interface::return_type URPositionHardwareInterface::read()
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
       urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
+      resend_robot_program_cmd_ = NO_NEW_CMD_;
     }
 
     updateNonDoubleValues();
@@ -556,6 +565,15 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(target_speed_fraction_cmd_) && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
     target_speed_fraction_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(resend_robot_program_cmd_) && ur_driver_ != nullptr) {
+    try {
+      resend_robot_program_async_success_ = ur_driver_->sendRobotProgram();
+    } catch (const urcl::UrException& e) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
+    }
+    resend_robot_program_cmd_ = NO_NEW_CMD_;
   }
 }
 
