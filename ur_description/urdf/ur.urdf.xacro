@@ -32,6 +32,6 @@
      safety_pos_margin="$(arg safety_pos_margin)"
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
-     fake_sensor_commands="$(arg fake_sensor_commands)
+     fake_sensor_commands="$(arg fake_sensor_commands)"
      headless_mode="$(arg headless_mode)" />
 </robot>

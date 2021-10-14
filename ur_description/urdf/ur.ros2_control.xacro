@@ -141,11 +141,6 @@
         <command_interface name="target_speed_fraction_async_success"/>
       </joint>
 
-      <joint name="resend_robot_program">
-        <command_interface name="resend_robot_program_cmd"/>
-        <command_interface name="resend_robot_program_async_success"/>
-      </joint>
-
       <joint name="gpio">
         <command_interface name="standard_digital_output_cmd_0"/>
         <command_interface name="standard_digital_output_cmd_1"/>
