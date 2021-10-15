@@ -8,7 +8,7 @@ on:
       - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '33 16 * * *'
+    - cron: '22 17 * * *'
 
 jobs:
   foxy_semi_binary:
