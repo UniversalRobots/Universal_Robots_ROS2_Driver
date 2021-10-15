@@ -8,13 +8,14 @@ on:
       - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '43 5 * * *'
+    - cron: '58 11 * * *'
 
 jobs:
   foxy_binary:
     name: foxy binary build
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 1
       matrix:
         env:
           - {ROS_DISTRO: foxy, ROS_REPO: main}
