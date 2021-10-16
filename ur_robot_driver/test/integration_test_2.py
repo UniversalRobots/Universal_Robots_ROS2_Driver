@@ -85,7 +85,7 @@ def generate_test_description():
             "launch_rviz": "false",
             "initial_joint_controller": initial_joint_controller,
             "headless_mode": "true",
-            "launch_dashboard_client": "false",
+            "launch_dashboard_client": "true",
             "start_joint_controller": "false",
         }.items(),
     )
