@@ -1,4 +1,4 @@
-name: Rolling Semi-Binary Build
+name: Semi-Binary Build
 on:
   pull_request:
     branches:
@@ -11,15 +11,17 @@ on:
     - cron: '03 5 * * *'
 
 jobs:
-  rolling_semi_binary:
-    name: rolling semi-binary build
+  semi_binary:
+    name: semi-binary build
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
       matrix:
         env:
-          - {ROS_DISTRO: rolling, ROS_REPO: main}
-          - {ROS_DISTRO: rolling, ROS_REPO: testing}
+          - { ROS_DISTRO: rolling, ROS_REPO: main }
+          - { ROS_DISTRO: rolling, ROS_REPO: testing }
+          - { ROS_DISTRO: galactic, ROS_REPO: main }
+          - { ROS_DISTRO: galactic, ROS_REPO: testing }
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.repos
       DOCKER_RUN_OPTS: --network static_test_net
