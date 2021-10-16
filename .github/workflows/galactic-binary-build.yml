@@ -15,11 +15,10 @@ jobs:
     name: galactic binary build
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 1
       matrix:
         env:
-          - { ROS_DISTRO: galactic, ROS_REPO: main }
-          - { ROS_DISTRO: galactic, ROS_REPO: testing }
+          - {ROS_DISTRO: galactic, ROS_REPO: main}
+          - {ROS_DISTRO: galactic, ROS_REPO: testing}
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.env.ROS_DISTRO }}.repos
       DOCKER_RUN_OPTS: --network static_test_net
