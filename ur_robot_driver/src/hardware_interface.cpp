@@ -70,6 +70,7 @@ CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::Ha
   first_pass_ = true;
   initialized_ = false;
   async_thread_shutdown_ = false;
+  system_interface_initialized_ = 0.0;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.name == "gpio" || joint.name == "speed_scaling") {
@@ -201,6 +202,9 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       hardware_interface::StateInterface("gpio", "tool_output_current", &tool_output_current_));
 
   state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
+
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "initialized", &system_interface_initialized_));
 
   return state_interfaces;
 }
@@ -420,12 +424,11 @@ void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::Dat
 void URPositionHardwareInterface::asyncThread()
 {
   while (!async_thread_shutdown_) {
-    if (first_pass_ && initialized_) {
-      first_pass_ = false;
-    } else if (initialized_) {
+    if (initialized_) {
+      //        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initialized in async thread");
       checkAsyncIO();
     }
-    std::this_thread::sleep_for(std::chrono::nanoseconds(2000));
+    std::this_thread::sleep_for(std::chrono::nanoseconds(20000));
   }
 }
 
@@ -613,6 +616,7 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   robot_mode_copy_ = static_cast<double>(robot_mode_);
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
+  system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(

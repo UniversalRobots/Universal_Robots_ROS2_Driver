@@ -157,6 +157,7 @@ protected:
   double resend_robot_program_async_success_;
   bool first_pass_;
   bool initialized_;
+  double system_interface_initialized_;
   bool async_thread_shutdown_;
 
   // copy of non double values

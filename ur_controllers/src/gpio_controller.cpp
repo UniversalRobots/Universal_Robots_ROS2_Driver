@@ -111,6 +111,7 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   for (size_t i = 0; i < 11; ++i) {
     config.names.emplace_back("gpio/safety_status_bit_" + std::to_string(i));
   }
+  config.names.emplace_back("gpio/initialized");
 
   return config;
 }
@@ -202,6 +203,11 @@ void GPIOController::publishSafetyMode()
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_value() == 0.0) {
+    RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+
   try {
     // register publisher
     io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());

@@ -70,7 +70,8 @@ enum StateInterfaces
   ROBOT_MODE = 52,
   ROBOT_STATUS_BITS = 53,
   SAFETY_MODE = 57,
-  SAFETY_STATUS_BITS = 58
+  SAFETY_STATUS_BITS = 58,
+  INITIALIZED_FLAG = 69,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
