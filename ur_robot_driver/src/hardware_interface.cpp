@@ -204,7 +204,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface("gpio", "initialized", &system_interface_initialized_));
+      hardware_interface::StateInterface("system_interface", "initialized", &system_interface_initialized_));
 
   return state_interfaces;
 }

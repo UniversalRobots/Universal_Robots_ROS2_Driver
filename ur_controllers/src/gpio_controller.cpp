@@ -111,7 +111,7 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   for (size_t i = 0; i < 11; ++i) {
     config.names.emplace_back("gpio/safety_status_bit_" + std::to_string(i));
   }
-  config.names.emplace_back("gpio/initialized");
+  config.names.emplace_back("system_interface/initialized");
 
   return config;
 }
