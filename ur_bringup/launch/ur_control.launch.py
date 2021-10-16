@@ -16,7 +16,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -124,6 +124,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "start_joint_controller",
+            default_value="true",
+            description="Enable headless mode for robot control",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "initial_joint_controller",
             default_value="joint_trajectory_controller",
             description="Robot controller to start.",
@@ -131,6 +138,11 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_dashboard_client", default_value="true", description="Launch RViz?"
+        )
     )
 
     # Initialize Arguments
@@ -147,9 +159,11 @@ def generate_launch_description():
     prefix = LaunchConfiguration("prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    start_joint_controller = LaunchConfiguration("start_joint_controller")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
+    launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -240,8 +254,8 @@ def generate_launch_description():
     )
 
     control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
+        package="ur_robot_driver",
+        executable="ur_ros2_control_node",
         parameters=[robot_description, initial_joint_controllers],
         output={
             "stdout": "screen",
@@ -251,6 +265,7 @@ def generate_launch_description():
 
     dashboard_client_node = Node(
         package="ur_robot_driver",
+        condition=IfCondition(launch_dashboard_client),
         executable="dashboard_client",
         name="dashboard_client",
         output="screen",
@@ -307,10 +322,17 @@ def generate_launch_description():
     )
 
     # There may be other controllers of the joints, but this is the initially-started one
-    initial_joint_controller_spawner = Node(
+    initial_joint_controller_spawner_started = Node(
         package="controller_manager",
         executable="spawner.py",
         arguments=[initial_joint_controller, "-c", "/controller_manager"],
+        condition=IfCondition(start_joint_controller),
+    )
+    initial_joint_controller_spawner_stopped = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=[initial_joint_controller, "-c", "/controller_manager", "--stopped"],
+        condition=UnlessCondition(start_joint_controller),
     )
 
     nodes_to_start = [
@@ -322,7 +344,8 @@ def generate_launch_description():
         io_and_status_controller_spawner,
         speed_scaling_state_broadcaster_spawner,
         force_torque_sensor_broadcaster_spawner,
-        initial_joint_controller_spawner,
+        initial_joint_controller_spawner_stopped,
+        initial_joint_controller_spawner_started,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
