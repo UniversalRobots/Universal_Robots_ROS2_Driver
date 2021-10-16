@@ -1,4 +1,4 @@
-name: Semi-Binary Build
+name: Binary Build
 on:
   pull_request:
     branches:
@@ -8,11 +8,11 @@ on:
       - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 5 * * *'
+    - cron: '13 4 * * *'
 
 jobs:
-  semi_binary:
-    name: semi-binary build
+  binary:
+    name: binary build
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
@@ -20,10 +20,8 @@ jobs:
         env:
           - {ROS_DISTRO: rolling, ROS_REPO: main}
           - {ROS_DISTRO: rolling, ROS_REPO: testing}
-          - { ROS_DISTRO: rolling, ROS_REPO: main }
-          - { ROS_DISTRO: rolling, ROS_REPO: testing }
     env:
-      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.repos
+      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.env.ROS_DISTRO }}.repos
       DOCKER_RUN_OPTS: --network static_test_net
       BEFORE_INIT: 'apt-get update -qq && apt-get install -y iproute2 iputils-ping && ip addr && ping -c5 192.168.56.101'
       IMMEDIATE_TEST_OUTPUT: true
@@ -35,8 +33,8 @@ jobs:
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
-      # The target directory cache doesn't include the source directory because
-      # that comes from the checkout.  See "prepare target_ws for cache" task below
+       The target directory cache doesn't include the source directory because
+       that comes from the checkout.  See "prepare target_ws for cache" task below
       - name: cache target_ws
         if: ${{ ! matrix.env.CCOV }}
         uses: pat-s/always-upload-cache@v2.1.5
