@@ -48,144 +48,144 @@
 
 namespace ur_robot_driver
 {
-    enum class PausingState
-    {
-        PAUSED,
-        RUNNING,
-        RAMPUP
-    };
+enum class PausingState
+{
+  PAUSED,
+  RUNNING,
+  RAMPUP
+};
 
-    enum StoppingInterface
-    {
-        NONE,
-        STOP_POSITION,
-        STOP_VELOCITY
-    };
+enum StoppingInterface
+{
+  NONE,
+  STOP_POSITION,
+  STOP_VELOCITY
+};
 
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
  * driver. It contains the read and write methods of the main control loop and registers various ROS
  * topics and services.
  */
-    class URPositionHardwareInterface : public hardware_interface::SystemInterface
-    {
-    public:
-        RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
+class URPositionHardwareInterface : public hardware_interface::SystemInterface
+{
+public:
+  RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
 
-        CallbackReturn on_init(const hardware_interface::HardwareInfo& system_info) final;
+  CallbackReturn on_init(const hardware_interface::HardwareInfo& system_info) final;
 
-        std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
+  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 
-        std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
+  std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
 
-        CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
-        CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) final;
+  CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) final;
 
-        hardware_interface::return_type read() final;
-        hardware_interface::return_type write() final;
+  hardware_interface::return_type read() final;
+  hardware_interface::return_type write() final;
 
-        hardware_interface::return_type prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
-                                                                    const std::vector<std::string>& stop_interfaces) final;
+  hardware_interface::return_type prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                                              const std::vector<std::string>& stop_interfaces) final;
 
-        hardware_interface::return_type perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
-                                                                    const std::vector<std::string>& stop_interfaces) final;
+  hardware_interface::return_type perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
+                                                              const std::vector<std::string>& stop_interfaces) final;
 
-        /*!
-         * \brief Callback to handle a change in the current state of the URCaps program running on the
-         * robot. Executed only on the state change.
-         *
-         * \param program_running True when the URCap program is running on the robot.
-         */
-        void handleRobotProgramState(bool program_running);
+  /*!
+   * \brief Callback to handle a change in the current state of the URCaps program running on the
+   * robot. Executed only on the state change.
+   *
+   * \param program_running True when the URCap program is running on the robot.
+   */
+  void handleRobotProgramState(bool program_running);
 
-        static constexpr double NO_NEW_CMD_ = std::numeric_limits<double>::quiet_NaN();
+  static constexpr double NO_NEW_CMD_ = std::numeric_limits<double>::quiet_NaN();
 
-        void asyncThread();
+  void asyncThread();
 
-    protected:
-        template <typename T>
-        void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
-                      T& data);
-        template <typename T, size_t N>
-        void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
-                            std::bitset<N>& data);
+protected:
+  template <typename T>
+  void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
+                T& data);
+  template <typename T, size_t N>
+  void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
+                      std::bitset<N>& data);
 
-        void initAsyncIO();
-        void checkAsyncIO();
-        void updateNonDoubleValues();
+  void initAsyncIO();
+  void checkAsyncIO();
+  void updateNonDoubleValues();
 
-        urcl::vector6d_t urcl_position_commands_;
-        urcl::vector6d_t urcl_position_commands_old_;
-        urcl::vector6d_t urcl_velocity_commands_;
-        urcl::vector6d_t urcl_joint_positions_;
-        urcl::vector6d_t urcl_joint_velocities_;
-        urcl::vector6d_t urcl_joint_efforts_;
-        urcl::vector6d_t urcl_ft_sensor_measurements_;
-        urcl::vector6d_t urcl_tcp_pose_;
+  urcl::vector6d_t urcl_position_commands_;
+  urcl::vector6d_t urcl_position_commands_old_;
+  urcl::vector6d_t urcl_velocity_commands_;
+  urcl::vector6d_t urcl_joint_positions_;
+  urcl::vector6d_t urcl_joint_velocities_;
+  urcl::vector6d_t urcl_joint_efforts_;
+  urcl::vector6d_t urcl_ft_sensor_measurements_;
+  urcl::vector6d_t urcl_tcp_pose_;
 
-        bool packet_read_;
+  bool packet_read_;
 
-        uint32_t runtime_state_;
-        bool controllers_initialized_;
+  uint32_t runtime_state_;
+  bool controllers_initialized_;
 
-        std::bitset<18> actual_dig_out_bits_;
-        std::bitset<18> actual_dig_in_bits_;
-        std::array<double, 2> standard_analog_input_;
-        std::array<double, 2> standard_analog_output_;
-        std::bitset<4> analog_io_types_;
-        uint32_t tool_mode_;
-        std::bitset<2> tool_analog_input_types_;
-        std::array<double, 2> tool_analog_input_;
-        int32_t tool_output_voltage_;
-        double tool_output_current_;
-        double tool_temperature_;
-        double speed_scaling_;
-        double target_speed_fraction_;
-        double speed_scaling_combined_;
-        int32_t robot_mode_;
-        int32_t safety_mode_;
-        std::bitset<4> robot_status_bits_;
-        std::bitset<11> safety_status_bits_;
+  std::bitset<18> actual_dig_out_bits_;
+  std::bitset<18> actual_dig_in_bits_;
+  std::array<double, 2> standard_analog_input_;
+  std::array<double, 2> standard_analog_output_;
+  std::bitset<4> analog_io_types_;
+  uint32_t tool_mode_;
+  std::bitset<2> tool_analog_input_types_;
+  std::array<double, 2> tool_analog_input_;
+  int32_t tool_output_voltage_;
+  double tool_output_current_;
+  double tool_temperature_;
+  double speed_scaling_;
+  double target_speed_fraction_;
+  double speed_scaling_combined_;
+  int32_t robot_mode_;
+  int32_t safety_mode_;
+  std::bitset<4> robot_status_bits_;
+  std::bitset<11> safety_status_bits_;
 
-        // asynchronous commands
-        std::array<double, 18> standard_dig_out_bits_cmd_;
-        std::array<double, 2> standard_analog_output_cmd_;
-        double io_async_success_;
-        double target_speed_fraction_cmd_;
-        double scaling_async_success_;
-        double resend_robot_program_cmd_;
-        double resend_robot_program_async_success_;
-        bool first_pass_;
-        bool initialized_;
-        bool async_thread_shutdown_;
+  // asynchronous commands
+  std::array<double, 18> standard_dig_out_bits_cmd_;
+  std::array<double, 2> standard_analog_output_cmd_;
+  double io_async_success_;
+  double target_speed_fraction_cmd_;
+  double scaling_async_success_;
+  double resend_robot_program_cmd_;
+  double resend_robot_program_async_success_;
+  bool first_pass_;
+  bool initialized_;
+  bool async_thread_shutdown_;
 
-        // copy of non double values
-        std::array<double, 18> actual_dig_out_bits_copy_;
-        std::array<double, 18> actual_dig_in_bits_copy_;
-        std::array<double, 4> analog_io_types_copy_;
-        double tool_mode_copy_;
-        std::array<double, 2> tool_analog_input_types_copy_;
-        double tool_output_voltage_copy_;
-        double robot_mode_copy_;
-        double safety_mode_copy_;
-        std::array<double, 4> robot_status_bits_copy_;
-        std::array<double, 11> safety_status_bits_copy_;
+  // copy of non double values
+  std::array<double, 18> actual_dig_out_bits_copy_;
+  std::array<double, 18> actual_dig_in_bits_copy_;
+  std::array<double, 4> analog_io_types_copy_;
+  double tool_mode_copy_;
+  std::array<double, 2> tool_analog_input_types_copy_;
+  double tool_output_voltage_copy_;
+  double robot_mode_copy_;
+  double safety_mode_copy_;
+  std::array<double, 4> robot_status_bits_copy_;
+  std::array<double, 11> safety_status_bits_copy_;
 
-        bool robot_program_running_;
-        bool non_blocking_read_;
+  bool robot_program_running_;
+  bool non_blocking_read_;
 
-        PausingState pausing_state_;
-        double pausing_ramp_up_increment_;
+  PausingState pausing_state_;
+  double pausing_ramp_up_increment_;
 
-        // resources switching aux vars
-        std::vector<uint> stop_modes_;
-        std::vector<std::string> start_modes_;
-        bool position_controller_running_;
-        bool velocity_controller_running_;
+  // resources switching aux vars
+  std::vector<uint> stop_modes_;
+  std::vector<std::string> start_modes_;
+  bool position_controller_running_;
+  bool velocity_controller_running_;
 
-        std::unique_ptr<urcl::UrDriver> ur_driver_;
-        std::shared_ptr<std::thread> async_thread_;
-    };
+  std::unique_ptr<urcl::UrDriver> ur_driver_;
+  std::shared_ptr<std::thread> async_thread_;
+};
 }  // namespace ur_robot_driver
 
 #endif  // UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
