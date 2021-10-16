@@ -1,4 +1,4 @@
-name: Semi-Binary Build
+name: Rolling Semi-Binary Build
 on:
   pull_request:
     branches:
@@ -11,8 +11,8 @@ on:
     - cron: '03 5 * * *'
 
 jobs:
-  semi_binary:
-    name: semi-binary build
+  rolling_semi_binary:
+    name: rolling semi-binary build
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1

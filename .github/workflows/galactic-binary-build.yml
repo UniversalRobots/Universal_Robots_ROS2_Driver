@@ -1,4 +1,4 @@
-name: Binary Build
+name: Galactic Binary Build
 on:
   pull_request:
     branches:
@@ -8,11 +8,11 @@ on:
       - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '13 4 * * *'
+    - cron: '03 4 * * *'
 
 jobs:
-  binary:
-    name: binary build
+  galactic_binary:
+    name: galactic binary build
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
@@ -33,8 +33,8 @@ jobs:
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
-       The target directory cache doesn't include the source directory because
-       that comes from the checkout.  See "prepare target_ws for cache" task below
+      # The target directory cache doesn't include the source directory because
+      # that comes from the checkout.  See "prepare target_ws for cache" task below
       - name: cache target_ws
         if: ${{ ! matrix.env.CCOV }}
         uses: pat-s/always-upload-cache@v2.1.5

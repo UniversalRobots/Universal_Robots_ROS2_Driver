@@ -1,4 +1,4 @@
-name: Binary Build
+name: Rolling Binary Build
 on:
   pull_request:
     branches:
@@ -11,8 +11,8 @@ on:
     - cron: '13 4 * * *'
 
 jobs:
-  binary:
-    name: binary build
+  rolling_binary:
+    name: rolling binary build
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
@@ -33,8 +33,8 @@ jobs:
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
-       The target directory cache doesn't include the source directory because
-       that comes from the checkout.  See "prepare target_ws for cache" task below
+      # The target directory cache doesn't include the source directory because
+      # that comes from the checkout.  See "prepare target_ws for cache" task below
       - name: cache target_ws
         if: ${{ ! matrix.env.CCOV }}
         uses: pat-s/always-upload-cache@v2.1.5

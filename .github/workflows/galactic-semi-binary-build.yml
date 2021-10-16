@@ -1,4 +1,4 @@
-name: Semi-Binary Build
+name: Galactic Semi-Binary Build
 on:
   pull_request:
     branches:
@@ -8,11 +8,11 @@ on:
       - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 5 * * *'
+    - cron: '23 5 * * *'
 
 jobs:
-  semi_binary:
-    name: semi-binary build
+  galactic_semi_binary:
+    name: galactic semi-binary build
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
