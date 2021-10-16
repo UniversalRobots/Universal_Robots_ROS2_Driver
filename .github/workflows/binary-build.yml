@@ -23,7 +23,7 @@ jobs:
           - {ROS_DISTRO: galactic, ROS_REPO: testing}
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.env.ROS_DISTRO }}.repos
-      DOCKER_RUN_OPTS: --network static_test_net
+#      DOCKER_RUN_OPTS: --network static_test_net
       BEFORE_INIT: 'apt-get update -qq && apt-get install -y iproute2 iputils-ping && ip addr && ping -c5 192.168.56.101'
       NOT_TEST_BUILD: true
       NOT_TEST_DOWNSTREAM: true
