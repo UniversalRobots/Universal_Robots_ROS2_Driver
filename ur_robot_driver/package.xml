@@ -35,8 +35,7 @@
   <depend>ur_description</depend>
   <depend>ur_bringup</depend>
   <depend>ur_controllers</depend>
-
-  <exec_depend>controller_manager</exec_depend>
+  <depend>controller_manager</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
