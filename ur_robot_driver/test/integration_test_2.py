@@ -20,7 +20,7 @@ import pytest
 
 import launch_testing
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -35,9 +35,11 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 from controller_manager_msgs.srv import SwitchController
 from ur_msgs.srv import SetIO
 from ur_msgs.msg import IOStates
-from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState, GetRobotMode
-from ur_dashboard_msgs.srv import IsProgramRunning
-from ur_dashboard_msgs.srv import Load
+from ur_dashboard_msgs.srv import GetRobotMode
+
+# from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState
+# from ur_dashboard_msgs.srv import IsProgramRunning
+# from ur_dashboard_msgs.srv import Load
 from ur_dashboard_msgs.msg import RobotMode
 
 from std_srvs.srv import Trigger
@@ -89,13 +91,6 @@ def generate_test_description():
             "start_joint_controller": "false",
         }.items(),
     )
-
-    # wait_dashboard_server = [
-    #     ExecuteProcess(
-    #         cmd=["bash", "-c", '"$(ros2 pkg prefix ur_robot_driver)"/bin/wait_dashboard_server.sh'],
-    #         output="both",
-    #     )
-    # ]
 
     ld = []
     # ld += wait_dashboard_server

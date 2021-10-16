@@ -15,6 +15,7 @@ jobs:
     name: rolling semi-binary build
     runs-on: ubuntu-latest
     strategy:
+      max-parallel: 1
       matrix:
         env:
           - {ROS_DISTRO: rolling, ROS_REPO: main}
