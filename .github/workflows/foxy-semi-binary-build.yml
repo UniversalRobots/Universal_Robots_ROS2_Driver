@@ -8,7 +8,7 @@ on:
       - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '22 17 * * *'
+    - cron: '23 5 * * *'
 
 jobs:
   foxy_semi_binary:
@@ -29,7 +29,9 @@ jobs:
       BASEDIR: ${{ github.workspace }}/.work
       CACHE_PREFIX: ${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.env.ROS_DISTRO }}
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
