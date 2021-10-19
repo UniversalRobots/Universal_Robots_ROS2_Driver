@@ -1,6 +1,5 @@
 name: Execution Testing
 on:
-  workflow_dispatch
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 20 * * *'
