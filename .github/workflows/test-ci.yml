@@ -1,14 +1,9 @@
 name: Semi-Binary Test
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+  workflow_dispatch
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 5 * * *'
+    - cron: '03 20 * * *'
 
 jobs:
   semi_binary_test:
