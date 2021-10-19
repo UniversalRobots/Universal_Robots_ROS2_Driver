@@ -1,4 +1,4 @@
-name: Semi-Binary Test
+name: Execution Testing
 on:
   workflow_dispatch
   schedule:
