@@ -21,46 +21,44 @@ find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(controller_manager REQUIRED)
 
-include_directories(
-        include
-)
+include_directories(include)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
-        hardware_interface
-        pluginlib
-        rclcpp
-        std_srvs
-        ur_client_library
-        ur_dashboard_msgs
-        controller_manager
+  hardware_interface
+  pluginlib
+  rclcpp
+  std_srvs
+  ur_client_library
+  ur_dashboard_msgs
+  controller_manager
 )
 
 add_library(ur_robot_driver_plugin
-        SHARED
-        src/dashboard_client_ros.cpp
-        src/hardware_interface.cpp
-        src/urcl_log_handler.cpp
+  SHARED
+  src/dashboard_client_ros.cpp
+  src/hardware_interface.cpp
+  src/urcl_log_handler.cpp
 )
 target_link_libraries(
-        ur_robot_driver_plugin
-        ur_client_library::urcl
+  ur_robot_driver_plugin
+  ur_client_library::urcl
 )
 target_include_directories(
-        ur_robot_driver_plugin
-        PRIVATE
-        include
+  ur_robot_driver_plugin
+  PRIVATE
+  include
 )
 ament_target_dependencies(
-        ur_robot_driver_plugin
-        ${${PROJECT_NAME}_EXPORTED_TARGETS}
-        ${THIS_PACKAGE_INCLUDE_DEPENDS}
+  ur_robot_driver_plugin
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
 
 add_executable(dashboard_client
-        src/dashboard_client_ros.cpp
-        src/dashboard_client_node.cpp
-        src/urcl_log_handler.cpp
+  src/dashboard_client_ros.cpp
+  src/dashboard_client_node.cpp
+  src/urcl_log_handler.cpp
 )
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
@@ -70,51 +68,51 @@ target_link_libraries(ur_ros2_control_node ${controller_manager_LIBRARIES})
 ament_target_dependencies(ur_ros2_control_node controller_manager)
 
 install(TARGETS ur_ros2_control_node
-        RUNTIME DESTINATION lib/${PROJECT_NAME}
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 install(
-        TARGETS dashboard_client
-        DESTINATION lib/${PROJECT_NAME}
+  TARGETS dashboard_client
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # INSTALL
 install(
-        TARGETS ur_robot_driver_plugin
-        DESTINATION lib
+  TARGETS ur_robot_driver_plugin
+  DESTINATION lib
 )
 install(
-        DIRECTORY include/
-        DESTINATION include
+  DIRECTORY include/
+  DESTINATION include
 )
 
 ## EXPORTS
 ament_export_include_directories(
-        include
+  include
 )
 ament_export_libraries(
-        ur_robot_driver_plugin
+  ur_robot_driver_plugin
 )
 
 install(PROGRAMS scripts/tool_communication scripts/wait_dashboard_server.sh
-        DESTINATION bin
+  DESTINATION bin
 )
 
 install(DIRECTORY resources
-        DESTINATION share/${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}
 )
 
 
 install(DIRECTORY include/
-        DESTINATION include
+  DESTINATION include
 )
 
 ament_export_dependencies(
-        hardware_interface
-        pluginlib
-        rclcpp
-        rclcpp_lifecycle
-        ${THIS_PACKAGE_INCLUDE_DEPENDS}
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
 ament_package()
