@@ -21,7 +21,9 @@ jobs:
       - uses: ros-tooling/setup-ros@v0.2
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ env.ROS_DISTRO }}
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
