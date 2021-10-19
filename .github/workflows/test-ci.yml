@@ -2,7 +2,7 @@ name: Execution Testing
 on:
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 20 * * *'
+    - cron: '03 22 * * *'
 
 jobs:
   semi_binary_test:
