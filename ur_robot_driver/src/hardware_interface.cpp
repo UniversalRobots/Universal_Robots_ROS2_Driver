@@ -40,7 +40,6 @@ namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
-<<<<<<< HEAD
 CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& system_info)
 {
   if (hardware_interface::SystemInterface::on_init(system_info) != CallbackReturn::SUCCESS) {
