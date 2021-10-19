@@ -19,7 +19,6 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
-find_package(controller_manager REQUIRED)
 
 include_directories(include)
 
@@ -30,7 +29,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_srvs
   ur_client_library
   ur_dashboard_msgs
-  controller_manager
 )
 
 add_library(ur_robot_driver_plugin
@@ -62,14 +60,6 @@ add_executable(dashboard_client
 )
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-add_executable(ur_ros2_control_node src/ur_ros2_control_node.cpp)
-target_link_libraries(ur_ros2_control_node ${controller_manager_LIBRARIES})
-ament_target_dependencies(ur_ros2_control_node controller_manager)
-
-install(TARGETS ur_ros2_control_node
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
 
 install(
   TARGETS dashboard_client

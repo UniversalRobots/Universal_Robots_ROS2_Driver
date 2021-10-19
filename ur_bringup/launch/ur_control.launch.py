@@ -254,8 +254,8 @@ def generate_launch_description():
     )
 
     control_node = Node(
-        package="ur_robot_driver",
-        executable="ur_ros2_control_node",
+        package="controller_manager",
+        executable="ros2_control_node",
         parameters=[robot_description, initial_joint_controllers],
         output={
             "stdout": "screen",
