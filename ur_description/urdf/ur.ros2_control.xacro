@@ -42,8 +42,8 @@
       </hardware>
       <joint name="${prefix}shoulder_pan_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>
+          <param name="min">${-2*pi}</param>
+          <param name="max">${2*pi}</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.15</param>
@@ -56,8 +56,8 @@
       </joint>
       <joint name="${prefix}shoulder_lift_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>
+          <param name="min">${-2*pi}</param>
+          <param name="max">${2*pi}</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.15</param>
@@ -70,8 +70,8 @@
       </joint>
       <joint name="${prefix}elbow_joint">
         <command_interface name="position">
-          <param name="min">{-pi}</param>
-          <param name="max">{pi}</param>
+          <param name="min">${-pi}</param>
+          <param name="max">${pi}</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.15</param>
@@ -84,8 +84,8 @@
       </joint>
       <joint name="${prefix}wrist_1_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>
+          <param name="min">${-2*pi}</param>
+          <param name="max">${2*pi}</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.2</param>
@@ -98,8 +98,8 @@
       </joint>
       <joint name="${prefix}wrist_2_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>
+          <param name="min">${-2*pi}</param>
+          <param name="max">${2*pi}</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.2</param>
@@ -112,8 +112,8 @@
       </joint>
       <joint name="${prefix}wrist_3_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>
+          <param name="min">${-2*pi}</param>
+          <param name="max">${2*pi}</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.2</param>
