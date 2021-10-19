@@ -99,7 +99,7 @@ class URTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("ur_robot_driver_integration_test_2")
-        time.sleep(10)
+        time.sleep(1)
         cls.init_robot(cls)
 
     @classmethod
