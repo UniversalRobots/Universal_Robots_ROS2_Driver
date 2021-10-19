@@ -14,10 +14,10 @@ jobs:
       - uses: ros-tooling/setup-ros@v0.2
         with:
           required-ros-distributions: rolling
-#      - uses: actions/checkout@v1
-#      - name: start ursim
-#        run: |
-#          .github/dockerursim/build_and_run_docker_ursim.sh
+      - uses: actions/checkout@v1
+      - name: start ursim
+        run: |
+          .github/dockerursim/build_and_run_docker_ursim.sh
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
           target-ros2-distro: rolling
@@ -38,7 +38,6 @@ jobs:
               }
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-          skip-tests: true
       - uses: codecov/codecov-action@v1.0.14
         with:
           file: ros_ws/lcov/total_coverage.info

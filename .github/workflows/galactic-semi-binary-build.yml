@@ -1,4 +1,4 @@
-name: Semi-Binary Build
+name: Galactic Semi-Binary Build
 on:
   pull_request:
     branches:
@@ -8,20 +8,18 @@ on:
       - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 5 * * *'
+    - cron: '23 5 * * *'
 
 jobs:
-  semi_binary:
-    name: semi-binary build
+  galactic_semi_binary:
+    name: galacitc semi-binary build
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
       matrix:
         env:
-          - { ROS_DISTRO: rolling, ROS_REPO: main }
-          - { ROS_DISTRO: rolling, ROS_REPO: testing }
-          - { ROS_DISTRO: galactic, ROS_REPO: main }
-          - { ROS_DISTRO: galactic, ROS_REPO: testing }
+          - {ROS_DISTRO: galactic, ROS_REPO: main}
+          - {ROS_DISTRO: galactic, ROS_REPO: testing}
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.repos
       DOCKER_RUN_OPTS: --network static_test_net
