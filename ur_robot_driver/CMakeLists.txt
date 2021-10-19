@@ -20,9 +20,7 @@ find_package(std_srvs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 
-include_directories(
-  include
-)
+include_directories(include)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
@@ -78,16 +76,15 @@ install(
   DESTINATION include
 )
 
-
 ## EXPORTS
 ament_export_include_directories(
-        include
+  include
 )
 ament_export_libraries(
-        ur_robot_driver_plugin
+  ur_robot_driver_plugin
 )
 
-install(PROGRAMS scripts/tool_communication
+install(PROGRAMS scripts/tool_communication scripts/wait_dashboard_server.sh
   DESTINATION bin
 )
 
@@ -116,5 +113,6 @@ if(BUILD_TESTING)
   find_package(ur_bringup REQUIRED)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
-  add_launch_test(test/integration_test.py)
+  add_launch_test(test/integration_test_1.py)
+  add_launch_test(test/integration_test_2.py)
 endif()

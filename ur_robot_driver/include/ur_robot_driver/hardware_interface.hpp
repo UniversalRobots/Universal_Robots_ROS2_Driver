@@ -100,6 +100,8 @@ public:
 
   static constexpr double NO_NEW_CMD_ = std::numeric_limits<double>::quiet_NaN();
 
+  void asyncThread();
+
 protected:
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
@@ -154,6 +156,9 @@ protected:
   double resend_robot_program_cmd_;
   double resend_robot_program_async_success_;
   bool first_pass_;
+  bool initialized_;
+  double system_interface_initialized_;
+  bool async_thread_shutdown_;
 
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;
@@ -180,6 +185,7 @@ protected:
   bool velocity_controller_running_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
+  std::shared_ptr<std::thread> async_thread_;
 };
 }  // namespace ur_robot_driver
 
