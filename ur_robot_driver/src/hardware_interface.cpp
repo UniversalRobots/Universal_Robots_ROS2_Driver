@@ -59,9 +59,7 @@ CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::Ha
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   stop_modes_ = { StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE,
                   StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE };
-  start_modes_ = { hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
-                   hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
-                   hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION };
+  start_modes_ = {};
   position_controller_running_ = false;
   velocity_controller_running_ = false;
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
