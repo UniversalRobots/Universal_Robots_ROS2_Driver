@@ -525,7 +525,6 @@ hardware_interface::return_type URPositionHardwareInterface::write()
 
     } else {
       ur_driver_->writeKeepalive();
-      RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "writeKeepalive");
     }
 
     packet_read_ = false;
