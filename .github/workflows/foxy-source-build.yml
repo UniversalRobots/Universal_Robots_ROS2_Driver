@@ -24,9 +24,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{ env.ROS_DISTRO }}
-      - name: start ursim
-        run: |
-          .github/dockerursim/build_and_run_docker_ursim.sh
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
@@ -42,6 +39,7 @@ jobs:
             https://raw.githubusercontent.com/ros2/ros2/${{ env.ROS_DISTRO }}/ros2.repos
             https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/Universal_Robots_ROS2_Driver.repos
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
+          skip-tests: true
       - uses: actions/upload-artifact@v1
         with:
           name: colcon-logs-${{ matrix.os }}
