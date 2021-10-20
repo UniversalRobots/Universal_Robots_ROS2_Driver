@@ -22,6 +22,8 @@ jobs:
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ env.ROS_DISTRO }}
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
