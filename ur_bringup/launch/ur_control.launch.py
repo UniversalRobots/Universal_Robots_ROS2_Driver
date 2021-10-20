@@ -136,7 +136,7 @@ def launch_setup(context, *args, **kwargs):
     # define update rate
     # TODO prettify when ros2_control_node update loop stops jitter
     update_rate = 600 if 'e' in ur_type.perform(context) else 150
-    update_rate = 525 if ci_testing.perform(context) == "true" else update_rate
+    update_rate = 800 if ci_testing.perform(context) == "true" else update_rate
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
