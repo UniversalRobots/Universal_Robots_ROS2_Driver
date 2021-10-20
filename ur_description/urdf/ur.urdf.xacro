@@ -20,6 +20,10 @@
    <xacro:arg name="fake_sensor_commands" default="false" />
    <xacro:arg name="headless_mode" default="false" />
 
+   <!-- initial position -->
+   <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
+   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
+
    <!-- arm -->
    <xacro:ur_robot
      prefix="$(arg prefix)"
@@ -33,5 +37,6 @@
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
-     headless_mode="$(arg headless_mode)" />
+     headless_mode="$(arg headless_mode)"
+     initial_positions="${load_yaml(initial_positions_file)}" />
 </robot>
