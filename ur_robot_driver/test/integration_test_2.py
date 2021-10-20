@@ -83,6 +83,7 @@ def generate_test_description():
             "headless_mode": "true",
             "launch_dashboard_client": "false",
             "start_joint_controller": "false",
+            "ci_testing": "true",
         }.items(),
     )
 
