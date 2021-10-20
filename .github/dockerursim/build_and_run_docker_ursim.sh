@@ -16,5 +16,5 @@ docker run --name="mydockerursim" -d \
   -v "${DIR}/.vol":/ursim/programs \
   -v dockursim:/ursim \
   --privileged \
-  --cpus=2 \
+  --cpus=1 \
   mydockerursim
