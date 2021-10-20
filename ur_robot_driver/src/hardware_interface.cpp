@@ -687,6 +687,15 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
   }
+  if (stop_modes_.size() != 0 &&
+      std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_POSITION) != stop_modes_.end()) {
+    position_controller_running_ = false;
+    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+  } else if (stop_modes_.size() != 0 &&
+             std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_VELOCITY) != stop_modes_.end()) {
+    velocity_controller_running_ = false;
+    urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  }
 
   start_modes_.clear();
   stop_modes_.clear();
