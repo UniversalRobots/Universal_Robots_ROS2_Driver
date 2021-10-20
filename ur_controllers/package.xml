@@ -36,8 +36,6 @@
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_msgs</depend>
 
-  <exec_depend>joint_state_broadcaster</exec_depend>
-
   <export>
     <build_type>ament_cmake</build_type>
   </export>
