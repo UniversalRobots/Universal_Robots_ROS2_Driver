@@ -49,3 +49,5 @@ create a new file handle inside this directory. Therefore, we didn't use the `/d
 example, as users usually don't have the access rights to create new files there.
 
 For all the other tool parameters seen above, please refer to the Universal Robots user manual.
+
+More information can be found at [Universal_Robots_ToolComm_Forwarder_URCap](https://github.com/UniversalRobots/Universal_Robots_ToolComm_Forwarder_URCap).
