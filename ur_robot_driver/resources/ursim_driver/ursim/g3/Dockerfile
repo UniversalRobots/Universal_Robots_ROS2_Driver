@@ -106,5 +106,7 @@ EXPOSE 30001-30004
 
 # Install the ExternalControl URCap
 ADD ./aux/externalcontrol-1.0.5.urcap /ursim/GUI/bundle/com.fzi.externalcontrol-1.0.5.jar
+# Install rs485 URCap
+ADD ./aux/rs485-1.0.urcap /ursim/GUI/bundle/com.fzi.rs485-1.0.0.jar u dockerfile
 
 ENTRYPOINT ["/entrypoint.sh"]
