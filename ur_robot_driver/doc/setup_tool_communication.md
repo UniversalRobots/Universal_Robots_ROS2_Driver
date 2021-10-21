@@ -51,3 +51,8 @@ example, as users usually don't have the access rights to create new files there
 For all the other tool parameters seen above, please refer to the Universal Robots user manual.
 
 More information can be found at [Universal_Robots_ToolComm_Forwarder_URCap](https://github.com/UniversalRobots/Universal_Robots_ToolComm_Forwarder_URCap).
+The convenience script for `socat` call is [here](../scripts/tool_communication.py) for ROS2 driver and can be run by:
+```asm
+$ ros2 run ur_robot_driver tool_communication.py --ros-args -p robot_ip:=192.168.56.101 -p device_name:=/tmp/ttyUR
+
+```
