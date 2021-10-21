@@ -18,7 +18,7 @@
    <!-- ros2_control related parameters -->
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
-   
+
    <!-- initial position -->
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
