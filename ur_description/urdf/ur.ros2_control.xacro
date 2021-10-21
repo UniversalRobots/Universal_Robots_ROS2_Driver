@@ -3,11 +3,8 @@
 
   <xacro:macro name="ur_ros2_control" params="name prefix
     use_fake_hardware:=false fake_sensor_commands:=false
-<<<<<<< HEAD
     headless_mode:=false
-=======
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
->>>>>>> dc5b309... added the initial_positions argument with default dictionary
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
     hash_kinematics robot_ip">
