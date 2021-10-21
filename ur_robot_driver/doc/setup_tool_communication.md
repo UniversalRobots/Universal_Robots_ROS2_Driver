@@ -20,16 +20,19 @@ In order to use the tool communication in ROS, simply pass the correct parameter
 launch files:
 
 ```bash
-$ roslaunch ur_robot_driver ur<3|5|10>e_bringup.launch \
-  use_tool_communication:=true \
-  tool_voltage:=24 \ # can be 0, 12 or 24
-  tool_parity:=0 \ # 0: none, 1: odd, 2: even
-  tool_baud_rate:=115200 \
-  tool_stop_bits:=1 \
-  tool_rx_idle_chars:=1.5 \
-  tool_tx_idle_chars:=3.5 \
-  tool_device_name:=/tmp/ttyUR  # remember that your user needs to have the rights to write that file handle
+$ ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_tool_communication:=true use_fake_hardware:=false launch_rviz:=false
+  # remember that your user needs to have the rights to write that file handle to /tmp/ttyUR
 ```
+
+Following parameters can be set [ur.ros2_control.xacro](../../ur_description/urdf/ur.ros2_control.xacro):
+- `tool_voltage`
+- `tool_parity`
+- `tool_baud_rate`
+- `tool_stop_bits`
+- `tool_rx_idle_chars`
+- `tool_tx_idle_chars`
+- `tool_device_name`
+- `tool_tcp_port`
 
 The `tool_device_name` is an arbitrary name for the device file at which the device will be
 accessible in the local file system. Most ROS drivers for rs485 devices accept an argument to
@@ -37,7 +40,7 @@ specify the device file path. With the example above you could run the `rs485_no
 `imaginary_drivers` using the following command:
 
 ```bash
-$ rosrun imaginary_drivers rs485_node device:=/tmp/ttyUR
+$ ros2 run imaginary_drivers rs485_node --ros-args -p device:=/tmp/ttyUR
 
 ```
 
