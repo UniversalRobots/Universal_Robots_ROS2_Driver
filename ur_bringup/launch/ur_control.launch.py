@@ -22,6 +22,7 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+
 def launch_setup(context, *args, **kwargs):
 
     # Initialize Arguments
@@ -135,7 +136,7 @@ def launch_setup(context, *args, **kwargs):
 
     # define update rate
     # TODO prettify when ros2_control_node update loop stops jitter
-    update_rate = 600 if 'e' in ur_type.perform(context) else 150
+    update_rate = 600 if "e" in ur_type.perform(context) else 150
     update_rate = 650 if ci_testing.perform(context) == "true" else update_rate
     control_node = Node(
         package="controller_manager",
@@ -358,9 +359,7 @@ def generate_launch_description():
         )
     )
     declared_arguments.append(
-        DeclareLaunchArgument(
-            "ci_testing", default_value="false", description="Running ci tests?"
-        )
+        DeclareLaunchArgument("ci_testing", default_value="false", description="Running ci tests?")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
