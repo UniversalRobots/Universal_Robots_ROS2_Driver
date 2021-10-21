@@ -5,6 +5,7 @@
     use_fake_hardware:=false fake_sensor_commands:=false
     headless_mode:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
+    use_tool_communication:=false
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
     hash_kinematics robot_ip">
@@ -29,7 +30,7 @@
           <param name="non_blocking_read">0</param>
           <param name="servoj_gain">2000</param>
           <param name="servoj_lookahead_time">0.03</param>
-          <param name="use_tool_communication">0</param>
+          <param name="use_tool_communication">${use_tool_communication}</param>
           <param name="kinematics/hash">"${hash_kinematics}"</param>
           <param name="tool_voltage">0</param>
           <param name="tool_parity">0</param>

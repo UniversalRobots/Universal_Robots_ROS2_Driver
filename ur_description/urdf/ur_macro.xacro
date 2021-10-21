@@ -66,7 +66,8 @@
     use_fake_hardware:=false
     fake_sensor_commands:=false
     headless_mode:=false
-    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}">
+    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
+    use_tool_communication:=false">
 
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
@@ -96,7 +97,8 @@
       input_recipe_filename="$(arg input_recipe_filename)"
       tf_prefix=""
       hash_kinematics="${kinematics_hash}"
-      robot_ip="$(arg robot_ip)" />
+      robot_ip="$(arg robot_ip)"
+      use_tool_communication="$(arg use_tool_communication)"/>
 
     <!-- Add URDF transmission elements (for ros_control) -->
     <!--<xacro:ur_arm_transmission prefix="${prefix}" hw_interface="${transmission_hw_interface}" />-->
