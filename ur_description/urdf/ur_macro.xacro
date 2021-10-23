@@ -64,8 +64,8 @@
     safety_pos_margin:=0.15
     safety_k_position:=20
     use_fake_hardware:=false
-    fake_sensor_commands:=false"
-  >
+    fake_sensor_commands:=false
+    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}">
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
       joint_limits_parameters_file="${joint_limits_parameters_file}"
@@ -78,12 +78,15 @@
     <xacro:arg name="output_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_output_recipe.txt"/>
     <xacro:arg name="input_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
     <xacro:arg name="robot_ip" default="10.0.1.186"/>
+
+
     <!-- ros2 control include -->
     <xacro:include filename="$(find ur_description)/urdf/ur.ros2_control.xacro" />
     <!-- ros2 control instance -->
     <xacro:ur_ros2_control
       name="URPositionHardwareInterface" prefix="${prefix}"
       use_fake_hardware="$(arg use_fake_hardware)"
+      initial_positions="${initial_positions}"
       fake_sensor_commands="$(arg fake_sensor_commands)"
       script_filename="$(arg script_filename)"
       output_recipe_filename="$(arg output_recipe_filename)"

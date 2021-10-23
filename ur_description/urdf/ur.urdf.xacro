@@ -19,6 +19,10 @@
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
 
+   <!-- initial position -->
+   <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
+   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
+
    <!-- arm -->
    <xacro:ur_robot
      prefix="$(arg prefix)"
@@ -31,5 +35,6 @@
      safety_pos_margin="$(arg safety_pos_margin)"
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
-     fake_sensor_commands="$(arg fake_sensor_commands)" />
+     fake_sensor_commands="$(arg fake_sensor_commands)"
+     initial_positions="${load_yaml(initial_positions_file)}" />
 </robot>
