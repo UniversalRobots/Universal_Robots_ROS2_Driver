@@ -247,6 +247,15 @@
         <state_interface name="safety_status_bit_10"/>
       </joint>
 
+      <joint name="resend_robot_program">
+        <command_interface name="resend_robot_program_cmd"/>
+        <command_interface name="resend_robot_program_async_success"/>
+      </joint>
+
+      <joint name="system_interface">
+        <state_interface name="initialized"/>
+      </joint>
+
     </ros2_control>
   </xacro:macro>
 
