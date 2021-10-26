@@ -180,19 +180,19 @@ def launch_setup(context, *args, **kwargs):
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="  ",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
     )
 
     io_and_status_controller_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=["io_and_status_controller", "-c", "/controller_manager"],
     )
 
     speed_scaling_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "speed_scaling_state_broadcaster",
             "--controller-manager",
@@ -202,7 +202,7 @@ def launch_setup(context, *args, **kwargs):
 
     force_torque_sensor_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "force_torque_sensor_broadcaster",
             "--controller-manager",
@@ -213,13 +213,13 @@ def launch_setup(context, *args, **kwargs):
     # There may be other controllers of the joints, but this is the initially-started one
     initial_joint_controller_spawner_started = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[initial_joint_controller, "-c", "/controller_manager"],
         condition=IfCondition(start_joint_controller),
     )
     initial_joint_controller_spawner_stopped = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[initial_joint_controller, "-c", "/controller_manager", "--stopped"],
         condition=UnlessCondition(start_joint_controller),
     )
