@@ -44,7 +44,6 @@ def launch_setup(context, *args, **kwargs):
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
-    ci_testing = LaunchConfiguration("ci_testing")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -136,15 +135,17 @@ def launch_setup(context, *args, **kwargs):
 
     # define update rate
     update_rate_config_file = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", ur_type.perform(context) + "_update_rate.yaml"]
+        [
+            FindPackageShare(runtime_config_package),
+            "config",
+            ur_type.perform(context) + "_update_rate.yaml",
+        ]
     )
 
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description,
-                    update_rate_config_file,
-                    initial_joint_controllers],
+        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
         output={
             "stdout": "screen",
             "stderr": "screen",
@@ -360,9 +361,6 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "launch_dashboard_client", default_value="true", description="Launch RViz?"
         )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument("ci_testing", default_value="false", description="Running ci tests?")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
