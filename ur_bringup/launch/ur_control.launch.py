@@ -135,13 +135,16 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # define update rate
-    # TODO prettify when ros2_control_node update loop stops jitter
-    update_rate = 600 if "e" in ur_type.perform(context) else 150
-    update_rate = 650 if ci_testing.perform(context) == "true" else update_rate
+    update_rate_config_file = PathJoinSubstitution(
+        [FindPackageShare(runtime_config_package), "config", ur_type.perform(context) + "_update_rate.yaml"]
+    )
+
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description, {"update_rate": update_rate}, initial_joint_controllers],
+        parameters=[robot_description,
+                    update_rate_config_file,
+                    initial_joint_controllers],
         output={
             "stdout": "screen",
             "stderr": "screen",
