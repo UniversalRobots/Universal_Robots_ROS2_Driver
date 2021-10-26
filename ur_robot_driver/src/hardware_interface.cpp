@@ -72,7 +72,8 @@ CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::Ha
   system_interface_initialized_ = 0.0;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    if (joint.name == "gpio" || joint.name == "speed_scaling") {
+    if (joint.name == "gpio" || joint.name == "speed_scaling" || joint.name == "resend_robot_program" ||
+        joint.name == "system_interface") {
       continue;
     }
     if (joint.command_interfaces.size() != 2) {
@@ -132,7 +133,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling") {
+    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling" ||
+        info_.joints[i].name == "resend_robot_program" || info_.joints[i].name == "system_interface") {
       continue;
     }
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -213,7 +215,7 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
     if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling" ||
-        info_.joints[i].name == "resend_robot_program") {
+        info_.joints[i].name == "resend_robot_program" || info_.joints[i].name == "system_interface") {
       continue;
     }
     command_interfaces.emplace_back(hardware_interface::CommandInterface(

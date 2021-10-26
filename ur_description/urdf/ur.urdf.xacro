@@ -19,9 +19,10 @@
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
    <xacro:arg name="headless_mode" default="false" />
-
-   <!-- initial position -->
+   <!-- initial position for fake hardware -->
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
+
+   <!-- convert to property to use substitution in function -->
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
    <!-- arm -->

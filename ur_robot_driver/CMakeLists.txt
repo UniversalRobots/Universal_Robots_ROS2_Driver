@@ -90,6 +90,7 @@ install(PROGRAMS scripts/tool_communication scripts/wait_dashboard_server.sh
 
 install(DIRECTORY resources
   DESTINATION share/${PROJECT_NAME}
+  REGEX "/ursim/" EXCLUDE
 )
 
 
