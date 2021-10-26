@@ -427,7 +427,7 @@ void URPositionHardwareInterface::asyncThread()
       //        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initialized in async thread");
       checkAsyncIO();
     }
-    std::this_thread::sleep_for(std::chrono::nanoseconds(20000));
+    std::this_thread::sleep_for(std::chrono::nanoseconds(20000000));
   }
 }
 
