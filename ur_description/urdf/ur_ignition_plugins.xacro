@@ -1,6 +1,16 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur_ignition_plugins">
 
+  <!-- Joint Controller Gains -->
+  <xacro:property name="default_initial_position" value="0"/>
+  <xacro:property name="default_position_p_gain" value="3000"/>
+  <xacro:property name="default_position_d_gain" value="0"/>
+  <xacro:property name="default_position_i_gain" value="100"/>
+  <xacro:property name="default_position_i_min" value="-50"/>
+  <xacro:property name="default_position_i_max" value="50"/>
+  <xacro:property name="default_position_cmd_min" value="-100"/>
+  <xacro:property name="default_position_cmd_max" value="100"/>
+
   <gazebo>
     <!-- Joint States -->
     <plugin filename="libignition-gazebo-joint-state-publisher-system.so" name="ignition::gazebo::systems::JointStatePublisher"/>
@@ -11,64 +21,64 @@
       <topic>joint_trajectory</topic>
 
       <joint_name>shoulder_pan_joint</joint_name>
-      <initial_position>0</initial_position>
-      <position_p_gain>3000</position_p_gain>
-      <position_d_gain>15</position_d_gain>
-      <position_i_gain>1650</position_i_gain>
-      <position_i_min>-15</position_i_min>
-      <position_i_max>15</position_i_max>
-      <position_cmd_min>-87</position_cmd_min>
-      <position_cmd_max>87</position_cmd_max>
+      <initial_position>${default_initial_position}</initial_position>
+      <position_p_gain>${default_position_p_gain}</position_p_gain>
+      <position_d_gain>${default_position_d_gain}</position_d_gain>
+      <position_i_gain>${default_position_i_gain}</position_i_gain>
+      <position_i_min>${default_position_i_min}</position_i_min>
+      <position_i_max>${default_position_i_max}</position_i_max>
+      <position_cmd_min>${default_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${default_position_cmd_max}</position_cmd_max>
 
       <joint_name>shoulder_lift_joint</joint_name>
-      <initial_position>0</initial_position>
-      <position_p_gain>3000</position_p_gain>
-      <position_d_gain>15</position_d_gain>
-      <position_i_gain>1650</position_i_gain>
-      <position_i_min>-15</position_i_min>
-      <position_i_max>15</position_i_max>
-      <position_cmd_min>-87</position_cmd_min>
-      <position_cmd_max>87</position_cmd_max>
+      <initial_position>${default_initial_position}</initial_position>
+      <position_p_gain>${default_position_p_gain}</position_p_gain>
+      <position_d_gain>${default_position_d_gain}</position_d_gain>
+      <position_i_gain>${default_position_i_gain}</position_i_gain>
+      <position_i_min>${default_position_i_min}</position_i_min>
+      <position_i_max>${default_position_i_max}</position_i_max>
+      <position_cmd_min>${default_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${default_position_cmd_max}</position_cmd_max>
 
       <joint_name>elbow_joint</joint_name>
-      <initial_position>0</initial_position>
-      <position_p_gain>3000</position_p_gain>
-      <position_d_gain>15</position_d_gain>
-      <position_i_gain>1650</position_i_gain>
-      <position_i_min>-15</position_i_min>
-      <position_i_max>15</position_i_max>
-      <position_cmd_min>-87</position_cmd_min>
-      <position_cmd_max>87</position_cmd_max>
+      <initial_position>${default_initial_position}</initial_position>
+      <position_p_gain>${default_position_p_gain}</position_p_gain>
+      <position_d_gain>${default_position_d_gain}</position_d_gain>
+      <position_i_gain>${default_position_i_gain}</position_i_gain>
+      <position_i_min>${default_position_i_min}</position_i_min>
+      <position_i_max>${default_position_i_max}</position_i_max>
+      <position_cmd_min>${default_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${default_position_cmd_max}</position_cmd_max>
 
       <joint_name>wrist_1_joint</joint_name>
-      <initial_position>0</initial_position>
-      <position_p_gain>3000</position_p_gain>
-      <position_d_gain>15</position_d_gain>
-      <position_i_gain>1650</position_i_gain>
-      <position_i_min>-15</position_i_min>
-      <position_i_max>15</position_i_max>
-      <position_cmd_min>-87</position_cmd_min>
-      <position_cmd_max>87</position_cmd_max>
+      <initial_position>${default_initial_position}</initial_position>
+      <position_p_gain>${default_position_p_gain}</position_p_gain>
+      <position_d_gain>${default_position_d_gain}</position_d_gain>
+      <position_i_gain>${default_position_i_gain}</position_i_gain>
+      <position_i_min>${default_position_i_min}</position_i_min>
+      <position_i_max>${default_position_i_max}</position_i_max>
+      <position_cmd_min>${default_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${default_position_cmd_max}</position_cmd_max>
 
       <joint_name>wrist_2_joint</joint_name>
-      <initial_position>0</initial_position>
-      <position_p_gain>3000</position_p_gain>
-      <position_d_gain>15</position_d_gain>
-      <position_i_gain>1650</position_i_gain>
-      <position_i_min>-15</position_i_min>
-      <position_i_max>15</position_i_max>
-      <position_cmd_min>-87</position_cmd_min>
-      <position_cmd_max>87</position_cmd_max>
+      <initial_position>${default_initial_position}</initial_position>
+      <position_p_gain>${default_position_p_gain}</position_p_gain>
+      <position_d_gain>${default_position_d_gain}</position_d_gain>
+      <position_i_gain>${default_position_i_gain}</position_i_gain>
+      <position_i_min>${default_position_i_min}</position_i_min>
+      <position_i_max>${default_position_i_max}</position_i_max>
+      <position_cmd_min>${default_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${default_position_cmd_max}</position_cmd_max>
 
       <joint_name>wrist_3_joint</joint_name>
-      <initial_position>0</initial_position>
-      <position_p_gain>3000</position_p_gain>
-      <position_d_gain>15</position_d_gain>
-      <position_i_gain>1650</position_i_gain>
-      <position_i_min>-15</position_i_min>
-      <position_i_max>15</position_i_max>
-      <position_cmd_min>-87</position_cmd_min>
-      <position_cmd_max>87</position_cmd_max>
+      <initial_position>${default_initial_position}</initial_position>
+      <position_p_gain>${default_position_p_gain}</position_p_gain>
+      <position_d_gain>${default_position_d_gain}</position_d_gain>
+      <position_i_gain>${default_position_i_gain}</position_i_gain>
+      <position_i_min>${default_position_i_min}</position_i_min>
+      <position_i_max>${default_position_i_max}</position_i_max>
+      <position_cmd_min>${default_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${default_position_cmd_max}</position_cmd_max>
     </plugin>
 
   </gazebo>

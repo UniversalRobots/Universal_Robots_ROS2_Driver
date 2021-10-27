@@ -1,7 +1,7 @@
 controller_names:
-  - ur_controller
+  - joint_trajectory_controller
 
-ur_controller:
+joint_trajectory_controller:
   action_ns: follow_joint_trajectory
   type: FollowJointTrajectory
   default: True
