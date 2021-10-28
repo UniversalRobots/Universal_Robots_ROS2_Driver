@@ -1,6 +1,8 @@
 controller_manager:
   ros__parameters:
 
+    use_sleep_in_update_loop: false
+
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
