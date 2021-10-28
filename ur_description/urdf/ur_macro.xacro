@@ -55,6 +55,8 @@
 
   <xacro:macro name="ur_robot" params="
     prefix
+    parent
+    *origin
     joint_limits_parameters_file
     kinematics_parameters_file
     physical_parameters_file
@@ -225,6 +227,12 @@
       </xacro:cylinder_inertial>
     </link>
 
+    <!-- base_joint fixes base_link to the environment -->
+    <joint name="${prefix}base_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="${prefix}base_link" />
+    </joint>
     <!-- joints - main serial chain -->
     <joint name="${prefix}base_link-base_link_inertia" type="fixed">
       <parent link="${prefix}base_link" />
@@ -308,6 +316,13 @@
       </xacro:if>
       <dynamics damping="5" friction="5"/>
     </joint>
+    
+    <link name="${prefix}ft_frame"/>
+    <joint name="${prefix}wrist_3_link-ft_frame" type="fixed">
+      <parent link="${prefix}wrist_3_link"/>
+      <child link="${prefix}ft_frame"/>
+      <origin xyz="0 0 0" rpy="${pi} 0 0"/>
+    </joint>
 
     <!-- ROS-Industrial 'base' frame - base_link to UR 'Base' Coordinates transform -->
     <link name="${prefix}base"/>
@@ -333,25 +348,18 @@
     <!-- ROS-Industrial 'tool0' frame - all-zeros tool frame -->
     <link name="${prefix}tool0"/>
     <joint name="${prefix}flange-tool0" type="fixed">
-      <!-- default toolframe - X+ left, Y+ up, Z+ front -->
-      <origin xyz="0 0 0" rpy="${pi/2.0} 0 ${pi/2.0}"/>
       <parent link="${prefix}flange"/>
       <child link="${prefix}tool0"/>
-    </joint>
-
-    <!-- Create a world link, and a fixed joint between world and base_link -->
-    <link name="world" />
-    <joint name="${prefix}world_joint"  type="fixed">
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <parent link="world"/>
-      <child link="${prefix}base_link"/>
+      <!-- default toolframe - X+ left, Y+ up, Z+ front -->
+      <origin xyz="0 0 0" rpy="${pi/2.0} 0 ${pi/2.0}"/>
     </joint>
 
     <!-- Ignition Gazebo -->
+    <!-- TODO(destogl): propagate `prefix` here down in the document, otherwise no multi-robot simulation is possible. -->
     <xacro:if value="${ignition}">
       <!-- Include Ignition Gazebo Plugins -->
       <xacro:include filename="ur_ignition_plugins.xacro" />
     </xacro:if>
 
-  </xacro:macro>
+    </xacro:macro>
 </robot>

@@ -26,10 +26,14 @@
 
    <!-- convert to property to use substitution in function -->
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
+   
+   <!-- create link fixed to the "world" -->
+   <link name="world" />
 
    <!-- arm -->
    <xacro:ur_robot
      prefix="$(arg prefix)"
+     parent="world"
      joint_limits_parameters_file="$(arg joint_limit_params)"
      kinematics_parameters_file="$(arg kinematics_params)"
      physical_parameters_file="$(arg physical_params)"
@@ -42,6 +46,10 @@
      fake_sensor_commands="$(arg fake_sensor_commands)"
      headless_mode="$(arg headless_mode)"
      initial_positions="${load_yaml(initial_positions_file)}"
-     ignition="$(arg ignition)" />
+     ignition="$(arg ignition)" >
+    <origin xyz="0 0 0" rpy="0 0 0" />          <!-- position robot in the world -->
+   </xacro:ur_robot>
+   
+   
 
 </robot>
