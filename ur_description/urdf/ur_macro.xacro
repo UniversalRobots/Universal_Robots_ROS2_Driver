@@ -328,6 +328,13 @@
       </xacro:if>
       <dynamics damping="0" friction="0"/>
     </joint>
+    
+    <link name="${prefix}ft_frame"/>
+    <joint name="${prefix}wrist_3_link-ft_frame" type="fixed">
+      <parent link="${prefix}wrist_3_link"/>
+      <child link="${prefix}ft_frame"/>
+      <origin xyz="0 0 0" rpy="${pi} 0 0"/>
+    </joint>
 
     <!-- ROS-Industrial 'base' frame - base_link to UR 'Base' Coordinates transform -->
     <link name="${prefix}base"/>
@@ -353,10 +360,11 @@
     <!-- ROS-Industrial 'tool0' frame - all-zeros tool frame -->
     <link name="${prefix}tool0"/>
     <joint name="${prefix}flange-tool0" type="fixed">
-      <!-- default toolframe - X+ left, Y+ up, Z+ front -->
-      <origin xyz="0 0 0" rpy="${pi/2.0} 0 ${pi/2.0}"/>
       <parent link="${prefix}flange"/>
       <child link="${prefix}tool0"/>
+      <!-- default toolframe - X+ left, Y+ up, Z+ front -->
+      <origin xyz="0 0 0" rpy="${pi/2.0} 0 ${pi/2.0}"/>
     </joint>
+    
   </xacro:macro>
 </robot>
