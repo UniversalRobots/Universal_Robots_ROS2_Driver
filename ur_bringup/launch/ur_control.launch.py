@@ -253,8 +253,8 @@ def launch_setup(context, *args, **kwargs):
         arguments=[
             '-name', 'ur',
             '-topic', 'robot_description',
-            '-x', '0.1',
-            '-z', '1.2'
+            '-x', '0.0',
+            '-z', '0.0'
         ],
         output='screen',
         condition=IfCondition(use_ignition)

@@ -103,6 +103,8 @@
     <!-- Placeholder for ros2_control transmission which don't yet exist -->
 
     <!-- links -  main serial chain -->
+    <!-- World link for static base -->
+    <link name="world" />
     <link name="${prefix}base_link"/>
     <link name="${prefix}base_link_inertia">
       <visual>
@@ -117,7 +119,7 @@
           <mesh filename="${base_collision_mesh}"/>
         </geometry>
       </collision>
-      <xacro:cylinder_inertial radius="${base_inertia_radius}" length="${base_inertia_length}" mass="1000">
+      <xacro:cylinder_inertial radius="${base_inertia_radius}" length="${base_inertia_length}" mass="${base_mass}">
         <origin xyz="0 0 0" rpy="0 0 0" />
       </xacro:cylinder_inertial>
     </link>
@@ -134,7 +136,7 @@
           <mesh filename="${shoulder_collision_mesh}"/>
         </geometry>
       </collision>
-      <xacro:cylinder_inertial radius="${shoulder_inertia_radius}" length="${shoulder_inertia_length}" mass="1">
+      <xacro:cylinder_inertial radius="${shoulder_inertia_radius}" length="${shoulder_inertia_length}" mass="${shoulder_mass}">
         <origin xyz="0 0 0" rpy="0 0 0" />
       </xacro:cylinder_inertial>
     </link>
@@ -151,7 +153,7 @@
           <mesh filename="${upper_arm_collision_mesh}"/>
         </geometry>
       </collision>
-      <xacro:cylinder_inertial radius="${upperarm_inertia_radius}" length="${upperarm_inertia_length}" mass="1">
+      <xacro:cylinder_inertial radius="${upperarm_inertia_radius}" length="${upperarm_inertia_length}" mass="${upper_arm_mass}">
         <origin xyz="${-0.5 * upperarm_inertia_length} 0.0 ${upper_arm_inertia_offset}" rpy="0 ${pi/2} 0" />
       </xacro:cylinder_inertial>
     </link>
@@ -168,7 +170,7 @@
           <mesh filename="${forearm_collision_mesh}"/>
         </geometry>
       </collision>
-      <xacro:cylinder_inertial radius="${forearm_inertia_radius}" length="${forearm_inertia_length}"  mass="1">
+      <xacro:cylinder_inertial radius="${forearm_inertia_radius}" length="${forearm_inertia_length}"  mass="${forearm_mass}">
         <origin xyz="${-0.5 * forearm_inertia_length} 0.0 ${elbow_offset}" rpy="0 ${pi/2} 0" />
       </xacro:cylinder_inertial>
     </link>
@@ -185,7 +187,7 @@
           <mesh filename="${wrist_1_collision_mesh}"/>
         </geometry>
       </collision>
-      <xacro:cylinder_inertial radius="${wrist_1_inertia_radius}" length="${wrist_1_inertia_length}"  mass="1">
+      <xacro:cylinder_inertial radius="${wrist_1_inertia_radius}" length="${wrist_1_inertia_length}"  mass="${wrist_1_mass}">
         <origin xyz="0 0 0" rpy="0 0 0" />
       </xacro:cylinder_inertial>
     </link>
@@ -202,7 +204,7 @@
           <mesh filename="${wrist_2_collision_mesh}"/>
         </geometry>
       </collision>
-      <xacro:cylinder_inertial radius="${wrist_2_inertia_radius}" length="${wrist_2_inertia_length}"  mass="1">
+      <xacro:cylinder_inertial radius="${wrist_2_inertia_radius}" length="${wrist_2_inertia_length}"  mass="${wrist_2_mass}">
         <origin xyz="0 0 0" rpy="0 0 0" />
       </xacro:cylinder_inertial>
     </link>
@@ -219,12 +221,17 @@
           <mesh filename="${wrist_3_collision_mesh}"/>
         </geometry>
       </collision>
-      <xacro:cylinder_inertial radius="${wrist_3_inertia_radius}" length="${wrist_3_inertia_length}"  mass="1">
+      <xacro:cylinder_inertial radius="${wrist_3_inertia_radius}" length="${wrist_3_inertia_length}"  mass="${wrist_3_mass}">
         <origin xyz="0.0 0.0 ${-0.5 * wrist_3_inertia_length}" rpy="0 0 0" />
       </xacro:cylinder_inertial>
     </link>
 
     <!-- joints - main serial chain -->
+    <joint name="${prefix}world_joint"  type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="world"/>
+      <child link="${prefix}base_link"/>
+    </joint>
     <joint name="${prefix}base_link-base_link_inertia" type="fixed">
       <parent link="${prefix}base_link" />
       <child link="${prefix}base_link_inertia" />
