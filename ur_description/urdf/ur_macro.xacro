@@ -339,15 +339,16 @@
       <child link="${prefix}tool0"/>
     </joint>
 
+    <!-- Create a world link, and a fixed joint between world and base_link -->
+    <link name="world" />
+    <joint name="${prefix}world_joint"  type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="world"/>
+      <child link="${prefix}base_link"/>
+    </joint>
+
     <!-- Ignition Gazebo -->
     <xacro:if value="${ignition}">
-      <!-- Create a world link, and a fixed between world and base_link -->
-      <link name="world" />
-      <joint name="${prefix}world_joint"  type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <parent link="world"/>
-        <child link="${prefix}base_link"/>
-      </joint>
       <!-- Include Ignition Gazebo Plugins -->
       <xacro:include filename="ur_ignition_plugins.xacro" />
     </xacro:if>
