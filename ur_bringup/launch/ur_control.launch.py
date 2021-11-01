@@ -244,7 +244,7 @@ def launch_setup(context, *args, **kwargs):
     ignition_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory("ros_ign_gazebo"), 'launch', 'ign_gazebo.launch.py')),
-            launch_arguments={'ign_args': "--force-version 5.1.0 -r " + os.path.join(get_package_share_directory("ur_ignition"), 'worlds', 'empty_world.sdf')}.items(),
+            launch_arguments={'ign_args': "-r " + os.path.join(get_package_share_directory("ur_ignition"), 'worlds', 'empty_world.sdf')}.items(),
         condition=IfCondition(use_ignition)
     )
 
