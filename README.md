@@ -225,7 +225,7 @@ The most relevant arguments are the following:
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
 
-- If you want the bringup the robot in Ignition Gazebo and control it with MoveIt you can use the following command to bring up the robot:
+- Assuming you have installed Ignition Gazebo [from the official instructions](https://github.com/ignitionrobotics/ign-gazebo#install) if you want the bringup the robot in Ignition Gazebo and control it with MoveIt you can use the following command to bring up the robot:
 
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=xxx.xxx ignition:=true use_fake_hardware:=true launch_rviz:=false

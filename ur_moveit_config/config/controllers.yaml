@@ -4,7 +4,7 @@ controller_names:
 joint_trajectory_controller:
   action_ns: follow_joint_trajectory
   type: FollowJointTrajectory
-  default: True
+  default: true
   joints:
     - shoulder_pan_joint
     - shoulder_lift_joint

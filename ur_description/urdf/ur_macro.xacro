@@ -104,8 +104,6 @@
     <!-- Placeholder for ros2_control transmission which don't yet exist -->
 
     <!-- links -  main serial chain -->
-    <!-- World link for static base -->
-    <link name="world" />
     <link name="${prefix}base_link"/>
     <link name="${prefix}base_link_inertia">
       <visual>
@@ -228,11 +226,6 @@
     </link>
 
     <!-- joints - main serial chain -->
-    <joint name="${prefix}world_joint"  type="fixed">
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <parent link="world"/>
-      <child link="${prefix}base_link"/>
-    </joint>
     <joint name="${prefix}base_link-base_link_inertia" type="fixed">
       <parent link="${prefix}base_link" />
       <child link="${prefix}base_link_inertia" />
@@ -346,9 +339,18 @@
       <child link="${prefix}tool0"/>
     </joint>
 
-  <!-- Ignition Plugins -->
-  <xacro:if value="${ignition}">
-    <xacro:include filename="ur_ignition_plugins.xacro" />
-  </xacro:if>
+    <!-- Ignition Gazebo -->
+    <xacro:if value="${ignition}">
+      <!-- Create a world link, and a fixed between world and base_link -->
+      <link name="world" />
+      <joint name="${prefix}world_joint"  type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="world"/>
+        <child link="${prefix}base_link"/>
+      </joint>
+      <!-- Include Ignition Gazebo Plugins -->
+      <xacro:include filename="ur_ignition_plugins.xacro" />
+    </xacro:if>
+
   </xacro:macro>
 </robot>
