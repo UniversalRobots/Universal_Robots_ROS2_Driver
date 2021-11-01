@@ -8,3 +8,5 @@ install_manifest.txt
 .directory
 .vscode
 .moveit_ci/
+__pycache__/
+*.pyc
