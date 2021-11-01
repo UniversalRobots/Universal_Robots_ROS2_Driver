@@ -3,7 +3,7 @@
 
   <!-- Joint Controller Gains -->
   <xacro:property name="default_initial_position" value="0"/>
-  <xacro:property name="default_position_p_gain" value="3000"/>
+  <xacro:property name="default_position_p_gain" value="1500"/>
   <xacro:property name="default_position_d_gain" value="15"/>
   <xacro:property name="default_position_i_gain" value="1650"/>
   <xacro:property name="default_position_i_min" value="-15"/>

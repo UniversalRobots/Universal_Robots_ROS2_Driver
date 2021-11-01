@@ -66,6 +66,7 @@
     use_fake_hardware:=false
     fake_sensor_commands:=false
     headless_mode:=false
+    ignition:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}">
 
     <!-- Load configuration data from the provided .yaml files -->
@@ -344,5 +345,10 @@
       <parent link="${prefix}flange"/>
       <child link="${prefix}tool0"/>
     </joint>
+
+  <!-- Ignition Plugins -->
+  <xacro:if value="${ignition}">
+    <xacro:include filename="ur_ignition_plugins.xacro" />
+  </xacro:if>
   </xacro:macro>
 </robot>

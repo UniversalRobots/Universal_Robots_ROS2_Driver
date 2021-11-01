@@ -46,7 +46,7 @@ def launch_setup(context, *args, **kwargs):
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
-    use_ignition = LaunchConfiguration("use_ignition")
+    use_ignition = LaunchConfiguration("ignition")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -124,7 +124,7 @@ def launch_setup(context, *args, **kwargs):
             "headless_mode:=",
             headless_mode,
             " ",
-            "use_ignition:=",
+            "ignition:=",
             use_ignition,
         ]
     )
@@ -404,7 +404,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_ignition",
+            "ignition",
             default_value="false",
             description="Spawn the robot in Ignition Gazebo",
         )
