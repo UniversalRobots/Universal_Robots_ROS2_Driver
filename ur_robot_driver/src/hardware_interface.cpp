@@ -510,8 +510,9 @@ hardware_interface::return_type URPositionHardwareInterface::read()
     return hardware_interface::return_type::OK;
   }
 
-  // TODO(anyone): could not read from the driver --> reset controllers
-  return hardware_interface::return_type::ERROR;
+  RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
+  // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
+  return hardware_interface::return_type::OK;
 }
 
 hardware_interface::return_type URPositionHardwareInterface::write()
@@ -534,7 +535,9 @@ hardware_interface::return_type URPositionHardwareInterface::write()
     return hardware_interface::return_type::OK;
   }
 
-  return hardware_interface::return_type::ERROR;
+  RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to write to hardware...");
+  // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
+  return hardware_interface::return_type::OK;
 }
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
