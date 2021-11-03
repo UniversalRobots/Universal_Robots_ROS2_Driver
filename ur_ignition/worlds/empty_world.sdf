@@ -1,5 +1,3 @@
-
-  
 <sdf version="1.6">
   <world name="default">
     <physics name="1ms" type="dart">

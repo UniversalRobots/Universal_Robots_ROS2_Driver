@@ -17,7 +17,7 @@
 
     <!-- Joint Trajectories -->
     <plugin filename="libignition-gazebo-joint-trajectory-controller-system.so" name="ignition::gazebo::systems::JointTrajectoryController">
-      
+
       <topic>joint_trajectory</topic>
 
       <joint_name>shoulder_pan_joint</joint_name>

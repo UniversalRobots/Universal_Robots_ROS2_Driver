@@ -155,7 +155,7 @@ def launch_setup(context, *args, **kwargs):
             "stdout": "screen",
             "stderr": "screen",
         },
-        condition=UnlessCondition(use_ignition)
+        condition=UnlessCondition(use_ignition),
     )
 
     dashboard_client_node = Node(
@@ -188,14 +188,14 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="spawner.py",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-        condition=UnlessCondition(use_ignition)
+        condition=UnlessCondition(use_ignition),
     )
 
     io_and_status_controller_spawner = Node(
         package="controller_manager",
         executable="spawner.py",
         arguments=["io_and_status_controller", "-c", "/controller_manager"],
-        condition=UnlessCondition(use_ignition)
+        condition=UnlessCondition(use_ignition),
     )
 
     speed_scaling_state_broadcaster_spawner = Node(
@@ -206,7 +206,7 @@ def launch_setup(context, *args, **kwargs):
             "--controller-manager",
             "/controller_manager",
         ],
-        condition=UnlessCondition(use_ignition)
+        condition=UnlessCondition(use_ignition),
     )
 
     force_torque_sensor_broadcaster_spawner = Node(
@@ -217,7 +217,7 @@ def launch_setup(context, *args, **kwargs):
             "--controller-manager",
             "/controller_manager",
         ],
-        condition=UnlessCondition(use_ignition)
+        condition=UnlessCondition(use_ignition),
     )
 
     # There may be other controllers of the joints, but this is the initially-started one
@@ -241,46 +241,47 @@ def launch_setup(context, *args, **kwargs):
         condition=IfCondition(use_ignition),
     )
 
+    empty_world_str = "-r " + os.path.join(
+        get_package_share_directory("ur_ignition"), "worlds", "empty_world.sdf"
+    )
     ignition_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory("ros_ign_gazebo"), 'launch', 'ign_gazebo.launch.py')),
-            launch_arguments={'ign_args': "-r " + os.path.join(get_package_share_directory("ur_ignition"), 'worlds', 'empty_world.sdf')}.items(),
-        condition=IfCondition(use_ignition)
+            os.path.join(
+                get_package_share_directory("ros_ign_gazebo"), "launch", "ign_gazebo.launch.py"
+            )
+        ),
+        launch_arguments={"ign_args": empty_world_str}.items(),
+        condition=IfCondition(use_ignition),
     )
 
     ignition_spawn = Node(
-        package='ros_ign_gazebo', executable='create',
-        arguments=[
-            '-name', 'ur',
-            '-topic', 'robot_description',
-            '-x', '0.0',
-            '-z', '0.0'
-        ],
-        output='screen',
-        condition=IfCondition(use_ignition)
+        package="ros_ign_gazebo",
+        executable="create",
+        arguments=["-name", "ur", "-topic", "robot_description", "-x", "0.0", "-z", "0.0"],
+        output="screen",
+        condition=IfCondition(use_ignition),
     )
 
     ignition_gazebo_bridge = Node(
-        package='ros_ign_bridge',
-        executable='parameter_bridge',
-        parameters=[{'use_sim_time': True}],
+        package="ros_ign_bridge",
+        executable="parameter_bridge",
+        parameters=[{"use_sim_time": True}],
         arguments=[
-                # JointTrajectory bridge (ROS2 -> IGN)
-                '/joint_trajectory@trajectory_msgs/msg/JointTrajectory]ignition.msgs.JointTrajectory',
-                # Clock (IGN -> ROS2)
-                '/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock',
-                # Joint states (IGN -> ROS2)
-                '/world/default/model/ur/joint_state@sensor_msgs/msg/JointState[ignition.msgs.Model',
-                # JointTrajectoryProgress bridge (IGN -> ROS2)
-                '/joint_trajectory_progress@std_msgs/msg/Float32[ignition.msgs.Float',  
-                ],
+            # JointTrajectory bridge (ROS2 -> IGN)
+            "/joint_trajectory@trajectory_msgs/msg/JointTrajectory]ignition.msgs.JointTrajectory",
+            # Clock (IGN -> ROS2)
+            "/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock",
+            # Joint states (IGN -> ROS2)
+            "/world/default/model/ur/joint_state@sensor_msgs/msg/JointState[ignition.msgs.Model",
+            # JointTrajectoryProgress bridge (IGN -> ROS2)
+            "/joint_trajectory_progress@std_msgs/msg/Float32[ignition.msgs.Float",
+        ],
         remappings=[
             ("/world/default/model/ur/joint_state", "joint_states"),
         ],
-        output='screen',
-        condition=IfCondition(use_ignition)
+        output="screen",
+        condition=IfCondition(use_ignition),
     )
-
 
     nodes_to_start = [
         control_node,
@@ -296,7 +297,7 @@ def launch_setup(context, *args, **kwargs):
         ur_ignition_control,
         ignition_gazebo,
         ignition_spawn,
-        ignition_gazebo_bridge
+        ignition_gazebo_bridge,
     ]
 
     return nodes_to_start
