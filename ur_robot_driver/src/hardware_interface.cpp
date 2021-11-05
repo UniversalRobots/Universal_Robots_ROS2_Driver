@@ -467,6 +467,10 @@ hardware_interface::return_type URPositionHardwareInterface::read()
     readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
     readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
+    // required transforms
+    extractToolPose();
+    transformForceTorque();
+
     // TODO(anyone): logic for sending other stuff to higher level interface
 
     // pausing state follows runtime state when pausing
@@ -621,6 +625,41 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
   system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+}
+
+void URPositionHardwareInterface::transformForceTorque()
+{
+  tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
+                      urcl_ft_sensor_measurements_[2]);
+  tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
+                       urcl_ft_sensor_measurements_[5]);
+
+  tf2::Quaternion rotation_quat;
+  tf2::fromMsg(tcp_transform_.transform.rotation, rotation_quat);
+  tcp_force_ = tf2::quatRotate(rotation_quat.inverse(), tcp_force_);
+  tcp_torque_ = tf2::quatRotate(rotation_quat.inverse(), tcp_torque_);
+
+  urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
+                                   tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
+}
+
+void URPositionHardwareInterface::extractToolPose()
+{
+  double tcp_angle =
+      std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
+
+  tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
+  tf2::Quaternion rotation;
+  if (tcp_angle > 1e-16) {
+    rotation.setRotation(rotation_vec.normalized(), tcp_angle);
+  } else {
+    rotation.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
+  }
+  tcp_transform_.transform.translation.x = urcl_tcp_pose_[0];
+  tcp_transform_.transform.translation.y = urcl_tcp_pose_[1];
+  tcp_transform_.transform.translation.z = urcl_tcp_pose_[2];
+
+  tcp_transform_.transform.rotation = tf2::toMsg(rotation);
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
