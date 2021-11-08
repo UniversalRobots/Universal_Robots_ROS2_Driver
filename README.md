@@ -169,7 +169,7 @@ The most relevant arguments are the following:
   - `robot_controller` (default: *joint_trajectory_controller*) - controller for robot joints to be started.
     Available controllers: *joint_trajectory_controller*, *scaled_joint_trajectory_controller*.
     Note: *joint_state_broadcaster*, *speed_scaling_state_broadcaster*, *force_torque_sensor_broadcaster*, and *io_and_status_controller* will always start.
-  - `ignition` (default: *false*) - Bring up the robot in Ignition Gazebo.
+  - `ignition` (default: *false*) - Bring up the robot in the Ignition Gazebo simulator.
 
     *HINT*: list all loaded controllers using `ros2 control list_controllers` command.
 
@@ -220,12 +220,12 @@ The most relevant arguments are the following:
    ```
    Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
 
-- If you just want to test description of the UR robots, e.g., after changes you can use the following command:
+- If you just want to test the description of the UR robots, e.g., after changes you can use the following command:
    ```
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
 
-- Assuming you have installed Ignition Gazebo [from the official instructions](https://github.com/ignitionrobotics/ign-gazebo#install) if you want the bringup the robot in Ignition Gazebo and control it with MoveIt you can use the following command to bring up the robot:
+- Assuming you have installed the Ignition Gazebo simulator [from the official instructions](https://github.com/ignitionrobotics/ign-gazebo#install) you can bring up the simulated robot in Ignition Gazebo and control it with MoveIt. Use the following command:
 
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=xxx.xxx ignition:=true use_fake_hardware:=true launch_rviz:=false
