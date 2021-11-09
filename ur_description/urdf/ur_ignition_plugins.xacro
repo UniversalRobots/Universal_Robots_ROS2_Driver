@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur_ignition_plugins">
+
+  <!-- Joint Controller Gains -->
+  <xacro:property name="pan_initial_position" value="0"/>
+  <xacro:property name="pan_position_p_gain" value="300"/>
+  <xacro:property name="pan_position_d_gain" value="0"/>
+  <xacro:property name="pan_position_i_gain" value="100"/>
+  <xacro:property name="pan_position_i_min" value="-30"/>
+  <xacro:property name="pan_position_i_max" value="30"/>
+  <xacro:property name="pan_position_cmd_min" value="-50"/>
+  <xacro:property name="pan_position_cmd_max" value="50"/>
+
+  <xacro:property name="lift_initial_position" value="0"/>
+  <xacro:property name="lift_position_p_gain" value="1500"/>
+  <xacro:property name="lift_position_d_gain" value="0"/>
+  <xacro:property name="lift_position_i_gain" value="100"/>
+  <xacro:property name="lift_position_i_min" value="-50"/>
+  <xacro:property name="lift_position_i_max" value="50"/>
+  <xacro:property name="lift_position_cmd_min" value="-100"/>
+  <xacro:property name="lift_position_cmd_max" value="100"/>
+
+  <xacro:property name="elbow_initial_position" value="0"/>
+  <xacro:property name="elbow_position_p_gain" value="300"/>
+  <xacro:property name="elbow_position_d_gain" value="0"/>
+  <xacro:property name="elbow_position_i_gain" value="100"/>
+  <xacro:property name="elbow_position_i_min" value="-35"/>
+  <xacro:property name="elbow_position_i_max" value="35"/>
+  <xacro:property name="elbow_position_cmd_min" value="-50"/>
+  <xacro:property name="elbow_position_cmd_max" value="50"/>
+
+  <xacro:property name="wrist_initial_position" value="0"/>
+  <xacro:property name="wrist_position_p_gain" value="300"/>
+  <xacro:property name="wrist_position_d_gain" value="0"/>
+  <xacro:property name="wrist_position_i_gain" value="0"/>
+  <xacro:property name="wrist_position_i_min" value="-15"/>
+  <xacro:property name="wrist_position_i_max" value="15"/>
+  <xacro:property name="wrist_position_cmd_min" value="-50"/>
+  <xacro:property name="wrist_position_cmd_max" value="50"/>
+
+  <gazebo>
+    <!-- Joint States -->
+    <plugin filename="libignition-gazebo-joint-state-publisher-system.so" name="ignition::gazebo::systems::JointStatePublisher"/>
+
+    <!-- Joint Trajectories -->
+    <plugin filename="libignition-gazebo-joint-trajectory-controller-system.so" name="ignition::gazebo::systems::JointTrajectoryController">
+
+      <topic>joint_trajectory</topic>
+
+      <joint_name>shoulder_pan_joint</joint_name>
+      <initial_position>${pan_initial_position}</initial_position>
+      <position_p_gain>${pan_position_p_gain}</position_p_gain>
+      <position_d_gain>${pan_position_d_gain}</position_d_gain>
+      <position_i_gain>${pan_position_i_gain}</position_i_gain>
+      <position_i_min>${pan_position_i_min}</position_i_min>
+      <position_i_max>${pan_position_i_max}</position_i_max>
+      <position_cmd_min>${pan_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${pan_position_cmd_max}</position_cmd_max>
+
+      <joint_name>shoulder_lift_joint</joint_name>
+      <initial_position>${lift_initial_position}</initial_position>
+      <position_p_gain>${lift_position_p_gain}</position_p_gain>
+      <position_d_gain>${lift_position_d_gain}</position_d_gain>
+      <position_i_gain>${lift_position_i_gain}</position_i_gain>
+      <position_i_min>${lift_position_i_min}</position_i_min>
+      <position_i_max>${lift_position_i_max}</position_i_max>
+      <position_cmd_min>${lift_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${lift_position_cmd_max}</position_cmd_max>
+
+      <joint_name>elbow_joint</joint_name>
+      <initial_position>${elbow_initial_position}</initial_position>
+      <position_p_gain>${elbow_position_p_gain}</position_p_gain>
+      <position_d_gain>${elbow_position_d_gain}</position_d_gain>
+      <position_i_gain>${elbow_position_i_gain}</position_i_gain>
+      <position_i_min>${elbow_position_i_min}</position_i_min>
+      <position_i_max>${elbow_position_i_max}</position_i_max>
+      <position_cmd_min>${elbow_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${elbow_position_cmd_max}</position_cmd_max>
+
+      <joint_name>wrist_1_joint</joint_name>
+      <initial_position>${wrist_initial_position}</initial_position>
+      <position_p_gain>${wrist_position_p_gain}</position_p_gain>
+      <position_d_gain>${wrist_position_d_gain}</position_d_gain>
+      <position_i_gain>${wrist_position_i_gain}</position_i_gain>
+      <position_i_min>${wrist_position_i_min}</position_i_min>
+      <position_i_max>${wrist_position_i_max}</position_i_max>
+      <position_cmd_min>${wrist_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${wrist_position_cmd_max}</position_cmd_max>
+
+      <joint_name>wrist_2_joint</joint_name>
+      <initial_position>${wrist_initial_position}</initial_position>
+      <position_p_gain>${wrist_position_p_gain}</position_p_gain>
+      <position_d_gain>${wrist_position_d_gain}</position_d_gain>
+      <position_i_gain>${wrist_position_i_gain}</position_i_gain>
+      <position_i_min>${wrist_position_i_min}</position_i_min>
+      <position_i_max>${wrist_position_i_max}</position_i_max>
+      <position_cmd_min>${wrist_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${wrist_position_cmd_max}</position_cmd_max>
+
+      <joint_name>wrist_3_joint</joint_name>
+      <initial_position>${wrist_initial_position}</initial_position>
+      <position_p_gain>${wrist_position_p_gain}</position_p_gain>
+      <position_d_gain>${wrist_position_d_gain}</position_d_gain>
+      <position_i_gain>${wrist_position_i_gain}</position_i_gain>
+      <position_i_min>${wrist_position_i_min}</position_i_min>
+      <position_i_max>${wrist_position_i_max}</position_i_max>
+      <position_cmd_min>${wrist_position_cmd_min}</position_cmd_min>
+      <position_cmd_max>${wrist_position_cmd_max}</position_cmd_max>
+    </plugin>
+
+  </gazebo>
+</robot>

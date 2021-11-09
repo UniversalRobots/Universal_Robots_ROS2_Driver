@@ -21,6 +21,8 @@
    <xacro:arg name="headless_mode" default="false" />
    <!-- initial position for fake hardware -->
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
+   <!-- Simulation parameter -->
+   <xacro:arg name="ignition" default="false" />
 
    <!-- convert to property to use substitution in function -->
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
@@ -39,5 +41,7 @@
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
      headless_mode="$(arg headless_mode)"
-     initial_positions="${load_yaml(initial_positions_file)}" />
+     initial_positions="${load_yaml(initial_positions_file)}"
+     ignition="$(arg ignition)" />
+
 </robot>
