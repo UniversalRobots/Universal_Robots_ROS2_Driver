@@ -27,6 +27,8 @@
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>std_srvs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
   <!-- TODO: rosdep cannot find ur_client_library -->
   <depend>ur_client_library</depend>
   <depend>ur_dashboard_msgs</depend>

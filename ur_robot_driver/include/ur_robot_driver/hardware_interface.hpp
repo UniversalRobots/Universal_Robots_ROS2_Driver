@@ -45,6 +45,8 @@
 // ROS
 #include "rclcpp/macros.hpp"
 #include "rclcpp_lifecycle/state.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
 namespace ur_robot_driver
 {
@@ -113,6 +115,8 @@ protected:
   void initAsyncIO();
   void checkAsyncIO();
   void updateNonDoubleValues();
+  void extractToolPose();
+  void transformForceTorque();
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -146,6 +150,11 @@ protected:
   int32_t safety_mode_;
   std::bitset<4> robot_status_bits_;
   std::bitset<11> safety_status_bits_;
+
+  // transform stuff
+  tf2::Vector3 tcp_force_;
+  tf2::Vector3 tcp_torque_;
+  geometry_msgs::msg::TransformStamped tcp_transform_;
 
   // asynchronous commands
   std::array<double, 18> standard_dig_out_bits_cmd_;
