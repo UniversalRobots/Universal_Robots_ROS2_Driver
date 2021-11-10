@@ -214,10 +214,10 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    forward_velocity_controller_spawner_stopped = Node(
+    forward_position_controller_spawner_stopped = Node(
         package="controller_manager",
         executable="spawner.py",
-        arguments=["forward_velocity_controller", "-c", "/controller_manager", "--stopped"],
+        arguments=["forward_position_controller", "-c", "/controller_manager", "--stopped"],
         condition=UnlessCondition(use_ignition),
     )
 
@@ -244,7 +244,7 @@ def launch_setup(context, *args, **kwargs):
         io_and_status_controller_spawner,
         speed_scaling_state_broadcaster_spawner,
         force_torque_sensor_broadcaster_spawner,
-        forward_velocity_controller_spawner_stopped,
+        forward_position_controller_spawner_stopped,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
     ]
