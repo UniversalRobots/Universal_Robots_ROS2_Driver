@@ -239,6 +239,16 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
 
+  command_interfaces.emplace_back(hardware_interface::CommandInterface("payload", "mass", &payload_mass_));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("payload", "cog.x", &payload_center_of_gravity_[0]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("payload", "cog.y", &payload_center_of_gravity_[1]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("payload", "cog.z", &payload_center_of_gravity_[2]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("payload", "payload_async_success", &payload_async_success_));
+
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
@@ -558,6 +568,9 @@ void URPositionHardwareInterface::initAsyncIO()
   for (size_t i = 0; i < 2; ++i) {
     standard_analog_output_cmd_[i] = NO_NEW_CMD_;
   }
+
+  payload_mass_ = NO_NEW_CMD_;
+  payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
@@ -597,6 +610,26 @@ void URPositionHardwareInterface::checkAsyncIO()
       RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
     }
     resend_robot_program_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) &&
+      !std::isnan(payload_center_of_gravity_[1]) && !std::isnan(payload_center_of_gravity_[2]) &&
+      ur_driver_ != nullptr) {
+    try {
+      // create command as string from interfaces
+      // ROS1 driver hardware_interface.cpp#L450-L456
+      std::stringstream str_command;
+      str_command.imbue(std::locale::classic());
+      str_command << "sec setup():" << std::endl
+                  << " set_payload(" << payload_mass_ << ", [" << payload_center_of_gravity_[0] << ", "
+                  << payload_center_of_gravity_[1] << ", " << payload_center_of_gravity_[2] << "])" << std::endl
+                  << "end";
+      payload_async_success_ = ur_driver_->sendScript(str_command.str());
+    } catch (const urcl::UrException& e) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
+    }
+    payload_mass_ = NO_NEW_CMD_;
+    payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   }
 }
 
