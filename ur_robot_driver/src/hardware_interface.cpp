@@ -629,6 +629,7 @@ void URPositionHardwareInterface::updateNonDoubleValues()
 
 void URPositionHardwareInterface::transformForceTorque()
 {
+  // imported from ROS1 driver - hardware_interface.cpp#L867-L876
   tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
                       urcl_ft_sensor_measurements_[2]);
   tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
@@ -645,6 +646,7 @@ void URPositionHardwareInterface::transformForceTorque()
 
 void URPositionHardwareInterface::extractToolPose()
 {
+  // imported from ROS1 driver hardware_interface.cpp#L911-L928
   double tcp_angle =
       std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
 
