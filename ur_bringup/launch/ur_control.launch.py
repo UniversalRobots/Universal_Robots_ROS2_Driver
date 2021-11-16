@@ -14,15 +14,13 @@
 #
 # Author: Denis Stogl
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.actions import DeclareLaunchArgument
+from launch.actions import OpaqueFunction
 from launch.conditions import IfCondition, UnlessCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-import os
 
 
 def launch_setup(context, *args, **kwargs):
@@ -46,7 +44,6 @@ def launch_setup(context, *args, **kwargs):
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
-    use_ignition = LaunchConfiguration("ignition")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -124,8 +121,6 @@ def launch_setup(context, *args, **kwargs):
             "headless_mode:=",
             headless_mode,
             " ",
-            "ignition:=",
-            use_ignition,
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -155,7 +150,6 @@ def launch_setup(context, *args, **kwargs):
             "stdout": "screen",
             "stderr": "screen",
         },
-        condition=UnlessCondition(use_ignition),
     )
 
     dashboard_client_node = Node(
@@ -188,14 +182,12 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="  ",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-        condition=UnlessCondition(use_ignition),
     )
 
     io_and_status_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["io_and_status_controller", "-c", "/controller_manager"],
-        condition=UnlessCondition(use_ignition),
     )
 
     speed_scaling_state_broadcaster_spawner = Node(
@@ -206,7 +198,6 @@ def launch_setup(context, *args, **kwargs):
             "--controller-manager",
             "/controller_manager",
         ],
-        condition=UnlessCondition(use_ignition),
     )
 
     force_torque_sensor_broadcaster_spawner = Node(
@@ -217,7 +208,6 @@ def launch_setup(context, *args, **kwargs):
             "--controller-manager",
             "/controller_manager",
         ],
-        condition=UnlessCondition(use_ignition),
     )
 
     # There may be other controllers of the joints, but this is the initially-started one
@@ -234,55 +224,6 @@ def launch_setup(context, *args, **kwargs):
         condition=UnlessCondition(start_joint_controller),
     )
 
-    ur_ignition_control = Node(
-        package="ur_ignition",
-        executable="ur_ignition_control",
-        output="screen",
-        condition=IfCondition(use_ignition),
-    )
-
-    empty_world_str = "-r " + os.path.join(
-        get_package_share_directory("ur_ignition"), "worlds", "empty_world.sdf"
-    )
-    ignition_gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("ros_ign_gazebo"), "launch", "ign_gazebo.launch.py"
-            )
-        ),
-        launch_arguments={"ign_args": empty_world_str}.items(),
-        condition=IfCondition(use_ignition),
-    )
-
-    ignition_spawn = Node(
-        package="ros_ign_gazebo",
-        executable="create",
-        arguments=["-name", "ur", "-topic", "robot_description", "-x", "0.0", "-z", "0.0"],
-        output="screen",
-        condition=IfCondition(use_ignition),
-    )
-
-    ignition_gazebo_bridge = Node(
-        package="ros_ign_bridge",
-        executable="parameter_bridge",
-        parameters=[{"use_sim_time": True}],
-        arguments=[
-            # JointTrajectory bridge (ROS2 -> IGN)
-            "/joint_trajectory@trajectory_msgs/msg/JointTrajectory]ignition.msgs.JointTrajectory",
-            # Clock (IGN -> ROS2)
-            "/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock",
-            # Joint states (IGN -> ROS2)
-            "/world/default/model/ur/joint_state@sensor_msgs/msg/JointState[ignition.msgs.Model",
-            # JointTrajectoryProgress bridge (IGN -> ROS2)
-            "/joint_trajectory_progress@std_msgs/msg/Float32[ignition.msgs.Float",
-        ],
-        remappings=[
-            ("/world/default/model/ur/joint_state", "joint_states"),
-        ],
-        output="screen",
-        condition=IfCondition(use_ignition),
-    )
-
     nodes_to_start = [
         control_node,
         dashboard_client_node,
@@ -294,10 +235,6 @@ def launch_setup(context, *args, **kwargs):
         force_torque_sensor_broadcaster_spawner,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
-        ur_ignition_control,
-        ignition_gazebo,
-        ignition_spawn,
-        ignition_gazebo_bridge,
     ]
 
     return nodes_to_start
@@ -401,13 +338,6 @@ def generate_launch_description():
             "headless_mode",
             default_value="false",
             description="Enable headless mode for robot control",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ignition",
-            default_value="false",
-            description="Spawn the robot in Ignition Gazebo",
         )
     )
     declared_arguments.append(
