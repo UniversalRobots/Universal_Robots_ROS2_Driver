@@ -46,9 +46,16 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "robot_controller",
+            "initial_joint_controller",
             default_value="joint_trajectory_controller",
-            description="Robot controller to start.",
+            description="Initially loaded robot controller.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "activate_joint_controller",
+            default_value="true",
+            description="Activate loaded joint controller.",
         )
     )
 
@@ -56,7 +63,8 @@ def generate_launch_description():
     robot_ip = LaunchConfiguration("robot_ip")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
-    robot_controller = LaunchConfiguration("robot_controller")
+    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
+    activate_joint_controller = LaunchConfiguration("activate_joint_controller")
 
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ThisLaunchFileDir(), "/ur_control.launch.py"]),
@@ -65,7 +73,8 @@ def generate_launch_description():
             "robot_ip": robot_ip,
             "use_fake_hardware": use_fake_hardware,
             "fake_sensor_commands": fake_sensor_commands,
-            "robot_controller": robot_controller,
+            "initial_joint_controller": initial_joint_controller,
+            "activate_joint_controller": activate_joint_controller,
         }.items(),
     )
 
