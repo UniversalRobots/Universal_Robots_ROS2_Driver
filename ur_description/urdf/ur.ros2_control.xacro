@@ -3,12 +3,15 @@
 
   <xacro:macro name="ur_ros2_control" params="name prefix
     use_fake_hardware:=false fake_sensor_commands:=false
+    gazebo_sim:=false
+    gazebo_controllers:=MISSING_CONTROLLERS_YAML
     headless_mode:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
     hash_kinematics robot_ip">
 
+  <xacro:unless value="${gazebo_sim}">
     <ros2_control name="${name}" type="system">
       <hardware>
         <xacro:if value="${use_fake_hardware}">
@@ -125,6 +128,7 @@
         <state_interface name="effort"/>
         <param name="initial_position">${initial_positions['wrist_3_joint']}</param>  <!-- initial position for the FakeSystem -->
       </joint>
+
       <sensor name="tcp_fts_sensor">
         <state_interface name="force.x"/>
         <state_interface name="force.y"/>
@@ -257,6 +261,70 @@
       </joint>
 
     </ros2_control>
+  </xacro:unless>
+
+  <xacro:if value="${gazebo_sim}">
+    <!-- Gazebo plugins -->
+    <gazebo reference="world">
+    </gazebo>
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>${gazebo_controllers}</parameters>
+      </plugin>
+    </gazebo>
+
+    <!-- TODO: Implement initial positions support in Gazebo - check ros-controls/gazebo_ros2_control#100 -->
+    <!-- ros2_control definition -->
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+      <joint name="${prefix}shoulder_pan_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        <param name="initial_position">${initial_positions['shoulder_pan_joint']}</param>  <!-- initial position for Gazebo -->
+      </joint>
+      <joint name="${prefix}shoulder_lift_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        <param name="initial_position">${initial_positions['shoulder_lift_joint']}</param>  <!-- initial position for Gazebo -->
+      </joint>
+      <joint name="${prefix}elbow_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        <param name="initial_position">${initial_positions['elbow_joint']}</param>  <!-- initial position for Gazebo -->
+      </joint>
+      <joint name="${prefix}wrist_1_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        <param name="initial_position">${initial_positions['wrist_1_joint']}</param>  <!-- initial position for Gazebo -->
+      </joint>
+      <joint name="${prefix}wrist_2_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        <param name="initial_position">${initial_positions['wrist_2_joint']}</param>  <!-- initial position for Gazebo -->
+      </joint>
+      <joint name="${prefix}wrist_3_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        <param name="initial_position">${initial_positions['wrist_3_joint']}</param>  <!-- initial position for Gazebo -->
+      </joint>
+
+    </ros2_control>
+  </xacro:if>
+
   </xacro:macro>
 
 </robot>

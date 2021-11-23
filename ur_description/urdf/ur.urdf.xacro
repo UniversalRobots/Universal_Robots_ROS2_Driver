@@ -18,6 +18,8 @@
    <!-- ros2_control related parameters -->
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
+   <xacro:arg name="gazebo_sim" default="false" />
+   <xacro:arg name="gazebo_controllers" default="$(find ur_bringup)/config/ur_controllers.yaml" />
    <xacro:arg name="headless_mode" default="false" />
    <!-- initial position for fake hardware -->
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
@@ -32,6 +34,7 @@
 
    <!-- arm -->
    <xacro:ur_robot
+     name="$(arg name)"
      prefix="$(arg prefix)"
      parent="world"
      joint_limits_parameters_file="$(arg joint_limit_params)"
@@ -44,12 +47,12 @@
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
+     gazebo_sim="$(arg gazebo_sim)"
+     gazebo_controllers="$(arg gazebo_controllers)"
      headless_mode="$(arg headless_mode)"
      initial_positions="${load_yaml(initial_positions_file)}"
      ignition="$(arg ignition)" >
     <origin xyz="0 0 0" rpy="0 0 0" />          <!-- position robot in the world -->
    </xacro:ur_robot>
-   
-   
 
 </robot>
