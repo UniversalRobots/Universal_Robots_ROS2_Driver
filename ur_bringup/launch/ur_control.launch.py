@@ -180,7 +180,7 @@ def launch_setup(context, *args, **kwargs):
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="  ",
+        executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
     )
 
