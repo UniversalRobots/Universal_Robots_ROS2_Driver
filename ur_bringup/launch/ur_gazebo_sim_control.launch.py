@@ -114,8 +114,6 @@ def launch_setup(context, *args, **kwargs):
             initial_joint_controllers,
             " ",
             "headless_mode:=false",
-            " ",
-            "ignition:=false",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -331,13 +329,6 @@ def generate_launch_description():
             "headless_mode",
             default_value="false",
             description="Enable headless mode for robot control",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ignition",
-            default_value="false",
-            description="Spawn the robot in Ignition Gazebo",
         )
     )
     declared_arguments.append(

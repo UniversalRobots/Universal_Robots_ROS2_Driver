@@ -169,6 +169,11 @@ protected:
   double system_interface_initialized_;
   bool async_thread_shutdown_;
 
+  // payload stuff
+  urcl::vector3d_t payload_center_of_gravity_;
+  double payload_mass_;
+  double payload_async_success_;
+
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;
   std::array<double, 18> actual_dig_in_bits_copy_;

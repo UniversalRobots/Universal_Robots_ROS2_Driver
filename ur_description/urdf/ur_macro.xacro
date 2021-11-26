@@ -71,8 +71,7 @@
     gazebo_sim:=false
     gazebo_controllers:=MISSING_CONTROLLERS_YAML
     headless_mode:=false
-    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
-    ignition:=false">
+    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}">
 
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
@@ -118,6 +117,9 @@
         <geometry>
           <mesh filename="file://$(find ur_description)/meshes/${base_visual_mesh}"/>
         </geometry>
+        <material name="${base_visual_material_name}">
+          <color rgba="${base_visual_material_color}"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
@@ -135,6 +137,9 @@
         <geometry>
           <mesh filename="file://$(find ur_description)/meshes/${shoulder_visual_mesh}"/>
         </geometry>
+        <material name="${shoulder_visual_material_name}">
+          <color rgba="${shoulder_visual_material_color}"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
@@ -152,6 +157,9 @@
         <geometry>
           <mesh filename="file://$(find ur_description)/meshes/${upper_arm_visual_mesh}"/>
         </geometry>
+        <material name="${upper_arm_visual_material_name}">
+          <color rgba="${upper_arm_visual_material_color}"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0 ${shoulder_offset}" rpy="${pi/2} 0 ${-pi/2}"/>
@@ -169,6 +177,9 @@
         <geometry>
           <mesh filename="file://$(find ur_description)/meshes/${forearm_visual_mesh}"/>
         </geometry>
+        <material name="${forearm_visual_material_name}">
+          <color rgba="${forearm_visual_material_color}"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0 ${elbow_offset}" rpy="${pi/2} 0 ${-pi/2}"/>
@@ -186,6 +197,9 @@
         <geometry>
           <mesh filename="file://$(find ur_description)/meshes/${wrist_1_visual_mesh}"/>
         </geometry>
+        <material name="${wrist_1_visual_material_name}">
+          <color rgba="${wrist_1_visual_material_color}"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0 ${wrist_1_visual_offset}" rpy="${pi/2} 0 0"/>
@@ -203,6 +217,9 @@
         <geometry>
           <mesh filename="file://$(find ur_description)/meshes/${wrist_2_visual_mesh}"/>
         </geometry>
+        <material name="${wrist_2_visual_material_name}">
+          <color rgba="${wrist_2_visual_material_color}"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0 ${wrist_2_visual_offset}" rpy="0 0 0"/>
@@ -220,6 +237,9 @@
         <geometry>
           <mesh filename="file://$(find ur_description)/meshes/${wrist_3_visual_mesh}"/>
         </geometry>
+        <material name="${wrist_3_visual_material_name}">
+          <color rgba="${wrist_3_visual_material_color}"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0 ${wrist_3_visual_offset}" rpy="${pi/2} 0 0"/>
@@ -259,7 +279,7 @@
       <xacro:if value="${safety_limits}">
          <safety_controller soft_lower_limit="${shoulder_pan_lower_limit + safety_pos_margin}" soft_upper_limit="${shoulder_pan_upper_limit - safety_pos_margin}" k_position="${safety_k_position}" k_velocity="0.0"/>
       </xacro:if>
-      <dynamics damping="5" friction="5"/>
+      <dynamics damping="0" friction="0"/>
     </joint>
     <joint name="${prefix}shoulder_lift_joint" type="revolute">
       <parent link="${prefix}shoulder_link" />
@@ -271,7 +291,7 @@
       <xacro:if value="${safety_limits}">
          <safety_controller soft_lower_limit="${shoulder_lift_lower_limit + safety_pos_margin}" soft_upper_limit="${shoulder_lift_upper_limit - safety_pos_margin}" k_position="${safety_k_position}" k_velocity="0.0"/>
       </xacro:if>
-      <dynamics damping="5" friction="5"/>
+      <dynamics damping="0" friction="0"/>
     </joint>
     <joint name="${prefix}elbow_joint" type="revolute">
       <parent link="${prefix}upper_arm_link" />
@@ -283,7 +303,7 @@
       <xacro:if value="${safety_limits}">
          <safety_controller soft_lower_limit="${elbow_joint_lower_limit + safety_pos_margin}" soft_upper_limit="${elbow_joint_upper_limit - safety_pos_margin}" k_position="${safety_k_position}" k_velocity="0.0"/>
       </xacro:if>
-      <dynamics damping="5" friction="5"/>
+      <dynamics damping="0" friction="0"/>
     </joint>
     <joint name="${prefix}wrist_1_joint" type="revolute">
       <parent link="${prefix}forearm_link" />
@@ -295,7 +315,7 @@
       <xacro:if value="${safety_limits}">
          <safety_controller soft_lower_limit="${wrist_1_lower_limit + safety_pos_margin}" soft_upper_limit="${wrist_1_upper_limit - safety_pos_margin}" k_position="${safety_k_position}" k_velocity="0.0"/>
       </xacro:if>
-      <dynamics damping="5" friction="5"/>
+      <dynamics damping="0" friction="0"/>
     </joint>
     <joint name="${prefix}wrist_2_joint" type="revolute">
       <parent link="${prefix}wrist_1_link" />
@@ -307,7 +327,7 @@
       <xacro:if value="${safety_limits}">
          <safety_controller soft_lower_limit="${wrist_2_lower_limit + safety_pos_margin}" soft_upper_limit="${wrist_2_upper_limit - safety_pos_margin}" k_position="${safety_k_position}" k_velocity="0.0"/>
       </xacro:if>
-      <dynamics damping="5" friction="5"/>
+      <dynamics damping="0" friction="0"/>
     </joint>
     <joint name="${prefix}wrist_3_joint" type="revolute">
       <parent link="${prefix}wrist_2_link" />
@@ -319,7 +339,7 @@
       <xacro:if value="${safety_limits}">
          <safety_controller soft_lower_limit="${wrist_3_lower_limit + safety_pos_margin}" soft_upper_limit="${wrist_3_upper_limit - safety_pos_margin}" k_position="${safety_k_position}" k_velocity="0.0"/>
       </xacro:if>
-      <dynamics damping="5" friction="5"/>
+      <dynamics damping="0" friction="0"/>
     </joint>
     
     <link name="${prefix}ft_frame"/>
@@ -358,13 +378,5 @@
       <!-- default toolframe - X+ left, Y+ up, Z+ front -->
       <origin xyz="0 0 0" rpy="${pi/2.0} 0 ${pi/2.0}"/>
     </joint>
-
-    <!-- Ignition Gazebo -->
-    <!-- TODO(destogl): propagate `prefix` here down in the document, otherwise no multi-robot simulation is possible. -->
-    <xacro:if value="${ignition}">
-      <!-- Include Ignition Gazebo Plugins -->
-      <xacro:include filename="ur_ignition_plugins.xacro" />
-    </xacro:if>
-
     </xacro:macro>
 </robot>
