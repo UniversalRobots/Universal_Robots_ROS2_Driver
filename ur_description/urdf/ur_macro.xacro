@@ -69,10 +69,9 @@
     use_fake_hardware:=false
     fake_sensor_commands:=false
     gazebo_sim:=false
-    gazebo_controllers:=MISSING_CONTROLLERS_YAML
+    ignition_sim:=false
     headless_mode:=false
-    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
-    ignition:=false">
+    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}">
 
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
@@ -96,7 +95,7 @@
       use_fake_hardware="$(arg use_fake_hardware)"
       fake_sensor_commands="$(arg fake_sensor_commands)"
       gazebo_sim="$(arg gazebo_sim)"
-      gazebo_controllers="$(arg gazebo_controllers)"
+      ignition_sim="$(arg ignition_sim)"
       headless_mode="$(arg headless_mode)"
       initial_positions="${initial_positions}"
       script_filename="$(arg script_filename)"
@@ -321,7 +320,7 @@
       </xacro:if>
       <dynamics damping="5" friction="5"/>
     </joint>
-    
+
     <link name="${prefix}ft_frame"/>
     <joint name="${prefix}wrist_3_link-ft_frame" type="fixed">
       <parent link="${prefix}wrist_3_link"/>

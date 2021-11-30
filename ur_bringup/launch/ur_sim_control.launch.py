@@ -14,19 +14,25 @@
 #
 # Author: Denis Stogl
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+)
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-import os
 
 
 def launch_setup(context, *args, **kwargs):
 
+    # Simulation arguments
+    gazebo_sim = LaunchConfiguration("gazebo_sim")
+    ignition_sim = LaunchConfiguration("ignition_sim")
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
     safety_limits = LaunchConfiguration("safety_limits")
@@ -69,8 +75,6 @@ def launch_setup(context, *args, **kwargs):
             " ",
             PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
             " ",
-            "robot_ip:=xxx.yyy.zzz.www",
-            " ",
             "joint_limit_params:=",
             joint_limit_params,
             " ",
@@ -95,25 +99,17 @@ def launch_setup(context, *args, **kwargs):
             "name:=",
             ur_type,
             " ",
-            "script_filename:=''",
-            " ",
-            "input_recipe_filename:=''",
-            " ",
-            "output_recipe_filename:=''",
-            " ",
             "prefix:=",
             prefix,
             " ",
-            "use_fake_hardware:=false",
+            "gazebo_sim:=",
+            gazebo_sim,
             " ",
-            "fake_sensor_commands:=false",
+            "ignition_sim:=",
+            ignition_sim,
             " ",
-            "gazebo_sim:=true",
-            " ",
-            "gazebo_controllers:=",
+            "simulation_controllers:=",
             initial_joint_controllers,
-            " ",
-            "headless_mode:=false",
             " ",
             "ignition:=false",
         ]
@@ -124,7 +120,7 @@ def launch_setup(context, *args, **kwargs):
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[{'use_sim_time': True}, robot_description],
+        parameters=[{"use_sim_time": True}, robot_description],
     )
 
     rviz_node = Node(
@@ -140,32 +136,6 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
-
-    io_and_status_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["io_and_status_controller", "-c", "/controller_manager"],
-    )
-
-    speed_scaling_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "speed_scaling_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager"
-        ],
-    )
-
-    force_torque_sensor_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "force_torque_sensor_broadcaster",
-            "--controller-manager",
-            "/controller_manager"
-        ],
     )
 
     # There may be other controllers of the joints, but this is the initially-started one
@@ -184,43 +154,63 @@ def launch_setup(context, *args, **kwargs):
 
     # Gazebo nodes
     gzserver = ExecuteProcess(
-        cmd=['gzserver',
-             '-s', 'libgazebo_ros_init.so',
-             '-s', 'libgazebo_ros_factory.so',
-             ''],
-        output='screen',
+        cmd=["gzserver", "-s", "libgazebo_ros_init.so", "-s", "libgazebo_ros_factory.so", ""],
+        output="screen",
+        condition=IfCondition(gazebo_sim),
     )
 
     # Gazebo client
     gzclient = ExecuteProcess(
-        cmd=['gzclient'],
-        output='screen',
+        cmd=["gzclient"],
+        output="screen",
+        condition=IfCondition(gazebo_sim),
     )
 
     # Spawn robot
-    spawn_robot = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
-        name='spawn_ur',
-        arguments=['-entity',
-                   ur_type,
-                   '-topic',
-                   'robot_description'],
-        output='screen',
+    gazebo_spawn_robot = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        name="spawn_ur",
+        arguments=["-entity", ur_type, "-topic", "robot_description"],
+        output="screen",
+        condition=IfCondition(gazebo_sim),
+    )
+
+    # Ignition nodes
+    ignition_spawn_entity = Node(
+        package="ros_ign_gazebo",
+        executable="create",
+        output="screen",
+        arguments=[
+            "-string",
+            robot_description_content,
+            "-name",
+            ur_type,
+            "-allow_renaming",
+            "true",
+        ],
+        condition=IfCondition(ignition_sim),
+    )
+
+    ignition_launch_description = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ros_ign_gazebo"), "/launch/ign_gazebo.launch.py"]
+        ),
+        launch_arguments={"ign_args": " -r -v 3 empty.sdf"}.items(),
+        condition=IfCondition(ignition_sim),
     )
 
     nodes_to_start = [
         robot_state_publisher_node,
         rviz_node,
         joint_state_broadcaster_spawner,
-        # io_and_status_controller_spawner,
-        # speed_scaling_state_broadcaster_spawner,
-        # force_torque_sensor_broadcaster_spawner,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
         gzserver,
         gzclient,
-        spawn_robot,
+        gazebo_spawn_robot,
+        ignition_spawn_entity,
+        ignition_launch_description,
     ]
 
     return nodes_to_start
@@ -228,6 +218,21 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     declared_arguments = []
+    # Simulation specific arguments
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "ignition_sim",
+            default_value="true",
+            description="Use Ignition for simulation",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "gazebo_sim",
+            default_value="false",
+            description="Use Gazebo Classic for simulation",
+        )
+    )
     # UR specific arguments
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -235,12 +240,6 @@ def generate_launch_description():
             description="Type/series of used UR robot.",
             choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
             default_value="ur5e",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "robot_ip", description="IP address by which the robot can be reached.",
-            default_value="xxx.yyy.zzz.www",
         )
     )
     declared_arguments.append(
@@ -306,42 +305,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_fake_hardware",
-            default_value="false",
-            description="Start robot with fake hardware mirroring command to its states.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "fake_sensor_commands",
-            default_value="false",
-            description="Enable fake command interfaces for sensors used for simple simulations. \
-            Used only if 'use_fake_hardware' parameter is true.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "gazebo_sim",
-            default_value="false",
-            description="Start Gazebo simulation",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "headless_mode",
-            default_value="false",
-            description="Enable headless mode for robot control",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ignition",
-            default_value="false",
-            description="Spawn the robot in Ignition Gazebo",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "start_joint_controller",
             default_value="true",
             description="Enable headless mode for robot control",
@@ -356,11 +319,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "launch_dashboard_client", default_value="true", description="Launch RViz?"
-        )
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

@@ -18,17 +18,17 @@
    <!-- ros2_control related parameters -->
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
-   <xacro:arg name="gazebo_sim" default="false" />
-   <xacro:arg name="gazebo_controllers" default="$(find ur_bringup)/config/ur_controllers.yaml" />
    <xacro:arg name="headless_mode" default="false" />
    <!-- initial position for fake hardware -->
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
    <!-- Simulation parameter -->
-   <xacro:arg name="ignition" default="false" />
+   <xacro:arg name="gazebo_sim" default="false" />
+   <xacro:arg name="ignition_sim" default="false" />
+   <xacro:arg name="simulation_controllers" default="$(find ur_bringup)/config/ur_controllers.yaml" />
 
    <!-- convert to property to use substitution in function -->
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
-   
+
    <!-- create link fixed to the "world" -->
    <link name="world" />
 
@@ -47,12 +47,34 @@
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
-     gazebo_sim="$(arg gazebo_sim)"
-     gazebo_controllers="$(arg gazebo_controllers)"
      headless_mode="$(arg headless_mode)"
      initial_positions="${load_yaml(initial_positions_file)}"
-     ignition="$(arg ignition)" >
+     gazebo_sim="$(arg gazebo_sim)"
+     ignition_sim="$(arg ignition_sim)" >
     <origin xyz="0 0 0" rpy="0 0 0" />          <!-- position robot in the world -->
    </xacro:ur_robot>
+
+   <xacro:if value="$(arg gazebo_sim)">
+     <!-- Gazebo plugins -->
+     <gazebo reference="world">
+     </gazebo>
+     <gazebo>
+       <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+         <parameters>$(arg simulation_controllers)</parameters>
+       </plugin>
+     </gazebo>
+   </xacro:if>
+
+   <xacro:if value="$(arg ignition_sim)">
+     <!-- Gazebo plugins -->
+     <gazebo reference="world">
+     </gazebo>
+     <gazebo>
+       <plugin filename="libignition_ros2_control-system.so" name="ignition_ros2_control::IgnitionROS2ControlPlugin">
+         <parameters>$(arg simulation_controllers)</parameters>
+         <controller_manager_node_name>$(arg prefix)controller_manager</controller_manager_node_name>
+       </plugin>
+     </gazebo>
+   </xacro:if>
 
 </robot>
