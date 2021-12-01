@@ -298,7 +298,8 @@ CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::
   // A longer lookahead time can smooth the trajectory.
   double servoj_lookahead_time = stod(info_.hardware_parameters["servoj_lookahead_time"]);
 
-  bool use_tool_communication = static_cast<bool>(stoi(info_.hardware_parameters["use_tool_communication"]));
+  bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
+                                (info_.hardware_parameters["use_tool_communication"] == "True");
 
   // Hash of the calibration reported by the robot. This is used for validating the robot
   // description is using the correct calibration. If the robot's calibration doesn't match this
