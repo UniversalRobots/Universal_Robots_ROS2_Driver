@@ -10,6 +10,8 @@ services:
      ipv4_address: 192.168.56.1
    ports:
       - "5566:5566"
+   devices:
+     - "/tmp/ttyUR:/tmp/ttyUR"
    build:
     context: driver/.
     dockerfile: Dockerfile

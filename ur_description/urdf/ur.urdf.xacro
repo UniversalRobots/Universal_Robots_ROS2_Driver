@@ -19,6 +19,8 @@
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
    <xacro:arg name="headless_mode" default="false" />
+   <xacro:arg name="use_tool_communication" default="false" />
+
    <!-- initial position for fake hardware -->
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
 
@@ -39,5 +41,6 @@
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
      headless_mode="$(arg headless_mode)"
-     initial_positions="${load_yaml(initial_positions_file)}" />
+     initial_positions="${load_yaml(initial_positions_file)}"
+     use_tool_communication="$(arg use_tool_communication)" />
 </robot>

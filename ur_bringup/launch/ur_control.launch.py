@@ -44,6 +44,7 @@ def launch_setup(context, *args, **kwargs):
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -120,6 +121,9 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "headless_mode:=",
             headless_mode,
+            " ",
+            "use_tool_communication:=",
+            use_tool_communication,
             " ",
         ]
     )
@@ -358,6 +362,13 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "launch_dashboard_client", default_value="true", description="Launch RViz?"
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_tool_communication",
+            default_value="false",
+            description="Only available for e series!",
         )
     )
 
