@@ -266,8 +266,9 @@
         <state_interface name="initialized"/>
       </joint>
 
+    </xacro:unless>
+
     </ros2_control>
-  </xacro:unless>
 
   </xacro:macro>
 

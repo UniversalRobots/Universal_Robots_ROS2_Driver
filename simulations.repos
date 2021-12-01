@@ -1,0 +1,16 @@
+repositories:
+
+  gazebo_ros2_control:
+    type: git
+    url: https://github.com/destogl/gazebo_ros2_control.git
+    version: add-support-for-initial-position
+
+  ign_ros2_control:
+    type: git
+    url: https://github.com/ignitionrobotics/ign_ros2_control.git
+    version: ahcorde/galactic/ign_ros2_control
+
+  ros2_control_demos:
+    type: git
+    url: https://github.com/ros-controls/ros2_control_demos.git
+    version: master

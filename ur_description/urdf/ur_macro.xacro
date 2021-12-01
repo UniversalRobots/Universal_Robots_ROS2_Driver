@@ -358,12 +358,5 @@
       <origin xyz="0 0 0" rpy="${pi/2.0} 0 ${pi/2.0}"/>
     </joint>
 
-    <!-- Ignition Gazebo -->
-    <!-- TODO(destogl): propagate `prefix` here down in the document, otherwise no multi-robot simulation is possible. -->
-    <xacro:if value="${ignition}">
-      <!-- Include Ignition Gazebo Plugins -->
-      <xacro:include filename="ur_ignition_plugins.xacro" />
-    </xacro:if>
-
     </xacro:macro>
 </robot>

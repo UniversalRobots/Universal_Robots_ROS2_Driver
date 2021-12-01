@@ -110,8 +110,6 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "simulation_controllers:=",
             initial_joint_controllers,
-            " ",
-            "ignition:=false",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
