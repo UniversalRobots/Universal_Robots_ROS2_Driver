@@ -38,6 +38,7 @@
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_msgs/srv/set_io.hpp"
 #include "ur_msgs/srv/set_speed_slider_fraction.hpp"
+#include "ur_msgs/srv/set_payload.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 
@@ -51,7 +52,12 @@ enum CommandInterfaces
   TARGET_SPEED_FRACTION_CMD = 21,
   TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 22,
   RESEND_ROBOT_PROGRAM_CMD = 23,
-  RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS = 24
+  RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS = 24,
+  PAYLOAD_MASS = 25,
+  PAYLOAD_COG_X = 26,
+  PAYLOAD_COG_Y = 27,
+  PAYLOAD_COG_Z = 28,
+  PAYLOAD_ASYNC_SUCCESS = 29,
 };
 
 enum StateInterfaces
@@ -100,6 +106,9 @@ private:
   bool resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr req,
                           std_srvs::srv::Trigger::Response::SharedPtr resp);
 
+  bool setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
+                  ur_msgs::srv::SetPayload::Response::SharedPtr resp);
+
   void publishIO();
 
   void publishToolData();
@@ -122,6 +131,7 @@ protected:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr resend_robot_program_srv_;
   rclcpp::Service<ur_msgs::srv::SetSpeedSliderFraction>::SharedPtr set_speed_slider_srv_;
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
+  rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;

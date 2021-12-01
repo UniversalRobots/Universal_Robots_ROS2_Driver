@@ -57,6 +57,13 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   config.names.emplace_back("resend_robot_program/resend_robot_program_async_success");
 
+  // payload stuff
+  config.names.emplace_back("payload/mass");
+  config.names.emplace_back("payload/cog.x");
+  config.names.emplace_back("payload/cog.y");
+  config.names.emplace_back("payload/cog.z");
+  config.names.emplace_back("payload/payload_async_success");
+
   return config;
 }
 
@@ -231,6 +238,9 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
         "~/resend_robot_program",
         std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
+        "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -335,6 +345,34 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
     RCLCPP_INFO(node_->get_logger(), "Successfully resent robot program");
   } else {
     RCLCPP_ERROR(node_->get_logger(), "Could not resend robot program");
+    return false;
+  }
+
+  return true;
+}
+
+bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
+                                ur_msgs::srv::SetPayload::Response::SharedPtr resp)
+{
+  // reset success flag
+  command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+
+  command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(req->mass);
+  command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
+  command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
+  command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
+
+  while (command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+    // Asynchronous wait until the hardware interface has set the payload
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+
+  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value());
+
+  if (resp->success) {
+    RCLCPP_INFO(node_->get_logger(), "Payload has been set successfully");
+  } else {
+    RCLCPP_ERROR(node_->get_logger(), "Could not set the payload");
     return false;
   }
 
