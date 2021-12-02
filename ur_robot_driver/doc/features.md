@@ -4,7 +4,7 @@
 | ---                                                   | ---                       |
 | joint-position-based control                          | yes                       |
 | scaled joint-position-based control                   | yes                       |
-| joint-velocity-based control                          | yes<sup>1</sup>            |
+| joint-velocity-based control                          | yes<sup>1</sup>           |
 | Cartesian position-based control                      | no                        |
 | Cartesian twist-based control                         | no                        |
 | Trajectory forwarding for execution on robot          | no                        |
@@ -24,4 +24,4 @@
 | send custom script commands to robot                  | yes                       |
 | Reconnect on a disconnected robot                     | yes                       |
 
-<sup>1</sup> Velocity-based joint control is implemented in the driver, but the current version of ros2_control do not yet support Velocity-based joint trajectory control 
+<sup>1</sup> Velocity-based joint control is implemented in the driver, but the current version of ros2_control do not yet support Velocity-based joint trajectory control
