@@ -218,7 +218,6 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="spawner.py",
         arguments=["forward_position_controller", "-c", "/controller_manager", "--stopped"],
-        condition=UnlessCondition(use_ignition),
     )
 
     # There may be other controllers of the joints, but this is the initially-started one
