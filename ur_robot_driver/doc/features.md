@@ -21,7 +21,7 @@
 | use ROS as drop-in for TP-programs                    | yes                       |
 | headless mode                                         | yes                       |
 | extract calibration from robot                        | yes                       |
-| send custom script commands to robot                  | yes                       |
+| send custom script commands to robot                  | no                       |
 | Reconnect on a disconnected robot                     | yes                       |
 
 <sup>1</sup> Velocity-based joint control is implemented in the driver, but the current version of ros2_control do not yet support Velocity-based joint trajectory control
