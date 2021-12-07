@@ -41,7 +41,7 @@ def launch_setup(context, *args, **kwargs):
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     launch_rviz = LaunchConfiguration("launch_rviz")
-    launch_rviz = LaunchConfiguration("launch_servo")
+    launch_servo = LaunchConfiguration("launch_servo")
     headless_mode = LaunchConfiguration("headless_mode")
 
     joint_limit_params = PathJoinSubstitution(
@@ -249,7 +249,7 @@ def launch_setup(context, *args, **kwargs):
     servo_params = {"moveit_servo": servo_yaml}
     servo_node = Node(
         package="moveit_servo",
-        condition=IfCondition(launch_rviz),
+        condition=IfCondition(launch_servo),
         executable="servo_node_main",
         parameters=[
             servo_params,
