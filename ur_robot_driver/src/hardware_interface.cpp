@@ -533,7 +533,7 @@ hardware_interface::return_type URPositionHardwareInterface::read()
 hardware_interface::return_type URPositionHardwareInterface::write()
 {
   // If there is no interpreting program running on the robot, we do not want to send anything.
-  // TODO: We would still like to disable the controllers requiring a writable interface. In ROS1
+  // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
   // this was done externally using the controller_stopper.
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
