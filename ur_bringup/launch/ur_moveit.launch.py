@@ -21,7 +21,7 @@ from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from ur_bringup.launch_common import load_yaml, load_yaml_abs
+from ur_bringup.launch_common import load_yaml
 
 
 def launch_setup(context, *args, **kwargs):
@@ -147,12 +147,12 @@ def launch_setup(context, *args, **kwargs):
     )
     robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
-    kinematics_yaml = load_yaml("ur_moveit_config", "config/kinematics.yaml")
+    kinematics_yaml = PathJoinSubstitution(
+        [FindPackageShare("ur_moveit_config"), "config", "kinematics.yaml"]
+    )
     robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
 
-    robot_description_planning = {
-        "robot_description_planning": load_yaml_abs(str(joint_limit_params.perform(context)))
-    }
+    robot_description_planning = {"robot_description_planning": joint_limit_params}
 
     # Planning Configuration
     ompl_planning_pipeline_config = {
