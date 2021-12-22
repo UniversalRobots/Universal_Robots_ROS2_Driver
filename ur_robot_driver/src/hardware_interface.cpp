@@ -532,6 +532,9 @@ hardware_interface::return_type URPositionHardwareInterface::read()
 
 hardware_interface::return_type URPositionHardwareInterface::write()
 {
+  // If there is no interpreting program running on the robot, we do not want to send anything.
+  // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
+  // this was done externally using the controller_stopper.
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
@@ -546,12 +549,8 @@ hardware_interface::return_type URPositionHardwareInterface::write()
     }
 
     packet_read_ = false;
-
-    return hardware_interface::return_type::OK;
   }
 
-  RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to write to hardware...");
-  // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
   return hardware_interface::return_type::OK;
 }
 
