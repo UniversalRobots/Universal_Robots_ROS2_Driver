@@ -27,4 +27,4 @@ Authors:
   - Dr. Nathan Brooks (PickNik Inc.)
   - Lovro Ivanov (PickNik Inc.)
   - Dr. Andy Zelenak (PickNik Inc.)
-  - Rune Søe-Knudsen (Universal Robots)
+  - Rune Søe-Knudsen (Universal Robots A/S)
