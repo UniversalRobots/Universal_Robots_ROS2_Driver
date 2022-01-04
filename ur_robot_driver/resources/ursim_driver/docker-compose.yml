@@ -1,0 +1,52 @@
+version: "3.3"
+services:
+  driver:
+   image: driver_img
+   privileged: true
+   environment:
+    - DISPLAY=:1
+   networks:
+    static_test_net:
+     ipv4_address: 192.168.56.1
+   ports:
+      - "5566:5566"
+   devices:
+     - "/tmp/ttyUR:/tmp/ttyUR"
+   build:
+    context: driver/.
+    dockerfile: Dockerfile
+    args:
+    - ROS2_DISTRO=${ROS2_DISTRO}
+    - BUILD_MOVEIT2=${BUILD_MOVEIT2}
+   depends_on:
+      - "ursim"
+  ursim:
+   image: ursim_img
+   privileged: true
+   environment:
+    - ROBOT_MODEL=UR5
+    - DISPLAY=:1
+   networks:
+    static_test_net:
+     ipv4_address: 192.168.56.101
+   ports:
+      - "5900:5900"
+      - "29999:29999"
+      - "8080:8080"
+      - "30001-30004:30001-30004"
+   volumes:
+      - ./ursim/aux/.vol/:/ursim/programs
+   build:
+    context: ursim/.
+    dockerfile: g5/Dockerfile
+    args:
+     URSIM: "https://s3-eu-west-1.amazonaws.com/ur-support-site/118926/URSim_Linux-5.11.1.108318.tar.gz"
+     VERSION: 5.11.1.108318
+     #URSIM: https://s3-eu-west-1.amazonaws.com/ur-support-site/116229/URSim_Linux-3.15.3.106223.tar.gz
+     #VERSION: 3.15.3.106223
+networks:
+ static_test_net:
+  driver: bridge
+  ipam:
+   config:
+    - subnet: 192.168.0.0/16
