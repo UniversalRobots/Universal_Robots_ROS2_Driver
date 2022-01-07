@@ -36,6 +36,7 @@
 //----------------------------------------------------------------------
 
 #include <thread>
+#include <memory>
 
 // ROS includes
 #include "controller_manager/controller_manager.hpp"
