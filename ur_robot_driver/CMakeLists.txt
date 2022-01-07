@@ -12,6 +12,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(controller_manager REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -26,6 +27,7 @@ find_package(rclpy REQUIRED)
 include_directories(include)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+  controller_manager
   hardware_interface
   pluginlib
   rclcpp
@@ -64,8 +66,17 @@ add_executable(dashboard_client
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+add_executable(ur_ros2_control_node src/ur_ros2_control_node.cpp)
+target_include_directories(ur_ros2_control_node PUBLIC ${controller_manager_INCLUDE_DIRS})
+target_link_libraries(ur_ros2_control_node ${controller_manager_LIBRARIES})
+ament_target_dependencies(ur_ros2_control_node
+  controller_interface
+  hardware_interface
+  rclcpp
+)
+
 install(
-  TARGETS dashboard_client
+  TARGETS dashboard_client ur_ros2_control_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
