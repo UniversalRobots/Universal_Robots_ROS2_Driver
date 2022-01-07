@@ -35,7 +35,47 @@
  */
 //----------------------------------------------------------------------
 
+#include <thread>
+
+// ROS includes
+#include "controller_manager/controller_manager.hpp"
+#include "rclcpp/rclcpp.hpp"
+
+// code is inspired by
+// https://github.com/ros-controls/ros2_control/blob/master/controller_manager/src/ros2_control_node.cpp
+
 int main(int argc, char** argv)
 {
-    return 0;
+  rclcpp::init(argc, argv);
+
+  // create executor
+  std::shared_ptr<rclcpp::Executor> e = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+  // create controller manager instance
+  auto controller_manager = std::make_shared<controller_manager::ControllerManager>(e, "controller_manager");
+
+  // control loop thread
+  std::thread control_loop([controller_manager]() {
+    // last update time
+    rclcpp::Time last_update = controller_manager->now();
+
+    while (rclcpp::ok()) {
+      // ur client library is blocking and is the one that is controlling time step
+      controller_manager->read();
+      controller_manager->update(controller_manager->now(), controller_manager->now() - last_update);
+      last_update = controller_manager->now();
+      controller_manager->write();
+    }
+  });
+
+  // spin the executor with controller manager node
+  e->add_node(controller_manager);
+  e->spin();
+
+  // wait for control loop to finish
+  control_loop.join();
+
+  // shutdown
+  rclcpp::shutdown();
+
+  return 0;
 }
