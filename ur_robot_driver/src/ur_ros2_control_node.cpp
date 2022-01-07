@@ -56,14 +56,13 @@ int main(int argc, char** argv)
 
   // control loop thread
   std::thread control_loop([controller_manager]() {
-    // last update time
-    rclcpp::Time last_update = controller_manager->now();
+    // use fixed time step
+    rclcpp::Duration dt = rclcpp::Duration::from_seconds(1.0 / controller_manager->get_update_rate());
 
     while (rclcpp::ok()) {
       // ur client library is blocking and is the one that is controlling time step
       controller_manager->read();
-      controller_manager->update(controller_manager->now(), controller_manager->now() - last_update);
-      last_update = controller_manager->now();
+      controller_manager->update(controller_manager->now(), dt);
       controller_manager->write();
     }
   });
