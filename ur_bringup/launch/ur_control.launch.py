@@ -39,11 +39,12 @@ def launch_setup(context, *args, **kwargs):
     prefix = LaunchConfiguration("prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
-    start_joint_controller = LaunchConfiguration("start_joint_controller")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
+    activate_joint_controller = LaunchConfiguration("activate_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -120,6 +121,9 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "headless_mode:=",
             headless_mode,
+            " ",
+            "use_tool_communication:=",
+            use_tool_communication,
             " ",
         ]
     )
@@ -210,18 +214,24 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
+    forward_position_controller_spawner_stopped = Node(
+        package="controller_manager",
+        executable="spawner.py",
+        arguments=["forward_position_controller", "-c", "/controller_manager", "--stopped"],
+    )
+
     # There may be other controllers of the joints, but this is the initially-started one
     initial_joint_controller_spawner_started = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[initial_joint_controller, "-c", "/controller_manager"],
-        condition=IfCondition(start_joint_controller),
+        condition=IfCondition(activate_joint_controller),
     )
     initial_joint_controller_spawner_stopped = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[initial_joint_controller, "-c", "/controller_manager", "--stopped"],
-        condition=UnlessCondition(start_joint_controller),
+        condition=UnlessCondition(activate_joint_controller),
     )
 
     nodes_to_start = [
@@ -233,6 +243,7 @@ def launch_setup(context, *args, **kwargs):
         io_and_status_controller_spawner,
         speed_scaling_state_broadcaster_spawner,
         force_torque_sensor_broadcaster_spawner,
+        forward_position_controller_spawner_stopped,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
     ]
@@ -340,16 +351,16 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "start_joint_controller",
-            default_value="true",
-            description="Enable headless mode for robot control",
+            "initial_joint_controller",
+            default_value="joint_trajectory_controller",
+            description="Initially loaded robot controller.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "initial_joint_controller",
-            default_value="joint_trajectory_controller",
-            description="Robot controller to start.",
+            "activate_joint_controller",
+            default_value="true",
+            description="Activate loaded joint controller.",
         )
     )
     declared_arguments.append(
@@ -358,6 +369,13 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "launch_dashboard_client", default_value="true", description="Launch RViz?"
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_tool_communication",
+            default_value="false",
+            description="Only available for e series!",
         )
     )
 

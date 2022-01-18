@@ -32,12 +32,11 @@ jobs:
             ur_bringup
             ur_controllers
             ur_dashboard_msgs
-            ur_description
             ur_moveit_config
             ur_robot_driver
           vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/${{ env.ROS_DISTRO }}/ros2.repos
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/Universal_Robots_ROS2_Driver.repos
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ env.ROS_DISTRO }}/Universal_Robots_ROS2_Driver.repos
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
           skip-tests: true
       - uses: actions/upload-artifact@v1
