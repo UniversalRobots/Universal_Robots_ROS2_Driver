@@ -23,7 +23,6 @@ jobs:
             ur_bringup
             ur_controllers
             ur_dashboard_msgs
-            ur_description
             ur_moveit_config
             ur_robot_driver
           vcs-repo-file-url: |
