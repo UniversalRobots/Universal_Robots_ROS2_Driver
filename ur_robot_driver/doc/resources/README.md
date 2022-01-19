@@ -1,6 +1,6 @@
 # Resources about ROS 2 Universal Robot driver
 
-The files in this folder are available for use under [![License](https://i.creativecommons.org/l/by/4.0/88x31.png)](http://creativecommons.org/licenses/by/4.0/) license.
+The files in this folder are available for use under BSD-3-Clause license.
 
 
 ## Diagrams and images
