@@ -21,14 +21,13 @@ from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from ur_bringup.launch_common import load_yaml, load_yaml_abs
+from ur_bringup.launch_common import load_yaml
 
 
 def launch_setup(context, *args, **kwargs):
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
-    robot_ip = LaunchConfiguration("robot_ip")
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
@@ -38,11 +37,9 @@ def launch_setup(context, *args, **kwargs):
     moveit_config_package = LaunchConfiguration("moveit_config_package")
     moveit_config_file = LaunchConfiguration("moveit_config_file")
     prefix = LaunchConfiguration("prefix")
-    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
-    fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    use_sim_time = LaunchConfiguration("use_sim_time")
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_servo = LaunchConfiguration("launch_servo")
-    headless_mode = LaunchConfiguration("headless_mode")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -56,15 +53,6 @@ def launch_setup(context, *args, **kwargs):
     visual_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "visual_parameters.yaml"]
     )
-    script_filename = PathJoinSubstitution(
-        [FindPackageShare("ur_robot_driver"), "resources", "ros_control.urscript"]
-    )
-    input_recipe_filename = PathJoinSubstitution(
-        [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
-    )
-    output_recipe_filename = PathJoinSubstitution(
-        [FindPackageShare("ur_robot_driver"), "resources", "rtde_output_recipe.txt"]
-    )
 
     robot_description_content = Command(
         [
@@ -72,8 +60,7 @@ def launch_setup(context, *args, **kwargs):
             " ",
             PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
             " ",
-            "robot_ip:=",
-            robot_ip,
+            "robot_ip:=xxx.yyy.zzz.www",
             " ",
             "joint_limit_params:=",
             joint_limit_params,
@@ -97,30 +84,19 @@ def launch_setup(context, *args, **kwargs):
             safety_k_position,
             " ",
             "name:=",
-            # Also ur_type parameter could be used but then the planning group names in yaml
-            # configs has to be updated!
             "ur",
             " ",
-            "script_filename:=",
-            script_filename,
+            "ur_type:=",
+            ur_type,
             " ",
-            "input_recipe_filename:=",
-            input_recipe_filename,
+            "script_filename:=ros_control.urscript",
             " ",
-            "output_recipe_filename:=",
-            output_recipe_filename,
+            "input_recipe_filename:=rtde_input_recipe.txt",
+            " ",
+            "output_recipe_filename:=rtde_output_recipe.txt",
             " ",
             "prefix:=",
             prefix,
-            " ",
-            "use_fake_hardware:=",
-            use_fake_hardware,
-            " ",
-            "fake_sensor_commands:=",
-            fake_sensor_commands,
-            " ",
-            "headless_mode:=",
-            headless_mode,
             " ",
         ]
     )
@@ -147,12 +123,15 @@ def launch_setup(context, *args, **kwargs):
     )
     robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
-    kinematics_yaml = load_yaml("ur_moveit_config", "config/kinematics.yaml")
+    # kinematics_yaml = load_yaml("ur_moveit_config", "config/kinematics.yaml")
+    kinematics_yaml = PathJoinSubstitution(
+        [FindPackageShare(moveit_config_package), "config", "kinematics.yaml"]
+    )
     robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
 
-    robot_description_planning = {
-        "robot_description_planning": load_yaml_abs(str(joint_limit_params.perform(context)))
-    }
+    # robot_description_planning = {
+    # "robot_description_planning": load_yaml_abs(str(joint_limit_params.perform(context)))
+    # }
 
     # Planning Configuration
     ompl_planning_pipeline_config = {
@@ -195,11 +174,12 @@ def launch_setup(context, *args, **kwargs):
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,
-            robot_description_planning,
+            # robot_description_planning,
             ompl_planning_pipeline_config,
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
+            {"use_sim_time": use_sim_time},
         ],
     )
 
@@ -231,17 +211,8 @@ def launch_setup(context, *args, **kwargs):
             robot_description_semantic,
             ompl_planning_pipeline_config,
             robot_description_kinematics,
-            robot_description_planning,
+            # robot_description_planning,
         ],
-    )
-
-    # Static TF
-    static_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_transform_publisher",
-        output="log",
-        arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "base_link"],
     )
 
     # Servo node for realtime control
@@ -262,7 +233,7 @@ def launch_setup(context, *args, **kwargs):
         },
     )
 
-    nodes_to_start = [move_group_node, mongodb_server_node, rviz_node, static_tf, servo_node]
+    nodes_to_start = [move_group_node, mongodb_server_node, rviz_node, servo_node]
 
     return nodes_to_start
 
@@ -276,11 +247,6 @@ def generate_launch_description():
             "ur_type",
             description="Type/series of used UR robot.",
             choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "robot_ip", description="IP address by which the robot can be reached."
         )
     )
     declared_arguments.append(
@@ -337,33 +303,18 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "use_sim_time",
+            default_value="false",
+            description="Make MoveIt to use simulation time. This is needed for the trajectory planing in simulation.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "prefix",
             default_value='""',
             description="Prefix of the joint names, useful for \
         multi-robot setup. If changed than also joint names in the controllers' configuration \
         have to be updated.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_fake_hardware",
-            default_value="false",
-            description="Start robot with fake hardware mirroring command to its states.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "fake_sensor_commands",
-            default_value="false",
-            description="Enable fake command interfaces for sensors used for simple simulations. \
-            Used only if 'use_fake_hardware' parameter is true.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "headless_mode",
-            default_value="false",
-            description="Enable headless mode for robot control",
         )
     )
     declared_arguments.append(
