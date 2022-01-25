@@ -57,7 +57,7 @@ int main(int argc, char** argv)
   // control loop thread
   std::thread control_loop([controller_manager]() {
     // use fixed time step
-    rclcpp::Duration dt = rclcpp::Duration::from_seconds(1.0 / controller_manager->get_update_rate());
+    const rclcpp::Duration dt = rclcpp::Duration::from_seconds(1.0 / controller_manager->get_update_rate());
 
     while (rclcpp::ok()) {
       // ur client library is blocking and is the one that is controlling time step
