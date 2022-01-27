@@ -381,7 +381,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "launch_dashboard_client", default_value="true", description="Launch RViz?"
+            "launch_dashboard_client", default_value="true", description="Launch Dashboard Client?"
         )
     )
     declared_arguments.append(
