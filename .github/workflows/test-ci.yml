@@ -14,9 +14,9 @@ jobs:
       matrix:
         env:
           - { ROS_DISTRO: rolling, ROS_REPO: main }
-          - { ROS_DISTRO: rolling, ROS_REPO: testing }
+#          - { ROS_DISTRO: rolling, ROS_REPO: testing }
           - { ROS_DISTRO: galactic, ROS_REPO: main }
-          - { ROS_DISTRO: galactic, ROS_REPO: testing }
+#          - { ROS_DISTRO: galactic, ROS_REPO: testing }
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.repos
       DOCKER_RUN_OPTS: --network static_test_net
@@ -25,7 +25,7 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       BASEDIR: ${{ github.workspace }}/.work
       CACHE_PREFIX: ${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}-execution
-      PARALLEL_TESTS: 2
+#      PARALLEL_TESTS: 2
     steps:
       - uses: actions/checkout@v1
       - name: start ursim
