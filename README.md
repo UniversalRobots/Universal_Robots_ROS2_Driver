@@ -12,6 +12,9 @@ This driver is developed on top of [Universal_Robots_Client_Library](https://git
 The driver is compatible across the entire line of UR robots -- from 3 kg payload to 16 kg payload and includes both the CB3 and the E-series.
 
 
+Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) about this driver.
+
+
 ## Build Status
 
 ROS2 Distro | Foxy  | Galactic | Rolling
