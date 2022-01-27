@@ -35,6 +35,7 @@
  */
 //----------------------------------------------------------------------
 
+#include <pthread.h>
 #include <thread>
 #include <memory>
 
@@ -66,6 +67,38 @@ int main(int argc, char** argv)
       controller_manager->write();
     }
   });
+
+  auto control_loop_handle = control_loop.native_handle();
+  sched_param params;
+  int policy;
+  bool sched_success = true;
+  sched_success &= (pthread_getschedparam(control_loop_handle, &policy, &params) == 0);
+  if (sched_success) {
+    RCLCPP_INFO(controller_manager->get_logger(),
+                "Control loop default sched parameters: \n    * sched priority: '%d \n    * policy: '%d' ",
+                params.sched_priority, policy);
+  } else {
+    RCLCPP_ERROR(controller_manager->get_logger(), "Unable to fetch control loop sched parameters!");
+  }
+
+  // priority to 49
+  params.sched_priority = (sched_get_priority_min(SCHED_FIFO) + sched_get_priority_max(SCHED_FIFO)) / 2 - 1;
+  sched_success &= (pthread_setschedparam(control_loop_handle, SCHED_FIFO, &params) == 0);
+  if (sched_success) {
+    RCLCPP_INFO(controller_manager->get_logger(), "Control loop thread priority set successfully. Verifying "
+                                                  "priority...");
+    sched_success &= pthread_getschedparam(control_loop_handle, &policy, &params);
+    if (!sched_success) {
+      RCLCPP_ERROR(controller_manager->get_logger(), "Unable to retrieve scheduling parameters to verify changes...");
+    }
+    if (policy != SCHED_FIFO) {
+      RCLCPP_ERROR(controller_manager->get_logger(), "Scheduling policy is not SCHED_FIFO.");
+    } else {
+      RCLCPP_INFO(controller_manager->get_logger(), "SCHED_FIFO set as scheduling policy.");
+    }
+    RCLCPP_INFO(controller_manager->get_logger(), "Control loop thread priority is '%d'. ", params.sched_priority);
+    pthread_setname_np(control_loop_handle, "ctrl_loop_ur");
+  }
 
   // spin the executor with controller manager node
   e->add_node(controller_manager);
