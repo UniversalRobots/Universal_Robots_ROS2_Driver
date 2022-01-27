@@ -17,13 +17,16 @@ Summary:
 
   With the release of ros2_control and MoveIt 2, ROS 2 Foxy finally has all the “ingredients” needed to power a robot with similar features as in ROS 1. We present the driver for Universal Robot’s manipulators as a real-world example of how robots can be run using ROS 2. We show how to realize multi-interface support for position and velocity commands in the driver and how to support scaling controllers while respecting factors set on the teach pendant. Finally, we show how this real-world example influences development of ros2_control to support non-joint related inputs and outputs in its real-time control loop.
 
-Recording: TBA
+[Recording](https://vimeo.com/649651707)
 
-*Presenter: Denis Štogl*
+[Video: MoveIt2 Demo](2021-10_ROS_World_2021_Video_MoveIt2_Demo.mp4)
+[Video: Scaled Joint Trajectory Controller Demo](2021-10_ROS_World_2021_Video_Scaled_JTC_Demo.mp4)
+
+*Presenter: Dr.-Ing. Denis Štogl*
 
 Authors:
 
-  - Denis Štogl (PickNik Inc.)
+  - Dr.-Ing. Denis Štogl (PickNik Inc.)
   - Dr. Nathan Brooks (PickNik Inc.)
   - Lovro Ivanov (PickNik Inc.)
   - Dr. Andy Zelenak (PickNik Inc.)

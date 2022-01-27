@@ -1,5 +1,7 @@
 # Universal Robots ROS2 Driver
 
+![Universal Robots ROS2 Driver with Scaled Joint Trajectory Controller Demo](ur_robot_driver/doc/resources/2021-10_ROS_World_2021_Video_Scaled_JTC_Demo.gif)
+
 Universal Robots has become a dominant supplier of lightweight, robotic manipulators for industry, as well as for scientific research and education.
 <center><img src="ur_robot_driver/doc/initial_setup_images/e-Series.jpg" alt="Universal Robot e-Series family" style="width: 80%;"/></center>
 
