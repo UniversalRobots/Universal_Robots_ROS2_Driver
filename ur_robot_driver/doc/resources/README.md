@@ -20,6 +20,7 @@ Summary:
 [Recording](https://vimeo.com/649651707)
 
 [Video: MoveIt2 Demo](2021-10_ROS_World_2021_Video_MoveIt2_Demo.mp4)
+
 [Video: Scaled Joint Trajectory Controller Demo](2021-10_ROS_World_2021_Video_Scaled_JTC_Demo.mp4)
 
 *Presenter: Dr.-Ing. Denis Štogl*
