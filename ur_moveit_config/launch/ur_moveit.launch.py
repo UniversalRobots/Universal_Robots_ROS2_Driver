@@ -21,7 +21,7 @@ from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from ur_bringup.launch_common import load_yaml
+from ur_moveit_config.launch_common import load_yaml
 
 
 def launch_setup(context, *args, **kwargs):
