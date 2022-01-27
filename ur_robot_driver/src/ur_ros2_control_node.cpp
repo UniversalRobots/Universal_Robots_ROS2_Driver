@@ -87,7 +87,7 @@ int main(int argc, char** argv)
   if (sched_success) {
     RCLCPP_INFO(controller_manager->get_logger(), "Control loop thread priority set successfully. Verifying "
                                                   "priority...");
-    sched_success &= pthread_getschedparam(control_loop_handle, &policy, &params);
+    sched_success &= (pthread_getschedparam(control_loop_handle, &policy, &params) == 0);
     if (!sched_success) {
       RCLCPP_ERROR(controller_manager->get_logger(), "Unable to retrieve scheduling parameters to verify changes...");
     }
@@ -98,6 +98,8 @@ int main(int argc, char** argv)
     }
     RCLCPP_INFO(controller_manager->get_logger(), "Control loop thread priority is '%d'. ", params.sched_priority);
     pthread_setname_np(control_loop_handle, "ctrl_loop_ur");
+  } else {
+    RCLCPP_ERROR(controller_manager->get_logger(), "Unable to set control loop thread priority!");
   }
 
   // spin the executor with controller manager node
