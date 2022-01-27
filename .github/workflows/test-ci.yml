@@ -10,7 +10,7 @@ jobs:
     name: semi-binary test
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 1
+#      max-parallel: 1
       matrix:
         env:
           - { ROS_DISTRO: rolling, ROS_REPO: main }
