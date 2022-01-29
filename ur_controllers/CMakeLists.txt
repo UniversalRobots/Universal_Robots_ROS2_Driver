@@ -28,6 +28,7 @@ find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+  angles
   control_msgs
   controller_interface
   geometry_msgs
