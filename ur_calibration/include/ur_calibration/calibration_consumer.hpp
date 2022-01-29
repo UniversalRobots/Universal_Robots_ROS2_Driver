@@ -28,13 +28,13 @@
 
 #ifndef UR_CALIBRATION__CALIBRATION_CONSUMER_HPP_
 #define UR_CALIBRATION__CALIBRATION_CONSUMER_HPP_
-#include <ur_client_library/comm/pipeline.h>
-
-#include <ur_client_library/primary/robot_state/kinematics_info.h>
-
-#include <ur_calibration/calibration.hpp>
 
 #include <memory>
+
+#include "ur_client_library/comm/pipeline.h"
+#include "ur_client_library/primary/robot_state/kinematics_info.h"
+
+#include "ur_calibration/calibration.hpp"
 
 namespace ur_calibration
 {

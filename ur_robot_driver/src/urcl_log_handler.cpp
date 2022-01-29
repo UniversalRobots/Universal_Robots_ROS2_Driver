@@ -41,7 +41,7 @@ UrclLogHandler::UrclLogHandler() = default;
 
 void UrclLogHandler::log(const char* file, int line, urcl::LogLevel loglevel, const char* message)
 {
-  rcutils_log_location_t location = { "", file, (size_t)line };
+  rcutils_log_location_t location = { "", file, static_cast<size_t> line };
   switch (loglevel) {
     case urcl::LogLevel::DEBUG:
       rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_DEBUG, "UR_Client_Library", "%s", message);
