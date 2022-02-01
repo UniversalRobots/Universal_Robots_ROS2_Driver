@@ -154,6 +154,18 @@ def launch_setup(context, *args, **kwargs):
             "stdout": "screen",
             "stderr": "screen",
         },
+        condition=IfCondition(use_fake_hardware),
+    )
+
+    ur_control_node = Node(
+        package="ur_robot_driver",
+        executable="ur_ros2_control_node",
+        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        output={
+            "stdout": "screen",
+            "stderr": "screen",
+        },
+        condition=UnlessCondition(use_fake_hardware),
     )
 
     dashboard_client_node = Node(
@@ -236,6 +248,7 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         control_node,
+        ur_control_node,
         dashboard_client_node,
         robot_state_publisher_node,
         rviz_node,

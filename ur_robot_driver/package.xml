@@ -24,6 +24,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
+  <depend>controller_manager</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
@@ -39,8 +40,6 @@
   <depend>ur_description</depend>
   <depend>ur_bringup</depend>
   <depend>ur_controllers</depend>
-
-  <exec_depend>controller_manager</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
