@@ -228,7 +228,7 @@ def launch_setup(context, *args, **kwargs):
 
     forward_position_controller_spawner_stopped = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=["forward_position_controller", "-c", "/controller_manager", "--stopped"],
     )
 
