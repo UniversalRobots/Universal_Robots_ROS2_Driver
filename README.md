@@ -284,7 +284,6 @@ The docker-compose setup is prepared for usage of driver with the official UR si
 
 ## Expected Changes in the Near Future
 
-- Using upstream `force_torque_sensor_broadcaster` (ros-controls/ros2_controllers#152)
 - Trajectory control currently only supports position commands. In the future, velocity control will be added.
 
 
