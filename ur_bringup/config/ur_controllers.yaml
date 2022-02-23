@@ -8,7 +8,7 @@ controller_manager:
       type: ur_controllers/GPIOController
 
     speed_scaling_state_broadcaster:
-      type: ur_controllers/SpeedScalingStateBroadcaster
+      type: scaled_controllers/SpeedScalingStateBroadcaster
 
     force_torque_sensor_broadcaster:
       type: ur_controllers/ForceTorqueStateBroadcaster
@@ -17,7 +17,7 @@ controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
 
     scaled_joint_trajectory_controller:
-      type: ur_controllers/ScaledJointTrajectoryController
+      type: scaled_controllers/ScaledJointTrajectoryController
 
     forward_velocity_controller:
       type: velocity_controllers/JointGroupVelocityController

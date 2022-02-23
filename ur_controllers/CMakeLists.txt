@@ -48,8 +48,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 include_directories(include)
 
 add_library(${PROJECT_NAME} SHARED
-  src/scaled_joint_trajectory_controller.cpp
-  src/speed_scaling_state_broadcaster.cpp
   src/force_torque_sensor_broadcaster.cpp
   src/gpio_controller.cpp)
 
