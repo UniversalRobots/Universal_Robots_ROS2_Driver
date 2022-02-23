@@ -31,8 +31,8 @@ class UrToolCommunication(Node):
         robot_ip = self.get_parameter("robot_ip").get_parameter_value().string_value
         self.get_logger().info(robot_ip)
         # Port on which the remote pc (robot) publishes the interface
-        self.declare_parameter("tcp_port", "54321")
-        tcp_port = self.get_parameter_or("tcp_port", "54321").get_parameter_value().string_value
+        self.declare_parameter("tcp_port", 54321)
+        tcp_port = self.get_parameter_or("tcp_port", 54321).get_parameter_value().integer_value
         # By default, socat will create a pty in /dev/pts/N with n being an increasing number.
         # Additionally, a symlink at the given location will be created. Use an absolute path here.
         self.declare_parameter("device_name", "/tmp/ttyUR")
@@ -48,7 +48,7 @@ class UrToolCommunication(Node):
 
         cmd = ["socat"]
         cmd.append(",".join(cfg_params))
-        cmd.append(":".join(["tcp", robot_ip, tcp_port]))
+        cmd.append(":".join(["tcp", robot_ip, str(tcp_port)]))
 
         self.get_logger().info("Starting socat with following command:\n" + " ".join(cmd))
         subprocess.call(cmd)
