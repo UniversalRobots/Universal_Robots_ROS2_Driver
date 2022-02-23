@@ -42,7 +42,7 @@ ROS2 Distro | Foxy  | Galactic | Rolling
   - `ur_controllers` - implementations of controllers specific for UR robots.
   - `ur_dashboard_msgs` - package defining messages used by dashboard node.
   - `ur_description` - description files for the UR robots: meshes, URDF/XACRO files, etc.
-  - `ur_moveit` - example MoveIt configuration for UR robots.
+  - `ur_moveit_config` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
 
@@ -135,10 +135,9 @@ This section describes installation and launching of the URCap program from the 
 
 ## Usage
 
-For starting the driver there are three main launch files in the `ur_bringup` package.
+For starting the driver there are two main launch files in the `ur_bringup` package.
 
   - `ur_control.launch.py` - starts ros2_control node including hardware interface, joint state broadcaster and a controller. This launch file also starts `dashboard_client` if real robot is used.
-  - `ur_moveit.launch.py` - start everything from `ur_control.launch.py` plus an example scenario with [MoveIt2](https://moveit.ros.org/).
   - `ur_dashboard_client.launch.py` - start the dashboard client for UR robots.
 
 Also, there are predefined launch files for all supported types of UR robots.
@@ -215,7 +214,7 @@ The most relevant arguments are the following:
 
    (then start the external_control URCap program from the pendant, as described above)
 
-   ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true launch_rviz:=true
+   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e use_fake_hardware:=true launch_rviz:=true
    ```
    Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
 
