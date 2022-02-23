@@ -29,7 +29,7 @@
           <param name="servoj_gain">2000</param>
           <param name="servoj_lookahead_time">0.03</param>
           <param name="use_tool_communication">0</param>
-          <param name="kinematics/hash">"${hash_kinematics}"</param>
+          <param name="kinematics/hash">${hash_kinematics}</param>
           <param name="tool_voltage">0</param>
           <param name="tool_parity">0</param>
           <param name="tool_baud_rate">115200</param>
