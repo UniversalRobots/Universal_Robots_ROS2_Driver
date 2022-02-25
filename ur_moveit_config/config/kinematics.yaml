@@ -1,5 +1,8 @@
-ur_manipulator:
-  kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
-  kinematics_solver_search_resolution: 0.005
-  kinematics_solver_timeout: 0.005
-  kinematics_solver_attempts: 3
+/**:
+  ros__parameters:
+    robot_description_kinematics:
+      ur_manipulator:
+        kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
+        kinematics_solver_search_resolution: 0.005
+        kinematics_solver_timeout: 0.005
+        kinematics_solver_attempts: 3
