@@ -195,7 +195,7 @@ Allowed UR-Type strings: `ur3`, `ur3e`, `ur5`, `ur5e`, `ur10`, `ur10e`, `ur16e`.
   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
   ```
 
-  **NOTE**: Instead of using global launch file for control stack, there are also prepeared launch files for each type of UR robots named. The accept the same arguments are the global one and are used by:
+  **NOTE**: Instead of using the global launch file for control stack, there are also prepeared launch files for each type of UR robots named. They accept the same arguments are the global one and are used by:
   ```
   ros2 launch ur_bringup <ur_type>.launch.py
   ```
