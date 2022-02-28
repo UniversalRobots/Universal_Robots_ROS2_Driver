@@ -175,22 +175,33 @@ The most relevant arguments are the following:
 
 ### Example Commands for Testing the Driver
 
-- To start the robot driver and controllers, use:
-   ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+Allowed UR-Type strings: `ur3`, `ur3e`, `ur5`, `ur5e`, `ur10`, `ur10e`, `ur16e`.
 
-   (then start the external_control URCap program from the pendant, as described above)
-   ```
-   For an offline test with the emulated hardware you can just copy-paste this line.
-   To run on the hardware, write the IP address of your robot and omit the `use_fake_hardware` argument.
+##### 1. Start hardware, simulator or mockup
 
-   **NOTE**: If controllers are not starting automatically, i.e., the robot state is not shown in rviz, you can start them manually:
-   ```
-   ros2 control load_controller --set-state start joint_state_broadcaster
-   ros2 control load_controller --set-state start joint_trajectory_controller
-   ```
+- To do test with hardware, use:
+  ```
+  ros2 launch ur_bringup ur_control.launch.py ur_type:=<UR_TYPE> robot_ip:=<IP_OF_THE_ROBOT> launch_rviz:=true
+  ```
+  For more details check the argument documentation with `ros2 launch ur_bringup ur_control.launch.py --show-arguments`
 
-   To check the controllers' state use `ros2 control list_controllers` command.
+  After starting the launch file start the external_control URCap program from the pendant, as described above.
+
+- To do an offline test with URSim check details about it in [this section](#usage-with-official-ur-simulator)
+
+- To use mocked hardware (capability of ros2_control), use `use_fake_hardware` argument, like:
+  ```
+  ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+  ```
+
+  **NOTE**: Instead of using the global launch file for control stack, there are also prepeared launch files for each type of UR robots named. They accept the same arguments are the global one and are used by:
+  ```
+  ros2 launch ur_bringup <ur_type>.launch.py
+  ```
+
+##### 2. Sending commands to controllers
+
+Before running any commands, first check the controllers' state using `ros2 control list_controllers`.
 
 - Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
@@ -198,9 +209,9 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move.
 
-- To test another controller, simply define it using `robot_controller` argument:
+- To test another controller, simply define it using `initial_joint_controller` argument, for example when using fake hardware:
    ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=scaled_joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
+   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
    ```
    And send the command using demo node:
    ```
@@ -218,7 +229,9 @@ The most relevant arguments are the following:
    ```
    Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
 
-5. If you just want to test description of the UR robots, e.g., after changes you can use the following command:
+##### 3. Using only robot description
+
+If you just want to test description of the UR robots, e.g., after changes you can use the following command:
    ```
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
