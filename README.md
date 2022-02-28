@@ -202,12 +202,7 @@ Allowed UR-Type strings: `ur3`, `ur3e`, `ur5`, `ur5e`, `ur10`, `ur10e`, `ur16e`.
 
 ##### 2. Sending commands to controllers
 
-**NOTE**: If controllers are not starting automatically, i.e., the robot state is not shown in rviz, you can start them manually:
-```
-ros2 control load_controller --set-state start joint_state_broadcaster
-ros2 control load_controller --set-state start scaled_joint_trajectory_controller
-```
-To check the controllers' state use `ros2 control list_controllers` command.
+Before running any commands, first check the controllers' state using `ros2 control list_controllers`.
 
 - Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
