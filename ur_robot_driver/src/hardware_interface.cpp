@@ -379,20 +379,14 @@ CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::
   if (ur_driver_->checkCalibration(calibration_checksum)) {
     RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checked successfully.");
   } else {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "The calibration parameters of the "
-                                                                           "connected robot don't match the ones from "
-                                                                           "the given kinematics "
-                                                                           "config file. Please be aware that this can "
-                                                                           "lead to critical inaccuracies of tcp "
-                                                                           "positions. Use "
-                                                                           "the ur_calibration tool to extract the "
-                                                                           "correct calibration from the robot and "
-                                                                           "pass that into the "
-                                                                           "description. See "
-                                                                           "[https://github.com/UniversalRobots/"
-                                                                           "Universal_Robots_ROS_Driver#extract-"
-                                                                           "calibration-information] "
-                                                                           "for details.");
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
+
+                        "The calibration parameters of the connected robot don't match the ones from the given "
+                        "kinematics config file. Please be aware that this can lead to critical inaccuracies of tcp "
+                        "positions. Use the ur_calibration tool to extract the correct calibration from the robot and "
+                        "pass that into the description. See "
+                        "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
+                        "README.md] for details.");
   }
 
   ur_driver_->startRTDECommunication();
