@@ -123,11 +123,9 @@ def launch_setup(context, *args, **kwargs):
     )
     robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
-    # kinematics_yaml = load_yaml("ur_moveit_config", "config/kinematics.yaml")
-    kinematics_yaml = PathJoinSubstitution(
+    robot_description_kinematics = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "config", "kinematics.yaml"]
     )
-    robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
 
     # robot_description_planning = {
     # "robot_description_planning": load_yaml_abs(str(joint_limit_params.perform(context)))
