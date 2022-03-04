@@ -20,7 +20,7 @@
  * \date    2019-06-12
  *
  * \author  Mads Holm Peters
- * \date    2020-02-25
+ * \date    2022-02-25
  *
  */
 //----------------------------------------------------------------------
@@ -51,7 +51,7 @@ private:
    *
    * Queries the controller manager for running controllers and compares the result with the
    * consistent_controllers_. The remaining running controllers are stored in stopped_controllers_
-   * and stopped afterwards. Also all broadcaster controllers isn't stopped.
+   * and stopped afterwards. Also, all broadcaster controllers aren't stopped.
    */
   void findAndStopControllers();
 

@@ -6,15 +6,11 @@ add_compile_options(-Wall)
 add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter)
 
-if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-  message("${PROJECT_NAME}: You did not request a specific build type: selecting 'RelWithDebInfo'.")
-  set(CMAKE_BUILD_TYPE RelWithDebInfo)
-endif()
-
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
+find_package(std_msgs)
 
 include_directories(include)
 
@@ -22,6 +18,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   std_srvs
   controller_manager_msgs
+  std_msgs
 )
 
 

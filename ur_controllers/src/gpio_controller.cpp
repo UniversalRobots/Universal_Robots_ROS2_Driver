@@ -242,8 +242,10 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     safety_mode_pub_ =
         get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", rclcpp::SystemDefaultsQoS());
 
+    auto program_state_pub_qos = rclcpp::SystemDefaultsQoS();
+    program_state_pub_qos.transient_local();
     program_state_pub_ =
-        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", program_state_pub_qos);
 
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
         "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
