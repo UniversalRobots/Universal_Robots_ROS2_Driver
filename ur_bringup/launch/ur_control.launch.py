@@ -234,6 +234,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             {"headless_mode": headless_mode},
             {"joint_controller_active": activate_joint_controller},
+            {"consistent_controllers": ["io_and_status_controller"]},
         ],
     )
 

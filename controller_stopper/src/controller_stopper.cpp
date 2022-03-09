@@ -1,5 +1,4 @@
-// Copyright 2019 FZI Forschungszentrum Informatik
-// Created on behalf of Universal Robots A/S
+// Copyright 2019 FZI Forschungszentrum Informatik, Created on behalf of Universal Robots A/S
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +26,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "controller_stopper/controller_stopper.hpp"
 
@@ -56,9 +56,7 @@ ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool s
   controller_list_srv_->wait_for_service();
   RCLCPP_INFO(rclcpp::get_logger("Controller stopper"), "Service available");
 
-  // Consistent controllers will not be stopped when the robot stops. Add IO and status controller,
-  // since it is publishing when the robot starts and stops.
-  consistent_controllers_.push_back("io_and_status_controller");
+  consistent_controllers_ = node_->declare_parameter<std::vector<std::string>>("consistent_controllers");
 
   if (stop_controllers_on_startup_ == true) {
     while (stopped_controllers_.empty()) {
