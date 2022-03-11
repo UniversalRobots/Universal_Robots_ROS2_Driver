@@ -226,7 +226,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     controller_stopper_node = Node(
-        package="controller_stopper",
+        package="ur_robot_driver",
         executable="controller_stopper_node",
         name="controller_stopper",
         output="screen",
@@ -234,7 +234,10 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             {"headless_mode": headless_mode},
             {"joint_controller_active": activate_joint_controller},
-            {"consistent_controllers": ["io_and_status_controller"]},
+            {"consistent_controllers": ["io_and_status_controller", 
+                                        "force_torque_sensor_broadcaster", 
+                                        "joint_state_broadcaster", 
+                                        "speed_scaling_state_broadcaster"]},
         ],
     )
 

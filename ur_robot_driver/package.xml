@@ -40,6 +40,8 @@
   <depend>ur_description</depend>
   <depend>ur_bringup</depend>
   <depend>ur_controllers</depend>
+  <depend>std_msgs</depend>
+  <depend>controller_manager_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

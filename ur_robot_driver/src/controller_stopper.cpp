@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-#include "controller_stopper/controller_stopper.hpp"
+#include "ur_robot_driver/controller_stopper.hpp"
 
 ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool stop_controllers_on_startup)
   : node_(node), stop_controllers_on_startup_(stop_controllers_on_startup), robot_running_(true)
@@ -70,7 +70,7 @@ ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool s
         //   Add to stopped_controllers
         if (controller.state == "active") {
           auto it = std::find(consistent_controllers_.begin(), consistent_controllers_.end(), controller.name);
-          if (it == consistent_controllers_.end() && controller.name.find("broadcaster") == std::string::npos) {
+          if (it == consistent_controllers_.end()) {
             stopped_controllers_.push_back(controller.name);
           }
         }
@@ -114,7 +114,7 @@ void ControllerStopper::findAndStopControllers()
           //   Add to stopped_controllers
           if (controller.state == "active") {
             auto it = std::find(consistent_controllers_.begin(), consistent_controllers_.end(), controller.name);
-            if (it == consistent_controllers_.end() && controller.name.find("broadcaster") == std::string::npos) {
+            if (it == consistent_controllers_.end()) {
               stopped_controllers_.push_back(controller.name);
             }
           }

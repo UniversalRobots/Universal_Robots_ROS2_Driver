@@ -26,7 +26,7 @@
 //----------------------------------------------------------------------
 
 #include "rclcpp/rclcpp.hpp"
-#include "controller_stopper/controller_stopper.hpp"
+#include "ur_robot_driver/controller_stopper.hpp"
 
 int main(int argc, char** argv)
 {

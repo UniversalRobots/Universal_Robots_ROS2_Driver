@@ -51,7 +51,7 @@ private:
    *
    * Queries the controller manager for running controllers and compares the result with the
    * consistent_controllers_. The remaining running controllers are stored in stopped_controllers_
-   * and stopped afterwards. Also, all broadcaster controllers aren't stopped.
+   * and stopped afterwards.
    */
   void findAndStopControllers();
 
