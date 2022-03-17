@@ -15,7 +15,7 @@ jobs:
     name: foxy semi-binary build
     runs-on: ubuntu-latest
     strategy:
-    max-parallel: 1
+      max-parallel: 1
       matrix:
         env:
           - {ROS_DISTRO: foxy, ROS_REPO: main}
