@@ -37,7 +37,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   ur_client_library
   ur_dashboard_msgs
   std_msgs
-  controller_manager_msgs  
+  controller_manager_msgs
 )
 
 add_library(ur_robot_driver_plugin

@@ -23,8 +23,8 @@
  *
  */
 //----------------------------------------------------------------------
-#ifndef CONTROLLER_STOPPER__CONTROLLER_STOPPER_HPP_
-#define CONTROLLER_STOPPER__CONTROLLER_STOPPER_HPP_
+#ifndef UR_ROBOT_DRIVER__CONTROLLER_STOPPER_HPP_
+#define UR_ROBOT_DRIVER__CONTROLLER_STOPPER_HPP_
 
 #include <memory>
 #include <string>
@@ -72,4 +72,4 @@ private:
   bool stop_controllers_on_startup_;
   bool robot_running_;
 };
-#endif  // CONTROLLER_STOPPER__CONTROLLER_STOPPER_HPP_
+#endif  // UR_ROBOT_DRIVER__CONTROLLER_STOPPER_HPP_
