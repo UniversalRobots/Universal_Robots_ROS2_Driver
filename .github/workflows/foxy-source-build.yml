@@ -1,0 +1,45 @@
+name: Foxy Source Build
+on:
+  push:
+    branches:
+      - foxy
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '43 3 * * *'
+
+jobs:
+  foxy_source:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+    env:
+      ROS_DISTRO: foxy
+    steps:
+      - uses: ros-tooling/setup-ros@v0.2
+        with:
+          required-ros-distributions: ${{ env.ROS_DISTRO }}
+      - uses: actions/checkout@v1
+        with:
+          ref: foxy
+      - name: start ursim
+        run: |
+          .github/dockerursim/build_and_run_docker_ursim.sh
+      - uses: ros-tooling/action-ros-ci@v0.2
+        with:
+          target-ros2-distro: ${{ env.ROS_DISTRO }}
+          # build all packages listed in the meta package
+          package-name:
+            ur_bringup
+            ur_controllers
+            ur_dashboard_msgs
+            ur_description
+            ur_moveit_config
+            ur_robot_driver
+          vcs-repo-file-url: |
+            https://raw.githubusercontent.com/ros2/ros2/${{ env.ROS_DISTRO }}/ros2.repos
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/Universal_Robots_ROS2_Driver.repos
+          colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
+      - uses: actions/upload-artifact@v1
+        with:
+          name: colcon-logs-${{ matrix.os }}
+          path: ros_ws/log
