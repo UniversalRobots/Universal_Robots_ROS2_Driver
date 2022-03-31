@@ -1,8 +1,5 @@
 name: Foxy Binary Build
 on:
-  pull_request:
-    branches:
-      - foxy
   push:
     branches:
       - foxy
@@ -30,6 +27,8 @@ jobs:
       CACHE_PREFIX: ${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}
     steps:
       - uses: actions/checkout@v1
+        with:
+          ref: foxy
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
