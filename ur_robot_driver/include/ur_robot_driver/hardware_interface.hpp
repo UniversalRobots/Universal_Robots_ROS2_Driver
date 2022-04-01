@@ -170,6 +170,7 @@ protected:
 
   bool robot_program_running_;
   bool non_blocking_read_;
+  double robot_program_running_copy_;
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;

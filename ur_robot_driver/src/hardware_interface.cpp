@@ -190,6 +190,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       hardware_interface::StateInterface("gpio", "tool_output_current", &tool_output_current_));
 
   state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "program_running", &robot_program_running_copy_));
 
   return state_interfaces;
 }
@@ -616,6 +618,7 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   robot_mode_copy_ = static_cast<double>(robot_mode_);
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
+  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 }
 }  // namespace ur_robot_driver
 
