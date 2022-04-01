@@ -41,6 +41,7 @@
 #include "ur_msgs/srv/set_payload.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 namespace ur_controllers
 {
@@ -78,6 +79,7 @@ enum StateInterfaces
   SAFETY_MODE = 57,
   SAFETY_STATUS_BITS = 58,
   INITIALIZED_FLAG = 69,
+  PROGRAM_RUNNING = 70,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -117,6 +119,8 @@ private:
 
   void publishSafetyMode();
 
+  void publishProgramRunning();
+
 protected:
   void initMsgs();
 
@@ -137,14 +141,16 @@ protected:
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
+  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Bool>> program_state_pub_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
+  std_msgs::msg::Bool program_running_msg_;
 
   static constexpr double ASYNC_WAITING = 2.0;
-  // TODO(anyone) publishers to add: program_state_pub_, tcp_pose_pub_
+  // TODO(anyone) publishers to add: tcp_pose_pub_
   // TODO(anyone) subscribers to add: script_command_sub_
   // TODO(anyone) service servers to add: resend_robot_program_srv_, deactivate_srv_, set_payload_srv_, tare_sensor_srv_
 };

@@ -199,6 +199,9 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface("system_interface", "initialized", &system_interface_initialized_));
 
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "program_running", &robot_program_running_copy_));
+
   return state_interfaces;
 }
 
@@ -662,6 +665,7 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
   system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 }
 
 void URPositionHardwareInterface::transformForceTorque()
