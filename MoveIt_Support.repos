@@ -6,7 +6,7 @@ repositories:
   srdfdom:
     type: git
     url: https://github.com/ros-planning/srdfdom.git
-    version: ros2
+    version: foxy
   warehouse_ros_mongo:
     type: git
     url: https://github.com/ros-planning/warehouse_ros_mongo
