@@ -109,14 +109,14 @@ CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::Ha
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as second state interface. '%s' expected.", joint.name.c_str(),
-                   joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_POSITION);
+                   joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as third state interface. '%s' expected.", joint.name.c_str(),
-                   joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_POSITION);
+                   joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_EFFORT);
       return CallbackReturn::ERROR;
     }
   }
