@@ -231,6 +231,7 @@ def launch_setup(context, *args, **kwargs):
         name="controller_stopper",
         output="screen",
         emulate_tty=True,
+        condition=UnlessCondition(use_fake_hardware),
         parameters=[
             {"headless_mode": headless_mode},
             {"joint_controller_active": activate_joint_controller},
