@@ -72,10 +72,6 @@ CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::Ha
   system_interface_initialized_ = 0.0;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    if (joint.name == "gpio" || joint.name == "speed_scaling" || joint.name == "resend_robot_program" ||
-        joint.name == "system_interface") {
-      continue;
-    }
     if (joint.command_interfaces.size() != 2) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
@@ -113,14 +109,14 @@ CallbackReturn URPositionHardwareInterface::on_init(const hardware_interface::Ha
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as second state interface. '%s' expected.", joint.name.c_str(),
-                   joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_POSITION);
+                   joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
       return CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[2].name != hardware_interface::HW_IF_EFFORT) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Joint '%s' have %s state interface as third state interface. '%s' expected.", joint.name.c_str(),
-                   joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_POSITION);
+                   joint.state_interfaces[2].name.c_str(), hardware_interface::HW_IF_EFFORT);
       return CallbackReturn::ERROR;
     }
   }
@@ -133,10 +129,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling" ||
-        info_.joints[i].name == "resend_robot_program" || info_.joints[i].name == "system_interface") {
-      continue;
-    }
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
 
@@ -207,6 +199,9 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface("system_interface", "initialized", &system_interface_initialized_));
 
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "program_running", &robot_program_running_copy_));
+
   return state_interfaces;
 }
 
@@ -214,10 +209,6 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    if (info_.joints[i].name == "gpio" || info_.joints[i].name == "speed_scaling" ||
-        info_.joints[i].name == "resend_robot_program" || info_.joints[i].name == "system_interface") {
-      continue;
-    }
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_position_commands_[i]));
 
@@ -374,8 +365,8 @@ CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::
     ur_driver_ = std::make_unique<urcl::UrDriver>(
         robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
-        std::move(tool_comm_setup), calibration_checksum, (uint32_t)reverse_port, (uint32_t)script_sender_port,
-        servoj_gain, servoj_lookahead_time, non_blocking_read_);
+        std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
+        servoj_lookahead_time, non_blocking_read_);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
@@ -383,6 +374,22 @@ CallbackReturn URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::
   } catch (urcl::UrException& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
     return CallbackReturn::ERROR;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checksum: '%s'.",
+              calibration_checksum.c_str());
+  // check calibration
+  // https://github.com/UniversalRobots/Universal_Robots_ROS_Driver/blob/c3378599d5fa73a261328b326392e847f312ab6b/ur_robot_driver/src/hardware_interface.cpp#L296-L309
+  if (ur_driver_->checkCalibration(calibration_checksum)) {
+    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checked successfully.");
+  } else {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
+
+                        "The calibration parameters of the connected robot don't match the ones from the given "
+                        "kinematics config file. Please be aware that this can lead to critical inaccuracies of tcp "
+                        "positions. Use the ur_calibration tool to extract the correct calibration from the robot and "
+                        "pass that into the description. See "
+                        "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
+                        "README.md] for details.");
   }
 
   ur_driver_->startRTDECommunication();
@@ -658,6 +665,7 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
   system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 }
 
 void URPositionHardwareInterface::transformForceTorque()

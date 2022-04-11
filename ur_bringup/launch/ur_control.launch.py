@@ -45,6 +45,14 @@ def launch_setup(context, *args, **kwargs):
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
     use_tool_communication = LaunchConfiguration("use_tool_communication")
+    tool_parity = LaunchConfiguration("tool_parity")
+    tool_baud_rate = LaunchConfiguration("tool_baud_rate")
+    tool_stop_bits = LaunchConfiguration("tool_stop_bits")
+    tool_rx_idle_chars = LaunchConfiguration("tool_rx_idle_chars")
+    tool_tx_idle_chars = LaunchConfiguration("tool_tx_idle_chars")
+    tool_device_name = LaunchConfiguration("tool_device_name")
+    tool_tcp_port = LaunchConfiguration("tool_tcp_port")
+    tool_voltage = LaunchConfiguration("tool_voltage")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -125,6 +133,30 @@ def launch_setup(context, *args, **kwargs):
             "use_tool_communication:=",
             use_tool_communication,
             " ",
+            "tool_parity:=",
+            tool_parity,
+            " ",
+            "tool_baud_rate:=",
+            tool_baud_rate,
+            " ",
+            "tool_stop_bits:=",
+            tool_stop_bits,
+            " ",
+            "tool_rx_idle_chars:=",
+            tool_rx_idle_chars,
+            " ",
+            "tool_tx_idle_chars:=",
+            tool_tx_idle_chars,
+            " ",
+            "tool_device_name:=",
+            tool_device_name,
+            " ",
+            "tool_tcp_port:=",
+            tool_tcp_port,
+            " ",
+            "tool_voltage:=",
+            tool_voltage,
+            " ",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -154,16 +186,63 @@ def launch_setup(context, *args, **kwargs):
             "stdout": "screen",
             "stderr": "screen",
         },
+        condition=IfCondition(use_fake_hardware),
+    )
+
+    ur_control_node = Node(
+        package="ur_robot_driver",
+        executable="ur_ros2_control_node",
+        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        output={
+            "stdout": "screen",
+            "stderr": "screen",
+        },
+        condition=UnlessCondition(use_fake_hardware),
     )
 
     dashboard_client_node = Node(
         package="ur_robot_driver",
-        condition=IfCondition(launch_dashboard_client),
+        condition=IfCondition(launch_dashboard_client) and UnlessCondition(use_fake_hardware),
         executable="dashboard_client",
         name="dashboard_client",
         output="screen",
         emulate_tty=True,
         parameters=[{"robot_ip": robot_ip}],
+    )
+
+    tool_communication_node = Node(
+        package="ur_robot_driver",
+        condition=IfCondition(use_tool_communication),
+        executable="tool_communication.py",
+        name="ur_tool_comm",
+        output="screen",
+        parameters=[
+            {
+                "robot_ip": robot_ip,
+                "tcp_port": tool_tcp_port,
+                "device_name": tool_device_name,
+            }
+        ],
+    )
+
+    controller_stopper_node = Node(
+        package="ur_robot_driver",
+        executable="controller_stopper_node",
+        name="controller_stopper",
+        output="screen",
+        emulate_tty=True,
+        parameters=[
+            {"headless_mode": headless_mode},
+            {"joint_controller_active": activate_joint_controller},
+            {
+                "consistent_controllers": [
+                    "io_and_status_controller",
+                    "force_torque_sensor_broadcaster",
+                    "joint_state_broadcaster",
+                    "speed_scaling_state_broadcaster",
+                ]
+            },
+        ],
     )
 
     robot_state_publisher_node = Node(
@@ -216,7 +295,7 @@ def launch_setup(context, *args, **kwargs):
 
     forward_position_controller_spawner_stopped = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=["forward_position_controller", "-c", "/controller_manager", "--stopped"],
     )
 
@@ -236,7 +315,10 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         control_node,
+        ur_control_node,
         dashboard_client_node,
+        tool_communication_node,
+        controller_stopper_node,
         robot_state_publisher_node,
         rviz_node,
         joint_state_broadcaster_spawner,
@@ -352,7 +434,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "initial_joint_controller",
-            default_value="joint_trajectory_controller",
+            default_value="scaled_joint_trajectory_controller",
             description="Initially loaded robot controller.",
         )
     )
@@ -368,7 +450,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "launch_dashboard_client", default_value="true", description="Launch RViz?"
+            "launch_dashboard_client", default_value="true", description="Launch Dashboard Client?"
         )
     )
     declared_arguments.append(
@@ -376,6 +458,70 @@ def generate_launch_description():
             "use_tool_communication",
             default_value="false",
             description="Only available for e series!",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_parity",
+            default_value="0",
+            description="Parity configuration for serial communication. Only effective, if \
+            use_tool_communication is set to True.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_baud_rate",
+            default_value="115200",
+            description="Baud rate configuration for serial communication. Only effective, if \
+            use_tool_communication is set to True.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_stop_bits",
+            default_value="1",
+            description="Stop bits configuration for serial communication. Only effective, if \
+            use_tool_communication is set to True.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_rx_idle_chars",
+            default_value="1.5",
+            description="RX idle chars configuration for serial communication. Only effective, \
+            if use_tool_communication is set to True.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_tx_idle_chars",
+            default_value="3.5",
+            description="TX idle chars configuration for serial communication. Only effective, \
+            if use_tool_communication is set to True.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_device_name",
+            default_value="/tmp/ttyUR",
+            description="File descriptor that will be generated for the tool communication device. \
+            The user has be be allowed to write to this location. \
+            Only effective, if use_tool_communication is set to True.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_tcp_port",
+            default_value="54321",
+            description="Remote port that will be used for bridging the tool's serial device. \
+            Only effective, if use_tool_communication is set to True.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_voltage",
+            default_value="24",
+            description="Tool voltage that will be setup.",
         )
     )
 

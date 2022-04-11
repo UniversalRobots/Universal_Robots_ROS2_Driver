@@ -20,7 +20,7 @@ jobs:
           - {ROS_DISTRO: rolling, ROS_REPO: main}
           - {ROS_DISTRO: rolling, ROS_REPO: testing}
     env:
-      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.repos
+      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.${{ matrix.env.ROS_DISTRO }}.repos
       NOT_TEST_BUILD: true
       NOT_TEST_DOWNSTREAM: true
       CCACHE_DIR: ${{ github.workspace }}/.ccache
