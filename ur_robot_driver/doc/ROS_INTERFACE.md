@@ -54,7 +54,7 @@ The driver will offer an interface to receive the program's URScript on this por
 ##### servoj_gain (Required)
 
 Specify the gain for the underlying servoj command. This will be used whenever position control is
-active. A higher value will lead to sharper motions, while a higher value might also introduce
+active. A higher value will lead to sharper motions, but might also introduce
 higher jerks and vibrations.
 
 Range: [100 - 3000]
@@ -62,7 +62,7 @@ Range: [100 - 3000]
 ##### servoj_lookahead_time (Required)
 
 Specify lookahead_time parameter of underlying servoj command. This will be used whenever position
-control is active. A higher value will result in smoother trajectories but will also introduce a
+control is active. A higher value will result in smoother trajectories, but will also introduce a
 higher delay between the commands sent from ROS and the motion being executed on the robot.
 
 Unit: seconds, range: [0.03 - 0.2]
