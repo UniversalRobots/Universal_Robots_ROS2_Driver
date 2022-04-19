@@ -15,17 +15,17 @@ jobs:
     name: galacitc semi-binary build
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        env:
-          - {ROS_DISTRO: galactic, ROS_REPO: main}
-          - {ROS_DISTRO: galactic, ROS_REPO: testing}
+        ROS_DISTRO: [galactic]
+        ROS_REPO: [main, testing]
     env:
-      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.${{ matrix.env.ROS_DISTRO }}.repos
+      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.${{ matrix.ROS_DISTRO }}.repos
       NOT_TEST_BUILD: true
       NOT_TEST_DOWNSTREAM: true
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       BASEDIR: ${{ github.workspace }}/.work
-      CACHE_PREFIX: ${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}
+      CACHE_PREFIX: ${{ matrix.ROS_DISTRO }}-${{ matrix.ROS_REPO }}-semi-binary
     steps:
       - uses: actions/checkout@v1
       # The target directory cache doesn't include the source directory because
@@ -47,7 +47,9 @@ jobs:
             ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}
             ccache-${{ env.CACHE_PREFIX }}
       - uses: 'ros-industrial/industrial_ci@master'
-        env: ${{matrix.env}}
+        env:
+          ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
+          ROS_REPO: ${{ matrix.ROS_REPO }}
       - name: prepare target_ws for cache
         if: ${{ always() && ! matrix.env.CCOV }}
         run: |
