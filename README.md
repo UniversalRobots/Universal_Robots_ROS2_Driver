@@ -84,13 +84,46 @@ ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
 ```
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
 
-### Fake hardware
+### Fake hardware on ROS2 Galactic
 
-When using fake_hardware the default `scaled_joint_trajectory_controller` is not supported. In that
-case please change the default controller in the
-[controllers.yaml](ur_moveit_config/config/controllers.yaml) file. Make sure that the `default`
-field is assigned `true` for the `joint_trajectory_controller` and `false` for the
+Currently, the `scaled_joint_trajectory_controller` does not work on ROS2 Galactic. There is an
+[upstream Merge-Request]() pending to fix that. Until this is merged and released, please change the
+default controller in the [controllers.yaml](ur_moveit_config/config/controllers.yaml) file. Make
+sure that the `default` field is assigned `true` for the `joint_trajectory_controller` and `false`
+for the
 `scaled_joint_trajectory_controller`.
+
+```
+controller_names:
+  - scaled_joint_trajectory_controller
+  - joint_trajectory_controller
+
+
+scaled_joint_trajectory_controller:
+  action_ns: follow_joint_trajectory
+  type: FollowJointTrajectory
+  default: false
+  joints:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+    - wrist_3_joint
+
+
+joint_trajectory_controller:
+  action_ns: follow_joint_trajectory
+  type: FollowJointTrajectory
+  default: true
+  joints:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+    - wrist_3_joint
+```
 
 Then start
 
