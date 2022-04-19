@@ -25,7 +25,7 @@ jobs:
       NOT_TEST_DOWNSTREAM: true
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       BASEDIR: ${{ github.workspace }}/.work
-      CACHE_PREFIX: ${{ matrix.ROS_DISTRO }}-${{ matrix.ROS_REPO }}
+      CACHE_PREFIX: ${{ matrix.ROS_DISTRO }}-${{ matrix.ROS_REPO }}-binary
     steps:
       - uses: actions/checkout@v1
       # The target directory cache doesn't include the source directory because
