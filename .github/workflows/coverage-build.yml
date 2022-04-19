@@ -8,14 +8,17 @@ jobs:
   coverage:
     name: coverage build
     runs-on: ubuntu-20.04
+    container:
+      image: ubuntu:jammy
     strategy:
       fail-fast: false
     env:
       ROS_DISTRO: rolling
+      ros_version: 2
     steps:
-      - uses: ros-tooling/setup-ros@v0.2
+      - uses: ros-tooling/setup-ros@v0.3
         with:
-          required-ros-distributions: rolling
+          required-ros-distributions: ${{ env.ROS_DISTRO }}
       - uses: actions/checkout@v2
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
@@ -28,7 +31,7 @@ jobs:
             ur_moveit_config
             ur_robot_driver
           vcs-repo-file-url: |
-            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/Universal_Robots_ROS2_Driver.${{ env.ROS_DISTRO }}.repos
+            https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/Universal_Robots_ROS2_Driver-not-released.${{ env.ROS_DISTRO }}.repos
           colcon-defaults: |
             {
               "build": {
