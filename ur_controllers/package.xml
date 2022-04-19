@@ -25,6 +25,7 @@
   <depend>controller_interface</depend>
   <depend>geometry_msgs</depend>
   <depend>joint_trajectory_controller</depend>
+  <depend>lifecycle_msgs</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>rcutils</depend>

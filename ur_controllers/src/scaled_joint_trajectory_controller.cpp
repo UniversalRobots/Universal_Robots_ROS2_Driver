@@ -38,6 +38,7 @@
 #include <memory>
 #include <vector>
 
+#include "lifecycle_msgs/msg/state.hpp"
 #include "ur_controllers/scaled_joint_trajectory_controller.hpp"
 
 namespace ur_controllers
