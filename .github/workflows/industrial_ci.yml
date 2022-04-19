@@ -19,16 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        ROS_DISTRO: ${{ inputs.ROS_DISTRO }}
-        ROS_REPO: ${{ inputs.ROS_REPO }}
     env:
       UPSTREAM_WORKSPACE: ${{ inputs.UPSTREAM_WORKSPACE }}
       NOT_TEST_BUILD: true
       NOT_TEST_DOWNSTREAM: true
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       BASEDIR: ${{ github.workspace }}/.work
-      CACHE_PREFIX: ${{ matrix.ROS_DISTRO }}-${{ matrix.ROS_REPO }}-binary
+      CACHE_PREFIX: ${{ inputs.ROS_DISTRO }}-${{ inputs.ROS_REPO }}-binary
     steps:
       - uses: actions/checkout@v1
       # The target directory cache doesn't include the source directory because
@@ -51,8 +48,8 @@ jobs:
             ccache-${{ env.CACHE_PREFIX }}
       - uses: 'ros-industrial/industrial_ci@master'
         env:
-          ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
-          ROS_REPO: ${{ matrix.ROS_REPO }}
+          ROS_DISTRO: ${{ inputs.ROS_DISTRO }}
+          ROS_REPO: ${{ inputs.ROS_REPO }}
       - name: prepare target_ws for cache
         if: ${{ always() && ! matrix.CCOV }}
         run: |

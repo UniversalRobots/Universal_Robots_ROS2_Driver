@@ -14,6 +14,6 @@ jobs:
   galactic_binary:
     uses: ./.github/workflows/industrial_ci.yml
     with:
-      ROS_DISTRO: [galactic]
-      ROS_REPO: [main, testing]
+      ROS_DISTRO: galactic
+      ROS_REPO: main
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.galactic.repos
