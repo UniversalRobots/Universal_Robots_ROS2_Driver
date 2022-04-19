@@ -40,6 +40,8 @@
 
 #include "ur_controllers/scaled_joint_trajectory_controller.hpp"
 
+#include "lifecycle_msgs/msg/state.hpp"
+
 namespace ur_controllers
 {
 controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::state_interface_configuration() const
