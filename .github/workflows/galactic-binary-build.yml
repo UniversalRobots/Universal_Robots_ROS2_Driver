@@ -13,7 +13,12 @@ on:
 jobs:
   galactic_binary:
     uses: ./.github/workflows/industrial_ci.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        ROS_DISTRO: [galactic]
+        ROS_REPO: [main, testing]
     with:
-      ROS_DISTRO: galactic
-      ROS_REPO: main
-      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.galactic.repos
+      ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
+      ROS_REPO: ${{ matrix.ROS_REPO }}
+      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.ROS_DISTRO }}.repos
