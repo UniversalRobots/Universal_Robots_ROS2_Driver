@@ -10,7 +10,7 @@ Welcome to ur_robot_driver's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   features
+   overview
    installation/toc
    usage
    setup_tool_communication
