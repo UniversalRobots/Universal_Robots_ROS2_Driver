@@ -164,18 +164,6 @@ Before running any commands, first check the controllers' state using ``ros2 con
 
   After a few seconds the robot should move(or jump when using emulation).
 
-* To test the driver with the example MoveIt-setup, first start the controllers then start MoveIt. (This requires a ``vcs import`` of MoveIt packages):
-
-  .. code-block::
-
-     ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false
-
-     (then start the external_control URCap program from the pendant, as described above)
-
-     ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e use_fake_hardware:=true launch_rviz:=true
-
-  Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
-
 3. Using only robot description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -184,3 +172,71 @@ If you just want to test description of the UR robots, e.g., after changes you c
 .. code-block::
 
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
+
+Using MoveIt
+------------
+
+`MoveIt! <https://moveit.ros.org>`_ support is built-in into this driver already.
+
+Real robot / URSim
+^^^^^^^^^^^^^^^^^^
+
+To test the driver with the example MoveIt-setup, first start the driver as described
+`above <#start-hardware-simulator-or-mockup>`_.
+
+.. code-block::
+
+   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
+
+Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
+robot as explained `here <https://moveit.picknik.ai/galactic/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html>`_.
+
+Fake hardware on ROS2 Galactic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Currently, the ``scaled_joint_trajectory_controller`` does not work on ROS2 Galactic. There is an
+`upstream Merge-Request <https://github.com/ros-controls/ros2_control/pull/635>`_ pending to fix that. Until this is merged and released, please change the
+default controller in the `controllers.yaml <ur_moveit_config/config/controllers.yaml>`_ file. Make
+sure that the ``default`` field is assigned ``true`` for the ``joint_trajectory_controller`` and ``false``
+for the
+``scaled_joint_trajectory_controller``.
+
+.. code-block::
+
+   controller_names:
+     - scaled_joint_trajectory_controller
+     - joint_trajectory_controller
+
+
+   scaled_joint_trajectory_controller:
+     action_ns: follow_joint_trajectory
+     type: FollowJointTrajectory
+     default: false
+     joints:
+       - shoulder_pan_joint
+       - shoulder_lift_joint
+       - elbow_joint
+       - wrist_1_joint
+       - wrist_2_joint
+       - wrist_3_joint
+
+
+   joint_trajectory_controller:
+     action_ns: follow_joint_trajectory
+     type: FollowJointTrajectory
+     default: true
+     joints:
+       - shoulder_pan_joint
+       - shoulder_lift_joint
+       - elbow_joint
+       - wrist_1_joint
+       - wrist_2_joint
+       - wrist_3_joint
+
+Then start
+
+.. code-block::
+
+   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
+   # and in another shell
+   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
