@@ -23,3 +23,11 @@ repositories:
     type: git
     url: https://github.com/ros-industrial/ur_msgs.git
     version: foxy-devel
+  moveit2:
+    type: git
+    url: https://github.com/ros-planning/moveit2.git
+    version: main
+  srdfdom:
+    type: git
+    url: https://github.com/ros-planning/srdfdom.git
+    version: ros2

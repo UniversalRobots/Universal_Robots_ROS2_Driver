@@ -66,6 +66,7 @@ ROS2 Distro | Foxy  | Galactic | Rolling
    cd $COLCON_WS
    git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
    vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
+   rosdep update
    rosdep install --ignore-src --from-paths src -y -r
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
    source install/setup.bash
@@ -73,15 +74,67 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 
 ## Using MoveIt
 
-To use MoveIt some additional packages should be added into workspace:
-   ```
-   cd $COLCON_WS
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/MoveIt_Support.repos
-   vcs import src --skip-existing --input src/moveit2/moveit2.repos
-   rosdep install --ignore-src --from-paths src -y -r
-   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-   source install/setup.bash
-   ```
+[MoveIt!](https://moveit.ros.org) support is built-in into this driver already.
+
+### Real robot / URSim
+To test the driver with the example MoveIt-setup, first start the driver as described
+[below](#connect-to-external-control-via-urcap).
+```
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
+```
+Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
+robot as explained [here](https://moveit.picknik.ai/galactic/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html).
+
+### Fake hardware on ROS2 Galactic
+
+Currently, the `scaled_joint_trajectory_controller` does not work on ROS2 Galactic. There is an
+[upstream Merge-Request]() pending to fix that. Until this is merged and released, please change the
+default controller in the [controllers.yaml](ur_moveit_config/config/controllers.yaml) file. Make
+sure that the `default` field is assigned `true` for the `joint_trajectory_controller` and `false`
+for the
+`scaled_joint_trajectory_controller`.
+
+```
+controller_names:
+  - scaled_joint_trajectory_controller
+  - joint_trajectory_controller
+
+
+scaled_joint_trajectory_controller:
+  action_ns: follow_joint_trajectory
+  type: FollowJointTrajectory
+  default: false
+  joints:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+    - wrist_3_joint
+
+
+joint_trajectory_controller:
+  action_ns: follow_joint_trajectory
+  type: FollowJointTrajectory
+  default: true
+  joints:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+    - wrist_3_joint
+```
+
+Then start
+
+```
+ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
+# and in another shell
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
+```
+
+This manual file manipulation will hopefully change in the future, though.
 
 ## Network Setup
 
@@ -219,15 +272,6 @@ Before running any commands, first check the controllers' state using `ros2 cont
    ```
    After a few seconds the robot should move (or jump when using emulation).
 
-- To test the driver with the example MoveIt-setup, first start the controllers then start MoveIt. (This requires a `vcs import` of MoveIt packages):
-   ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false
-
-   (then start the external_control URCap program from the pendant, as described above)
-
-   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e use_fake_hardware:=true launch_rviz:=true
-   ```
-   Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
 
 ##### 3. Using only robot description
 
