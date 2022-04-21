@@ -78,7 +78,7 @@ MoveIt! support is built-in into this driver already.
 
 ### Real robot / URSim
 To test the driver with the example MoveIt-setup, first start the driver as described
-[below](#connect-to-exnernal-control-via-urcap).
+[below](#connect-to-external-control-via-urcap).
 ```
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
 ```
