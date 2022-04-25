@@ -24,6 +24,7 @@
   <depend>rclpy</depend>
 
   <exec_depend>controller_manager</exec_depend>
+  <exec_depend>force_torque_sensor_broadcaster</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
