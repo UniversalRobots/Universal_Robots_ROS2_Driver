@@ -41,11 +41,11 @@
 
 namespace ur_controllers
 {
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn GPIOController::on_init()
+controller_interface::CallbackReturn GPIOController::on_init()
 {
   initMsgs();
 
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+  return controller_interface::CallbackReturn::SUCCESS;
 }
 
 controller_interface::InterfaceConfiguration GPIOController::command_interface_configuration() const
@@ -151,7 +151,7 @@ controller_interface::return_type ur_controllers::GPIOController::update(const r
   return controller_interface::return_type::OK;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -235,7 +235,7 @@ void GPIOController::publishProgramRunning()
   }
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_value() == 0.0) {
@@ -280,7 +280,7 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   try {
@@ -305,7 +305,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
 
-    RCLCPP_INFO(node_->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
+    RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
       // Asynchronous wait until the hardware interface has set the io value
@@ -319,7 +319,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->pin].set_value(static_cast<double>(req->state));
 
-    RCLCPP_INFO(node_->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
+    RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
 
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
       // Asynchronous wait until the hardware interface has set the io value
@@ -338,7 +338,7 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
                                     ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp)
 {
   if (req->speed_slider_fraction >= 0.01 && req->speed_slider_fraction <= 1.0) {
-    RCLCPP_INFO(node_->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction * 100.0);
+    RCLCPP_INFO(get_node()->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction * 100.0);
     // reset success flag
     command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     // set commanding value for speed slider
@@ -352,8 +352,8 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
     resp->success =
         static_cast<bool>(command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value());
   } else {
-    RCLCPP_WARN(node_->get_logger(), "The desired speed slider fraction must be within range (0; 1.0]. Request "
-                                     "ignored.");
+    RCLCPP_WARN(get_node()->get_logger(), "The desired speed slider fraction must be within range (0; 1.0]. Request "
+                                          "ignored.");
     resp->success = false;
     return false;
   }
@@ -376,9 +376,9 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
       static_cast<bool>(command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value());
 
   if (resp->success) {
-    RCLCPP_INFO(node_->get_logger(), "Successfully resent robot program");
+    RCLCPP_INFO(get_node()->get_logger(), "Successfully resent robot program");
   } else {
-    RCLCPP_ERROR(node_->get_logger(), "Could not resend robot program");
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not resend robot program");
     return false;
   }
 
@@ -404,9 +404,9 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value());
 
   if (resp->success) {
-    RCLCPP_INFO(node_->get_logger(), "Payload has been set successfully");
+    RCLCPP_INFO(get_node()->get_logger(), "Payload has been set successfully");
   } else {
-    RCLCPP_ERROR(node_->get_logger(), "Could not set the payload");
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the payload");
     return false;
   }
 

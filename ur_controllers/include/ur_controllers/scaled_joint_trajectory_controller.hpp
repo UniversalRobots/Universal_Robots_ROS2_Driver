@@ -46,8 +46,6 @@
 
 namespace ur_controllers
 {
-using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
 class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
 {
 public:
@@ -56,7 +54,7 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  CallbackReturn on_activate(const rclcpp_lifecycle::State& state) override;
+  controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& state) override;
 
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
