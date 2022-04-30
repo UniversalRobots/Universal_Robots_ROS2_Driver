@@ -10,6 +10,9 @@ This driver is developed on top of [Universal_Robots_Client_Library](https://git
 The driver is compatible across the entire line of UR robots -- from 3 kg payload to 16 kg payload and includes both the CB3 and the E-series.
 
 
+Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) about this driver.
+
+
 ## Build Status
 
 ROS2 Distro | Foxy  | Galactic | Rolling
@@ -75,6 +78,12 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 ## Using MoveIt
 
 [MoveIt!](https://moveit.ros.org) support is built-in into this driver already.
+Watch MoveIt in action with the Universal Robots ROS2 driver:
+
+[![Video: MoveIt2 Demo](https://img.youtube.com/vi/d_cVXoZZ52w/0.jpg)](https://www.youtube.com/watch?v=d_cVXoZZ52w)
+
+  *The video shows free-space trajectory planning around a modeled collision scene object using the MoveIt2 MotionPlanning widget for Rviz2.*
+
 
 ### Real robot / URSim
 To test the driver with the example MoveIt-setup, first start the driver as described
@@ -98,8 +107,6 @@ for the
 controller_names:
   - scaled_joint_trajectory_controller
   - joint_trajectory_controller
-
-
 scaled_joint_trajectory_controller:
   action_ns: follow_joint_trajectory
   type: FollowJointTrajectory
@@ -111,8 +118,6 @@ scaled_joint_trajectory_controller:
     - wrist_1_joint
     - wrist_2_joint
     - wrist_3_joint
-
-
 joint_trajectory_controller:
   action_ns: follow_joint_trajectory
   type: FollowJointTrajectory
@@ -133,8 +138,6 @@ ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.
 # and in another shell
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
 ```
-
-This manual file manipulation will hopefully change in the future, though.
 
 ## Network Setup
 
