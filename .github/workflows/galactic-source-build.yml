@@ -1,8 +1,5 @@
 name: Galactic Source Build
 on:
-  push:
-    branches:
-      - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '43 2 * * *'
