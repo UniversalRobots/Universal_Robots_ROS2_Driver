@@ -15,7 +15,7 @@ jobs:
     - uses: ros-tooling/setup-ros@v0.2
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
-        distribution: rolling
+        distribution: galactic
         linter: ${{ matrix.linter }}
         package-name:
           ur_bringup
@@ -34,7 +34,7 @@ jobs:
       - uses: ros-tooling/setup-ros@v0.2
       - uses: ros-tooling/action-ros-lint@v0.1
         with:
-          distribution: rolling
+          distribution: rolling  # the galactic version does not support excludes
           linter: copyright
           arguments: '--exclude ur_robot_driver/doc/conf.py'
           package-name:
@@ -56,7 +56,7 @@ jobs:
     - uses: ros-tooling/setup-ros@v0.2
     - uses: ros-tooling/action-ros-lint@v0.1
       with:
-        distribution: rolling
+        distribution: galactic
         linter: cpplint
         arguments: "--linelength=120"
         package-name:

@@ -2,7 +2,7 @@ name: Coverage Build
 on:
   pull_request:
     branches:
-      - main
+      - galactic
 
 jobs:
   coverage:
@@ -11,11 +11,11 @@ jobs:
     strategy:
       fail-fast: false
     env:
-      ROS_DISTRO: rolling
+      ROS_DISTRO: galactic
     steps:
       - uses: ros-tooling/setup-ros@v0.2
         with:
-          required-ros-distributions: rolling
+          required-ros-distributions: galactic
       - uses: actions/checkout@v2
       - uses: ros-tooling/action-ros-ci@v0.2
         with:
