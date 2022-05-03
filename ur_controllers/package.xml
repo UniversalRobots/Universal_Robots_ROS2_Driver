@@ -13,7 +13,7 @@
   <maintainer email="denis.stogl@picknik.ai">Denis Stogl</maintainer>
   <maintainer email="zelenak@picknik.ai">Andy Zelenak</maintainer>
 
-  <license>Apache License 2.0</license>
+  <license>BSD-3-Clause</license>
 
   <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>

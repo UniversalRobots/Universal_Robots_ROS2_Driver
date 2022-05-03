@@ -1,7 +1,7 @@
 # Universal Robots ROS2 Driver
 
 Universal Robots has become a dominant supplier of lightweight, robotic manipulators for industry, as well as for scientific research and education.
-<center><img src="ur_robot_driver/doc/initial_setup_images/e-Series.jpg" alt="Universal Robot e-Series family" style="width: 80%;"/></center>
+<center><img src="ur_robot_driver/doc/installation/initial_setup_images/e-Series.jpg" alt="Universal Robot e-Series family" style="width: 80%;"/></center>
 
 This is one of the very first ROS2 manipulator drivers. Some of the new features are enabled by ROS2 and include decreased latency, improved security, and more flexibility regarding middleware configuration. The package contains launch files to quickly get started using the driver as a standalone version or in combination with MoveIt2
 
@@ -10,12 +10,15 @@ This driver is developed on top of [Universal_Robots_Client_Library](https://git
 The driver is compatible across the entire line of UR robots -- from 3 kg payload to 16 kg payload and includes both the CB3 and the E-series.
 
 
+Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) about this driver.
+
+
 ## Build Status
 
 ROS2 Distro | Foxy  | Galactic | Rolling
 :---------: | :---: | :------: | :-----:
-**Branch** | [foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main)
-**Build Status** | [![Foxy Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml) <br /> [![Foxy Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml) <br /> [![Foxy Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml) | [![Galactic Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?branch=main) <br /> [![Galactic Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?branch=main) <br /> [![Galactic Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml?branch=main) | [![Rolling Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml?branch=main) <br /> [![Rolling Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?branch=main) <br /> [![Rolling Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml?branch=main)
+**Branch** | [foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy) | [galactic](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main)
+**Build Status** | [![Foxy Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml) <br /> [![Foxy Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml) <br /> [![Foxy Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml) | [![Galactic Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?branch=galactic)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?branch=galactic) <br /> [![Galactic Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?branch=galactic)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?branch=galactic) <br /> [![Galactic Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml/badge.svg?branch=galactic)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml?branch=galactic) | [![Rolling Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml?branch=main) <br /> [![Rolling Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?branch=main) <br /> [![Rolling Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml?branch=main)
 **Execution Test** |  |  | [![Execution Testing](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/test-ci.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/test-ci.yml?branch=main)
 
 **NOTE**: There are three build stages checking current and future compatibility of the driver.
@@ -32,23 +35,22 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
 
 
-## Known Issues
-
--
-
 ## Packages in the Repository:
 
   - `ur_bringup` - launch file and run-time configurations, e.g. controllers.
   - `ur_controllers` - implementations of controllers specific for UR robots.
   - `ur_dashboard_msgs` - package defining messages used by dashboard node.
   - `ur_description` - description files for the UR robots: meshes, URDF/XACRO files, etc.
-  - `ur_moveit` - example MoveIt configuration for UR robots.
+  - `ur_moveit_config` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
 
 ## Getting Started
 
-1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html) or [Install ROS2 Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html). This branch will support both distributions until API breaking changes are made, at which point a `galactic` branch will be forked. For using this driver with ROS2 `foxy` checkout [foxy branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy).
+1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html).
+   For using this driver with ROS2 `foxy`. Checkout [foxy
+   branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy), for using it
+   with ROS2 ``galactic``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic).
 
 2. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```
@@ -65,7 +67,8 @@ ROS2 Distro | Foxy  | Galactic | Rolling
    ```
    cd $COLCON_WS
    git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
+   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
+   rosdep update
    rosdep install --ignore-src --from-paths src -y -r
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
    source install/setup.bash
@@ -73,15 +76,22 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 
 ## Using MoveIt
 
-To use MoveIt some additional packages should be added into workspace:
-   ```
-   cd $COLCON_WS
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/MoveIt_Support.repos
-   vcs import src --skip-existing --input src/moveit2/moveit2.repos
-   rosdep install --ignore-src --from-paths src -y -r
-   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-   source install/setup.bash
-   ```
+[MoveIt!](https://moveit.ros.org) support is built-in into this driver already.
+Watch MoveIt in action with the Universal Robots ROS2 driver:
+
+[![Video: MoveIt2 Demo](https://img.youtube.com/vi/d_cVXoZZ52w/0.jpg)](https://www.youtube.com/watch?v=d_cVXoZZ52w)
+
+  *The video shows free-space trajectory planning around a modeled collision scene object using the MoveIt2 MotionPlanning widget for Rviz2.*
+
+
+### Real robot / URSim
+To test the driver with the example MoveIt-setup, first start the driver as described
+[below](#connect-to-external-control-via-urcap).
+```
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
+```
+Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
+robot as explained [here](https://moveit.picknik.ai/galactic/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html).
 
 ## Network Setup
 
@@ -135,10 +145,9 @@ This section describes installation and launching of the URCap program from the 
 
 ## Usage
 
-For starting the driver there are three main launch files in the `ur_bringup` package.
+For starting the driver there are two main launch files in the `ur_bringup` package.
 
   - `ur_control.launch.py` - starts ros2_control node including hardware interface, joint state broadcaster and a controller. This launch file also starts `dashboard_client` if real robot is used.
-  - `ur_moveit.launch.py` - start everything from `ur_control.launch.py` plus an example scenario with [MoveIt2](https://moveit.ros.org/).
   - `ur_dashboard_client.launch.py` - start the dashboard client for UR robots.
 
 Also, there are predefined launch files for all supported types of UR robots.
@@ -176,22 +185,33 @@ The most relevant arguments are the following:
 
 ### Example Commands for Testing the Driver
 
-- To start the robot driver and controllers, use:
-   ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+Allowed UR-Type strings: `ur3`, `ur3e`, `ur5`, `ur5e`, `ur10`, `ur10e`, `ur16e`.
 
-   (then start the external_control URCap program from the pendant, as described above)
-   ```
-   For an offline test with the emulated hardware you can just copy-paste this line.
-   To run on the hardware, write the IP address of your robot and omit the `use_fake_hardware` argument.
+##### 1. Start hardware, simulator or mockup
 
-   **NOTE**: If controllers are not starting automatically, i.e., the robot state is not shown in rviz, you can start them manually:
-   ```
-   ros2 control load_controller --set-state start joint_state_broadcaster
-   ros2 control load_controller --set-state start joint_trajectory_controller
-   ```
+- To do test with hardware, use:
+  ```
+  ros2 launch ur_bringup ur_control.launch.py ur_type:=<UR_TYPE> robot_ip:=<IP_OF_THE_ROBOT> launch_rviz:=true
+  ```
+  For more details check the argument documentation with `ros2 launch ur_bringup ur_control.launch.py --show-arguments`
 
-   To check the controllers' state use `ros2 control list_controllers` command.
+  After starting the launch file start the external_control URCap program from the pendant, as described above.
+
+- To do an offline test with URSim check details about it in [this section](#usage-with-official-ur-simulator)
+
+- To use mocked hardware (capability of ros2_control), use `use_fake_hardware` argument, like:
+  ```
+  ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+  ```
+
+  **NOTE**: Instead of using the global launch file for control stack, there are also prepeared launch files for each type of UR robots named. They accept the same arguments are the global one and are used by:
+  ```
+  ros2 launch ur_bringup <ur_type>.launch.py
+  ```
+
+##### 2. Sending commands to controllers
+
+Before running any commands, first check the controllers' state using `ros2 control list_controllers`.
 
 - Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
@@ -199,9 +219,9 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move.
 
-- To test another controller, simply define it using `robot_controller` argument:
+- To test another controller, simply define it using `initial_joint_controller` argument, for example when using fake hardware:
    ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy robot_controller:=scaled_joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
+   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
    ```
    And send the command using demo node:
    ```
@@ -209,17 +229,10 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move (or jump when using emulation).
 
-- To test the driver with the example MoveIt-setup, first start the controllers then start MoveIt. (This requires a `vcs import` of MoveIt packages):
-   ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false
 
-   (then start the external_control URCap program from the pendant, as described above)
+##### 3. Using only robot description
 
-   ros2 launch ur_bringup ur_moveit.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true launch_rviz:=true
-   ```
-   Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot.
-
-5. If you just want to test description of the UR robots, e.g., after changes you can use the following command:
+If you just want to test description of the UR robots, e.g., after changes you can use the following command:
    ```
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
@@ -228,7 +241,6 @@ The docker-compose setup is prepared for usage of driver with the official UR si
 
 ## Expected Changes in the Near Future
 
-- Using upstream `force_torque_sensor_broadcaster` (ros-controls/ros2_controllers#152)
 - Trajectory control currently only supports position commands. In the future, velocity control will be added.
 
 

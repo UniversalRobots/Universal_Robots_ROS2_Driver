@@ -1,16 +1,30 @@
 // Copyright (c) 2021 PickNik LLC
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the {copyright_holder} nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 
 //----------------------------------------------------------------------
 /*!\file
@@ -41,6 +55,7 @@
 #include "ur_msgs/srv/set_payload.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 namespace ur_controllers
 {
@@ -78,6 +93,7 @@ enum StateInterfaces
   SAFETY_MODE = 57,
   SAFETY_STATUS_BITS = 58,
   INITIALIZED_FLAG = 69,
+  PROGRAM_RUNNING = 70,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -117,6 +133,8 @@ private:
 
   void publishSafetyMode();
 
+  void publishProgramRunning();
+
 protected:
   void initMsgs();
 
@@ -137,14 +155,16 @@ protected:
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
+  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Bool>> program_state_pub_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
+  std_msgs::msg::Bool program_running_msg_;
 
   static constexpr double ASYNC_WAITING = 2.0;
-  // TODO(anyone) publishers to add: program_state_pub_, tcp_pose_pub_
+  // TODO(anyone) publishers to add: tcp_pose_pub_
   // TODO(anyone) subscribers to add: script_command_sub_
   // TODO(anyone) service servers to add: resend_robot_program_srv_, deactivate_srv_, set_payload_srv_, tare_sensor_srv_
 };

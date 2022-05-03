@@ -1,8 +1,4 @@
 repositories:
-  ros2_control_demos:
-    type: git
-    url: https://github.com/ros-controls/ros2_control_demos.git
-    version: master
   Universal_Robots_Client_Library:
     type: git
     url: https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
@@ -13,5 +9,13 @@ repositories:
     version: ros2
   ur_msgs:
     type: git
-    url: https://github.com/destogl/ur_msgs.git
+    url: https://github.com/ros-industrial/ur_msgs.git
+    version: foxy-devel
+  moveit2:
+    type: git
+    url: https://github.com/ros-planning/moveit2.git
+    version: main
+  srdfdom:
+    type: git
+    url: https://github.com/ros-planning/srdfdom.git
     version: ros2

@@ -1,9 +1,4 @@
 <library path="ur_controllers">
-  <class name="ur_controllers/ForceTorqueStateBroadcaster" type="ur_controllers::ForceTorqueStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
-    <description>
-      The force torque state controller publishes the current force and torques
-    </description>
-  </class>
   <class name="ur_controllers/SpeedScalingStateBroadcaster" type="ur_controllers::SpeedScalingStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
     <description>
       This controller publishes the readings of all available speed scaling factors.
