@@ -2,13 +2,10 @@ name: Galactic Binary Build
 on:
   pull_request:
     branches:
-      - main
+      - galactic
   push:
     branches:
-      - main
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 4 * * *'
+      - galactic
 
 jobs:
   galactic_binary:
