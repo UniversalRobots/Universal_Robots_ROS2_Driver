@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Provides controllers that use the speed scaling interface of Universal Robots.</description>
 
-  <maintainer email="denis.stogl@picknik.ai">Denis Stogl</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Stogl</maintainer>
   <maintainer email="exner@fzi.de">Felix Exner</maintainer>
   <maintainer email="schnell@fzi.de">Tristan Schnell</maintainer>
 

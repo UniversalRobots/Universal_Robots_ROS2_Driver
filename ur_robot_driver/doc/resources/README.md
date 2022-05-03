@@ -5,7 +5,7 @@ The files in this folder are available for use under BSD-3-Clause license.
 
 ## Diagrams and images
 
-- [ros2_control diagrams](ros2_control_ur_driver.drawio) - `.drawio` file, Author: [Dr.-Ing. Denis Stogl](mailto:denis.stogl@picknik.ai) (PickNik Robotics)
+- [ros2_control diagrams](ros2_control_ur_driver.drawio) - `.drawio` file, Author: [Dr.-Ing. Denis Stogl](mailto:denis@stoglrobotics.de) (PickNik Robotics)
 
 
 ## 2021-10 ROS World presentation
