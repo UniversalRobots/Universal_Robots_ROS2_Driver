@@ -29,6 +29,8 @@
 #
 # Author: Denis Stogl
 
+import os
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import OpaqueFunction
@@ -51,6 +53,7 @@ def launch_setup(context, *args, **kwargs):
     description_file = LaunchConfiguration("description_file")
     moveit_config_package = LaunchConfiguration("moveit_config_package")
     moveit_config_file = LaunchConfiguration("moveit_config_file")
+    warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
     prefix = LaunchConfiguration("prefix")
     use_sim_time = LaunchConfiguration("use_sim_time")
     launch_rviz = LaunchConfiguration("launch_rviz")
@@ -178,6 +181,11 @@ def launch_setup(context, *args, **kwargs):
         "publish_transforms_updates": True,
     }
 
+    warehouse_ros_config = {
+        "warehouse_plugin": "warehouse_ros_sqlite::DatabaseConnection",
+        "warehouse_host": warehouse_sqlite_path,
+    }
+
     # Start the actual move_group node/action server
     move_group_node = Node(
         package="moveit_ros_move_group",
@@ -193,19 +201,8 @@ def launch_setup(context, *args, **kwargs):
             moveit_controllers,
             planning_scene_monitor_parameters,
             {"use_sim_time": use_sim_time},
+            warehouse_ros_config,
         ],
-    )
-
-    # Warehouse mongodb server
-    mongodb_server_node = Node(
-        package="warehouse_ros_mongo",
-        executable="mongo_wrapper_ros.py",
-        parameters=[
-            {"warehouse_port": 33829},
-            {"warehouse_host": "localhost"},
-            {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-        ],
-        output="screen",
     )
 
     # rviz with moveit configuration
@@ -225,6 +222,7 @@ def launch_setup(context, *args, **kwargs):
             ompl_planning_pipeline_config,
             robot_description_kinematics,
             # robot_description_planning,
+            warehouse_ros_config,
         ],
     )
 
@@ -246,7 +244,7 @@ def launch_setup(context, *args, **kwargs):
         },
     )
 
-    nodes_to_start = [move_group_node, mongodb_server_node, rviz_node, servo_node]
+    nodes_to_start = [move_group_node, rviz_node, servo_node]
 
     return nodes_to_start
 
@@ -312,6 +310,13 @@ def generate_launch_description():
             "moveit_config_file",
             default_value="ur.srdf.xacro",
             description="MoveIt SRDF/XACRO description file with the robot.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "warehouse_sqlite_path",
+            default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite"),
+            description="Path where the warehouse database should be stored",
         )
     )
     declared_arguments.append(

@@ -31,3 +31,7 @@ repositories:
     type: git
     url: https://github.com/ros-planning/srdfdom.git
     version: ros2
+  warehouse_ros_sqlite:
+    type: git
+    url: https://github.com/ros-planning/warehouse_ros_sqlite
+    version: ros2
