@@ -16,6 +16,7 @@ find_package(control_msgs REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(joint_trajectory_controller REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(rcutils REQUIRED)
@@ -33,6 +34,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_interface
   geometry_msgs
   joint_trajectory_controller
+  lifecycle_msgs
   pluginlib
   rclcpp_lifecycle
   rcutils
