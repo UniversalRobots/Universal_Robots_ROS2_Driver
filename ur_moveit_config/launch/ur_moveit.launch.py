@@ -196,18 +196,6 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    # Warehouse mongodb server
-    mongodb_server_node = Node(
-        package="warehouse_ros_mongo",
-        executable="mongo_wrapper_ros.py",
-        parameters=[
-            {"warehouse_port": 33829},
-            {"warehouse_host": "localhost"},
-            {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-        ],
-        output="screen",
-    )
-
     # rviz with moveit configuration
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "rviz", "view_robot.rviz"]
@@ -246,7 +234,7 @@ def launch_setup(context, *args, **kwargs):
         },
     )
 
-    nodes_to_start = [move_group_node, mongodb_server_node, rviz_node, servo_node]
+    nodes_to_start = [move_group_node, rviz_node, servo_node]
 
     return nodes_to_start
 
