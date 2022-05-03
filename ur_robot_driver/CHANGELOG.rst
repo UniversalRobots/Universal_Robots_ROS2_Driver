@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.1.0 (2022-05-03)
+------------------
 * Updated package maintainers (`#360 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/360>`_)
 * Add resource files from ROS World. (`#226 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/226>`_)
 * Add sphinx documentation (`#340 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/340>`_)
