@@ -5,7 +5,7 @@
   <description>Package for extracting the factory calibration from a UR robot and change it such that it can be used by ur_description to gain a correct URDF</description>
 
   <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <maintainer email="lovro.ivanov@gmail.com">Lovro Ivanov</maintainer>
+  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
 
   <license>BSD-3-Clause</license>
 
