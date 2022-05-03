@@ -1,11 +1,5 @@
 name: Galactic Semi-Binary Build
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '23 5 * * *'
