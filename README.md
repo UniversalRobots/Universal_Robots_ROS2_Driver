@@ -38,9 +38,9 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 ## Packages in the Repository:
 
   - `ur_bringup` - launch file and run-time configurations, e.g. controllers.
+  - `ur_calibration` - tool for extracting calibration information from a real robot.
   - `ur_controllers` - implementations of controllers specific for UR robots.
   - `ur_dashboard_msgs` - package defining messages used by dashboard node.
-  - `ur_description` - description files for the UR robots: meshes, URDF/XACRO files, etc.
   - `ur_moveit_config` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
