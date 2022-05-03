@@ -5,21 +5,20 @@
   <version>0.0.0</version>
   <description>The new driver for Universal Robots UR3, UR5 and UR10 robots with CB3 controllers and the e-series.</description>
 
-  <author>Thomas Timm Andersen</author>
-  <author>Simon Rasmussen</author>
-  <author>Felix Exner</author>
-  <author>Lea Steffen</author>
-  <author>Tristan Schnell</author>
-
-  <maintainer email="grosse@fzi.de">Marvin Große Besselmann</maintainer>
-  <maintainer email="lovro.ivanov@gmail.com">Lovro Ivanov</maintainer>
-  <maintainer email="denis.stogl@picknik.ai">Denis Stogl</maintainer>
-  <maintainer email="zelenak@picknik.ai">Andy Zelenak</maintainer>
+  <maintainer email="denis@stoglrobotics.de">Denis Stogl</maintainer>
+  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
+  <maintainer email="schnell@fzi.de">Tristan Schnell</maintainer>
 
   <license>BSD-3-Clause</license>
 
   <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
+
+  <author>Thomas Timm Andersen</author>
+  <author>Simon Rasmussen</author>
+  <author>Felix Exner</author>
+  <author>Lea Steffen</author>
+  <author>Tristan Schnell</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
