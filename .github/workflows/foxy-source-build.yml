@@ -1,8 +1,5 @@
 name: Foxy Source Build
 on:
-  push:
-    branches:
-      - foxy
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '43 3 * * *'
