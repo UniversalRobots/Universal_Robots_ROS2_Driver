@@ -24,23 +24,20 @@
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>controller_manager</depend>
+  <depend>controller_manager_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>hardware_interface</depend>
+  <depend>launch_testing_ament_cmake</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
   <depend>rclpy</depend>
-  <depend>std_srvs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>tf2_geometry_msgs</depend>
-  <!-- TODO: rosdep cannot find ur_client_library -->
-  <depend>ur_client_library</depend>
-  <depend>ur_dashboard_msgs</depend>
-  <depend>launch_testing_ament_cmake</depend>
-  <depend>ur_msgs</depend>
-  <depend>ur_description</depend>
-  <depend>ur_bringup</depend>
-  <depend>ur_controllers</depend>
   <depend>std_msgs</depend>
-  <depend>controller_manager_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>ur_client_library</depend>
+  <depend>ur_controllers</depend>
+  <depend>ur_dashboard_msgs</depend>
+  <depend>ur_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

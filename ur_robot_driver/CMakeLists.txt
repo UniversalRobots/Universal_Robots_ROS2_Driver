@@ -143,8 +143,6 @@ ament_package()
 
 if(BUILD_TESTING)
   find_package(ur_controllers REQUIRED)
-  find_package(ur_description REQUIRED)
-  find_package(ur_bringup REQUIRED)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
   add_launch_test(test/integration_test_1.py)
