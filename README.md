@@ -35,10 +35,6 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
 
 
-## Known Issues
-
--
-
 ## Packages in the Repository:
 
   - `ur_bringup` - launch file and run-time configurations, e.g. controllers.
@@ -50,8 +46,25 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 
 
 ## Getting Started
+You can either install this driver from binary packages or build it from source. We recommend a
+binary package installation unless you want to join developing and submit changes.
 
-1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html) or [Install ROS2 Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html). This branch will support both distributions until API breaking changes are made, at which point a `galactic` branch will be forked. For using this driver with ROS2 `foxy` checkout [foxy branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy).
+### Install from binary packages
+
+1. [Install ROS2
+   Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html). This
+   branch supports only ROS2 galactic. For other ROS2 versions, please see the respective branches.
+2. Install the driver using
+   ```
+   sudo apt-get install ros-galactic-ur-robot-driver
+   ```
+### Build from source
+1. [Install ROS2
+   Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html). This
+   branch supports only ROS2 galactic. For other ROS2 versions, please see the respective branches.
+   The `main` branch will stay valid for all new ROS2 versions as long as they are compatible with
+   the main branch. Therefore you might not find a dedicated branch for a recent ROS2 version. In
+   that case, please use the `main` branch.
 
 2. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```
