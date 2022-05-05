@@ -47,7 +47,7 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 
 ## Getting Started
 You can either install this driver from binary packages or build it from source. We recommend a
-binary package installation unless you want to join developing and submit changes.
+binary package installation unless you want to join development and submit changes.
 
 ### Install from binary packages
 
