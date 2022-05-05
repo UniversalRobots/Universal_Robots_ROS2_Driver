@@ -31,6 +31,7 @@
   <exec_depend>ros2_controllers_test_nodes</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>ur_description</exec_depend>
+  <exec_depend>ur_robot_driver</exec_depend>
   <exec_depend>urdf</exec_depend>
   <exec_depend>xacro</exec_depend>
 
