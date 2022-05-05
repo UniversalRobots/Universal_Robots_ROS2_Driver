@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.1 (2022-05-05)
+------------------
 * Remove non-required dependency from CMakeLists
 * Contributors: Felix Exner
 
