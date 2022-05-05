@@ -17,7 +17,6 @@ jobs:
         ROS_DISTRO: [galactic]
         ROS_REPO: [main, testing]
     env:
-      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.ROS_DISTRO }}.repos
       NOT_TEST_BUILD: true
       NOT_TEST_DOWNSTREAM: true
       CCACHE_DIR: ${{ github.workspace }}/.ccache
