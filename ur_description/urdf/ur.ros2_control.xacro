@@ -247,6 +247,10 @@
         <state_interface name="program_running"/>
       </joint>
 
+      <gpio name="system_interface">
+        <state_interface name="initialized"/>
+      </gpio>
+
     </ros2_control>
   </xacro:macro>
 
