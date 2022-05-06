@@ -78,6 +78,10 @@ if(BUILD_TESTING)
   )
   target_include_directories(calibration_test PRIVATE include ${EIGEN3_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
   target_link_libraries(calibration_test ${rclcpp_LIBRARIES} ${EIGEN3_LIBRARIES} ${YAML_CPP_LIBRARIES} ur_client_library::urcl)
+  ament_target_dependencies(
+          calibration_test
+          rclcpp
+  )
 endif()
 
 ament_export_include_directories(

@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(ur_robot_driver)
 
-add_compile_options(-std=c++11)
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter)
@@ -30,14 +33,15 @@ include_directories(include)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_manager
+  controller_manager_msgs
   hardware_interface
   pluginlib
   rclcpp
+  std_msgs
   std_srvs
+  tf2_geometry_msgs
   ur_client_library
   ur_dashboard_msgs
-  std_msgs
-  controller_manager_msgs
 )
 
 add_library(ur_robot_driver_plugin
