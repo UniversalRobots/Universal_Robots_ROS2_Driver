@@ -56,7 +56,8 @@ ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool s
   controller_list_srv_->wait_for_service();
   RCLCPP_INFO(rclcpp::get_logger("Controller stopper"), "Service available");
 
-  consistent_controllers_ = node_->declare_parameter<std::vector<std::string>>("consistent_controllers", std::vector<std::string>(0));
+  consistent_controllers_ =
+      node_->declare_parameter<std::vector<std::string>>("consistent_controllers", std::vector<std::string>(0));
 
   if (stop_controllers_on_startup_ == true) {
     while (stopped_controllers_.empty()) {
