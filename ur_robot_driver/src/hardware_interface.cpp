@@ -58,6 +58,9 @@ hardware_interface::return_type URPositionHardwareInterface::configure(const Har
   pausing_ramp_up_increment_ = 0.01;
   controllers_initialized_ = false;
   first_pass_ = true;
+  initialized_ = false;
+  async_thread_shutdown_ = false;
+  system_interface_initialized_ = 0.0;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.name == "gpio" || joint.name == "speed_scaling") {
@@ -191,6 +194,12 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
 
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("system_interface", "initialized", &system_interface_initialized_));
+
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gpio", "program_running", &robot_program_running_copy_));
+
   return state_interfaces;
 }
 
@@ -232,8 +241,6 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 return_type URPositionHardwareInterface::start()
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
-
-  std::this_thread::sleep_for(std::chrono::seconds(2));
 
   // The robot's IP address.
   std::string robot_ip = info_.hardware_parameters["robot_ip"];
@@ -376,6 +383,8 @@ return_type URPositionHardwareInterface::start()
 
   ur_driver_->startRTDECommunication();
 
+  async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
+
   status_ = hardware_interface::status::STARTED;
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
@@ -387,9 +396,13 @@ return_type URPositionHardwareInterface::stop()
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
 
-  std::this_thread::sleep_for(std::chrono::seconds(2));
+  async_thread_shutdown_ = true;
+  async_thread_->join();
+  async_thread_.reset();
 
   ur_driver_.reset();
+
+  unregisterUrclLogHandler();
 
   status_ = hardware_interface::status::STOPPED;
 
@@ -417,6 +430,17 @@ void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::Dat
     // This throwing should never happen unless misconfigured
     std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
     throw std::runtime_error(error_msg);
+  }
+}
+
+void URPositionHardwareInterface::asyncThread()
+{
+  while (!async_thread_shutdown_) {
+    if (initialized_) {
+      //        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initialized in async thread");
+      checkAsyncIO();
+    }
+    std::this_thread::sleep_for(std::chrono::nanoseconds(20000));
   }
 }
 
@@ -482,11 +506,12 @@ return_type URPositionHardwareInterface::read()
       speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
     }
 
-    if (first_pass_) {
+    if (first_pass_ && !initialized_) {
       initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
+      initialized_ = true;
     }
 
     updateNonDoubleValues();
@@ -499,12 +524,6 @@ return_type URPositionHardwareInterface::read()
 
 return_type URPositionHardwareInterface::write()
 {
-  if (first_pass_) {
-    first_pass_ = false;
-  } else {
-    checkAsyncIO();
-  }
-
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
@@ -616,6 +635,8 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   robot_mode_copy_ = static_cast<double>(robot_mode_);
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
+  system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 }
 }  // namespace ur_robot_driver
 

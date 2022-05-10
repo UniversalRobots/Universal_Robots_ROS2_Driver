@@ -243,6 +243,24 @@ def generate_launch_description():
         parameters=[{"robot_ip": robot_ip}],
     )
 
+    controller_stopper_node = Node(
+        package="ur_robot_driver",
+        executable="controller_stopper_node",
+        name="controller_stopper",
+        output="screen",
+        emulate_tty=True,
+        parameters=[
+            {
+                "consistent_controllers": [
+                    "io_and_status_controller",
+                    "force_torque_sensor_broadcaster",
+                    "joint_state_broadcaster",
+                    "speed_scaling_state_broadcaster",
+                ]
+            },
+        ],
+    )
+
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -300,6 +318,7 @@ def generate_launch_description():
     nodes_to_start = [
         control_node,
         dashboard_client_node,
+        controller_stopper_node,
         robot_state_publisher_node,
         rviz_node,
         joint_state_broadcaster_spawner,

@@ -100,6 +100,10 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   for (size_t i = 0; i < 11; ++i) {
     config.names.emplace_back("gpio/safety_status_bit_" + std::to_string(i));
   }
+  config.names.emplace_back("system_interface/initialized");
+
+  // program running
+  config.names.emplace_back("gpio/program_running");
 
   return config;
 }
@@ -117,6 +121,7 @@ controller_interface::return_type ur_controllers::GPIOController::update()
   publishToolData();
   publishRobotMode();
   publishSafetyMode();
+  publishProgramRunning();
   return controller_interface::return_type::OK;
 }
 
@@ -194,9 +199,24 @@ void GPIOController::publishSafetyMode()
   }
 }
 
+void GPIOController::publishProgramRunning()
+{
+  auto program_running_value = static_cast<uint8_t>(state_interfaces_[StateInterfaces::PROGRAM_RUNNING].get_value());
+  bool program_running = program_running_value == 1.0 ? true : false;
+  if (program_running_msg_.data != program_running) {
+    program_running_msg_.data = program_running;
+    program_state_pub_->publish(program_running_msg_);
+  }
+}
+
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_value() == 0.0) {
+    RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+
   try {
     // register publisher
     io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
@@ -209,6 +229,11 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
 
     safety_mode_pub_ =
         get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", rclcpp::SystemDefaultsQoS());
+
+    auto program_state_pub_qos = rclcpp::SystemDefaultsQoS();
+    program_state_pub_qos.transient_local();
+    program_state_pub_ =
+        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", program_state_pub_qos);
 
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
         "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
@@ -231,6 +256,7 @@ ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*p
     tool_data_pub_.reset();
     robot_mode_pub_.reset();
     safety_mode_pub_.reset();
+    program_state_pub_.reset();
     set_io_srv_.reset();
     set_speed_slider_srv_.reset();
   } catch (...) {

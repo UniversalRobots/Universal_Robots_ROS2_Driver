@@ -18,6 +18,9 @@ find_package(rclcpp REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
 
 include_directories(
   include
@@ -30,6 +33,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_srvs
   ur_client_library
   ur_dashboard_msgs
+  std_msgs
+  controller_manager_msgs
 )
 
 add_library(ur_robot_driver_plugin
@@ -62,8 +67,14 @@ add_executable(dashboard_client
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+add_executable(controller_stopper_node
+  src/controller_stopper.cpp
+  src/controller_stopper_node.cpp
+)
+ament_target_dependencies(controller_stopper_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 install(
-  TARGETS dashboard_client
+  TARGETS dashboard_client controller_stopper_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

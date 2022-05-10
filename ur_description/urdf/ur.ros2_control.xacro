@@ -244,7 +244,12 @@
         <state_interface name="safety_status_bit_8"/>
         <state_interface name="safety_status_bit_9"/>
         <state_interface name="safety_status_bit_10"/>
+        <state_interface name="program_running"/>
       </joint>
+
+      <gpio name="system_interface">
+        <state_interface name="initialized"/>
+      </gpio>
 
     </ros2_control>
   </xacro:macro>
