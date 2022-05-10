@@ -152,7 +152,14 @@ The most relevant arguments are the following:
 
    To check the controllers' state use `ros2 control list_controllers` command.
 
-- Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
+- Send some goal to the Joint Trajectory Controller by using a demo node from
+  [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the
+  following command in another terminal.
+
+  **NOTE: As the `ros2_control_demos` package is currently not released for ROS2 Foxy, you'll have
+  to build it in your workspace in order to use this launchfile. We are aware that this is not
+  ideal, but we thought it would be better to not drop the testing launchfile at all and provide
+  this info to users.**
    ```
    ros2 launch ur_bringup test_joint_trajectory_controller.launch.py
    ```
