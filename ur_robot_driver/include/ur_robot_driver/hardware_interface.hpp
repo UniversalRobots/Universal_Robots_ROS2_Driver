@@ -98,8 +98,8 @@ public:
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) final;
 
-  hardware_interface::return_type read() final;
-  hardware_interface::return_type write() final;
+  hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) final;
+  hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) final;
 
   hardware_interface::return_type prepare_command_mode_switch(const std::vector<std::string>& start_interfaces,
                                                               const std::vector<std::string>& stop_interfaces) final;

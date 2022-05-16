@@ -61,9 +61,9 @@ int main(int argc, char** argv)
 
     while (rclcpp::ok()) {
       // ur client library is blocking and is the one that is controlling time step
-      controller_manager->read();
+      controller_manager->read(controller_manager->now(), dt);
       controller_manager->update(controller_manager->now(), dt);
-      controller_manager->write();
+      controller_manager->write(controller_manager->now(), dt);
     }
   });
 
