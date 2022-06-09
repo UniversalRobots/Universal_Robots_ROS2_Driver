@@ -135,7 +135,7 @@ This section describes installation and launching of the URCap program from the 
 
 **Note:** For installing this URCap a minimal PolyScope version of 3.7 or 5.1 (in case of e-Series) is necessary.
 
-2. For installing the necessary URCap and creating a program, please see the individual tutorial on how to [setup a CB3 robot](/ur_robot_driver/doc/install_urcap_cb3.md) or how to [setup an e-Series robot](/ur_robot_driver/doc/install_urcap_e_series.md)
+2. For installing the necessary URCap and creating a program, please see the individual tutorial on how to [setup a CB3 robot](/ur_robot_driver/doc/installation/install_urcap_cb3.rst) or how to [setup an e-Series robot](/ur_robot_driver/doc/installation/install_urcap_e_series.rst)
 
 3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers (see details in [Usage](#usage) section).
 
