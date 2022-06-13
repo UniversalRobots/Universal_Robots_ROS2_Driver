@@ -33,7 +33,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_lifecycle
   rcutils
   realtime_tools
-  sensor_msgs
   std_msgs
   std_srvs
   ur_dashboard_msgs
