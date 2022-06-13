@@ -60,10 +60,7 @@ def generate_launch_description():
         package="ur_calibration",
         executable="calibration_correction",
         parameters=[{"robot_ip": robot_ip}, {"output_filename": output_filename}],
-        output={
-            "stdout": "screen",
-            "stderr": "screen",
-        },
+        output="screen",
     )
 
     nodes_to_start = [

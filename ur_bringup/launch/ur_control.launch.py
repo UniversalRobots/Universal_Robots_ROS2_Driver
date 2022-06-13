@@ -197,10 +197,7 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
-        output={
-            "stdout": "screen",
-            "stderr": "screen",
-        },
+        output="screen",
         condition=IfCondition(use_fake_hardware),
     )
 
@@ -208,10 +205,7 @@ def launch_setup(context, *args, **kwargs):
         package="ur_robot_driver",
         executable="ur_ros2_control_node",
         parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
-        output={
-            "stdout": "screen",
-            "stderr": "screen",
-        },
+        output="screen",
         condition=UnlessCondition(use_fake_hardware),
     )
 

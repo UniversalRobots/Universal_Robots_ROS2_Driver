@@ -26,26 +26,36 @@ set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
 ## Build ##
 ###########
 
-include_directories(
-  include
-  ${EIGEN3_INCLUDE_DIRS}
-  ${YAML_CPP_INCLUDE_DIRS}
+add_library(calibration
+  src/calibration.cpp
+  src/calibration_consumer.cpp
+)
+target_include_directories(calibration
+  PUBLIC
+    include
+    ${EIGEN3_INCLUDE_DIRS}
+    ${YAML_CPP_INCLUDE_DIRS}
+)
+target_link_libraries(calibration
+  ${YAML_CPP_LIBRARIES}
+)
+ament_target_dependencies(calibration
+  rclcpp
+  ur_robot_driver
 )
 
 add_executable(calibration_correction
-  src/calibration.cpp
-  src/calibration_consumer.cpp
   src/calibration_correction.cpp
 )
-target_include_directories(calibration_correction PRIVATE include)
-target_link_libraries(calibration_correction
-        ${YAML_CPP_LIBRARIES}
-        ur_client_library::urcl
+target_include_directories(calibration_correction
+  PRIVATE
+    include
 )
-ament_target_dependencies(
-        calibration_correction
-        rclcpp
-        ur_robot_driver
+target_link_libraries(calibration_correction
+  ur_client_library::urcl
+)
+target_link_libraries(calibration_correction
+  calibration
 )
 
 install(TARGETS calibration_correction
@@ -74,10 +84,10 @@ if(BUILD_TESTING)
   ament_add_gmock(
           calibration_test
           test/calibration_test.cpp
-          src/calibration.cpp
   )
-  target_include_directories(calibration_test PRIVATE include ${EIGEN3_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
-  target_link_libraries(calibration_test ${rclcpp_LIBRARIES} ${EIGEN3_LIBRARIES} ${YAML_CPP_LIBRARIES} ur_client_library::urcl)
+  target_link_libraries(calibration_test
+    calibration
+  )
 endif()
 
 ament_export_include_directories(

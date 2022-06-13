@@ -238,10 +238,7 @@ def launch_setup(context, *args, **kwargs):
             robot_description,
             robot_description_semantic,
         ],
-        output={
-            "stdout": "screen",
-            "stderr": "screen",
-        },
+        output="screen",
     )
 
     nodes_to_start = [move_group_node, rviz_node, servo_node]

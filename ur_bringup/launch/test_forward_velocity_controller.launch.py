@@ -50,10 +50,7 @@ def generate_launch_description():
                 executable="publisher_forward_position_controller",
                 name="publisher_forward_velocity_controller",
                 parameters=[velocity_goals],
-                output={
-                    "stdout": "screen",
-                    "stderr": "screen",
-                },
+                output="screen",
             )
         ]
     )

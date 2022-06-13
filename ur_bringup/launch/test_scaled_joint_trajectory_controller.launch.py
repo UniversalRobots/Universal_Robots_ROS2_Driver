@@ -50,10 +50,7 @@ def generate_launch_description():
                 executable="publisher_joint_trajectory_controller",
                 name="publisher_scaled_joint_trajectory_controller",
                 parameters=[position_goals],
-                output={
-                    "stdout": "screen",
-                    "stderr": "screen",
-                },
+                output="screen",
             )
         ]
     )
