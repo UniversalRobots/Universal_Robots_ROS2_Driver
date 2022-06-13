@@ -13,31 +13,34 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(controller_manager REQUIRED)
+find_package(controller_manager_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
-find_package(geometry_msgs REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(controller_manager_msgs REQUIRED)
 
 include_directories(include)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_manager
+  controller_manager_msgs
+  geometry_msgs
   hardware_interface
   pluginlib
   rclcpp
+  rclcpp_lifecycle
+  std_msgs
   std_srvs
+  tf2_geometry_msgs
   ur_client_library
   ur_dashboard_msgs
-  std_msgs
-  controller_manager_msgs
 )
 
 add_library(ur_robot_driver_plugin
