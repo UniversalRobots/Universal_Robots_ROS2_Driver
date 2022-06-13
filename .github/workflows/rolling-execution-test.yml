@@ -1,4 +1,4 @@
-name: Execution Testing
+name: Rolling Execution Test
 on:
   schedule:
     # Run every morning to detect flakiness and broken dependencies
@@ -6,17 +6,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  semi_binary_test:
-    name: semi-binary test
+  binary_test:
+    name: binary execution test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 1
       matrix:
-        ROS_DISTRO: [galactic, rolling]
+        ROS_DISTRO: [rolling]
         ROS_REPO: [main, testing]
     env:
-      UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver.${{ matrix.ROS_DISTRO }}.repos
       DOCKER_RUN_OPTS: --network static_test_net
       BEFORE_INIT: 'apt-get update -qq && apt-get install -y iproute2 iputils-ping && ip addr && ping -c5 192.168.56.101'
       IMMEDIATE_TEST_OUTPUT: true
@@ -26,6 +25,8 @@ jobs:
       PARALLEL_TESTS: 2
     steps:
       - uses: actions/checkout@v1
+        with:
+          ref: main
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh

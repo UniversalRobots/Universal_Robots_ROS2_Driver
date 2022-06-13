@@ -1,4 +1,4 @@
-name: Galactic Execution Test
+name: Humble Execution Test
 on:
   schedule:
     # Run every morning to detect flakiness and broken dependencies
@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        ROS_DISTRO: [galactic]
+        ROS_DISTRO: [humble]
         ROS_REPO: [main, testing]
     env:
       DOCKER_RUN_OPTS: --network static_test_net
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
         with:
-          ref: galactic
+          ref: main
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
