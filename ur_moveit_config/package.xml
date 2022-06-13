@@ -20,7 +20,7 @@
   <exec_depend>rviz2</exec_depend>
   <exec_depend>ur_description</exec_depend>
   <exec_depend>urdf</exec_depend>
-  <exec_depend>warehouse_ros_mongo</exec_depend>
+  <exec_depend>warehouse_ros_sqlite</exec_depend>
   <exec_depend>xacro</exec_depend>
 
   <export>
