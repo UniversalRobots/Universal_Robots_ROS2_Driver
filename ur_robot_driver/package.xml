@@ -23,20 +23,26 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>controller_manager</depend>
+  <depend>controller_manager_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
+  <depend>std_msgs</depend>
   <depend>std_srvs</depend>
-  <!-- TODO: rosdep cannot find ur_client_library -->
   <depend>ur_client_library</depend>
-  <depend>ur_dashboard_msgs</depend>
-  <depend>launch_testing_ament_cmake</depend>
-  <depend>ur_msgs</depend>
-  <depend>ur_description</depend>
-  <depend>ur_bringup</depend>
   <depend>ur_controllers</depend>
+  <depend>ur_dashboard_msgs</depend>
+  <depend>ur_description</depend>
+  <depend>ur_msgs</depend>
 
-  <exec_depend>controller_manager</exec_depend>
+  <!--Depencency such that the bringup package also gets installed-->
+  <exec_depend>ur_bringup</exec_depend>
+
+  <test_depend>launch_testing_ament_cmake</test_depend>
+  <test_depend>rclpy</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
