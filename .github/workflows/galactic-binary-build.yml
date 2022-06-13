@@ -21,6 +21,8 @@ jobs:
       CACHE_PREFIX: ${{ matrix.ROS_DISTRO }}-${{ matrix.ROS_REPO }}-binary
     steps:
       - uses: actions/checkout@v1
+        with:
+          ref: galactic
       # The target directory cache doesn't include the source directory because
       # that comes from the checkout.  See "prepare target_ws for cache" task below
       - name: cache target_ws
