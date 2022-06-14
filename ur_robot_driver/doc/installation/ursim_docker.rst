@@ -82,11 +82,11 @@ address. The VNC web server will be available at `<http://192.168.56.101:6080/vn
 Script startup
 --------------
 
-All of the above is put together in a script in the ``ur_bringup`` package.
+All of the above is put together in a script in the ``ur_robot_driver`` package.
 
 .. code-block:: bash
 
-   ros2 run ur_bringup start_ursim.sh
+   ros2 run ur_robot_driver start_ursim.sh
 
 This will start a URSim docker container running on ``192.168.56.101`` with the ``external_control``
 URCap preinstalled. Created programs and installation changes will be stored persistently inside
@@ -96,4 +96,4 @@ With this, you can run
 
 .. code-block:: bash
 
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101

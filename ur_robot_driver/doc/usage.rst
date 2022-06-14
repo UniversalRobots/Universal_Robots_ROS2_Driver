@@ -8,7 +8,7 @@ Usage
 Launch files
 ------------
 
-For starting the driver there are two main launch files in the ``ur_bringup`` package.
+For starting the driver there are two main launch files in the ``ur_robot_driver`` package.
 
 
 * ``ur_control.launch.py`` - starts ros2_control node including hardware interface, joint state broadcaster and a controller. This launch file also starts ``dashboard_client`` if real robot is used.
@@ -16,7 +16,7 @@ For starting the driver there are two main launch files in the ``ur_bringup`` pa
 
 Also, there are predefined launch files for all supported types of UR robots.
 
-The arguments for launch files can be listed using ``ros2 launch ur_bringup <launch_file_name>.launch.py --show-args``.
+The arguments for launch files can be listed using ``ros2 launch ur_robot_driver <launch_file_name>.launch.py --show-args``.
 The most relevant arguments are the following:
 
 
@@ -89,13 +89,13 @@ To start it, we've prepared a script:
 
 .. code-block:: bash
 
-   ros2 run ur_bringup start_ursim.sh -m <ur_type>
+   ros2 run ur_robot_driver start_ursim.sh -m <ur_type>
 
 With this, we can spin up a driver using
 
 .. code-block:: bash
 
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=<ur_type> robot_ip:=172.17.0.2 launch_rviz:=true
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=<ur_type> robot_ip:=172.17.0.2 launch_rviz:=true
 
 You can view the polyscope GUI by opening `<http://192.168.56.101:6080/vnc.html>`_.
 
@@ -116,9 +116,9 @@ Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10`
 
   .. code-block::
 
-     ros2 launch ur_bringup ur_control.launch.py ur_type:=<UR_TYPE> robot_ip:=<IP_OF_THE_ROBOT> launch_rviz:=true
+     ros2 launch ur_robot_driver ur_control.launch.py ur_type:=<UR_TYPE> robot_ip:=<IP_OF_THE_ROBOT> launch_rviz:=true
 
-  For more details check the argument documentation with ``ros2 launch ur_bringup ur_control.launch.py --show-arguments``
+  For more details check the argument documentation with ``ros2 launch ur_robot_driver ur_control.launch.py --show-arguments``
 
   After starting the launch file start the external_control URCap program from the pendant, as described above.
 
@@ -128,13 +128,13 @@ Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10`
 
   .. code-block::
 
-     ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+     ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
 
   **NOTE**\ : Instead of using the global launch file for control stack, there are also prepeared launch files for each type of UR robots named. They accept the same arguments are the global one and are used by:
 
   .. code-block::
 
-     ros2 launch ur_bringup <ur_type>.launch.py
+     ros2 launch ur_robot_driver <ur_type>.launch.py
 
 2. Sending commands to controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,7 +146,7 @@ Before running any commands, first check the controllers' state using ``ros2 con
 
   .. code-block::
 
-     ros2 launch ur_bringup test_scaled_joint_trajectory_controller.launch.py
+     ros2 launch ur_robot_driver test_scaled_joint_trajectory_controller.launch.py
 
   After a few seconds the robot should move.
 
@@ -154,13 +154,13 @@ Before running any commands, first check the controllers' state using ``ros2 con
 
   .. code-block::
 
-     ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
+     ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
 
   And send the command using demo node:
 
   .. code-block::
 
-     ros2 launch ur_bringup test_joint_trajectory_controller.launch.py
+     ros2 launch ur_robot_driver test_joint_trajectory_controller.launch.py
 
   After a few seconds the robot should move(or jump when using emulation).
 
@@ -237,6 +237,6 @@ Then start
 
 .. code-block::
 
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
    # and in another shell
    ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true

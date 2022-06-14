@@ -55,7 +55,7 @@ respective launchfile in the driver:
 ```bash
 # Replace your actual colcon_ws folder
 $ cd <colcon_ws>/src/<organization_name>_ur_launch/launch
-$ cp $(ros2 pkg prefix ur_bringup)/share/ur_bringup/launch/ur_control.launch.py ex-ur10-1.launch.py
+$ cp $(ros2 pkg prefix ur_robot_driver)/share/ur_robot_driver/launch/ur_control.launch.py ex-ur10-1.launch.py
 ```
 
 Next, modify the parameter section of the new launchfile to match your actual calibration:
