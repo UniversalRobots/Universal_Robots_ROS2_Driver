@@ -25,6 +25,7 @@ jobs:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           # build all packages listed in the meta package
           package-name:
+            ur
             ur_bringup
             ur_controllers
             ur_dashboard_msgs
