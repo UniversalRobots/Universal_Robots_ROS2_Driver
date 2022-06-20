@@ -37,13 +37,15 @@ ROS2 Distro | Foxy  | Galactic | Humble | Rolling
 
 ## Packages in the Repository:
 
-  - `ur_bringup` - launch file and run-time configurations, e.g. controllers.
+  - `ur` - Meta-package that provides a single point of installation for the released packages.
+  - `ur_bringup` - launch file and run-time configurations, e.g. controllers (DEPRECATED).
   - `ur_calibration` - tool for extracting calibration information from a real robot.
   - `ur_controllers` - implementations of controllers specific for UR robots.
   - `ur_dashboard_msgs` - package defining messages used by dashboard node.
   - `ur_moveit_config` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
+Deprecation: The `ur_bringup` package is deprecated and will be removed from Iron Irwini on.
 
 ## Getting Started
 
