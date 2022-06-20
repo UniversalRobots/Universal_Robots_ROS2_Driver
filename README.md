@@ -37,13 +37,15 @@ ROS2 Distro | Foxy  | Galactic | Humble | Rolling
 
 ## Packages in the Repository:
 
-  - `ur_bringup` - launch file and run-time configurations, e.g. controllers.
+  - `ur` - Meta-package that provides a single point of installation for the released packages.
+  - `ur_bringup` - launch file and run-time configurations, e.g. controllers (DEPRECATED).
   - `ur_calibration` - tool for extracting calibration information from a real robot.
   - `ur_controllers` - implementations of controllers specific for UR robots.
   - `ur_dashboard_msgs` - package defining messages used by dashboard node.
   - `ur_moveit_config` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
+Deprecation: The `ur_bringup` package is deprecated and will be removed from Iron Irwini on.
 
 ## Getting Started
 
@@ -145,14 +147,14 @@ This section describes installation and launching of the URCap program from the 
 
 ## Usage
 
-For starting the driver there are two main launch files in the `ur_bringup` package.
+For starting the driver there are two main launch files in the `ur_robot_driver` package.
 
   - `ur_control.launch.py` - starts ros2_control node including hardware interface, joint state broadcaster and a controller. This launch file also starts `dashboard_client` if real robot is used.
   - `ur_dashboard_client.launch.py` - start the dashboard client for UR robots.
 
 Also, there are predefined launch files for all supported types of UR robots.
 
-The arguments for launch files can be listed using `ros2 launch ur_bringup <launch_file_name>.launch.py --show-args`.
+The arguments for launch files can be listed using `ros2 launch ur_robot_driver <launch_file_name>.launch.py --show-args`.
 The most relevant arguments are the following:
 
   - `ur_type` (*mandatory*) - a type of used UR robot (*ur3*, *ur3e*, *ur5*, *ur5e*, *ur10*, *ur10e*, or *ur16e*).
@@ -191,9 +193,9 @@ Allowed UR-Type strings: `ur3`, `ur3e`, `ur5`, `ur5e`, `ur10`, `ur10e`, `ur16e`.
 
 - To do test with hardware, use:
   ```
-  ros2 launch ur_bringup ur_control.launch.py ur_type:=<UR_TYPE> robot_ip:=<IP_OF_THE_ROBOT> launch_rviz:=true
+  ros2 launch ur_robot_driver ur_control.launch.py ur_type:=<UR_TYPE> robot_ip:=<IP_OF_THE_ROBOT> launch_rviz:=true
   ```
-  For more details check the argument documentation with `ros2 launch ur_bringup ur_control.launch.py --show-arguments`
+  For more details check the argument documentation with `ros2 launch ur_robot_driver ur_control.launch.py --show-arguments`
 
   After starting the launch file start the external_control URCap program from the pendant, as described above.
 
@@ -201,12 +203,12 @@ Allowed UR-Type strings: `ur3`, `ur3e`, `ur5`, `ur5e`, `ur10`, `ur10e`, `ur16e`.
 
 - To use mocked hardware (capability of ros2_control), use `use_fake_hardware` argument, like:
   ```
-  ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+  ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
   ```
 
   **NOTE**: Instead of using the global launch file for control stack, there are also prepeared launch files for each type of UR robots named. They accept the same arguments are the global one and are used by:
   ```
-  ros2 launch ur_bringup <ur_type>.launch.py
+  ros2 launch ur_robot_driver <ur_type>.launch.py
   ```
 
 ##### 2. Sending commands to controllers
@@ -215,17 +217,17 @@ Before running any commands, first check the controllers' state using `ros2 cont
 
 - Send some goal to the Joint Trajectory Controller by using a demo node from [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos) package by starting  the following command in another terminal:
    ```
-   ros2 launch ur_bringup test_joint_trajectory_controller.launch.py
+   ros2 launch ur_robot_driver test_joint_trajectory_controller.launch.py
    ```
    After a few seconds the robot should move.
 
 - To test another controller, simply define it using `initial_joint_controller` argument, for example when using fake hardware:
    ```
-   ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
    ```
    And send the command using demo node:
    ```
-   ros2 launch ur_bringup test_scaled_joint_trajectory_controller.launch.py
+   ros2 launch ur_robot_driver test_scaled_joint_trajectory_controller.launch.py
    ```
    After a few seconds the robot should move (or jump when using emulation).
 

@@ -31,11 +31,6 @@
 PERSISTENT_BASE="${HOME}/.ursim"
 URCAP_VERSION="1.0.5"
 
-echo -e "\033[0;31mDEPRECATION WARNING: " \
-    "Launch files from the ur_bringup package are deprecated and will be removed from Iron " \
-    "Irwini on. Please use the same launch files from the ur_robot_driver package." \
-    "\033[0m"
-
 help()
 {
   # Display Help

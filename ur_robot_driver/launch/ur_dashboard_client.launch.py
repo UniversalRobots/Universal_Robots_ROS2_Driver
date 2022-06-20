@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PickNik, Inc.
+# Copyright (c) 2021, PickNik, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -26,38 +26,33 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-#
-# Author: Denis Stogl
-#
-# Description: After a robot has been loaded, this will execute a series of trajectories.
 
 from launch import LaunchDescription
-from launch.substitutions import PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    print(
-        "\033[91m"
-        "DEPRECATION WARNING: "
-        "Launch files from the ur_bringup package are deprecated and will be removed from Iron "
-        "Irwini on. Please use the same launch files from the ur_robot_driver package."
-        "\033[0m"
+    # Declare arguments
+    declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "robot_ip",
+            description="IP address by which the robot can be reached.",
+        )
     )
 
-    position_goals = PathJoinSubstitution(
-        [FindPackageShare("ur_bringup"), "config", "test_goal_publishers_config.yaml"]
+    # Initialize Arguments
+    robot_ip = LaunchConfiguration("robot_ip")
+
+    dashboard_client_node = Node(
+        package="ur_robot_driver",
+        executable="dashboard_client",
+        name="dashboard_client",
+        output="screen",
+        emulate_tty=True,
+        parameters=[{"robot_ip": robot_ip}],
     )
 
-    return LaunchDescription(
-        [
-            Node(
-                package="ros2_controllers_test_nodes",
-                executable="publisher_joint_trajectory_controller",
-                name="publisher_joint_trajectory_controller",
-                parameters=[position_goals],
-                output="screen",
-            )
-        ]
-    )
+    return LaunchDescription(declared_arguments + [dashboard_client_node])

@@ -344,14 +344,6 @@ def launch_setup(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    print(
-        "\033[91m"
-        "DEPRECATION WARNING: "
-        "Launch files from the ur_bringup package are deprecated and will be removed from Iron "
-        "Irwini on. Please use the same launch files from the ur_robot_driver package."
-        "\033[0m"
-    )
-
     declared_arguments = []
     # UR specific arguments
     declared_arguments.append(
@@ -391,7 +383,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "runtime_config_package",
-            default_value="ur_bringup",
+            default_value="ur_robot_driver",
             description='Package with the controller\'s configuration in "config" folder. \
         Usually the argument is not set, it enables use of a custom setup.',
         )

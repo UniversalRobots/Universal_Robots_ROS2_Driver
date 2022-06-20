@@ -34,6 +34,14 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    print(
+        "\033[91m"
+        "DEPRECATION WARNING: "
+        "Launch files from the ur_bringup package are deprecated and will be removed from Iron "
+        "Irwini on. Please use the same launch files from the ur_robot_driver package."
+        "\033[0m"
+    )
+
     # Declare arguments
     declared_arguments = []
     declared_arguments.append(

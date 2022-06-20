@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ur</name>
+  <version>0.0.0</version>
+  <description>Metapackage for universal robots</description>
+  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
+  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>ur_calibration</exec_depend>
+  <exec_depend>ur_controllers</exec_depend>
+  <exec_depend>ur_dashboard_msgs</exec_depend>
+  <exec_depend>ur_moveit_config</exec_depend>
+  <exec_depend>ur_robot_driver</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

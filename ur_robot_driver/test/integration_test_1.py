@@ -66,9 +66,7 @@ def generate_test_description():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     launch_file = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [dir_path, "/../../ur_bringup/launch/ur_dashboard_client.launch.py"]
-        ),
+        PythonLaunchDescriptionSource([dir_path, "/../launch/ur_dashboard_client.launch.py"]),
         launch_arguments={
             "robot_ip": robot_ip,
         }.items(),

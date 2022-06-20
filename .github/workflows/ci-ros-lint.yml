@@ -18,6 +18,7 @@ jobs:
         distribution: rolling
         linter: ${{ matrix.linter }}
         package-name:
+          ur
           ur_bringup
           ur_controllers
           ur_dashboard_msgs
@@ -38,6 +39,7 @@ jobs:
           linter: copyright
           arguments: '--exclude ur_robot_driver/doc/conf.py'
           package-name:
+            ur
             ur_bringup
             ur_controllers
             ur_dashboard_msgs
@@ -60,6 +62,7 @@ jobs:
         linter: cpplint
         arguments: "--linelength=120"
         package-name:
+          ur
           ur_bringup
           ur_controllers
           ur_dashboard_msgs

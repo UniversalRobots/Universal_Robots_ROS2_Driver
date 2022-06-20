@@ -27,7 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Denis Stogl
+# Author: Lovro Ivanov
 #
 # Description: After a robot has been loaded, this will execute a series of trajectories.
 
@@ -38,25 +38,18 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    print(
-        "\033[91m"
-        "DEPRECATION WARNING: "
-        "Launch files from the ur_bringup package are deprecated and will be removed from Iron "
-        "Irwini on. Please use the same launch files from the ur_robot_driver package."
-        "\033[0m"
-    )
 
-    position_goals = PathJoinSubstitution(
-        [FindPackageShare("ur_bringup"), "config", "test_goal_publishers_config.yaml"]
+    velocity_goals = PathJoinSubstitution(
+        [FindPackageShare("ur_robot_driver"), "config", "test_velocity_goal_publishers_config.yaml"]
     )
 
     return LaunchDescription(
         [
             Node(
                 package="ros2_controllers_test_nodes",
-                executable="publisher_joint_trajectory_controller",
-                name="publisher_joint_trajectory_controller",
-                parameters=[position_goals],
+                executable="publisher_forward_position_controller",
+                name="publisher_forward_velocity_controller",
+                parameters=[velocity_goals],
                 output="screen",
             )
         ]
