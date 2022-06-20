@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.0.0 (2022-06-20)
+------------------
 * Updated package dependencies (`#399 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/399>`_)
 * Foxy controller stopper (`#324 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/324>`_)
 * Backport: Change driver constructor and change calibration check (`#282 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/282>`_) (`#302 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/302>`_)
