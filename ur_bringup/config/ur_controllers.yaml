@@ -12,7 +12,7 @@ controller_manager:
       type: ur_controllers/SpeedScalingStateBroadcaster
 
     force_torque_sensor_broadcaster:
-      type: force_torque_sensor_broadcaster/ForceTorqueStateBroadcaster
+      type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
 
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
