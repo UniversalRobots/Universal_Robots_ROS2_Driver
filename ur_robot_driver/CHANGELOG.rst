@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.2.0 (2022-06-20)
+------------------
 * Updated package maintainers
 * Rework bringup (`#403 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/403>`_)
 * Prepare for humble (`#394 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/394>`_)

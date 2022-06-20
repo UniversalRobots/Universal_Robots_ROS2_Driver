@@ -2,8 +2,8 @@
 Changelog for package ur
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.0 (2022-06-20)
+------------------
 * wip
 * Rework bringup (`#403 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/403>`_)
   * Copy all bringup files to ur_robot_driver
