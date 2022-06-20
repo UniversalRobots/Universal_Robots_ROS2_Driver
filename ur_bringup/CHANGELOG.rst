@@ -2,8 +2,8 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.0 (2022-06-20)
+------------------
 * Updated package maintainers
 * Rework bringup (`#403 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/403>`_)
 * Fix force_torque_sensor_broadcaster config (`#405 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/405>`_)
