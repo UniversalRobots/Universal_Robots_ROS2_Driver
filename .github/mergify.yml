@@ -1,0 +1,18 @@
+pull_request_rules:
+  - name: Backport to galactic branch
+    conditions:
+      - base=main
+      - label=backport-galactic
+    actions:
+      backport:
+        branches:
+          - galactic
+
+  - name: Backport to foxy branch
+    conditions:
+      - base=main
+      - label=backport-foxy
+    actions:
+      backport:
+        branches:
+          - foxy
