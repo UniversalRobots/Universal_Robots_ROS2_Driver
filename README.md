@@ -12,10 +12,104 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 ## Build Status
 
-ROS2 Distro | Foxy  | Galactic | Rolling
-:---------: | :---: | :------: | :-----:
-**Branch** | [foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main)
-**Build Status** | [![Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?branch=foxy)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml?branch=foxy) <br /> [![Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?branch=foxy)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml?branch=foxy) <br /> [![Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml/badge.svg?branch=foxy)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml?branch=foxy) | [![Galactic Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?branch=main) <br /> [![Galactic Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?branch=main) <br /> [![Galactic Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml?branch=main) | [![Rolling Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml?branch=main) <br /> [![Rolling Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?branch=main) <br /> [![Rolling Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml?branch=main)
+<table width="100%">
+  <tr>
+    <th>ROS2 Distro</th>
+    <th>Foxy</th>
+    <th>Galactic</th>
+    <th>Humble</th>
+    <th>Rolling</th>
+  </tr>
+  <tr>
+    <th>Branch</th>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy">foxy</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic">galactic</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
+  </tr>
+  <tr>
+    <th>Build Status</th>
+    <td>
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml?query=event%3Aschedule++">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?event=schedule"
+              alt="Foxy Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml?query=event%3Aschedule++">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule"
+              alt="Foxy Semi-Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml?query=branch%3Afoxy+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml/badge.svg?branch=foxy"
+              alt="Foxy Source Build"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?query=event%3Aschedule++">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?event=schedule"
+              alt="Galactic Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?query=event%3Aschedule++">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?event=schedule"
+              alt="Galactic Semi-Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml?query=branch%3Agalactic+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml/badge.svg?branch=galactic"
+              alt="Galactic Source Build"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-build.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-build.yml/badge.svg?branch=main"
+              alt="Humble Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml/badge.svg?branch=main"
+              alt="Humble Semi-Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml?branch=main">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml/badge.svg?branch=main"
+              alt="Humble Source Build"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml/badge.svg?branch=main"
+              alt="Rolling Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main"
+              alt="Rolling Semi-Binary Build"/>
+      </a> <br />
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml/badge.svg?branch=main"
+              alt="Rolling Source Build"/>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <th>Execution Test</th>
+    <td>&nbsp;</td>
+    <td>
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-execution-test.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-execution-test.yml/badge.svg?branch=main"
+              alt="Execution Testing"/>
+      </a>
+   </td>
+   <td>
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-execution-test.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-execution-test.yml/badge.svg?branch=main"
+              alt="Execution Testing"/>
+      </a>
+   </td>
+   <td>
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-execution-test.yml?query=branch%3Amain+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-execution-test.yml/badge.svg?branch=main"
+              alt="Execution Testing"/>
+      </a>
+   </td>
+
+  </tr>
+</table>
 
 **NOTE**: There are three build stages checking current and future compatibility of the driver.
 
