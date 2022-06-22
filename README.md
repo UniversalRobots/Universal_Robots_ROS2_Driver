@@ -15,13 +15,6 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
 
 ## Build Status
 
-<<<<<<< HEAD
-ROS2 Distro | Foxy  | Galactic | Rolling
-:---------: | :---: | :------: | :-----:
-**Branch** | [foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main) | [main](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main)
-**Build Status** | [![Foxy Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml) <br /> [![Foxy Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml) <br /> [![Foxy Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml) | [![Galactic Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?branch=galactic)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?branch=galactic) <br /> [![Galactic Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?branch=galactic)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?branch=galactic) <br /> [![Galactic Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml/badge.svg)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml) | [![Rolling Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml?branch=main) <br /> [![Rolling Semi-Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?branch=main) <br /> [![Rolling Source Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml?branch=main)
-**Execution Test** |  |  | [![Execution Testing](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/test-ci.yml/badge.svg?branch=main)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/test-ci.yml?branch=main)
-=======
 <table width="100%">
   <tr>
     <th>ROS2 Distro</th>
@@ -120,8 +113,6 @@ ROS2 Distro | Foxy  | Galactic | Rolling
 
   </tr>
 </table>
-
->>>>>>> 17507cb (Update README badges (#402))
 
 **NOTE**: There are three build stages checking current and future compatibility of the driver.
 
