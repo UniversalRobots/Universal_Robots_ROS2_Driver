@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+* Fixed controller name for force_torque_sensor_broadcaster (`#411 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/411>`_)
+* Contributors: Felix Exner
+
 2.2.0 (2022-06-20)
 ------------------
 * Updated package maintainers
