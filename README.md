@@ -159,9 +159,9 @@ binary package installation unless you want to join development and submit chang
    the main branch. Therefore you might not find a dedicated branch for a recent ROS2 version. In
    that case, please use the `main` branch.
 
-2. Make sure that `colcon`, its extensions and `vcs` are installed:
+2. Make sure that `colcon` and its extensions are installed:
    ```
-   sudo apt install python3-colcon-common-extensions python3-vcstool
+   sudo apt install python3-colcon-common-extensions
    ```
 
 3. Create a new ROS2 workspace:
@@ -174,9 +174,8 @@ binary package installation unless you want to join development and submit chang
    ```
    cd $COLCON_WS
    git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
    rosdep update
-   rosdep install --ignore-src --from-paths src -y -r
+   rosdep install --ignore-src --from-paths src -y
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
    source install/setup.bash
    ```
