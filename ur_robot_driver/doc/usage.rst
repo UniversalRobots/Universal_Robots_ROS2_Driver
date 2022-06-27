@@ -95,7 +95,7 @@ With this, we can spin up a driver using
 
 .. code-block:: bash
 
-   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=<ur_type> robot_ip:=172.17.0.2 launch_rviz:=true
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=<ur_type> robot_ip:=192.168.56.101 launch_rviz:=true
 
 You can view the polyscope GUI by opening `<http://192.168.56.101:6080/vnc.html>`_.
 
