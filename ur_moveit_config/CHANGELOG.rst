@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.1 (2022-06-27)
+------------------
 * Remove non-required dependency from CMakeLists (`#414 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/414>`_)
 * Contributors: Felix Exner
 
