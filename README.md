@@ -143,9 +143,9 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 
 1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html) or [Install ROS2 Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html). This branch will support both distributions until API breaking changes are made, at which point a `galactic` branch will be forked. For using this driver with ROS2 `foxy` checkout [foxy branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy).
 
-2. Make sure that `colcon`, its extensions and `vcs` are installed:
+2. Make sure that `colcon` and its extensions are installed:
    ```
-   sudo apt install python3-colcon-common-extensions python3-vcstool
+   sudo apt install python3-colcon-common-extensions
    ```
 
 3. Create a new ROS2 workspace:
@@ -157,20 +157,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 4. Pull relevant packages, install dependencies, compile, and source the workspace by using:
    ```
    cd $COLCON_WS
-   git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos
-   rosdep install --ignore-src --from-paths src -y -r
-   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-   source install/setup.bash
-   ```
-
-## Using MoveIt
-
-To use MoveIt some additional packages should be added into workspace:
-   ```
-   cd $COLCON_WS
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/MoveIt_Support.repos
-   vcs import src --skip-existing --input src/moveit2/moveit2.repos
+   git clone -b foxy https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
    rosdep install --ignore-src --from-paths src -y -r
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
    source install/setup.bash
@@ -269,7 +256,7 @@ The most relevant arguments are the following:
    ```
    After a few seconds the robot should move (or jump when using emulation).
 
-- To test the driver with the example MoveIt-setup, first start the controllers then start MoveIt. (This requires a `vcs import` of MoveIt packages):
+- To test the driver with the example MoveIt-setup, first start the controllers then start MoveIt.
    ```
    ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false
 
