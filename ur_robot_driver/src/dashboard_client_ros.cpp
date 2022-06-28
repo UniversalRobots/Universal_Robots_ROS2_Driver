@@ -264,7 +264,7 @@ bool DashboardClientROS::connect()
 {
   timeval tv;
   // Timeout after which a call to the dashboard server will be considered failure if no answer has been received.
-  double time_buffer;
+  double time_buffer = 0;
   node_->get_parameter("receive_timeout", time_buffer);
   tv.tv_sec = time_buffer;
   tv.tv_usec = 0;
