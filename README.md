@@ -173,7 +173,7 @@ binary package installation unless you want to join development and submit chang
 4. Pull relevant packages, install dependencies, compile, and source the workspace by using:
    ```
    cd $COLCON_WS
-   git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
+   git clone -b galactic https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
    rosdep update
    rosdep install --ignore-src --from-paths src -y
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
