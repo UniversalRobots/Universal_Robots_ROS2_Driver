@@ -79,12 +79,12 @@ def generate_test_description():
     return LaunchDescription(ld)
 
 
-class URTest(unittest.TestCase):
+class DashboardClientTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
-        cls.node = Node("ur_robot_driver_integration_test_1")
+        cls.node = Node("dashboard_client_test")
         cls.init_robot(cls)
 
     @classmethod
