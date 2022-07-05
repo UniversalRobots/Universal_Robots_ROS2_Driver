@@ -14,7 +14,7 @@
   <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
 
-  <author>Lovro Ivanov</author>
+  <author email="lovro.ivanov@gmail.com">Lovro Ivanov</author>
   <author>Denis Stogl</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
