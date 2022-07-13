@@ -21,9 +21,12 @@ On the welcome screen click on the hamburger menu in the top-right corner and se
 .. image:: initial_setup_images/UR10e_HMI_Settings_Remote_Control.png
    :target: initial_setup_images/UR10e_HMI_Settings_Remote_Control.png
    :alt: Remote Control screen of an e-Series robot
+
+
+Check that *Remote Control* is enabled.
    
 
-On the welcome screen click on the hamburger menu in the top-right corner and select *Settings* to enter the robot's setup.  There select *System* and then *URCaps* to enter the URCaps installation screen.
+Go into *Settings* again to enter the robot's setup. There select *System* and then *URCaps* to enter the URCaps installation screen.
 
 
 .. image:: initial_setup_images/es_01_welcome.png
