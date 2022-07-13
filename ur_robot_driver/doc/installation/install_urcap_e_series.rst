@@ -11,6 +11,18 @@ For using the *ur_robot_driver* with a real robot you need to install the
 To install it you first have to copy it to the robot's **programs** folder which can be done either
 via scp or using a USB stick.
 
+On the welcome screen click on the hamburger menu in the top-right corner and select *Settings* to enter the robot's setup. There select *System* and then *Remote Control*.
+
+
+.. image:: initial_setup_images/UR10e_HMI_Settings.png
+   :target: initial_setup_images/UR10e_HMI_Settings.png
+   :alt: Settings screen of an e-Series robot
+
+.. image:: initial_setup_images/UR10e_HMI_Settings_Remote_Control.png
+   :target: initial_setup_images/UR10e_HMI_Settings_Remote_Control.png
+   :alt: Remote Control screen of an e-Series robot
+   
+
 On the welcome screen click on the hamburger menu in the top-right corner and select *Settings* to enter the robot's setup.  There select *System* and then *URCaps* to enter the URCaps installation screen.
 
 
