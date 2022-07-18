@@ -165,7 +165,10 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     // find segment for current timestamp
     joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
     const bool valid_point =
-        (*traj_point_active_ptr_)->sample(traj_time, state_desired, start_segment_itr, end_segment_itr);
+        (*traj_point_active_ptr_)
+            ->sample(traj_time,
+                     joint_trajectory_controller::interpolation_methods::InterpolationMethod::VARIABLE_DEGREE_SPLINE,
+                     state_desired, start_segment_itr, end_segment_itr);
 
     if (valid_point) {
       bool abort = false;
