@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.2.2 (2022-07-19)
+------------------
 * Made sure all past maintainers are listed as authors (`#429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/429>`_)
 * Silence a compilation warning (`#425 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/425>`_)
   Since setting the receive timeout takes the time_buffer as an argument

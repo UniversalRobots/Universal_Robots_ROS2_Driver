@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.2 (2022-07-19)
+------------------
 * Adapted to JTC interpolation method feature (`#439 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/439>`_)
 * Made sure all past maintainers are listed as authors (`#429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/429>`_)
 * Contributors: Felix Exner
