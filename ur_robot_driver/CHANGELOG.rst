@@ -1,3 +1,13 @@
+Forthcoming
+-----------
+* Made sure all past maintainers are listed as authors (`#429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/429>`_)
+* Silence a compilation warning (`#425 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/425>`_)
+  Since setting the receive timeout takes the time_buffer as an argument
+  this raises a "may be used uninitialized" warning. Setting this to 0
+  explicitly should prevent that.
+* Doc: Fix IP address in usage->ursim section (`#422 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/422>`_)
+* Contributors: Felix Exner
+
 2.2.1 (2022-06-27)
 ------------------
 * Fixed controller name for force_torque_sensor_broadcaster (`#411 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/411>`_)
