@@ -13,6 +13,24 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) about this driver.
 
 
+## Installation
+
+The driver is available as several released packages. On Ubuntu, they can be installed with `apt` by running:
+
+```console
+$ sudo apt-get install ros-${ROS_DISTRO}-ur ros-${ROS_DISTRO}-ur-bringup
+```
+
+The driver can also be installed with `rosdep` by added the following tags to a package manifest in a developer's workspace:
+```yaml
+# package.xml
+<depend>ur</depend>
+<depend>ur_bringup</depend>
+```
+
+Lastly, run `rosdep install --from-paths src` to complete the installation.
+
+
 ## Build Status
 
 <table width="100%">
@@ -141,7 +159,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
 
 Deprecation: The `ur_bringup` package is deprecated and will be removed from Iron Irwini on.
 
-## Getting Started
+## Getting Started - Building from Source
 
 1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html).
    For using this driver with ROS2 `foxy`. Checkout [foxy
