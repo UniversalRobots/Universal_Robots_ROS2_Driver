@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.2.3 (2022-07-27)
+------------------
 * Adapt ros control api (`#448 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/448>`_)
   * scaled jtc: Use get_interface_name instead of get_name
   * Migrate from stopped controllers to inactive controllers
