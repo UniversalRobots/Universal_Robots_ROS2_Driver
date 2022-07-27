@@ -306,7 +306,7 @@ def launch_setup(context, *args, **kwargs):
     forward_position_controller_spawner_stopped = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["forward_position_controller", "-c", "/controller_manager", "--stopped"],
+        arguments=["forward_position_controller", "-c", "/controller_manager", "--inactive"],
     )
 
     # There may be other controllers of the joints, but this is the initially-started one
@@ -319,7 +319,7 @@ def launch_setup(context, *args, **kwargs):
     initial_joint_controller_spawner_stopped = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=[initial_joint_controller, "-c", "/controller_manager", "--stopped"],
+        arguments=[initial_joint_controller, "-c", "/controller_manager", "--inactive"],
         condition=UnlessCondition(activate_joint_controller),
     )
 

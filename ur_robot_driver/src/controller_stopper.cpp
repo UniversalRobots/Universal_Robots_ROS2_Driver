@@ -92,7 +92,7 @@ ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool s
     }
     auto request_switch_controller = std::make_shared<controller_manager_msgs::srv::SwitchController::Request>();
     request_switch_controller->strictness = request_switch_controller->STRICT;
-    request_switch_controller->stop_controllers = stopped_controllers_;
+    request_switch_controller->deactivate_controllers = stopped_controllers_;
     auto future = controller_manager_srv_->async_send_request(request_switch_controller);
     rclcpp::spin_until_future_complete(node_, future);
     if (future.get()->ok == false) {
@@ -135,7 +135,7 @@ void ControllerStopper::findAndStopControllers()
         }
         request_switch_controller->strictness = request_switch_controller->STRICT;
         if (!stopped_controllers_.empty()) {
-          request_switch_controller->stop_controllers = stopped_controllers_;
+          request_switch_controller->deactivate_controllers = stopped_controllers_;
           auto future =
               controller_manager_srv_->async_send_request(request_switch_controller, callback_switch_controller);
         }
