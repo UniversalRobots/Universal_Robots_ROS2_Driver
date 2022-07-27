@@ -2,6 +2,12 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix force_torque_sensor_broadcaster config (`#406 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/406>`_)
+* Fix dependencies for galactic (`#392 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/392>`_)
+* Contributors: Felix Exner, Robert Wilbrandt
+
 2.1.1 (2022-05-05)
 ------------------
 
