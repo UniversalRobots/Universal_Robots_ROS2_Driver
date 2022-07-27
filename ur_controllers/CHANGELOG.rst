@@ -2,6 +2,14 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Adapt ros control api (`#448 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/448>`_)
+  * scaled jtc: Use get_interface_name instead of get_name
+  * Migrate from stopped controllers to inactive controllers
+  stopped controllers has been depreated upstream
+* Contributors: Felix Exner
+
 2.2.2 (2022-07-19)
 ------------------
 * Adapted to JTC interpolation method feature (`#439 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/439>`_)
