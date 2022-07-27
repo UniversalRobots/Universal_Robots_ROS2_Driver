@@ -132,6 +132,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 ## Packages in the Repository:
 
   - `ur_bringup` - launch file and run-time configurations, e.g. controllers.
+  - `ur_calibration` - tool for extracting calibration information from a real robot.
   - `ur_controllers` - implementations of controllers specific for UR robots.
   - `ur_dashboard_msgs` - package defining messages used by dashboard node.
   - `ur_description` - description files for the UR robots: meshes, URDF/XACRO files, etc.
@@ -174,6 +175,17 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 3. On the remote PC, launch the suitable launch file which starts the robot driver and controllers (see details in [Usage](#usage) section).
 
 4. In the Program tab of the teach pendant, navigate to the URCaps section on the left and add the external control to the robot program by clicking on it. The program can then be executed by pressing the play button. Make sure the robot is turned on. The robot power status will be displayed on the bottom left.
+
+### Extract calibration information
+
+Each UR robot is calibrated inside the factory giving exact forward and inverse kinematics. To also
+make use of this in ROS, you first have to extract the calibration information from the robot.
+
+Though this step is not necessary to control the robot using this driver, it is highly recommended
+to do so, as otherwise endeffector positions might be off in the magnitude of centimeters.
+
+See the [`ur_calibration`](ur_calibration/README.md) package's documentation for details on
+calibration extraction and handling.
 
 ## Usage
 
