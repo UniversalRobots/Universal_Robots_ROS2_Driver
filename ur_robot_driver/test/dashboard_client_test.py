@@ -28,26 +28,24 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import unittest
 import os
 import time
-import pytest
+import unittest
 
 import launch_testing
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
+import pytest
 import rclpy
+from launch import LaunchDescription
+from launch.actions import (DeclareLaunchArgument, ExecuteProcess,
+                            IncludeLaunchDescription)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from rclpy.node import Node
-
-from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState, GetRobotMode
-from ur_dashboard_msgs.srv import IsProgramRunning
-from ur_dashboard_msgs.srv import Load
-from ur_dashboard_msgs.msg import RobotMode
-
 from std_srvs.srv import Trigger
+from ur_dashboard_msgs.msg import RobotMode
+from ur_dashboard_msgs.srv import (GetLoadedProgram, GetProgramState,
+                                   GetRobotMode, IsProgramRunning, Load)
 
 
 @pytest.mark.launch_test
@@ -63,20 +61,36 @@ def generate_test_description():
     )
 
     robot_ip = LaunchConfiguration("robot_ip")
-    dir_path = os.path.dirname(os.path.realpath(__file__))
 
     launch_file = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([dir_path, "/../launch/ur_dashboard_client.launch.py"]),
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_dashboard_client.launch.py"]
+            )
+        ),
         launch_arguments={
             "robot_ip": robot_ip,
         }.items(),
     )
 
-    ld = []
-    ld += declared_arguments
-    ld += [launch_testing.actions.ReadyToTest(), launch_file]
+    ursim = ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [FindPackagePrefix("ur_robot_driver"), "lib", "ur_robot_driver", "start_ursim.sh"]
+            )
+        ],
+        name="start_ursim",
+        output="screen",
+    )
 
-    return LaunchDescription(ld)
+    return LaunchDescription(
+        declared_arguments
+        + [
+            launch_testing.actions.ReadyToTest(),
+            launch_file,
+            ursim,
+        ]
+    )
 
 
 class DashboardClientTest(unittest.TestCase):
@@ -84,7 +98,7 @@ class DashboardClientTest(unittest.TestCase):
     def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
-        cls.node = Node("dashboard_client_test")
+        cls.node = rclpy.node.Node("dashboard_client_test")
         cls.init_robot(cls)
 
     @classmethod

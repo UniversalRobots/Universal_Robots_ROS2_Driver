@@ -28,30 +28,28 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import unittest
 import os
 import time
-import pytest
+import unittest
 
 import launch_testing
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
+import pytest
 import rclpy
-from rclpy.action import ActionClient
-from rclpy.node import Node
-
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
-from trajectory_msgs.msg import JointTrajectoryPoint
-
 from controller_manager_msgs.srv import SwitchController
-from ur_msgs.srv import SetIO
-from ur_msgs.msg import IOStates
-
+from launch import LaunchDescription
+from launch.actions import (DeclareLaunchArgument, ExecuteProcess,
+                            IncludeLaunchDescription)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
+from rclpy.action import ActionClient
+from rclpy.node import Node
 from std_srvs.srv import Trigger
+from trajectory_msgs.msg import JointTrajectoryPoint
+from ur_msgs.msg import IOStates
+from ur_msgs.srv import SetIO
 
 
 @pytest.mark.launch_test
@@ -86,10 +84,13 @@ def generate_test_description():
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
-    dir_path = os.path.dirname(os.path.realpath(__file__))
 
     launch_file = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([dir_path, "/../launch/ur_control.launch.py"]),
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
+            )
+        ),
         launch_arguments={
             "robot_ip": robot_ip,
             "ur_type": ur_type,
@@ -102,11 +103,19 @@ def generate_test_description():
         }.items(),
     )
 
-    ld = []
-    ld += declared_arguments
-    ld += [launch_testing.actions.ReadyToTest(), launch_file]
+    ursim = ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [FindPackagePrefix("ur_robot_driver"), "lib", "ur_robot_driver", "start_ursim.sh"]
+            )
+        ],
+        name="start_ursim",
+        output="screen",
+    )
 
-    return LaunchDescription(ld)
+    return LaunchDescription(
+        declared_arguments + [launch_testing.actions.ReadyToTest(), launch_file]
+    )
 
 
 class RobotDriverTest(unittest.TestCase):
