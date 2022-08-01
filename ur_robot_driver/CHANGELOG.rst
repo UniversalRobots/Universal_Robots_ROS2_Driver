@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.0.1 (2022-08-01)
+------------------
 * added ur_bringup to test_depend of ur_robot_driver (`#454 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/454>`_)
 * Contributors: Felix Exner
 
