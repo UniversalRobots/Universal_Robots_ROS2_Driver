@@ -7,16 +7,6 @@
     URDF description for Universal Robots
   </description>
 
-  <author>Nadia Hammoudeh Garcia</author>
-  <author>Kelsey Hawkins</author>
-  <author>G.A. vd. Hoorn</author>
-  <author>Lovro Ivanov</author>
-  <author>Mathias Ludtke</author>
-  <author>Wim Meeussen</author>
-  <author>Felix Messmer</author>
-  <author>Miguel Prada Sarasola</author>
-  <author>Denis Stogl</author>
-
   <maintainer email="grosse@fzi.de">Marvin Große Besselmann</maintainer>
   <maintainer email="lovro.ivanov@gmail.com">Lovro Ivanov</maintainer>
   <maintainer email="denis.stogl@picknik.ai">Denis Stogl</maintainer>
@@ -26,6 +16,16 @@
 
   <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
+
+  <author>Nadia Hammoudeh Garcia</author>
+  <author>Kelsey Hawkins</author>
+  <author>G.A. vd. Hoorn</author>
+  <author>Lovro Ivanov</author>
+  <author>Mathias Ludtke</author>
+  <author>Wim Meeussen</author>
+  <author>Felix Messmer</author>
+  <author>Miguel Prada Sarasola</author>
+  <author>Denis Stogl</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
