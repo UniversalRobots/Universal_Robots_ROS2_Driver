@@ -2,6 +2,9 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.0.0 (2022-06-20)
 ------------------
 * Updated package dependencies (`#399 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/399>`_)

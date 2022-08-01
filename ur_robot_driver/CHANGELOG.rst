@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+* added ur_bringup to test_depend of ur_robot_driver (`#454 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/454>`_)
+* Contributors: Felix Exner
+
 2.0.0 (2022-06-20)
 ------------------
 * Updated package dependencies (`#399 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/399>`_)

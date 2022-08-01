@@ -2,6 +2,9 @@
 Changelog for package ur_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.0.0 (2022-06-20)
 ------------------
 * Migrated the description to ROS2
