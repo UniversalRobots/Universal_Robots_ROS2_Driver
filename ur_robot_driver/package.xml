@@ -43,6 +43,7 @@
 
   <test_depend>launch_testing_ament_cmake</test_depend>
   <test_depend>rclpy</test_depend>
+  <test_depend>ur_bringup</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
