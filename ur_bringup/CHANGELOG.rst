@@ -2,6 +2,11 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Disable fts_broadcaster for now
+* Contributors: Felix Exner
+
 2.1.2 (2022-07-27)
 ------------------
 * Fix force_torque_sensor_broadcaster config (`#406 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/406>`_)
