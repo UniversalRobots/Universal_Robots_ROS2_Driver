@@ -299,15 +299,15 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    force_torque_sensor_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "force_torque_sensor_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
+    # force_torque_sensor_broadcaster_spawner = Node(
+    # package="controller_manager",
+    # executable="spawner",
+    # arguments=[
+    # "force_torque_sensor_broadcaster",
+    # "--controller-manager",
+    # "/controller_manager",
+    # ],
+    # )
 
     forward_position_controller_spawner_stopped = Node(
         package="controller_manager",
@@ -340,7 +340,7 @@ def launch_setup(context, *args, **kwargs):
         joint_state_broadcaster_spawner,
         io_and_status_controller_spawner,
         speed_scaling_state_broadcaster_spawner,
-        force_torque_sensor_broadcaster_spawner,
+        # force_torque_sensor_broadcaster_spawner,
         forward_position_controller_spawner_stopped,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,

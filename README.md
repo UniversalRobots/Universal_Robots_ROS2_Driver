@@ -151,6 +151,13 @@ binary package installation unless you want to join development and submit chang
    ```
    sudo apt-get install ros-galactic-ur-robot-driver
    ```
+
+   **NOTE:** The currently released version seems to have a problem with the
+   `force_torque_sensor_broadcaster`. For this reason we've disabled that controller for the time
+   being. We are working to solve this asap, but since binary versions are only released once a
+   month, we decided to rather disable this feature than having a crashing driver. This does only
+   affect the galactic version, all other distributions should be fine. See the corresponding [issue](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/460) for details.
+
 ### Build from source
 1. [Install ROS2
    Galactic](https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html). This
