@@ -2,8 +2,8 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.3 (2022-08-02)
+------------------
 * Disable fts_broadcaster for now
 * Contributors: Felix Exner
 
