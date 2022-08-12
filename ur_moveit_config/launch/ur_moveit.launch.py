@@ -165,8 +165,8 @@ def launch_setup(context, *args, **kwargs):
     controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
     # the scaled_joint_trajectory_controller does not work on simulated robots
     if use_fake_hardware:
-        controllers_yaml["scaled_joint_trajectory_controller"]["default"]= False
-        controllers_yaml["joint_trajectory_controller"]["default"]= True
+        controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
+        controllers_yaml["joint_trajectory_controller"]["default"] = True
 
     moveit_controllers = {
         "moveit_simple_controller_manager": controllers_yaml,
