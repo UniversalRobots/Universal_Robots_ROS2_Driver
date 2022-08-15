@@ -45,6 +45,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
+    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
@@ -162,6 +163,11 @@ def launch_setup(context, *args, **kwargs):
 
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
+    # the scaled_joint_trajectory_controller does not work on fake hardware
+    if use_fake_hardware:
+        controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
+        controllers_yaml["joint_trajectory_controller"]["default"] = True
+
     moveit_controllers = {
         "moveit_simple_controller_manager": controllers_yaml,
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
@@ -255,6 +261,13 @@ def generate_launch_description():
             "ur_type",
             description="Type/series of used UR robot.",
             choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_fake_hardware",
+            default_value="false",
+            description="Indicate whether robot is running with fake hardware mirroring command to its states.",
         )
     )
     declared_arguments.append(
