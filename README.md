@@ -333,7 +333,7 @@ If you just want to test description of the UR robots, e.g., after changes you c
    ros2 launch ur_description view_ur.launch.py ur_type:=ur5e
    ```
 ## Usage with official UR simulator
-The docker-compose setup is prepared for usage of driver with the official UR simulator. Follow instructions [here](ur_robot_driver/resources/ursim_driver/README.md).
+For using the driver with the URSim docker image please follow instructions [here](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator).
 
 ## Expected Changes in the Near Future
 
