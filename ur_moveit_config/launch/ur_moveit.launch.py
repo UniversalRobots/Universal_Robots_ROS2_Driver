@@ -159,6 +159,15 @@ def launch_setup(context, *args, **kwargs):
 
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
+<<<<<<< HEAD
+=======
+    # the scaled_joint_trajectory_controller does not work on fake hardware
+    change_controllers = context.perform_substitution(use_fake_hardware)
+    if change_controllers == "true":
+        controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
+        controllers_yaml["joint_trajectory_controller"]["default"] = True
+
+>>>>>>> 6c52828 (Fix selecting the right controller given fake_hw)
     moveit_controllers = {
         "moveit_simple_controller_manager": controllers_yaml,
         "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
