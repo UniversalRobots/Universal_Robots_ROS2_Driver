@@ -23,6 +23,11 @@
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
+   <xacro:arg name="robot_ip" default="0.0.0.0" />
+   <xacro:arg name="script_filename" default="$(find ur_robot_driver)/resources/ros_control.urscript"/>
+   <xacro:arg name="output_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
+   <xacro:arg name="input_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
+
    <!-- arm -->
    <xacro:ur_robot
      prefix="$(arg prefix)"
@@ -36,5 +41,9 @@
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
-     initial_positions="${load_yaml(initial_positions_file)}" />
+     initial_positions="${load_yaml(initial_positions_file)}"
+     robot_ip="$(arg robot_ip)"
+     script_filename="$(arg script_filename)"
+     output_recipe_filename="$(arg output_recipe_filename)"
+     input_recipe_filename="$(arg input_recipe_filename)" />
 </robot>
