@@ -85,9 +85,9 @@
     <!-- ros2 control instance -->
     <xacro:ur_ros2_control
       name="URPositionHardwareInterface" prefix="${prefix}"
-      use_fake_hardware="$(arg use_fake_hardware)"
+      use_fake_hardware="$(use_fake_hardware)"
       initial_positions="${initial_positions}"
-      fake_sensor_commands="$(arg fake_sensor_commands)"
+      fake_sensor_commands="$(fake_sensor_commands)"
       script_filename="$(arg script_filename)"
       output_recipe_filename="$(arg output_recipe_filename)"
       input_recipe_filename="$(arg input_recipe_filename)"
