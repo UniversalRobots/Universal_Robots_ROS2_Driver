@@ -16,7 +16,7 @@ saves it into a .yaml file.
 In the launch folder of the ur_calibration package is a helper script:
 
 ```bash
-$ ros2 launch ur_calibration calibration_correction.py.launch \
+$ ros2 launch ur_calibration calibration_correction.launch.py \
 robot_ip:=<robot_ip> target_filename:="${HOME}/my_robot_calibration.yaml"
 ```
 
@@ -44,7 +44,7 @@ We can use the new package to store the calibration data in that package. We rec
 robot individually, e.g. *ex-ur10-1*.
 
 ```bash
-$ ros2 launch ur_calibration calibration_correction.py.launch \
+$ ros2 launch ur_calibration calibration_correction.launch.py \
 robot_ip:=<robot_ip> \
 target_filename:="$(ros2 pkg prefix <organization_name>_ur_launch)/share/<organization_name>_ur_launch/etc/ex-ur10-1_calibration.yaml"
 ```
