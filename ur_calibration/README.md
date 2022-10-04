@@ -16,7 +16,7 @@ saves it into a .yaml file.
 In the launch folder of the ur_calibration package is a helper script:
 
 ```bash
-$ ros2 launch ur_calibration calibration_correction.py.launch \
+$ ros2 launch ur_calibration calibration_correction.launch.py \
 robot_ip:=<robot_ip> target_filename:="${HOME}/my_robot_calibration.yaml"
 ```
 
