@@ -4,7 +4,6 @@
    <xacro:arg name="name" default="ur"/>
    <!-- import main macro -->
    <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
-   <xacro:include filename="$(find ur_description)/urdf/inc/ur_common.xacro" />
 
    <!-- parameters -->
    <xacro:arg name="prefix" default="" />
@@ -12,6 +11,7 @@
    <xacro:arg name="kinematics_params" default=""/>
    <xacro:arg name="physical_params" default=""/>
    <xacro:arg name="visual_params" default=""/>
+   <xacro:arg name="transmission_hw_interface" default=""/>
    <xacro:arg name="safety_limits" default="false"/>
    <xacro:arg name="safety_pos_margin" default="0.15"/>
    <xacro:arg name="safety_k_position" default="20"/>
@@ -29,31 +29,22 @@
    <xacro:arg name="input_recipe_filename" default="$(find ur_robot_driver)/resources/rtde_input_recipe.txt"/>
 
    <!-- Load configuration data from the provided .yaml files -->
-   <xacro:read_model_data
+   <xacro:ur_robot
+     prefix="$(arg prefix)"
      joint_limits_parameters_file="$(arg joint_limit_params)"
      kinematics_parameters_file="$(arg kinematics_params)"
      physical_parameters_file="$(arg physical_params)"
-     visual_parameters_file="$(arg visual_params)"/>
-
-   <!-- arm -->
-   <xacro:ur_robot
-     prefix="$(arg prefix)"
+     visual_parameters_file="$(arg visual_params)"
+     transmission_hw_interface="$(arg transmission_hw_interface)"
      safety_limits="$(arg safety_limits)"
      safety_pos_margin="$(arg safety_pos_margin)"
      safety_k_position="$(arg safety_k_position)"
-     />
-  <!-- ros2 control include -->
-  <xacro:include filename="$(find ur_description)/urdf/ur.ros2_control.xacro" />
-  <!-- ros2 control instance -->
-  <xacro:ur_ros2_control
-    name="URPositionHardwareInterface" prefix="$(arg prefix)"
-    use_fake_hardware="$(arg use_fake_hardware)"
-    initial_positions="${load_yaml(initial_positions_file)}"
-    fake_sensor_commands="$(arg fake_sensor_commands)"
-    script_filename="$(arg script_filename)"
-    output_recipe_filename="$(arg output_recipe_filename)"
-    input_recipe_filename="$(arg input_recipe_filename)"
-    tf_prefix=""
-    hash_kinematics="${kinematics_hash}"
-    robot_ip="$(arg robot_ip)" />
+     use_fake_hardware="$(arg use_fake_hardware)"
+     fake_sensor_commands="$(arg fake_sensor_commands)"
+     initial_positions="${load_yaml(initial_positions_file)}"
+     robot_ip="$(arg robot_ip)"
+     script_filename="$(arg script_filename)"
+     output_recipe_filename="$(arg output_recipe_filename)"
+     input_recipe_filename="$(arg input_recipe_filename)"
+  />
 </robot>
