@@ -28,26 +28,22 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import unittest
 import os
 import time
-import pytest
+import unittest
 
 import launch_testing
+import pytest
+import rclpy
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-
-import rclpy
+from launch.substitutions import LaunchConfiguration
 from rclpy.node import Node
-
-from ur_dashboard_msgs.srv import GetLoadedProgram, GetProgramState, GetRobotMode
-from ur_dashboard_msgs.srv import IsProgramRunning
-from ur_dashboard_msgs.srv import Load
-from ur_dashboard_msgs.msg import RobotMode
-
 from std_srvs.srv import Trigger
+from ur_dashboard_msgs.msg import RobotMode
+from ur_dashboard_msgs.srv import (GetLoadedProgram, GetProgramState,
+                                   GetRobotMode, IsProgramRunning, Load)
 
 
 @pytest.mark.launch_test
@@ -79,12 +75,12 @@ def generate_test_description():
     return LaunchDescription(ld)
 
 
-class URTest(unittest.TestCase):
+class DashboardClientTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
-        cls.node = Node("ur_robot_driver_integration_test_1")
+        cls.node = Node("dashboard_client_test")
         cls.init_robot(cls)
 
     @classmethod

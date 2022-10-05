@@ -28,30 +28,26 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import unittest
 import os
 import time
-import pytest
+import unittest
 
 import launch_testing
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
+import pytest
 import rclpy
-from rclpy.action import ActionClient
-from rclpy.node import Node
-
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
-from trajectory_msgs.msg import JointTrajectoryPoint
-
 from controller_manager_msgs.srv import SwitchController
-from ur_msgs.srv import SetIO
-from ur_msgs.msg import IOStates
-
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from rclpy.action import ActionClient
+from rclpy.node import Node
 from std_srvs.srv import Trigger
+from trajectory_msgs.msg import JointTrajectoryPoint
+from ur_msgs.msg import IOStates
+from ur_msgs.srv import SetIO
 
 
 @pytest.mark.launch_test
@@ -109,12 +105,12 @@ def generate_test_description():
     return LaunchDescription(ld)
 
 
-class URTest(unittest.TestCase):
+class RobotDriverTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
-        cls.node = Node("ur_robot_driver_integration_test_2")
+        cls.node = Node("robot_driver_test")
         time.sleep(1)
         cls.init_robot(cls)
 
