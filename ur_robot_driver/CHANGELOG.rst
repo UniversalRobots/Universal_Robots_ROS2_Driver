@@ -1,3 +1,10 @@
+Forthcoming
+-----------
+* Remove the custom ursim docker files (`#478 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/478>`_)
+  This has been migrated inside the docs and is not needed anymore.
+* Remove duplicated update_rate parameter (`#479 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/479>`_)
+* Contributors: Felix Exner
+
 2.2.3 (2022-07-27)
 ------------------
 * Adapt ros control api (`#448 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/448>`_)
