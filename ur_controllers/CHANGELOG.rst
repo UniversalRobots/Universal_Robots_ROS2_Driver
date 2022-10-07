@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.4 (2022-10-07)
+------------------
 * Adapt jtc controller params to new param api
 * Contributors: Felix Exner
 
