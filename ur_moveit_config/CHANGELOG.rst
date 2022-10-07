@@ -2,6 +2,14 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix selecting the right controller given fake_hw
+  This was falsely introduced earlier. This is a working version.
+* add ur_moveit.launch.py parameter to use working controller when using fake hardware (`#464 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/464>`_)
+  add script parameter to use correct controller when using fake hardware
+* Contributors: Felix Exner, adverley
+
 2.2.3 (2022-07-27)
 ------------------
 
