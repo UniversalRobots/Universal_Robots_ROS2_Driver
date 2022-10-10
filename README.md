@@ -152,7 +152,7 @@ binary package installation unless you want to join development and submit chang
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
 robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html)
 ur [use a simulated
-robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator). 
+robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator).
 
 3. **Start the driver**. See the [usage
    documentation](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for
