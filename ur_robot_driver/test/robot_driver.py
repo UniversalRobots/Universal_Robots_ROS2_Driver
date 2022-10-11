@@ -28,20 +28,22 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import os
 import time
 import unittest
 
-import launch_testing
 import pytest
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from controller_manager_msgs.srv import SwitchController
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import (DeclareLaunchArgument, ExecuteProcess,
+                            IncludeLaunchDescription, RegisterEventHandler)
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
+from launch_testing.actions import ReadyToTest
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from std_srvs.srv import Trigger
@@ -56,14 +58,6 @@ def generate_test_description():
 
     declared_arguments.append(
         DeclareLaunchArgument(
-            "robot_ip",
-            default_value="192.168.56.101",
-            description="IP address by which the robot can be reached.",
-        )
-    )
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "ur_type",
             default_value="ur5e",
             description="Type/series of used UR robot.",
@@ -71,38 +65,52 @@ def generate_test_description():
         )
     )
 
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "initial_joint_controller",
-            default_value="scaled_joint_trajectory_controller",
-            description="Type/series of used UR robot.",
-        )
-    )
-
     ur_type = LaunchConfiguration("ur_type")
-    robot_ip = LaunchConfiguration("robot_ip")
-    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
-    dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    launch_file = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([dir_path, "/../launch/ur_control.launch.py"]),
+    robot_driver = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
+            )
+        ),
         launch_arguments={
-            "robot_ip": robot_ip,
+            "robot_ip": "192.168.56.101",
             "ur_type": ur_type,
             "launch_rviz": "false",
-            "initial_joint_controller": initial_joint_controller,
+            "initial_joint_controller": "scaled_joint_trajectory_controller",
             "headless_mode": "true",
             "launch_dashboard_client": "false",
             "start_joint_controller": "false",
-            "ci_testing": "true",
         }.items(),
     )
+    ursim = ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [FindPackagePrefix("ur_robot_driver"), "lib", "ur_robot_driver", "start_ursim.sh"]
+            ),
+            " ",
+            "-m ",
+            ur_type,
+        ],
+        name="start_ursim",
+        output="screen",
+    )
+    wait_dashboard_server = ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
+            )
+        ],
+        name="wait_dashboard_server",
+        output="screen",
+    )
+    driver_starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+    )
 
-    ld = []
-    ld += declared_arguments
-    ld += [launch_testing.actions.ReadyToTest(), launch_file]
-
-    return LaunchDescription(ld)
+    return LaunchDescription(
+        declared_arguments + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
+    )
 
 
 class RobotDriverTest(unittest.TestCase):
@@ -123,10 +131,24 @@ class RobotDriverTest(unittest.TestCase):
     def init_robot(self):
 
         # Initialize clients and test service appearance
+        self.power_on_client = self.node.create_client(Trigger, "/dashboard_client/power_on")
+        if self.power_on_client.wait_for_service(30) is False:
+            raise Exception(
+                "Could not reach power on service, make sure that the driver is actually running"
+            )
+
+        self.brake_release_client = self.node.create_client(
+            Trigger, "/dashboard_client/brake_release"
+        )
+        if self.brake_release_client.wait_for_service(10) is False:
+            raise Exception(
+                "Could not reach brake release service, make sure that the driver is actually running"
+            )
+
         self.switch_controller_client = self.node.create_client(
             SwitchController, "/controller_manager/switch_controller"
         )
-        if self.switch_controller_client.wait_for_service(10) is False:
+        if self.switch_controller_client.wait_for_service(60) is False:
             raise Exception(
                 "Could not reach switch controller service, make sure that the controller_manager is actually running"
             )
@@ -155,6 +177,13 @@ class RobotDriverTest(unittest.TestCase):
                 "Could not reach /scaled_joint_trajectory_controller/follow_joint_trajectory action server,"
                 "make sure that controller is active (load + start)"
             )
+
+        # Start robot
+        empty_req = Trigger.Request()
+        self.call_service(self, self.power_on_client, empty_req)
+        self.call_service(self, self.brake_release_client, empty_req)
+        self.call_service(self, self.resend_robot_program_client, empty_req)
+        self.call_service(self, self.resend_robot_program_client, empty_req)
 
     def test_2_manager(self):
         req = SwitchController.Request()

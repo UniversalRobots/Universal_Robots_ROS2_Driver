@@ -28,17 +28,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import os
 import time
 import unittest
 
-import launch_testing
 import pytest
 import rclpy
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import (DeclareLaunchArgument, ExecuteProcess,
+                            IncludeLaunchDescription)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
+from launch_testing.actions import ReadyToTest
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
@@ -52,27 +53,48 @@ def generate_test_description():
 
     declared_arguments.append(
         DeclareLaunchArgument(
-            "robot_ip",
-            default_value="192.168.56.101",
-            description="IP address by which the robot can be reached.",
+            "ur_type",
+            default_value="ur5e",
+            description="Type/series of used UR robot.",
+            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
         )
     )
 
-    robot_ip = LaunchConfiguration("robot_ip")
-    dir_path = os.path.dirname(os.path.realpath(__file__))
+    ur_type = LaunchConfiguration("ur_type")
 
-    launch_file = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([dir_path, "/../launch/ur_dashboard_client.launch.py"]),
+    dashboard_client = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_robot_driver"),
+                    "launch",
+                    "ur_dashboard_client.launch.py",
+                ]
+            )
+        ),
         launch_arguments={
-            "robot_ip": robot_ip,
+            "robot_ip": "192.168.56.101",
         }.items(),
     )
+    ursim = ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [
+                    FindPackagePrefix("ur_robot_driver"),
+                    "lib",
+                    "ur_robot_driver",
+                    "start_ursim.sh",
+                ]
+            ),
+            " ",
+            "-m ",
+            ur_type,
+        ],
+        name="start_ursim",
+        output="screen",
+    )
 
-    ld = []
-    ld += declared_arguments
-    ld += [launch_testing.actions.ReadyToTest(), launch_file]
-
-    return LaunchDescription(ld)
+    return LaunchDescription(declared_arguments + [ReadyToTest(), dashboard_client, ursim])
 
 
 class DashboardClientTest(unittest.TestCase):
@@ -93,7 +115,7 @@ class DashboardClientTest(unittest.TestCase):
 
         # Initialize clients
         self.power_on_client = self.node.create_client(Trigger, "/dashboard_client/power_on")
-        if self.power_on_client.wait_for_service(10) is False:
+        if self.power_on_client.wait_for_service(30) is False:
             raise Exception(
                 "Could not reach power on service, make sure that the driver is actually running"
             )
