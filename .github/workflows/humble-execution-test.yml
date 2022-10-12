@@ -7,7 +7,7 @@ on:
 
 jobs:
   binary_test:
-    name: binary execution test
+    name: ${{ matrix.ROS_DISTRO }} (${{ matrix.ROS_REPO }}) binary execution test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -17,17 +17,13 @@ jobs:
         ROS_REPO: [main, testing]
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.ROS_DISTRO }}.repos
-      DOCKER_RUN_OPTS: --network static_test_net
+      DOCKER_RUN_OPTS: --network ursim_net
       BEFORE_INIT: 'apt-get update -qq && apt-get install -y iproute2 iputils-ping && ip addr && ping -c5 192.168.56.101'
       IMMEDIATE_TEST_OUTPUT: true
-      PARALLEL_TESTS: 2
     steps:
       - uses: actions/checkout@v1
         with:
           ref: humble
-      - name: start ursim
-        run: |
-          .github/dockerursim/build_and_run_docker_ursim.sh
       - uses: 'ros-industrial/industrial_ci@master'
         env:
           ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
