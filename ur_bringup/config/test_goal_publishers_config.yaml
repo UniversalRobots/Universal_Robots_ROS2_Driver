@@ -27,7 +27,7 @@ publisher_scaled_joint_trajectory_controller:
       wrist_2_joint: [-0.1,0.1]
       wrist_3_joint: [-0.1,0.1]
 
-publisher_joint_trajectory_controller:
+publisher_joint_trajectory_position_controller:
   ros__parameters:
 
     controller_name: "joint_trajectory_controller"
