@@ -34,8 +34,7 @@ import unittest
 import pytest
 import rclpy
 from launch import LaunchDescription
-from launch.actions import (DeclareLaunchArgument, ExecuteProcess,
-                            IncludeLaunchDescription)
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
@@ -43,8 +42,16 @@ from launch_testing.actions import ReadyToTest
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
-from ur_dashboard_msgs.srv import (GetLoadedProgram, GetProgramState,
-                                   GetRobotMode, IsProgramRunning, Load)
+from ur_dashboard_msgs.srv import (
+    GetLoadedProgram,
+    GetProgramState,
+    GetRobotMode,
+    IsProgramRunning,
+    Load,
+)
+
+TIMEOUT_WAIT_SERVICE = 10
+TIMEOUT_WAIT_SERVICE_INITIAL = 30
 
 
 @pytest.mark.launch_test
@@ -113,133 +120,83 @@ class DashboardClientTest(unittest.TestCase):
 
     def init_robot(self):
 
-        # Initialize clients
-        self.power_on_client = self.node.create_client(Trigger, "/dashboard_client/power_on")
-        if self.power_on_client.wait_for_service(30) is False:
-            raise Exception(
-                "Could not reach power on service, make sure that the driver is actually running"
-            )
-
-        self.power_off_client = self.node.create_client(Trigger, "/dashboard_client/power_off")
-        if self.power_off_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach power off service, make sure that the driver is actually running"
-            )
-
-        self.brake_release_client = self.node.create_client(
-            Trigger, "/dashboard_client/brake_release"
+        # We wait longer for the first client, as the robot is still starting up
+        power_on_client = waitForService(
+            self.node, "/dashboard_client/power_on", Trigger, timeout=TIMEOUT_WAIT_SERVICE_INITIAL
         )
-        if self.brake_release_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach brake release service, make sure that the driver is actually running"
-            )
 
-        self.unlock_protective_stop_client = self.node.create_client(
-            Trigger, "/dashboard_client/unlock_protective_stop"
-        )
-        if self.unlock_protective_stop_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach unlock protective stop service, make sure that the driver is actually running"
-            )
+        # Connect to all other expected services
+        dashboard_interfaces = {
+            "power_off": Trigger,
+            "brake_release": Trigger,
+            "unlock_protective_stop": Trigger,
+            "restart_safety": Trigger,
+            "get_robot_mode": GetRobotMode,
+            "load_installation": Load,
+            "load_program": Load,
+            "close_popup": Trigger,
+            "get_loaded_program": GetLoadedProgram,
+            "program_state": GetProgramState,
+            "program_running": IsProgramRunning,
+            "play": Trigger,
+            "stop": Trigger,
+        }
+        self.dashboard_clients = {
+            srv_name: waitForService(self.node, f"/dashboard_client/{srv_name}", srv_type)
+            for (srv_name, srv_type) in dashboard_interfaces.items()
+        }
 
-        self.restart_safety_client = self.node.create_client(
-            Trigger, "/dashboard_client/restart_safety"
-        )
-        if self.restart_safety_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach restart safety service, make sure that the driver is actually running"
-            )
+        # Add first client to dict
+        self.dashboard_clients["power_on"] = power_on_client
 
-        self.get_robot_mode_client = self.node.create_client(
-            GetRobotMode, "/dashboard_client/get_robot_mode"
-        )
-        if self.get_robot_mode_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach get robot mode service, make sure that the driver is actually running"
-            )
+    #
+    # Test functions
+    #
 
-        self.load_installation_client = self.node.create_client(
-            Load, "/dashboard_client/load_installation"
-        )
-        if self.load_installation_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach load installation service, make sure that the driver is actually running"
-            )
-
-        self.load_program_client = self.node.create_client(Load, "/dashboard_client/load_program")
-        if self.load_program_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach load program service, make sure that the driver is actually running"
-            )
-
-        self.close_popup_client = self.node.create_client(Trigger, "/dashboard_client/close_popup")
-        if self.load_program_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach close popup service, make sure that the driver is actually running"
-            )
-
-        self.get_loaded_program_client = self.node.create_client(
-            GetLoadedProgram, "/dashboard_client/get_loaded_program"
-        )
-        if self.get_loaded_program_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach get loaded program service, make sure that the driver is actually running"
-            )
-
-        self.get_program_state_client = self.node.create_client(
-            GetProgramState, "/dashboard_client/program_state"
-        )
-        if self.get_program_state_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach program state service, make sure that the driver is actually running"
-            )
-
-        self.is_program_running_client = self.node.create_client(
-            IsProgramRunning, "/dashboard_client/program_running"
-        )
-        if self.is_program_running_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach program running service, make sure that the driver is actually running"
-            )
-
-        self.play_program_client = self.node.create_client(Trigger, "/dashboard_client/play")
-        if self.play_program_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach play service, make sure that the driver is actually running"
-            )
-
-        self.stop_program_client = self.node.create_client(Trigger, "/dashboard_client/stop")
-        if self.stop_program_client.wait_for_service(10) is False:
-            raise Exception(
-                "Could not reach stop service, make sure that the driver is actually running"
-            )
-
-    def test_1_switch_on(self):
+    def test_switch_on(self):
         """Test power on a robot."""
-        empty_req = Trigger.Request()
-        get_robot_mode_req = GetRobotMode.Request()
+        # Power on robot
+        self.assertTrue(self.call_dashboard_service("power_on", Trigger.Request()).success)
 
-        self.call_service(self.power_on_client, empty_req)
+        # Wait until robot mode changes
         end_time = time.time() + 10
         mode = RobotMode.DISCONNECTED
         while mode not in (RobotMode.IDLE, RobotMode.RUNNING) and time.time() < end_time:
-            result = self.call_service(self.get_robot_mode_client, get_robot_mode_req)
+            result = self.call_dashboard_service("get_robot_mode", GetRobotMode.Request())
+            self.assertTrue(result.success)
             mode = result.robot_mode.mode
 
         self.assertIn(mode, (RobotMode.IDLE, RobotMode.RUNNING))
 
-        self.call_service(self.brake_release_client, empty_req)
+        # Release robot brakes
+        self.assertTrue(self.call_dashboard_service("brake_release", Trigger.Request()).success)
+
+        # Wait until robot mode is RUNNING
         end_time = time.time() + 10
         while mode != RobotMode.RUNNING and time.time() < end_time:
-            result = self.call_service(self.get_robot_mode_client, get_robot_mode_req)
+            result = self.call_dashboard_service("get_robot_mode", GetRobotMode.Request())
+            self.assertTrue(result.success)
             mode = result.robot_mode.mode
 
         self.assertEqual(mode, RobotMode.RUNNING)
 
-    def call_service(self, client, request):
-        future = client.call_async(request)
+    #
+    # Utility functions
+    #
+
+    def call_dashboard_service(self, srv_name, request):
+        future = self.dashboard_clients[srv_name].call_async(request)
         rclpy.spin_until_future_complete(self.node, future)
         if future.result() is not None:
             return future.result()
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")
+
+
+def waitForService(node, srv_name, srv_type, timeout=TIMEOUT_WAIT_SERVICE):
+    client = node.create_client(srv_type, srv_name)
+    if client.wait_for_service(timeout) is False:
+        raise Exception(f"Could not reach service '{srv_name}' within timeout of {timeout}")
+
+    node.get_logger().info(f"Successfully connected to service '{srv_name}'")
+    return client
