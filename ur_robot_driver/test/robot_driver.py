@@ -193,7 +193,6 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_set_io(self):
         """Test to set an IO and check whether it has been set."""
-
         # Create io callback to verify result
         io_msg = None
 
@@ -248,7 +247,6 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_trajectory(self):
         """Test robot movement."""
-
         # Construct test trajectory
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -278,8 +276,9 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_illegal_trajectory(self):
         """Test trajectory server.
-        This is more of a validation test that the testing suite does the right thing"""
 
+        This is more of a validation test that the testing suite does the right thing
+        """
         # Construct test trajectory, the second point wrongly starts before the first
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -306,7 +305,6 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_trajectory_scaled(self):
         """Test robot movement."""
-
         # Construct test trajectory
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
