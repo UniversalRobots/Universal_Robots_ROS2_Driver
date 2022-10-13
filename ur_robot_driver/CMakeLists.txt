@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 project(ur_robot_driver)
 
+option(
+  UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS
+  "Build integration tests using the start_ursim script"
+  OFF
+)
+
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter)
@@ -157,12 +163,14 @@ if(BUILD_TESTING)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
 
-  add_launch_test(test/dashboard_client.py
-    TIMEOUT
-      120
-  )
-  add_launch_test(test/robot_driver.py
-    TIMEOUT
-      300
-  )
+  if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
+    add_launch_test(test/dashboard_client.py
+      TIMEOUT
+        120
+    )
+    add_launch_test(test/robot_driver.py
+      TIMEOUT
+        300
+    )
+  endif()
 endif()

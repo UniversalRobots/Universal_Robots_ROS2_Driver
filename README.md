@@ -106,6 +106,11 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
 
 1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
 
+Each of these stages also performs integration tests using ursim. In order to execute these tests locally, they have to be enabled:
+  ```
+  colcon build --packages-select ur_robot_driver --cmake-args -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=On
+  ```
+
 
 ## Packages in the Repository:
 
