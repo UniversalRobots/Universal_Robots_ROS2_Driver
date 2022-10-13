@@ -362,9 +362,11 @@ class RobotDriverTest(unittest.TestCase):
     #
 
     def call_service(self, srv_name, request):
+        self.node.get_logger().info(f"Calling service '{srv_name}' with request {request}")
         future = self.service_clients[srv_name].call_async(request)
         rclpy.spin_until_future_complete(self.node, future)
         if future.result() is not None:
+            self.node.get_logger().info(f"Received result {future.result()}")
             return future.result()
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")

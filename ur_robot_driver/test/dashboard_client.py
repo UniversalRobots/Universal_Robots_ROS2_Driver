@@ -162,6 +162,7 @@ class DashboardClientTest(unittest.TestCase):
         end_time = time.time() + 10
         mode = RobotMode.DISCONNECTED
         while mode not in (RobotMode.IDLE, RobotMode.RUNNING) and time.time() < end_time:
+            time.sleep(0.1)
             result = self.call_dashboard_service("get_robot_mode", GetRobotMode.Request())
             self.assertTrue(result.success)
             mode = result.robot_mode.mode
@@ -173,7 +174,9 @@ class DashboardClientTest(unittest.TestCase):
 
         # Wait until robot mode is RUNNING
         end_time = time.time() + 10
+        mode = RobotMode.DISCONNECTED
         while mode != RobotMode.RUNNING and time.time() < end_time:
+            time.sleep(0.1)
             result = self.call_dashboard_service("get_robot_mode", GetRobotMode.Request())
             self.assertTrue(result.success)
             mode = result.robot_mode.mode
@@ -185,9 +188,13 @@ class DashboardClientTest(unittest.TestCase):
     #
 
     def call_dashboard_service(self, srv_name, request):
+        self.node.get_logger().info(
+            f"Calling dashboard service '{srv_name}' with request {request}"
+        )
         future = self.dashboard_clients[srv_name].call_async(request)
         rclpy.spin_until_future_complete(self.node, future)
         if future.result() is not None:
+            self.node.get_logger().info(f"Received result {future.result()}")
             return future.result()
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")
