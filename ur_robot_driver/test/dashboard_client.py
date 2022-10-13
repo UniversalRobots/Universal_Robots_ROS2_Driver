@@ -155,6 +155,14 @@ class DashboardClientTest(unittest.TestCase):
 
     def test_switch_on(self):
         """Test power on a robot."""
+        # Wait until the robot is booted completely
+        mode = RobotMode.DISCONNECTED
+        while mode != RobotMode.POWER_OFF and time.time() < end_time:
+            time.sleep(0.1)
+            result = self.call_dashboard_service("get_robot_mode", GetRobotMode.Request())
+            self.assertTrue(result.success)
+            mode = result.robot_mode.mode
+
         # Power on robot
         self.assertTrue(self.call_dashboard_service("power_on", Trigger.Request()).success)
 
