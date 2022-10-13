@@ -170,7 +170,7 @@ if(BUILD_TESTING)
     )
     add_launch_test(test/robot_driver.py
       TIMEOUT
-        300
+        500
     )
   endif()
 endif()
