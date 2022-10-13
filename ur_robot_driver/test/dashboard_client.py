@@ -156,6 +156,7 @@ class DashboardClientTest(unittest.TestCase):
     def test_switch_on(self):
         """Test power on a robot."""
         # Wait until the robot is booted completely
+        end_time = time.time() + 10
         mode = RobotMode.DISCONNECTED
         while mode != RobotMode.POWER_OFF and time.time() < end_time:
             time.sleep(0.1)
