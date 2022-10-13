@@ -51,7 +51,7 @@ from ur_dashboard_msgs.srv import (
 )
 
 TIMEOUT_WAIT_SERVICE = 10
-TIMEOUT_WAIT_SERVICE_INITIAL = 30
+TIMEOUT_WAIT_SERVICE_INITIAL = 60
 
 
 @pytest.mark.launch_test

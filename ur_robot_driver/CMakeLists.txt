@@ -157,7 +157,10 @@ if(BUILD_TESTING)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
 
-  add_launch_test(test/dashboard_client.py)
+  add_launch_test(test/dashboard_client.py
+    TIMEOUT
+      120
+  )
   add_launch_test(test/robot_driver.py
     TIMEOUT
       300
