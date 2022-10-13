@@ -89,29 +89,6 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       </a>
     </td>
   </tr>
-  <tr>
-    <th>Execution Test</th>
-    <td>&nbsp;</td>
-    <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-execution-test.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-execution-test.yml/badge.svg?branch=main"
-              alt="Execution Testing"/>
-      </a>
-   </td>
-   <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-execution-test.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-execution-test.yml/badge.svg?branch=main"
-              alt="Execution Testing"/>
-      </a>
-   </td>
-   <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-execution-test.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-execution-test.yml/badge.svg?branch=main"
-              alt="Execution Testing"/>
-      </a>
-   </td>
-
-  </tr>
 </table>
 
 
