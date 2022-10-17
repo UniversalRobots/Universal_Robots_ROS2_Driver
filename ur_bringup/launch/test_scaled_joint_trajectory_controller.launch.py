@@ -48,7 +48,7 @@ def generate_launch_description():
         [
             Node(
                 package="ros2_control_test_nodes",
-                executable="publisher_joint_trajectory_controller",
+                executable="publisher_joint_trajectory_position_controller",
                 name="publisher_scaled_joint_trajectory_controller",
                 parameters=[position_goals],
                 output={"stdout": "screen", "stderr": "screen"},
