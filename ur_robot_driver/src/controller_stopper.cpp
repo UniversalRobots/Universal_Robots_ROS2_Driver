@@ -156,7 +156,7 @@ void ControllerStopper::startControllers()
   if (!stopped_controllers_.empty()) {
     auto request = std::make_shared<controller_manager_msgs::srv::SwitchController::Request>();
     request->strictness = request->STRICT;
-    request->start_controllers = stopped_controllers_;
+    request->activate_controllers = stopped_controllers_;
     auto future = controller_manager_srv_->async_send_request(request, callback);
   }
 }
