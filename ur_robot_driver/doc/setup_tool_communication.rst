@@ -3,6 +3,15 @@
 Setting up the tool communication on an e-Series robot
 ======================================================
 
+.. note::
+   Currently, there seems to be issues with having the tool communication setup from this guide and
+   the "Robotiq Grippers" URCap running in parallel. If you are planning to use the "Robotiq
+   Grippers" URCap then currently please refrain from installing the rs485 URCap.
+
+   See
+   `this issue <https://github.com/UniversalRobots/Universal_Robots_ToolComm_Forwarder_URCap/issues/9>`_
+   for details and the current state.
+
 The Universal Robots e-Series provides an rs485 based interface at the tool flange that can be used
 to attach an rs485-based device to the robot's tcp without the need to wire a separate cable along
 the robot.
