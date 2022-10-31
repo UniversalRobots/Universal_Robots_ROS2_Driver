@@ -128,7 +128,7 @@ private:
                           std_srvs::srv::Trigger::Response::SharedPtr resp);
 
   bool handBackControl(std_srvs::srv::Trigger::Request::SharedPtr req,
-                          std_srvs::srv::Trigger::Response::SharedPtr resp);
+                       std_srvs::srv::Trigger::Response::SharedPtr resp);
 
   bool setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                   ur_msgs::srv::SetPayload::Response::SharedPtr resp);

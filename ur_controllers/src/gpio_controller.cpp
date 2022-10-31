@@ -283,8 +283,8 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
         std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
 
     hand_back_control_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-            "~/hand_back_control",
-            std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
+        "~/hand_back_control",
+        std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
         "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
@@ -417,28 +417,28 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
 }
 
 bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
-                                        std_srvs::srv::Trigger::Response::SharedPtr resp)
+                                     std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
-    // reset success flag
-    command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-    // call the service in the hardware
-    command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_CMD].set_value(1.0);
+  // reset success flag
+  command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+  // call the service in the hardware
+  command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_CMD].set_value(1.0);
 
-    while (command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-        // Asynchronous wait until the hardware interface has set the slider value
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-    resp->success =
-            static_cast<bool>(command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value());
+  while (command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+    // Asynchronous wait until the hardware interface has set the slider value
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  resp->success =
+      static_cast<bool>(command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value());
 
-    if (resp->success) {
-        RCLCPP_INFO(get_node()->get_logger(), "Deactivated control");
-    } else {
-        RCLCPP_ERROR(get_node()->get_logger(), "Could not deactivate control");
-        return false;
-    }
+  if (resp->success) {
+    RCLCPP_INFO(get_node()->get_logger(), "Deactivated control");
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not deactivate control");
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,

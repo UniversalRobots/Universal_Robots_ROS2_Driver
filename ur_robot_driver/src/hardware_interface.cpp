@@ -244,11 +244,11 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-          "hand_back_control", "hand_back_control_cmd", &hand_back_control_cmd_));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("hand_back_control", "hand_back_control_cmd", &hand_back_control_cmd_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
-          "hand_back_control", "hand_back_control_async_success", &hand_back_control_async_success_));
+      "hand_back_control", "hand_back_control_async_success", &hand_back_control_async_success_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface("payload", "mass", &payload_mass_));
   command_interfaces.emplace_back(
@@ -673,9 +673,9 @@ void URPositionHardwareInterface::checkAsyncIO()
   }
 
   if (!std::isnan(hand_back_control_cmd_) && ur_driver_ != nullptr) {
-      robot_program_running_ = false;
-      hand_back_control_async_success_ = true;
-      hand_back_control_cmd_ = NO_NEW_CMD_;
+    robot_program_running_ = false;
+    hand_back_control_async_success_ = true;
+    hand_back_control_cmd_ = NO_NEW_CMD_;
   }
 
   if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) &&
