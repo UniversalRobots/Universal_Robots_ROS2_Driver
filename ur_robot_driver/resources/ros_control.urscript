@@ -1,6 +1,6 @@
-{{BEGIN_REPLACE}}
-
 # HEADER_BEGIN
+
+{{BEGIN_REPLACE}}
 
 steptime = get_steptime()
 

@@ -530,7 +530,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "tool_voltage",
-            default_value="24",
+            default_value="0",  # 0 being a conservative value that won't destroy anything
             description="Tool voltage that will be setup.",
         )
     )
