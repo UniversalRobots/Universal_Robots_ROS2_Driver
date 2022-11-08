@@ -202,3 +202,15 @@ Currently, the ``scaled_joint_trajectory_controller`` does not work with ros2_co
    ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
    # and in another shell
    ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true use_fake_hardware:=true
+
+Robot frames
+------------
+
+While most tf frames come from the URDF and are published from the ``robot_state_publisher``, there
+are a couple of things to know:
+
+- The ``base`` frame is the robot's base as the robot controller sees it.
+- The ``tool0_controller`` is the tool frame as published from the robot controller. If there is no
+  additional tool configured on the Teach pendant (TP), this should be equivalent to ``tool0`` given that
+  the URDF uses the specific robot's :ref:`calibration <calibration_extraction>`. If a tool is
+  configured on the TP, then the additional transformation will show in ``base`` -> ``tool0``.
