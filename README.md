@@ -189,18 +189,20 @@ building might fail occasionally.
    with ROS2 ``galactic``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic), for using it
    with ROS2 ``humble``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble).
 
-2. Make sure that `colcon`, its extensions and `vcs` are installed:
+   Once installed, please make sure to actually [source ROS2](https://docs.ros.org/en/rolling/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html#source-the-setup-files) before proceeding.
+
+3. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```
    sudo apt install python3-colcon-common-extensions python3-vcstool
    ```
 
-3. Create a new ROS2 workspace:
+4. Create a new ROS2 workspace:
    ```
    export COLCON_WS=~/workspace/ros_ur_driver
    mkdir -p $COLCON_WS/src
    ```
 
-4. Clone relevant packages, install dependencies, compile, and source the workspace by using:
+5. Clone relevant packages, install dependencies, compile, and source the workspace by using:
    ```
    cd $COLCON_WS
    git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
@@ -211,7 +213,7 @@ building might fail occasionally.
    source install/setup.bash
    ```
 
-5. When consecutive pulls leads to build errors, please make sure to update the upstream packages before
+6. When consecutive pulls leads to build errors, please make sure to update the upstream packages before
    filing an issue:
    ```
    cd $COLCON_WS
