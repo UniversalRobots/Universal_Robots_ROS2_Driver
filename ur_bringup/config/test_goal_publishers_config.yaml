@@ -11,14 +11,14 @@ publisher_scaled_joint_trajectory_controller:
     pos4: [0.0, -1.57, 0.0, 0.0, 0.0, 0.0]
 
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - ur_arm_shoulder_pan_joint
+      - ur_arm_shoulder_lift_joint
+      - ur_arm_elbow_joint
+      - ur_arm_wrist_1_joint
+      - ur_arm_wrist_2_joint
+      - ur_arm_wrist_3_joint
 
-    check_starting_point: true
+    check_starting_point: false
     starting_point_limits:
       shoulder_pan_joint: [-0.1,0.1]
       shoulder_lift_joint: [-1.6,-1.5]
@@ -40,14 +40,14 @@ publisher_joint_trajectory_position_controller:
     pos4: [0.0, -1.57, 0.0, 0.0, 0.0, 0.0]
 
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - ur_arm_shoulder_pan_joint
+      - ur_arm_shoulder_lift_joint
+      - ur_arm_elbow_joint
+      - ur_arm_wrist_1_joint
+      - ur_arm_wrist_2_joint
+      - ur_arm_wrist_3_joint
 
-    check_starting_point: true
+    check_starting_point: false
     starting_point_limits:
       shoulder_pan_joint: [-0.1,0.1]
       shoulder_lift_joint: [-1.6,-1.5]
