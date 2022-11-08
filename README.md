@@ -199,7 +199,7 @@ building might fail occasionally.
    git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
    vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
    rosdep update
-   rosdep install --ignore-src --from-paths src -y -r
+   rosdep install --ignore-src --from-paths src -y
    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
    source install/setup.bash
    ```
@@ -210,7 +210,7 @@ building might fail occasionally.
    cd $COLCON_WS
    vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
    rosdep update
-   rosdep install --ignore-src --from-paths src -y -r
+   rosdep install --ignore-src --from-paths src -y
    ```
 
 ## MoveIt! support
