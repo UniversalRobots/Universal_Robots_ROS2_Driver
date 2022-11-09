@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
-<!-- <robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)"> -->
-<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur">
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
    <!-- robot name parameter -->
    <xacro:arg name="name" default="ur"/>
    <!-- import main macro -->
@@ -42,7 +41,6 @@
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
-
      />
 
    <xacro:if value="$(arg is_sim)">
