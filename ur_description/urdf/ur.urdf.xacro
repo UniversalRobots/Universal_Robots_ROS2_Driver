@@ -15,6 +15,7 @@
    <xacro:arg name="safety_limits" default="false"/>
    <xacro:arg name="safety_pos_margin" default="0.15"/>
    <xacro:arg name="safety_k_position" default="20"/>
+   <xacro:arg name="is_sim" default="false"/>
    <!-- ros2_control related parameters -->
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
@@ -36,5 +37,15 @@
      safety_k_position="$(arg safety_k_position)"
      use_fake_hardware="$(arg use_fake_hardware)"
      fake_sensor_commands="$(arg fake_sensor_commands)"
-     initial_positions="${load_yaml(initial_positions_file)}" />
+     initial_positions="${load_yaml(initial_positions_file)}"
+     is_sim="$(arg is_sim)"/>
+
+
+   <xacro:if value="$(arg is_sim)">
+     <gazebo>
+       <plugin name="$(arg prefix)gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+         <parameters>$(arg gazebo_controllers)</parameters>
+       </plugin>
+     </gazebo>
+   </xacro:if>
 </robot>

@@ -149,6 +149,8 @@ def generate_launch_description():
             " ",
             "prefix:=",
             prefix,
+            " ",
+            "is_sim:=false",
         ]
     )
     robot_description = {"robot_description": robot_description_content}

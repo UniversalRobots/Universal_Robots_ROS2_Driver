@@ -31,7 +31,8 @@
    safety_pos_margin:=0.15
    safety_k_position:=20
    use_fake_hardware:=false
-   fake_sensor_command:=false"
+   fake_sensor_command:=false
+   is_sim:=false"
   >
     <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
     <xacro:ur_robot
@@ -46,6 +47,7 @@
       safety_k_position="${safety_k_position}"
       use_fake_hardware="${use_fake_hardware}"
       fake_sensor_commands="${fake_sensor_command}"
+      is_sim="${is_sim}"
     />
   </xacro:macro>
 </robot>

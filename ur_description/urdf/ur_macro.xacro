@@ -65,6 +65,7 @@
     safety_k_position:=20
     use_fake_hardware:=false
     fake_sensor_commands:=false
+    is_sim:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}">
     <!-- Load configuration data from the provided .yaml files -->
     <xacro:read_model_data
@@ -93,7 +94,8 @@
       input_recipe_filename="$(arg input_recipe_filename)"
       tf_prefix=""
       hash_kinematics="${kinematics_hash}"
-      robot_ip="$(arg robot_ip)" />
+      robot_ip="$(arg robot_ip)"
+      is_sim="${is_sim}"/>
 
 
 
