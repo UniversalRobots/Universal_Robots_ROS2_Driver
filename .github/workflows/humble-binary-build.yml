@@ -2,10 +2,10 @@ name: Humble Binary Build
 on:
   pull_request:
     branches:
-      - main
+      - humble
   push:
     branches:
-      - main
+      - humble
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '13 4 * * *'
