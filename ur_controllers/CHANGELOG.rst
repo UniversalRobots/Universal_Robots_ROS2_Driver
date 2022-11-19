@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Revert "Adapt jtc controller params to new param api"
+  This reverts commit 65ac3679004fb0a622b00d334fa57056607dd23f.
+* Contributors: Felix Exner
+
 2.2.4 (2022-10-07)
 ------------------
 * Adapt jtc controller params to new param api

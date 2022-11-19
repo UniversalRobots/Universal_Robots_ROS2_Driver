@@ -1,3 +1,22 @@
+Forthcoming
+-----------
+* ur_robot_driver: Controller_stopper fix deprecation warning
+  Use `activate_controllers` instead of `start_controllers`.
+* Fix tool voltage setup (`#526 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/526>`_)
+  * Move BEGIN_REPLACE inside of header
+  * Change default value of tool_voltage
+  Keeping this at 0 requires users to explicitly set it to non-zero. This way
+  we won't accitentally destroy hardware that cannot handle 24V.
+* Added dependency to socat (`#527 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/527>`_)
+  This is needed for the tool forwarding.
+* Add a note in the tool_comm doc about a URCap conflict (`#524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/524>`_)
+  * Add a note in the tool_comm doc about a URCap conflict
+  * Update ur_robot_driver/doc/setup_tool_communication.rst
+  Co-authored-by: Mads Holm Peters <79145214+urmahp@users.noreply.github.com>
+  * Fix formatting and one spelling mistake
+  Co-authored-by: Mads Holm Peters <79145214+urmahp@users.noreply.github.com>
+* Contributors: Felix Exner, Felix Exner (fexner)
+
 2.2.4 (2022-10-07)
 ------------------
 * Remove the custom ursim docker files (`#478 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/478>`_)
