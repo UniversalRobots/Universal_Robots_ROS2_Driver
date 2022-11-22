@@ -1,11 +1,5 @@
 name: Humble Semi-Binary Build
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 5 * * *'
@@ -25,6 +19,8 @@ jobs:
       NOT_TEST_DOWNSTREAM: true
     steps:
       - uses: actions/checkout@v1
+        with:
+          ref: humble
       - uses: 'ros-industrial/industrial_ci@master'
         env:
           ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
