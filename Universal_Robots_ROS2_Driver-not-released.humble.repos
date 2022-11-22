@@ -4,7 +4,3 @@
 # Once Upstream packages are released and synced to the target distributions in the required
 # version, the entry in this file shall be removed again.
 repositories:
-  ros2_controllers:
-    type: git
-    url: https://github.com/ros-controls/ros2_controllers.git
-    version: 2.13.0
