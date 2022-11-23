@@ -27,7 +27,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
     <th>Branch</th>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy">foxy</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic">galactic</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
   </tr>
   <tr>
@@ -61,16 +61,16 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       </a>
     </td>
     <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-build.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-build.yml/badge.svg?branch=main"
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-build.yml?query=event%3Aschedule++">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-build.yml/badge.svg?event=schedule"
               alt="Humble Binary Build"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml/badge.svg?branch=main"
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml?query=event%3Aschedule++">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Humble Semi-Binary Build"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml?branch=main">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml/badge.svg?branch=main"
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml?query=branch%3Ahumble">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml/badge.svg?branch=humble"
               alt="Humble Source Build"/>
       </a>
     </td>
@@ -146,7 +146,8 @@ Deprecation: The `ur_bringup` package is deprecated and will be removed from Iro
 1. [Install ROS2 Rolling](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html).
    For using this driver with ROS2 `foxy`. Checkout [foxy
    branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy), for using it
-   with ROS2 ``galactic``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic).
+   with ROS2 ``galactic``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic), for using it
+   with ROS2 ``humble``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble).
 
 2. Make sure that `colcon`, its extensions and `vcs` are installed:
    ```

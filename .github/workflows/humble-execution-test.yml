@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
         with:
-          ref: main
+          ref: humble
       - name: start ursim
         run: |
           .github/dockerursim/build_and_run_docker_ursim.sh
