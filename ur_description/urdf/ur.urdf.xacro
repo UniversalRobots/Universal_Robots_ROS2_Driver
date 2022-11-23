@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
-<!-- <robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)"> -->
-<robot xmlns:xacro="http://wiki.ros.org/xacro" name="">
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
    <!-- robot name parameter -->
    <xacro:arg name="name" default="ur"/>
    <!-- import main macro -->
