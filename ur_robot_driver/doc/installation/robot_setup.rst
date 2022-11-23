@@ -71,6 +71,8 @@ inside a colcon workspace).
 Extract calibration information
 -------------------------------
 
+.. _calibration_extraction:
+
 Each UR robot is calibrated inside the factory giving exact forward and inverse kinematics. To also
 make use of this in ROS, you first have to extract the calibration information from the robot.
 

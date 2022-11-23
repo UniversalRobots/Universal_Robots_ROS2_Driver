@@ -191,52 +191,26 @@ To test the driver with the example MoveIt-setup, first start the driver as desc
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
 robot as explained `here <https://moveit.picknik.ai/galactic/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html>`_.
 
-Fake hardware on ROS2 Galactic
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Fake hardware
+^^^^^^^^^^^^^
 
-Currently, the ``scaled_joint_trajectory_controller`` does not work on ROS2 Galactic. There is an
-`upstream Merge-Request <https://github.com/ros-controls/ros2_control/pull/635>`_ pending to fix that. Until this is merged and released, please change the
-default controller in the `controllers.yaml <ur_moveit_config/config/controllers.yaml>`_ file. Make
-sure that the ``default`` field is assigned ``true`` for the ``joint_trajectory_controller`` and ``false``
-for the
-``scaled_joint_trajectory_controller``.
-
-.. code-block::
-
-   controller_names:
-     - scaled_joint_trajectory_controller
-     - joint_trajectory_controller
-
-
-   scaled_joint_trajectory_controller:
-     action_ns: follow_joint_trajectory
-     type: FollowJointTrajectory
-     default: false
-     joints:
-       - shoulder_pan_joint
-       - shoulder_lift_joint
-       - elbow_joint
-       - wrist_1_joint
-       - wrist_2_joint
-       - wrist_3_joint
-
-
-   joint_trajectory_controller:
-     action_ns: follow_joint_trajectory
-     type: FollowJointTrajectory
-     default: true
-     joints:
-       - shoulder_pan_joint
-       - shoulder_lift_joint
-       - elbow_joint
-       - wrist_1_joint
-       - wrist_2_joint
-       - wrist_3_joint
-
-Then start
+Currently, the ``scaled_joint_trajectory_controller`` does not work with ros2_control fake_hardware. There is an
+`upstream Merge-Request <https://github.com/ros-controls/ros2_control/pull/822>`_ pending to fix that. Until this is merged and released, you'll have to fallback to the ``joint_trajectory_controller`` by passing ``initial_controller:=joint_trajectory_controller`` to the driver's startup. Also, you'll have to tell MoveIt! that you're using fake_hardware as it then has to map to the other controller:
 
 .. code-block::
 
    ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
    # and in another shell
-   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
+   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true use_fake_hardware:=true
+
+Robot frames
+------------
+
+While most tf frames come from the URDF and are published from the ``robot_state_publisher``, there
+are a couple of things to know:
+
+- The ``base`` frame is the robot's base as the robot controller sees it.
+- The ``tool0_controller`` is the tool frame as published from the robot controller. If there is no
+  additional tool configured on the Teach pendant (TP), this should be equivalent to ``tool0`` given that
+  the URDF uses the specific robot's :ref:`calibration <calibration_extraction>`. If a tool is
+  configured on the TP, then the additional transformation will show in ``base`` -> ``tool0``.
