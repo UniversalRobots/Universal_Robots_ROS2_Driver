@@ -112,7 +112,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="file://$(find ${base_visual_mesh['package']})/${base_visual_mesh['path']}"/>
+          <xacro:get_mesh name="base" type="visual"/>
         </geometry>
         <material name="${base_visual_material_name}">
           <color rgba="${base_visual_material_color}"/>
@@ -121,7 +121,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="file://$(find ${base_collision_mesh['package']})/${base_collision_mesh['path']}"/>
+          <xacro:get_mesh name="base" type="collision"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="${base_inertia_radius}" length="${base_inertia_length}" mass="${base_mass}">
@@ -132,7 +132,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="file://$(find ${shoulder_visual_mesh['package']})/${shoulder_visual_mesh['path']}"/>
+          <xacro:get_mesh name="shoulder" type="visual"/>
         </geometry>
         <material name="${shoulder_visual_material_name}">
           <color rgba="${shoulder_visual_material_color}"/>
@@ -141,7 +141,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="file://$(find ${shoulder_collision_mesh['package']})/${shoulder_collision_mesh['path']}"/>
+          <xacro:get_mesh name="shoulder" type="collision"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="${shoulder_inertia_radius}" length="${shoulder_inertia_length}" mass="${shoulder_mass}">
@@ -152,7 +152,7 @@
       <visual>
         <origin xyz="0 0 ${shoulder_offset}" rpy="${pi/2} 0 ${-pi/2}"/>
         <geometry>
-          <mesh filename="file://$(find ${upper_arm_visual_mesh['package']})/${upper_arm_visual_mesh['path']}"/>
+          <xacro:get_mesh name="upper_arm" type="visual"/>
         </geometry>
         <material name="${upper_arm_visual_material_name}">
           <color rgba="${upper_arm_visual_material_color}"/>
@@ -161,7 +161,7 @@
       <collision>
         <origin xyz="0 0 ${shoulder_offset}" rpy="${pi/2} 0 ${-pi/2}"/>
         <geometry>
-          <mesh filename="file://$(find ${upper_arm_collision_mesh['package']})/${upper_arm_collision_mesh['path']}"/>
+          <xacro:get_mesh name="upper_arm" type="collision"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="${upperarm_inertia_radius}" length="${upperarm_inertia_length}" mass="${upper_arm_mass}">
@@ -172,7 +172,7 @@
       <visual>
         <origin xyz="0 0 ${elbow_offset}" rpy="${pi/2} 0 ${-pi/2}"/>
         <geometry>
-          <mesh filename="file://$(find ${forearm_visual_mesh['package']})/${forearm_visual_mesh['path']}"/>
+          <xacro:get_mesh name="forearm" type="visual"/>
         </geometry>
         <material name="${forearm_visual_material_name}">
           <color rgba="${forearm_visual_material_color}"/>
@@ -181,7 +181,7 @@
       <collision>
         <origin xyz="0 0 ${elbow_offset}" rpy="${pi/2} 0 ${-pi/2}"/>
         <geometry>
-          <mesh filename="file://$(find ${forearm_collision_mesh['package']})/${forearm_collision_mesh['path']}"/>
+          <xacro:get_mesh name="forearm" type="collision"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="${forearm_inertia_radius}" length="${forearm_inertia_length}"  mass="${forearm_mass}">
@@ -192,7 +192,7 @@
       <visual>
         <origin xyz="0 0 ${wrist_1_visual_offset}" rpy="${pi/2} 0 0"/>
         <geometry>
-          <mesh filename="file://$(find ${wrist_1_visual_mesh['package']})/${wrist_1_visual_mesh['path']}"/>
+          <xacro:get_mesh name="wrist_1" type="visual"/>
         </geometry>
         <material name="${wrist_1_visual_material_name}">
           <color rgba="${wrist_1_visual_material_color}"/>
@@ -201,7 +201,7 @@
       <collision>
         <origin xyz="0 0 ${wrist_1_visual_offset}" rpy="${pi/2} 0 0"/>
         <geometry>
-          <mesh filename="file://$(find ${wrist_1_collision_mesh['package']})/${wrist_1_collision_mesh['path']}"/>
+          <xacro:get_mesh name="wrist_1" type="collision"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="${wrist_1_inertia_radius}" length="${wrist_1_inertia_length}"  mass="${wrist_1_mass}">
@@ -212,7 +212,7 @@
       <visual>
         <origin xyz="0 0 ${wrist_2_visual_offset}" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="file://$(find ${wrist_2_visual_mesh['package']})/${wrist_2_visual_mesh['path']}"/>
+          <xacro:get_mesh name="wrist_2" type="visual"/>
         </geometry>
         <material name="${wrist_2_visual_material_name}">
           <color rgba="${wrist_2_visual_material_color}"/>
@@ -221,7 +221,7 @@
       <collision>
         <origin xyz="0 0 ${wrist_2_visual_offset}" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="file://$(find ${wrist_2_collision_mesh['package']})/${wrist_2_collision_mesh['path']}"/>
+          <xacro:get_mesh name="wrist_2" type="collision"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="${wrist_2_inertia_radius}" length="${wrist_2_inertia_length}"  mass="${wrist_2_mass}">
@@ -232,7 +232,7 @@
       <visual>
         <origin xyz="0 0 ${wrist_3_visual_offset}" rpy="${pi/2} 0 0"/>
         <geometry>
-          <mesh filename="file://$(find ${wrist_3_visual_mesh['package']})/${wrist_3_visual_mesh['path']}"/>
+          <xacro:get_mesh name="wrist_3" type="visual"/>
         </geometry>
         <material name="${wrist_3_visual_material_name}">
           <color rgba="${wrist_3_visual_material_color}"/>
@@ -241,7 +241,7 @@
       <collision>
         <origin xyz="0 0 ${wrist_3_visual_offset}" rpy="${pi/2} 0 0"/>
         <geometry>
-          <mesh filename="file://$(find ${wrist_3_collision_mesh['package']})/${wrist_3_collision_mesh['path']}"/>
+          <xacro:get_mesh name="wrist_3" type="collision"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="${wrist_3_inertia_radius}" length="${wrist_3_inertia_length}"  mass="${wrist_3_mass}">
