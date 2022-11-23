@@ -1,7 +1,6 @@
 2.2.5 (2022-11-19)
 ------------------
 * ur_robot_driver: Controller_stopper fix deprecation warning
-  Use `activate_controllers` instead of `start_controllers`.
 * Fix tool voltage setup (`#526 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/526>`_)
   * Move BEGIN_REPLACE inside of header
   * Change default value of tool_voltage

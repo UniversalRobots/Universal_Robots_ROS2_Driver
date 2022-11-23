@@ -2,10 +2,7 @@ name: Humble Source Build
 on:
   push:
     branches:
-      - main
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '43 1 * * *'
+      - humble
 
 jobs:
   humble_source:

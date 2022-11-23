@@ -6,9 +6,6 @@ on:
   push:
     branches:
       - humble
-  schedule:
-    # Run every morning to detect flakiness and broken dependencies
-    - cron: '03 5 * * *'
 
 jobs:
   humble_semi_binary:
