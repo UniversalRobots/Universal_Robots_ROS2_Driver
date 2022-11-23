@@ -106,7 +106,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   }
 
   JointTrajectoryPoint state_current, state_desired, state_error;
-  const auto joint_num = joint_names_.size();
+  const auto joint_num = params_.joints.size();
   resize_joint_trajectory_point(state_current, joint_num);
 
   // current state update
@@ -206,7 +206,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
         // send feedback
         auto feedback = std::make_shared<FollowJTrajAction::Feedback>();
         feedback->header.stamp = time;
-        feedback->joint_names = joint_names_;
+        feedback->joint_names = params_.joints;
 
         feedback->actual = state_current;
         feedback->desired = state_desired;
