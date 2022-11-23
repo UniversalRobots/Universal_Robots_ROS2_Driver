@@ -150,7 +150,9 @@ def generate_launch_description():
             "prefix:=",
             prefix,
             " ",
-            "is_sim:=false",
+            "sim_gazebo:=false",
+            " ",
+            "sim_ignition:=false",
         ]
     )
     robot_description = {"robot_description": robot_description_content}

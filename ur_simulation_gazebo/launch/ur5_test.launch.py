@@ -110,6 +110,10 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "joint_limit_params:=",
             joint_limits_file,
+            " ",
+            "sim_gazebo:=false",
+            " ",
+            "sim_ignition:=false",
         ]
     )
     robot_description = {"robot_description": robot_description_content}

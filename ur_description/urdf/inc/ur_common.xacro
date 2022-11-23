@@ -21,7 +21,28 @@
     </inertial>
   </xacro:macro>
 
-  <xacro:macro name="read_model_data" params="joint_limits_parameters_file kinematics_parameters_file physical_parameters_file visual_parameters_file">
+  <xacro:macro name="get_visual_params" params="name:=^ type:=^" >
+    <xacro:property name="visual_params" value="${sec_mesh_files[name][type]}" scope="parent"/>
+  </xacro:macro>
+
+  <!-- Simplification of getting meshes. Available types can be seen in the visual_parameters.yaml (At the time of writing: visual, collision) -->
+  <xacro:macro name="get_mesh_path" params="name:=^ type:=^" >
+    <xacro:get_visual_params />
+    <xacro:if value="${force_abs_paths}">
+      <xacro:property name="mesh" value="file://$(find ${visual_params['mesh']['package']})/${visual_params['mesh']['path']}" scope="parent"/>
+    </xacro:if>
+    <xacro:unless value="${force_abs_paths}">
+      <xacro:property name="mesh" value="package://${visual_params['mesh']['package']}/${visual_params['mesh']['path']}" scope="parent"/>
+    </xacro:unless>
+  </xacro:macro>
+
+  <xacro:macro name="get_mesh" params="name type" >
+    <xacro:get_mesh_path/>
+    <mesh filename="${mesh}"/>
+  </xacro:macro>
+
+  <xacro:macro name="read_model_data" params="joint_limits_parameters_file kinematics_parameters_file physical_parameters_file visual_parameters_file force_abs_paths">
+    <xacro:property name="force_abs_paths" value="${force_abs_paths}" scope="parent"/>
     <!-- Read .yaml files from disk, load content into properties -->
     <xacro:property name="config_joint_limit_parameters" value="${load_yaml(joint_limits_parameters_file)}"/>
     <xacro:property name="config_kinematics_parameters" value="${load_yaml(kinematics_parameters_file)}"/>
@@ -33,7 +54,7 @@
     <xacro:property name="sec_dh_parameters" value="${config_physical_parameters['dh_parameters']}"/>
     <xacro:property name="sec_offsets" value="${config_physical_parameters['offsets']}"/>
     <xacro:property name="sec_inertia_parameters" value="${config_physical_parameters['inertia_parameters']}" />
-    <xacro:property name="sec_mesh_files" value="${config_visual_parameters['mesh_files']}" />
+    <xacro:property name="sec_mesh_files" value="${config_visual_parameters['mesh_files']}" scope="parent"/>
     <xacro:property name="sec_kinematics" value="${config_kinematics_parameters['kinematics']}" />
 
     <!-- JOINTS LIMIT PARAMETERS -->
