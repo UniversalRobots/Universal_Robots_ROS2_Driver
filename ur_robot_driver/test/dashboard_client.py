@@ -51,7 +51,9 @@ from ur_dashboard_msgs.srv import (
 )
 
 TIMEOUT_WAIT_SERVICE = 10
-TIMEOUT_WAIT_SERVICE_INITIAL = 60
+# If we download the docker image simultaneously to the tests, it can take quite some time until the
+# dashboard server is reachable and usable.
+TIMEOUT_WAIT_SERVICE_INITIAL = 120
 
 
 @pytest.mark.launch_test

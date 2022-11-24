@@ -168,7 +168,7 @@ if(BUILD_TESTING)
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
     add_launch_test(test/dashboard_client.py
       TIMEOUT
-        120
+        180
     )
     add_launch_test(test/robot_driver.py
       TIMEOUT
