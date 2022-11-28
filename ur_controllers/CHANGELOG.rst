@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ros2 controllers 2.14 (`#547 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/547>`_)
+* Contributors: Felix Exner
+
 2.2.5 (2022-11-19)
 ------------------
 * Revert "Adapt jtc controller params to new param api"
