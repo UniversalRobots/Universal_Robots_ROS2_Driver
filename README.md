@@ -89,29 +89,6 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       </a>
     </td>
   </tr>
-  <tr>
-    <th>Execution Test</th>
-    <td>&nbsp;</td>
-    <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-execution-test.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-execution-test.yml/badge.svg?branch=main"
-              alt="Execution Testing"/>
-      </a>
-   </td>
-   <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-execution-test.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-execution-test.yml/badge.svg?branch=main"
-              alt="Execution Testing"/>
-      </a>
-   </td>
-   <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-execution-test.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-execution-test.yml/badge.svg?branch=main"
-              alt="Execution Testing"/>
-      </a>
-   </td>
-
-  </tr>
 </table>
 
 
@@ -128,6 +105,11 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
    Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos`
 
 1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
+
+Each of these stages also performs integration tests using ursim. In order to execute these tests locally, they have to be enabled:
+  ```
+  colcon build --packages-select ur_robot_driver --cmake-args -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=On
+  ```
 
 
 ## Packages in the Repository:

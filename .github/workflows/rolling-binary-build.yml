@@ -21,11 +21,12 @@ jobs:
         ROS_REPO: [main, testing]
     env:
       UPSTREAM_WORKSPACE: Universal_Robots_ROS2_Driver-not-released.${{ matrix.ROS_DISTRO }}.repos
-      NOT_TEST_BUILD: true
-      NOT_TEST_DOWNSTREAM: true
+      DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
     steps:
       - uses: actions/checkout@v1
+      - run: docker network create --subnet=192.168.56.0/24 ursim_net
       - uses: 'ros-industrial/industrial_ci@master'
         env:
           ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           ROS_REPO: ${{ matrix.ROS_REPO }}
+          CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
