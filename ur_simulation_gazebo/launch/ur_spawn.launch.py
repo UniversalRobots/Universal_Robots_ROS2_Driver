@@ -137,6 +137,10 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "joint_limit_params:=",
             joint_limits_file,
+            " ",
+            "joint_to_parent:=true",
+            " ",
+            "create_link_world:=true"
         ]
     )
     robot_description = {"robot_description": robot_description_content}
