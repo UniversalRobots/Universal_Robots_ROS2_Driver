@@ -277,7 +277,8 @@ class RobotDriverTest(unittest.TestCase):
         self.node.get_logger().info("Received result SUCCESSFUL")
 
     def test_illegal_trajectory(self):
-        """Test trajectory server.
+        """
+        Test trajectory server.
 
         This is more of a validation test that the testing suite does the right thing
         """
