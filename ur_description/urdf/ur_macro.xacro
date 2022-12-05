@@ -53,11 +53,15 @@
   <xacro:include filename="$(find ur_description)/urdf/inc/ur_transmissions.xacro" />
   <xacro:include filename="$(find ur_description)/urdf/inc/ur_common.xacro" />
 
+  <xacro:property name="default_xyz" default="0 0 0"/>
+  <xacro:property name="default_rpy" default="0 0 0"/>
+
   <xacro:macro name="ur_robot" params="
     prefix
-    parent
+    parent:=world
     joint_to_parent:=false
-    *origin
+    xyz:=${default_xyz}
+    rpy:=${default_rpy}
     joint_limits_parameters_file
     kinematics_parameters_file
     physical_parameters_file
@@ -255,7 +259,8 @@
     <!-- base_joint fixes base_link to the environment -->
     <xacro:if value="${joint_to_parent}">
       <joint name="${prefix}base_joint" type="fixed">
-        <xacro:insert_block name="origin" />
+        <!-- <xacro:insert_block name="origin" /> -->
+        <origin xyz="${xyz}" rpy="${rpy}" />
         <parent link="${parent}" />
         <child link="${prefix}base_link" />
       </joint>

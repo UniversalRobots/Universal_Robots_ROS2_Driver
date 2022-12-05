@@ -53,8 +53,9 @@
      fake_sensor_commands="$(arg fake_sensor_commands)"
      initial_positions="${load_yaml(initial_positions_file)}"
      sim_gazebo="$(arg sim_gazebo)"
-     sim_ignition="$(arg sim_ignition)">
-     <origin xyz="$(arg xyz)" rpy="$(arg rpy)" />          <!-- position robot in the world; only used when joint_to_parent=true -->
+     sim_ignition="$(arg sim_ignition)"
+     xyz="$(arg xyz)" rpy="$(arg rpy)" > <!-- position robot in the world; only used when joint_to_parent=true -->
+     <!-- <origin xyz="$(arg xyz)" rpy="$(arg rpy)" />    -->
    </xacro:ur_robot>
 
 
