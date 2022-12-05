@@ -18,12 +18,6 @@
    <xacro:arg name="sim_gazebo" default="false" />
    <xacro:arg name="sim_ignition" default="false" />
    <xacro:arg name="simulation_controllers" default="" />
-   <xacro:arg name="joint_to_parent" default="false" />
-   <xacro:arg name="create_link_world" default="false" />
-   <xacro:arg name="parent" default="world" />
-   <xacro:arg name="xyz" default="0 0 0" />
-   <xacro:arg name="rpy" default="0 0 0" />
-
    <!-- ros2_control related parameters -->
    <xacro:arg name="use_fake_hardware" default="false" />
    <xacro:arg name="fake_sensor_commands" default="false" />
@@ -32,15 +26,9 @@
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
-   <xacro:if value="$(arg create_link_world)">
-     <!-- create link fixed to the "world" -->
-     <link name="world" />
-   </xacro:if>
    <!-- arm -->
    <xacro:ur_robot
      prefix="$(arg prefix)"
-     joint_to_parent="$(arg joint_to_parent)"
-     parent="$(arg parent)"
      joint_limits_parameters_file="$(arg joint_limit_params)"
      kinematics_parameters_file="$(arg kinematics_params)"
      physical_parameters_file="$(arg physical_params)"
@@ -53,10 +41,7 @@
      fake_sensor_commands="$(arg fake_sensor_commands)"
      initial_positions="${load_yaml(initial_positions_file)}"
      sim_gazebo="$(arg sim_gazebo)"
-     sim_ignition="$(arg sim_ignition)"
-     xyz="$(arg xyz)" rpy="$(arg rpy)" > <!-- position robot in the world; only used when joint_to_parent=true -->
-     <!-- <origin xyz="$(arg xyz)" rpy="$(arg rpy)" />    -->
-   </xacro:ur_robot>
+     sim_ignition="$(arg sim_ignition)"/>
 
 
     <xacro:if value="$(arg sim_gazebo)">
