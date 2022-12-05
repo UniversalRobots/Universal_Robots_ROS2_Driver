@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 project(ur_robot_driver)
 
+# Default to off as this only works in environments where a new docker container can be started with the appropriate networking, which
+# might not be possible e.g. inside the buildfarm
+option(
+  UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS
+  "Build integration tests using the start_ursim script"
+  OFF
+)
+
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
 add_compile_options(-Wno-unused-parameter)
@@ -156,6 +164,15 @@ if(BUILD_TESTING)
   find_package(ur_description REQUIRED)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
-  add_launch_test(test/integration_test_1.py)
-  add_launch_test(test/integration_test_2.py)
+
+  if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
+    add_launch_test(test/dashboard_client.py
+      TIMEOUT
+        180
+    )
+    add_launch_test(test/robot_driver.py
+      TIMEOUT
+        500
+    )
+  endif()
 endif()
