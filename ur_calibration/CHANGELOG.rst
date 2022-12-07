@@ -4,6 +4,13 @@ Changelog for package ur_calibration
 
 Forthcoming
 -----------
+* Added changelog of ur_calibration
+* Fixed package version of ur_calibration
+  That one was old
+* Add ur_calibration package (`#451 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/451>`_)
+  Co-authored-by: Mads Holm Peters <79145214+urmahp@users.noreply.github.com>
+* Contributors: Felix Exner
+
 * Add ur_calibration package (`#451 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/451>`_)
   Co-authored-by: Mads Holm Peters <79145214+urmahp@users.noreply.github.com>
 * Contributors: Felix Exner
