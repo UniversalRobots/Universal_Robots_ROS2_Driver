@@ -2,8 +2,8 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.2 (2022-12-07)
+------------------
 * executable name change (`#514 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/514>`_)
 * Don't attempt to start dashboard_client when use_fake_hardware is true (`#486 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/486>`_)
 * Contributors: Felix Exner, mertgungor

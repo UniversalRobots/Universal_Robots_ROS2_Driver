@@ -2,8 +2,8 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.2 (2022-12-07)
+------------------
 * Added changelog of ur_calibration
 * Fixed package version of ur_calibration
   That one was old
