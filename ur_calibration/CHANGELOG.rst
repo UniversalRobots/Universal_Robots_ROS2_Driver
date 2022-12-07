@@ -1,0 +1,20 @@
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package ur_calibration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Forthcoming
+-----------
+* Add ur_calibration package (`#451 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/451>`_)
+  Co-authored-by: Mads Holm Peters <79145214+urmahp@users.noreply.github.com>
+* Contributors: Felix Exner
+
+2.0.1 (2022-08-01)
+------------------
+
+2.0.0 (2022-06-20)
+------------------
+
+0.0.3 (2020-10-29)
+------------------
+* Initial copy of the ROS1 driver
+* Contributors: AndyZe
