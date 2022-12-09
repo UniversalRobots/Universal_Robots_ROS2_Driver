@@ -273,24 +273,31 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
 
   // The robot's IP address.
-  std::string robot_ip = info_.hardware_parameters["robot_ip"];
+  const std::string robot_ip = info_.hardware_parameters["robot_ip"];
   // Path to the urscript code that will be sent to the robot
-  std::string script_filename = info_.hardware_parameters["script_filename"];
+  const std::string script_filename = info_.hardware_parameters["script_filename"];
   // Path to the file containing the recipe used for requesting RTDE outputs.
-  std::string output_recipe_filename = info_.hardware_parameters["output_recipe_filename"];
+  const std::string output_recipe_filename = info_.hardware_parameters["output_recipe_filename"];
   // Path to the file containing the recipe used for requesting RTDE inputs.
-  std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
+  const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
   // Start robot in headless mode. This does not require the 'External Control' URCap to be running
   // on the robot, but this will send the URScript to the robot directly. On e-Series robots this
   // requires the robot to run in 'remote-control' mode.
-  bool headless_mode =
+  const bool headless_mode =
       (info_.hardware_parameters["headless_mode"] == "true") || (info_.hardware_parameters["headless_mode"] == "True");
   // Port that will be opened to communicate between the driver and the robot controller.
-  int reverse_port = stoi(info_.hardware_parameters["reverse_port"]);
+  const int reverse_port = stoi(info_.hardware_parameters["reverse_port"]);
   // The driver will offer an interface to receive the program's URScript on this port.
-  int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
+  const int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
   //  std::string tf_prefix = info_.hardware_parameters["tf_prefix"];
   //  std::string tf_prefix;
+
+  //The ip address of the host the driver runs on 
+  const std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
+  //Port of the trajectory interface
+  const int trajectory_port = info_.hardware_parameters["trajectory_port"];
+
+  const int script_command_port = info_.hardware_parameters["script_command_port"];
 
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
@@ -299,12 +306,12 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
-  int servoj_gain = stoi(info_.hardware_parameters["servoj_gain"]);
+  const int servoj_gain = stoi(info_.hardware_parameters["servoj_gain"]);
   // Specify lookahead time for servoing to position in joint space.
   // A longer lookahead time can smooth the trajectory.
-  double servoj_lookahead_time = stod(info_.hardware_parameters["servoj_lookahead_time"]);
+  const double servoj_lookahead_time = stod(info_.hardware_parameters["servoj_lookahead_time"]);
 
-  bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
+  const bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
                                 (info_.hardware_parameters["use_tool_communication"] == "True");
 
   // Hash of the calibration reported by the robot. This is used for validating the robot
@@ -312,65 +319,60 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   // hash, an error will be printed. You can use the robot as usual, however Cartesian poses of the
   // endeffector might be inaccurate. See the "ur_calibration" package on help how to generate your
   // own hash matching your actual robot.
-  std::string calibration_checksum = info_.hardware_parameters["kinematics/hash"];
+  const std::string calibration_checksum = info_.hardware_parameters["kinematics/hash"];
 
   std::unique_ptr<urcl::ToolCommSetup> tool_comm_setup;
   if (use_tool_communication) {
     tool_comm_setup = std::make_unique<urcl::ToolCommSetup>();
 
     using ToolVoltageT = std::underlying_type<urcl::ToolVoltage>::type;
-    ToolVoltageT tool_voltage;
+
     // Tool voltage that will be set as soon as the UR-Program on the robot is started. Note: This
     // parameter is only evaluated, when the parameter "use_tool_communication" is set to TRUE.
     // Then, this parameter is required.}
-    tool_voltage = std::stoi(info_.hardware_parameters["tool_voltage"]);
-
+    const ToolVoltageT tool_voltage = std::stoi(info_.hardware_parameters["tool_voltage"]);
     tool_comm_setup->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage));
 
     using ParityT = std::underlying_type<urcl::Parity>::type;
-    ParityT parity;
+  
     // Parity used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. Can be 0 (None), 1 (odd) and 2 (even).
     //
     // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
     // is set to TRUE.  Then, this parameter is required.
-    parity = std::stoi(info_.hardware_parameters["tool_parity"]);
+    const ParityT parity = std::stoi(info_.hardware_parameters["tool_parity"]);
     tool_comm_setup->setParity(static_cast<urcl::Parity>(parity));
 
-    int baud_rate;
     // Baud rate used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. See UR documentation for valid baud rates.
     //
     // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
     // is set to TRUE.  Then, this parameter is required.
-    baud_rate = std::stoi(info_.hardware_parameters["tool_baud_rate"]);
+    const int baud_rate = std::stoi(info_.hardware_parameters["tool_baud_rate"]);
     tool_comm_setup->setBaudRate(static_cast<uint32_t>(baud_rate));
 
-    int stop_bits;
     // Number of stop bits used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. Can be 1 or 2.
     //
     // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
     // is set to TRUE.  Then, this parameter is required.
-    stop_bits = std::stoi(info_.hardware_parameters["tool_stop_bits"]);
+    const int stop_bits = std::stoi(info_.hardware_parameters["tool_stop_bits"]);
     tool_comm_setup->setStopBits(static_cast<uint32_t>(stop_bits));
 
-    int rx_idle_chars;
     // Number of idle chars for the RX unit used for tool communication. Will be set as soon as the UR-Program on the
     // robot is started. Valid values: min=1.0, max=40.0
     //
     // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
     // is set to TRUE.  Then, this parameter is required.
-    rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
+    const int rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
     tool_comm_setup->setRxIdleChars(rx_idle_chars);
 
-    int tx_idle_chars;
     // Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the
     // robot is started. Valid values: min=0.0, max=40.0
     //
     // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
     // is set to TRUE.  Then, this parameter is required.
-    tx_idle_chars = std::stoi(info_.hardware_parameters["tool_tx_idle_chars"]);
+    const int tx_idle_chars = std::stoi(info_.hardware_parameters["tool_tx_idle_chars"]);
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
@@ -378,10 +380,21 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   registerUrclLogHandler();
   try {
     ur_driver_ = std::make_unique<urcl::UrDriver>(
-        robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
-        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
-        std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
-        servoj_lookahead_time, non_blocking_read_);
+        robot_ip, 
+        script_filename,
+        output_recipe_filename,
+        input_recipe_filename,
+        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), 
+        headless_mode,
+        std::move(tool_comm_setup),
+        (uint32_t)reverse_port, 
+        (uint32_t)script_sender_port,
+        servoj_gain,
+        servoj_lookahead_time,
+        non_blocking_read_, 
+        reverse_ip,
+        trajectory_port, 
+        script_command_port);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
