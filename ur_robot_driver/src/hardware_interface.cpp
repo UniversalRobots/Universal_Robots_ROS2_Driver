@@ -295,9 +295,9 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   //The ip address of the host the driver runs on 
   const std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
   //Port of the trajectory interface
-  const int trajectory_port = info_.hardware_parameters["trajectory_port"];
+  const int trajectory_port = stoi(info_.hardware_parameters["trajectory_port"]);
 
-  const int script_command_port = info_.hardware_parameters["script_command_port"];
+  const int script_command_port = stoi(info_.hardware_parameters["script_command_port"]);
 
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
