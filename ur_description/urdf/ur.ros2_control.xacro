@@ -4,11 +4,11 @@
   <xacro:macro name="ur_ros2_control" params="name prefix
     use_fake_hardware:=false fake_sensor_commands:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
+    sim_gazebo:=false
+    sim_ignition:=false
     script_filename output_recipe_filename
     input_recipe_filename tf_prefix
-    hash_kinematics robot_ip
-    sim_gazebo:=false
-    sim_ignition:=false">
+    hash_kinematics robot_ip">
 
     <ros2_control name="${name}" type="system">
       <hardware>
