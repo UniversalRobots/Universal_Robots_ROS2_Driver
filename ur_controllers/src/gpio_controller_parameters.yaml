@@ -1,4 +1,4 @@
-ur_controllers:
+gpio_controller:
    prefix: {
     type: string,
     default_value: "",

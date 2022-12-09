@@ -40,12 +40,19 @@ include_directories(include)
 
 
 generate_parameter_library(
-  GPIOController_parameters
+  gpio_controller_parameters
   src/gpio_controller_parameters.yaml
 )
 
+generate_parameter_library(
+  speed_scaling_state_broadcaster_parameters
+  src/speed_scaling_state_broadcaster_parameters.yaml
+)
+
+
+
 add_library(${PROJECT_NAME} SHARED
-  src/scaled_joint_trajectory_controller.cpp
+  #src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
   src/gpio_controller.cpp)
 
@@ -53,7 +60,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
 target_link_libraries(${PROJECT_NAME}
-GPIOController_parameters
+  gpio_controller_parameters
+  speed_scaling_state_broadcaster_parameters
 )
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}

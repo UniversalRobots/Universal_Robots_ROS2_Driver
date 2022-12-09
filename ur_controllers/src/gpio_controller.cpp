@@ -47,7 +47,7 @@ controller_interface::CallbackReturn GPIOController::on_init()
   {
     initMsgs();
     // Create the parameter listener and get the parameters
-    param_listener_ = std::make_shared<ParamListener>(get_node());
+    param_listener_ = std::make_shared<gpio_controller::ParamListener>(get_node());
     params_ = param_listener_->get_params();
 
     RCLCPP_INFO(get_node()->get_logger(), "Loading UR gpio controller with prefix: %s", params_.prefix.c_str());
@@ -190,6 +190,8 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
 
+  RCLCPP_INFO(get_node()->get_logger(), "Configured");
+
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -280,37 +282,44 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
   }
 
   try {
+    std::string prefix = params_.prefix;
+    //If no prefix was given we enforce the old behaviour of prefixing the topics with the controller name
+    if(prefix.empty()) {
+      prefix = "~/";
+    }
+    RCLCPP_INFO(get_node()->get_logger(), "%s", prefix.c_str());
     // register publisher
-    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
+    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>(prefix+"io_states", rclcpp::SystemDefaultsQoS());
 
     tool_data_pub_ =
-        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>(prefix+"tool_data", rclcpp::SystemDefaultsQoS());
 
     robot_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>(prefix+"robot_mode", rclcpp::SystemDefaultsQoS());
 
     safety_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>(prefix+"safety_mode", rclcpp::SystemDefaultsQoS());
 
     auto program_state_pub_qos = rclcpp::SystemDefaultsQoS();
     program_state_pub_qos.transient_local();
     program_state_pub_ =
-        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", program_state_pub_qos);
+        get_node()->create_publisher<std_msgs::msg::Bool>(prefix+"robot_program_running", program_state_pub_qos);
 
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
-        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+        prefix+"set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
 
     set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
-        "~/set_speed_slider",
+        prefix+"set_speed_slider",
         std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
 
     resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/resend_robot_program",
+        prefix+"resend_robot_program",
         std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
-        "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
-  } catch (...) {
+        prefix+"set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+  } catch (std::exception& ex) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Error while activating %s", ex.what());
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
