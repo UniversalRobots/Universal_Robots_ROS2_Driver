@@ -55,8 +55,21 @@
 
 #include <pthread.h>
 
+/**
+ * @brief set the priority of the current thread to the passed priority and tie the thread to a certain core
+ * @param priority - the desired priority between [0,99] with 99 beeing the highest priority
+ * @param cpu_core - the number of the core you want to tie the thread to (0,your amount of cores]. You are not allowed to tie the thread to core 0 as core 0 is often used for kernel tasks!
+ * 
+ * @note In order for this method to work without root permissions you need to add the following lines to /etc/security/limits.conf (without the ticks "")
+ *    "* soft rtprio 99"
+ *    "* hard rtprio 99"
+ * You need to logout and log back into your session in order for these changes to be applied
+
+*/
 bool setRealtimePriority(int priority, int cpu_core){
   //Taken from https://github.com/leggedrobotics/ethercat_sdk_master/blob/6b420bc1785cf26324aab62c79347b2a6e07924d/src/ethercat_sdk_master/EthercatMaster.cpp#L121
+  
+
   bool success = true;
   //Handle to our thread
   pthread_t thread = pthread_self();
