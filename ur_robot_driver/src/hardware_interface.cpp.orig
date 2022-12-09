@@ -141,6 +141,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
 
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
 {
+  
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -166,6 +167,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
                                                                        &urcl_ft_sensor_measurements_[j]));
     }
   }
+
+
 
   for (size_t i = 0; i < 18; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "digital_output_" + std::to_string(i),
@@ -271,12 +274,12 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
         prefix +"gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(prefix + "gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface("gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(prefix +  "zero_ftsensor", "zero_ftsensor_cmd", &zero_ftsensor_cmd_));
+      hardware_interface::CommandInterface("zero_ftsensor", "zero_ftsensor_cmd", &zero_ftsensor_cmd_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(prefix + "zero_ftsensor", "zero_ftsensor_async_success",
+  command_interfaces.emplace_back(hardware_interface::CommandInterface("zero_ftsensor", "zero_ftsensor_async_success",
                                                                        &zero_ftsensor_async_success_));
 
   return command_interfaces;
@@ -307,7 +310,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   //  std::string tf_prefix = info_.hardware_parameters["tf_prefix"];
   //  std::string tf_prefix;
 
-  // The ip address of the host the driver runs on
+  //The ip address of the host the driver runs on 
   std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
   if (reverse_ip == "0.0.0.0") {
     reverse_ip = "";
@@ -353,15 +356,14 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     tool_comm_setup->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage));
 
     using ParityT = std::underlying_type<urcl::Parity>::type;
-
+  
     // Parity used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. Can be 0 (None), 1 (odd) and 2 (even).
     //
     // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
     // is set to TRUE.  Then, this parameter is required.
-    parity = std::stoi(info_.hardware_parameters["tool_parity"]);
+    const ParityT parity = std::stoi(info_.hardware_parameters["tool_parity"]);
     tool_comm_setup->setParity(static_cast<urcl::Parity>(parity));
-
 
     // Baud rate used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. See UR documentation for valid baud rates.
@@ -371,7 +373,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     const int baud_rate = std::stoi(info_.hardware_parameters["tool_baud_rate"]);
     tool_comm_setup->setBaudRate(static_cast<uint32_t>(baud_rate));
 
-   
     // Number of stop bits used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. Can be 1 or 2.
     //
@@ -380,7 +381,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     const int stop_bits = std::stoi(info_.hardware_parameters["tool_stop_bits"]);
     tool_comm_setup->setStopBits(static_cast<uint32_t>(stop_bits));
 
-
     // Number of idle chars for the RX unit used for tool communication. Will be set as soon as the UR-Program on the
     // robot is started. Valid values: min=1.0, max=40.0
     //
@@ -388,6 +388,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     // is set to TRUE.  Then, this parameter is required.
     const int rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
     tool_comm_setup->setRxIdleChars(rx_idle_chars);
+
 
     // Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the
     // robot is started. Valid values: min=0.0, max=40.0
@@ -398,13 +399,18 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
+<<<<<<< HEAD
   //Amount of allowed timed out reads before the reverse interface will be dropped
   const int keep_alive_count = std::stoi(info_.hardware_parameters["keep_alive_count"]);
 
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
+=======
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver. Ip: %s, reverse_port: %i, script_sender_port: %i, trajectory_port: %i, script_command_port: %i, non_blocking_read: %s", robot_ip.c_str(), reverse_port, script_sender_port, trajectory_port, script_command_port, non_blocking_read_? "true" : "false");
+>>>>>>> 6536c65 (added prefix in hardware interface and added support for non blocking reads)
   registerUrclLogHandler();
   try {
+    rtde_comm_has_been_started_ = false;
     ur_driver_ = std::make_unique<urcl::UrDriver>(
         robot_ip, 
         script_filename,
@@ -510,6 +516,12 @@ void URPositionHardwareInterface::asyncThread()
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
+  //We want to start the rtde comm the latest point possible due to the delay times arising from setting up the communication with multiple arms
+  if(!rtde_comm_has_been_started_) {
+    rtde_comm_has_been_started_  = true;
+      ur_driver_->startRTDECommunication();
+  }
+
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
   if (data_pkg) {
@@ -643,6 +655,7 @@ void URPositionHardwareInterface::initAsyncIO()
 
 void URPositionHardwareInterface::checkAsyncIO()
 {
+  if(rtde_comm_has_been_started_){
   for (size_t i = 0; i < 18; ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
@@ -692,10 +705,13 @@ void URPositionHardwareInterface::checkAsyncIO()
     payload_mass_ = NO_NEW_CMD_;
     payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   }
+<<<<<<< HEAD
 
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
+=======
+>>>>>>> 6536c65 (added prefix in hardware interface and added support for non blocking reads)
   }
 }
 

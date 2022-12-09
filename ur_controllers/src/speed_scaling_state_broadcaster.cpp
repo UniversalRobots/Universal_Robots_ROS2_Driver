@@ -61,7 +61,12 @@ SpeedScalingStateBroadcaster::SpeedScalingStateBroadcaster()
 controller_interface::CallbackReturn SpeedScalingStateBroadcaster::on_init()
 {
   try {
-    auto_declare<double>("state_publish_rate", 100.0);
+    // Create the parameter listener and get the parameters
+    param_listener_ = std::make_shared<speed_scaling_state_broadcaster::ParamListener>(get_node());
+    params_ = param_listener_->get_params();
+
+    RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with prefix: %s", params_.prefix.c_str());
+
   } catch (std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return controller_interface::CallbackReturn::ERROR;
@@ -79,23 +84,41 @@ controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::state
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  config.names.push_back("speed_scaling/speed_scaling_factor");
+
+  const std::string prefix = params_.prefix;
+  config.names.push_back(prefix+"speed_scaling/speed_scaling_factor");
   return config;
 }
 
 controller_interface::CallbackReturn
 SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
-{
-  if (!get_node()->get_parameter("state_publish_rate", publish_rate_)) {
-    RCLCPP_INFO(get_node()->get_logger(), "Parameter 'state_publish_rate' not set");
+{ 
+
+  if (!param_listener_)
+  {
+    RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
     return controller_interface::CallbackReturn::ERROR;
-  } else {
-    RCLCPP_INFO(get_node()->get_logger(), "Publisher rate set to : %.1f Hz", publish_rate_);
   }
+
+  // update the dynamic map parameters
+  param_listener_->refresh_dynamic_parameters();
+
+  // get parameters from the listener in case they were updated
+  params_ = param_listener_->get_params();
+
+  std::string prefix = params_.prefix;
+  //If no prefix was given we enforce the old behaviour of prefixing the topics with the controller name
+  if(prefix.empty()) {
+    prefix = "~/";
+  }
+  publish_rate_ = params_.state_publish_rate;
+
+  RCLCPP_INFO(get_node()->get_logger(), "Publisher rate set to : %.1f Hz", publish_rate_);
+  
 
   try {
     speed_scaling_state_publisher_ =
-        get_node()->create_publisher<std_msgs::msg::Float64>("~/speed_scaling", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<std_msgs::msg::Float64>(prefix+"speed_scaling", rclcpp::SystemDefaultsQoS());
   } catch (const std::exception& e) {
     // get_node() may throw, logging raw here
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
