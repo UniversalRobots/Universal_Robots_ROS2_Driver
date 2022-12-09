@@ -56,6 +56,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "GPIOController_parameters.hpp"
 
 namespace ur_controllers
 {
@@ -162,6 +163,10 @@ protected:
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
   std_msgs::msg::Bool program_running_msg_;
+
+  // Parameters from ROS for joint_trajectory_controller
+  std::shared_ptr<ParamListener> param_listener_;
+  Params params_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   // TODO(anyone) publishers to add: tcp_pose_pub_
