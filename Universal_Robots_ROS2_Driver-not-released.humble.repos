@@ -7,4 +7,4 @@ repositories:
   ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers
-    version: 2.14.0
+    version: 2.15.0
