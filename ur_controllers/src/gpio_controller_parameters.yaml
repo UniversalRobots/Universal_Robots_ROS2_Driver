@@ -1,0 +1,6 @@
+ur_controllers:
+   prefix: {
+    type: string,
+    default_value: "",
+    description: "urdf prefix of the corresponding arm"
+   }

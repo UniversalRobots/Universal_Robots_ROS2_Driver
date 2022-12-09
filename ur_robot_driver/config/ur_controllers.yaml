@@ -29,6 +29,9 @@ speed_scaling_state_broadcaster:
   ros__parameters:
     state_publish_rate: 100.0
 
+io_and_status_controller:
+  ros__parameters:
+    prefix: ""
 
 force_torque_sensor_broadcaster:
   ros__parameters:
