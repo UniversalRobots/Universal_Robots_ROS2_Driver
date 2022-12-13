@@ -579,8 +579,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
     return hardware_interface::return_type::OK;
   }
-
-  RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
+  if(!non_blocking_read_)
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
   // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
   return hardware_interface::return_type::OK;
 }
