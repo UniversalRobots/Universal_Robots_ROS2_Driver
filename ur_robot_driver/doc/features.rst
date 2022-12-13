@@ -15,7 +15,7 @@ Feature list and roadmap
    * - scaled joint-position-based control
      - yes
    * - joint-velocity-based control
-     - yes\ :raw-html-m2r:`<sup>1</sup>`
+     - yes
    * - Cartesian position-based control
      - no
    * - Cartesian twist-based control
@@ -52,6 +52,3 @@ Feature list and roadmap
      - no
    * - Reconnect on a disconnected robot
      - yes
-
-
-:raw-html-m2r:`<sup>1</sup>` Velocity-based joint control is implemented in the driver, but the current version of ros2_control do not yet support Velocity-based joint trajectory control
