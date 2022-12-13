@@ -141,6 +141,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
 
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
 {
+  
   std::vector<hardware_interface::StateInterface> state_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -153,8 +154,12 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
         info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
   }
 
+  //Obtain the prefix from the urdf so that we can have the general interface multiple times
+  //NOTE using the prefix at this point is some kind of workaround. One should actually go through the list of gpio state interface in info_ and match them accordingly
+  const std::string prefix = info_.hardware_parameters.at("prefix");
+
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface("speed_scaling", "speed_scaling_factor", &speed_scaling_combined_));
+      hardware_interface::StateInterface(prefix+"speed_scaling", "speed_scaling_factor", &speed_scaling_combined_));
 
   for (auto& sensor : info_.sensors) {
     for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
@@ -163,58 +168,60 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
     }
   }
 
+
+
   for (size_t i = 0; i < 18; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "digital_output_" + std::to_string(i),
+    state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "digital_output_" + std::to_string(i),
                                                                      &actual_dig_out_bits_copy_[i]));
     state_interfaces.emplace_back(
-        hardware_interface::StateInterface("gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
+        hardware_interface::StateInterface(prefix+"gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
   }
 
   for (size_t i = 0; i < 11; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "safety_status_bit_" + std::to_string(i),
+    state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "safety_status_bit_" + std::to_string(i),
                                                                      &safety_status_bits_copy_[i]));
   }
 
   for (size_t i = 0; i < 4; ++i) {
     state_interfaces.emplace_back(
-        hardware_interface::StateInterface("gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "robot_status_bit_" + std::to_string(i),
+        hardware_interface::StateInterface(prefix+"gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "robot_status_bit_" + std::to_string(i),
                                                                      &robot_status_bits_copy_[i]));
   }
 
   for (size_t i = 0; i < 2; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
+        prefix+"gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
 
     state_interfaces.emplace_back(
-        hardware_interface::StateInterface("gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
+        hardware_interface::StateInterface(prefix+"gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
+        prefix+"gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
+        prefix+"gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
   }
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface("gpio", "tool_output_voltage", &tool_output_voltage_copy_));
+      hardware_interface::StateInterface(prefix+"gpio", "tool_output_voltage", &tool_output_voltage_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "robot_mode", &robot_mode_copy_));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "robot_mode", &robot_mode_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "safety_mode", &safety_mode_copy_));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "safety_mode", &safety_mode_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_mode", &tool_mode_copy_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface("gpio", "tool_output_current", &tool_output_current_));
-
-  state_interfaces.emplace_back(hardware_interface::StateInterface("gpio", "tool_temperature", &tool_temperature_));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "tool_mode", &tool_mode_copy_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface("system_interface", "initialized", &system_interface_initialized_));
+      hardware_interface::StateInterface(prefix+"gpio", "tool_output_current", &tool_output_current_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(prefix+"gpio", "tool_temperature", &tool_temperature_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface("gpio", "program_running", &robot_program_running_copy_));
+      hardware_interface::StateInterface(prefix+"system_interface", "initialized", &system_interface_initialized_));
+
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(prefix+"gpio", "program_running", &robot_program_running_copy_));
 
   return state_interfaces;
 }
@@ -229,39 +236,42 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
   }
+  //Obtain the prefix from the urdf so that we can have the general interface multiple times
+  //NOTE using the prefix at this point is some kind of workaround. One should actually go through the list of gpio command interface in info_ and match them accordingly
+  const std::string prefix = info_.hardware_parameters.at("prefix");
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("gpio", "io_async_success", &io_async_success_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(prefix +"gpio", "io_async_success", &io_async_success_));
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("speed_scaling", "target_speed_fraction_cmd", &target_speed_fraction_cmd_));
+      hardware_interface::CommandInterface(prefix +"speed_scaling", "target_speed_fraction_cmd", &target_speed_fraction_cmd_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      "speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_));
+      prefix +"speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      "resend_robot_program", "resend_robot_program_cmd", &resend_robot_program_cmd_));
+      prefix +"resend_robot_program", "resend_robot_program_cmd", &resend_robot_program_cmd_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
+      prefix +"resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("payload", "mass", &payload_mass_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(prefix +"payload", "mass", &payload_mass_));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("payload", "cog.x", &payload_center_of_gravity_[0]));
+      hardware_interface::CommandInterface(prefix +"payload", "cog.x", &payload_center_of_gravity_[0]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("payload", "cog.y", &payload_center_of_gravity_[1]));
+      hardware_interface::CommandInterface(prefix +"payload", "cog.y", &payload_center_of_gravity_[1]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("payload", "cog.z", &payload_center_of_gravity_[2]));
+      hardware_interface::CommandInterface(prefix +"payload", "cog.z", &payload_center_of_gravity_[2]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("payload", "payload_async_success", &payload_async_success_));
+      hardware_interface::CommandInterface(prefix +"payload", "payload_async_success", &payload_async_success_));
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
+        prefix +"gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
   }
 
   for (size_t i = 0; i < 2; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
+        prefix +"gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
 
   return command_interfaces;
@@ -302,7 +312,8 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
   // not used with combined_robot_hw can suppress important errors and affect real-time performance.
-  non_blocking_read_ = static_cast<bool>(stoi(info_.hardware_parameters["non_blocking_read"]));
+  non_blocking_read_ = (info_.hardware_parameters["non_blocking_read"] == "true") ||
+                                (info_.hardware_parameters["non_blocking_read"] == "True");
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
@@ -376,9 +387,10 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver. Ip: %s, reverse_port: %i, script_sender_port: %i, trajectory_port: %i, script_command_port: %i, non_blocking_read: %s", robot_ip.c_str(), reverse_port, script_sender_port, trajectory_port, script_command_port, non_blocking_read_? "true" : "false");
   registerUrclLogHandler();
   try {
+    rtde_comm_has_been_started_ = false;
     ur_driver_ = std::make_unique<urcl::UrDriver>(
         robot_ip, 
         script_filename,
@@ -420,7 +432,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
                         "README.md] for details.");
   }
 
-  ur_driver_->startRTDECommunication();
+
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
@@ -483,6 +495,12 @@ void URPositionHardwareInterface::asyncThread()
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
+  //We want to start the rtde comm the latest point possible due to the delay times arising from setting up the communication with multiple arms
+  if(!rtde_comm_has_been_started_) {
+    rtde_comm_has_been_started_  = true;
+      ur_driver_->startRTDECommunication();
+  }
+
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
   if (data_pkg) {
@@ -613,6 +631,7 @@ void URPositionHardwareInterface::initAsyncIO()
 
 void URPositionHardwareInterface::checkAsyncIO()
 {
+  if(rtde_comm_has_been_started_){
   for (size_t i = 0; i < 18; ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
@@ -668,6 +687,7 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
     payload_mass_ = NO_NEW_CMD_;
     payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  }
   }
 }
 

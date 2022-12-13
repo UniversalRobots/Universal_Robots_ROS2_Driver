@@ -216,6 +216,9 @@ protected:
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::shared_ptr<std::thread> async_thread_;
+
+
+  bool rtde_comm_has_been_started_ = false;
 };
 }  // namespace ur_robot_driver
 
