@@ -96,6 +96,7 @@ def generate_test_description():
             "launch_rviz": "false",
             "initial_joint_controller": "scaled_joint_trajectory_controller",
             "headless_mode": "true",
+            "simulated_robot": "true",
             "launch_dashboard_client": "false",
             "start_joint_controller": "false",
         }.items(),
