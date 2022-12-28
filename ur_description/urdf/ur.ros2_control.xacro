@@ -23,7 +23,7 @@
           <param name="fake_sensor_commands">${fake_sensor_commands}</param>
           <param name="state_following_offset">0.0</param>
         </xacro:if>
-        <xacro:unless value="${use_fake_hardware}">
+        <xacro:unless value="${use_fake_hardware or sim_gazebo or sim_ignition}">
           <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
           <param name="robot_ip">${robot_ip}</param>
           <param name="script_filename">${script_filename}</param>
@@ -132,132 +132,135 @@
         <state_interface name="effort"/>
         <param name="initial_position">${initial_positions['wrist_3_joint']}</param>  <!-- initial position for the FakeSystem -->
       </joint>
-      <sensor name="tcp_fts_sensor">
-        <state_interface name="force.x"/>
-        <state_interface name="force.y"/>
-        <state_interface name="force.z"/>
-        <state_interface name="torque.x"/>
-        <state_interface name="torque.y"/>
-        <state_interface name="torque.z"/>
-      </sensor>
+      <xacro:unless value="${sim_gazebo or sim_ignition}">
+        <sensor name="tcp_fts_sensor">
+          <state_interface name="force.x"/>
+          <state_interface name="force.y"/>
+          <state_interface name="force.z"/>
+          <state_interface name="torque.x"/>
+          <state_interface name="torque.y"/>
+          <state_interface name="torque.z"/>
+        </sensor>
 
-      <!-- NOTE The following are joints used only for testing with fake hardware and will change in the future -->
-      <joint name="speed_scaling">
-        <state_interface name="speed_scaling_factor"/>
-        <param name="initial_speed_scaling_factor">1</param>
-        <command_interface name="target_speed_fraction_cmd"/>
-        <command_interface name="target_speed_fraction_async_success"/>
-      </joint>
+        <!-- NOTE The following are joints used only for testing with fake hardware and will change in the future -->
+        <joint name="speed_scaling">
+          <state_interface name="speed_scaling_factor"/>
+          <param name="initial_speed_scaling_factor">1</param>
+          <command_interface name="target_speed_fraction_cmd"/>
+          <command_interface name="target_speed_fraction_async_success"/>
+        </joint>
 
-      <joint name="gpio">
-        <command_interface name="standard_digital_output_cmd_0"/>
-        <command_interface name="standard_digital_output_cmd_1"/>
-        <command_interface name="standard_digital_output_cmd_2"/>
-        <command_interface name="standard_digital_output_cmd_3"/>
-        <command_interface name="standard_digital_output_cmd_4"/>
-        <command_interface name="standard_digital_output_cmd_5"/>
-        <command_interface name="standard_digital_output_cmd_6"/>
-        <command_interface name="standard_digital_output_cmd_7"/>
-        <command_interface name="standard_digital_output_cmd_8"/>
-        <command_interface name="standard_digital_output_cmd_9"/>
-        <command_interface name="standard_digital_output_cmd_10"/>
-        <command_interface name="standard_digital_output_cmd_11"/>
-        <command_interface name="standard_digital_output_cmd_12"/>
-        <command_interface name="standard_digital_output_cmd_13"/>
-        <command_interface name="standard_digital_output_cmd_14"/>
-        <command_interface name="standard_digital_output_cmd_15"/>
-        <command_interface name="standard_digital_output_cmd_16"/>
-        <command_interface name="standard_digital_output_cmd_17"/>
+        <joint name="gpio">
+          <command_interface name="standard_digital_output_cmd_0"/>
+          <command_interface name="standard_digital_output_cmd_1"/>
+          <command_interface name="standard_digital_output_cmd_2"/>
+          <command_interface name="standard_digital_output_cmd_3"/>
+          <command_interface name="standard_digital_output_cmd_4"/>
+          <command_interface name="standard_digital_output_cmd_5"/>
+          <command_interface name="standard_digital_output_cmd_6"/>
+          <command_interface name="standard_digital_output_cmd_7"/>
+          <command_interface name="standard_digital_output_cmd_8"/>
+          <command_interface name="standard_digital_output_cmd_9"/>
+          <command_interface name="standard_digital_output_cmd_10"/>
+          <command_interface name="standard_digital_output_cmd_11"/>
+          <command_interface name="standard_digital_output_cmd_12"/>
+          <command_interface name="standard_digital_output_cmd_13"/>
+          <command_interface name="standard_digital_output_cmd_14"/>
+          <command_interface name="standard_digital_output_cmd_15"/>
+          <command_interface name="standard_digital_output_cmd_16"/>
+          <command_interface name="standard_digital_output_cmd_17"/>
 
-        <command_interface name="standard_analog_output_cmd_0"/>
-        <command_interface name="standard_analog_output_cmd_1"/>
+          <command_interface name="standard_analog_output_cmd_0"/>
+          <command_interface name="standard_analog_output_cmd_1"/>
 
-        <command_interface name="io_async_success"/>
+          <command_interface name="io_async_success"/>
 
-        <state_interface name="digital_output_0"/>
-        <state_interface name="digital_output_1"/>
-        <state_interface name="digital_output_2"/>
-        <state_interface name="digital_output_3"/>
-        <state_interface name="digital_output_4"/>
-        <state_interface name="digital_output_5"/>
-        <state_interface name="digital_output_6"/>
-        <state_interface name="digital_output_7"/>
-        <state_interface name="digital_output_8"/>
-        <state_interface name="digital_output_9"/>
-        <state_interface name="digital_output_10"/>
-        <state_interface name="digital_output_11"/>
-        <state_interface name="digital_output_12"/>
-        <state_interface name="digital_output_13"/>
-        <state_interface name="digital_output_14"/>
-        <state_interface name="digital_output_15"/>
-        <state_interface name="digital_output_16"/>
-        <state_interface name="digital_output_17"/>
+          <state_interface name="digital_output_0"/>
+          <state_interface name="digital_output_1"/>
+          <state_interface name="digital_output_2"/>
+          <state_interface name="digital_output_3"/>
+          <state_interface name="digital_output_4"/>
+          <state_interface name="digital_output_5"/>
+          <state_interface name="digital_output_6"/>
+          <state_interface name="digital_output_7"/>
+          <state_interface name="digital_output_8"/>
+          <state_interface name="digital_output_9"/>
+          <state_interface name="digital_output_10"/>
+          <state_interface name="digital_output_11"/>
+          <state_interface name="digital_output_12"/>
+          <state_interface name="digital_output_13"/>
+          <state_interface name="digital_output_14"/>
+          <state_interface name="digital_output_15"/>
+          <state_interface name="digital_output_16"/>
+          <state_interface name="digital_output_17"/>
 
-        <state_interface name="digital_input_0"/>
-        <state_interface name="digital_input_1"/>
-        <state_interface name="digital_input_2"/>
-        <state_interface name="digital_input_3"/>
-        <state_interface name="digital_input_4"/>
-        <state_interface name="digital_input_5"/>
-        <state_interface name="digital_input_6"/>
-        <state_interface name="digital_input_7"/>
-        <state_interface name="digital_input_8"/>
-        <state_interface name="digital_input_9"/>
-        <state_interface name="digital_input_10"/>
-        <state_interface name="digital_input_11"/>
-        <state_interface name="digital_input_12"/>
-        <state_interface name="digital_input_13"/>
-        <state_interface name="digital_input_14"/>
-        <state_interface name="digital_input_15"/>
-        <state_interface name="digital_input_16"/>
-        <state_interface name="digital_input_17"/>
+          <state_interface name="digital_input_0"/>
+          <state_interface name="digital_input_1"/>
+          <state_interface name="digital_input_2"/>
+          <state_interface name="digital_input_3"/>
+          <state_interface name="digital_input_4"/>
+          <state_interface name="digital_input_5"/>
+          <state_interface name="digital_input_6"/>
+          <state_interface name="digital_input_7"/>
+          <state_interface name="digital_input_8"/>
+          <state_interface name="digital_input_9"/>
+          <state_interface name="digital_input_10"/>
+          <state_interface name="digital_input_11"/>
+          <state_interface name="digital_input_12"/>
+          <state_interface name="digital_input_13"/>
+          <state_interface name="digital_input_14"/>
+          <state_interface name="digital_input_15"/>
+          <state_interface name="digital_input_16"/>
+          <state_interface name="digital_input_17"/>
 
-        <state_interface name="standard_analog_output_0"/>
-        <state_interface name="standard_analog_output_1"/>
+          <state_interface name="standard_analog_output_0"/>
+          <state_interface name="standard_analog_output_1"/>
 
-        <state_interface name="standard_analog_input_0"/>
-        <state_interface name="standard_analog_input_1"/>
+          <state_interface name="standard_analog_input_0"/>
+          <state_interface name="standard_analog_input_1"/>
 
-        <state_interface name="analog_io_type_0"/>
-        <state_interface name="analog_io_type_1"/>
-        <state_interface name="analog_io_type_2"/>
-        <state_interface name="analog_io_type_3"/>
+          <state_interface name="analog_io_type_0"/>
+          <state_interface name="analog_io_type_1"/>
+          <state_interface name="analog_io_type_2"/>
+          <state_interface name="analog_io_type_3"/>
 
-        <state_interface name="tool_mode"/>
-        <state_interface name="tool_output_voltage"/>
-        <state_interface name="tool_output_current"/>
-        <state_interface name="tool_temperature"/>
+          <state_interface name="tool_mode"/>
+          <state_interface name="tool_output_voltage"/>
+          <state_interface name="tool_output_current"/>
+          <state_interface name="tool_temperature"/>
 
-        <state_interface name="tool_analog_input_0"/>
-        <state_interface name="tool_analog_input_1"/>
+          <state_interface name="tool_analog_input_0"/>
+          <state_interface name="tool_analog_input_1"/>
 
-        <state_interface name="tool_analog_input_type_0"/>
-        <state_interface name="tool_analog_input_type_1"/>
+          <state_interface name="tool_analog_input_type_0"/>
+          <state_interface name="tool_analog_input_type_1"/>
 
-        <state_interface name="robot_mode"/>
-        <state_interface name="robot_status_bit_0"/>
-        <state_interface name="robot_status_bit_1"/>
-        <state_interface name="robot_status_bit_2"/>
-        <state_interface name="robot_status_bit_3"/>
+          <state_interface name="robot_mode"/>
+          <state_interface name="robot_status_bit_0"/>
+          <state_interface name="robot_status_bit_1"/>
+          <state_interface name="robot_status_bit_2"/>
+          <state_interface name="robot_status_bit_3"/>
 
-        <state_interface name="safety_mode"/>
-        <state_interface name="safety_status_bit_0"/>
-        <state_interface name="safety_status_bit_1"/>
-        <state_interface name="safety_status_bit_2"/>
-        <state_interface name="safety_status_bit_3"/>
-        <state_interface name="safety_status_bit_4"/>
-        <state_interface name="safety_status_bit_5"/>
-        <state_interface name="safety_status_bit_6"/>
-        <state_interface name="safety_status_bit_7"/>
-        <state_interface name="safety_status_bit_8"/>
-        <state_interface name="safety_status_bit_9"/>
-        <state_interface name="safety_status_bit_10"/>
-        <state_interface name="program_running"/>
-      </joint>
+          <state_interface name="safety_mode"/>
+          <state_interface name="safety_status_bit_0"/>
+          <state_interface name="safety_status_bit_1"/>
+          <state_interface name="safety_status_bit_2"/>
+          <state_interface name="safety_status_bit_3"/>
+          <state_interface name="safety_status_bit_4"/>
+          <state_interface name="safety_status_bit_5"/>
+          <state_interface name="safety_status_bit_6"/>
+          <state_interface name="safety_status_bit_7"/>
+          <state_interface name="safety_status_bit_8"/>
+          <state_interface name="safety_status_bit_9"/>
+          <state_interface name="safety_status_bit_10"/>
+          <state_interface name="program_running"/>
+        </joint>
 
-      <gpio name="system_interface">
-        <state_interface name="initialized"/>
-      </gpio>
+        <gpio name="system_interface">
+          <state_interface name="initialized"/>
+        </gpio>
+
+      </xacro:unless>
 
     </ros2_control>
   </xacro:macro>
