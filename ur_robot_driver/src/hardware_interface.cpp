@@ -377,10 +377,13 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   registerUrclLogHandler();
   try {
+    bool simulated_robot = false;
+    simulated_robot = (info_.hardware_parameters["simulated_robot"] == "true") ||
+                      (info_.hardware_parameters["simulated_robot"] == "True");
     ur_driver_ = std::make_unique<urcl::UrDriver>(
         robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
-        std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
+        std::move(tool_comm_setup), calibration_checksum, simulated_robot, (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
         servoj_lookahead_time, non_blocking_read_);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
@@ -394,18 +397,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
               calibration_checksum.c_str());
   // check calibration
   // https://github.com/UniversalRobots/Universal_Robots_ROS_Driver/blob/c3378599d5fa73a261328b326392e847f312ab6b/ur_robot_driver/src/hardware_interface.cpp#L296-L309
-  if (ur_driver_->checkCalibration(calibration_checksum)) {
-    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checked successfully.");
-  } else {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
-
-                        "The calibration parameters of the connected robot don't match the ones from the given "
-                        "kinematics config file. Please be aware that this can lead to critical inaccuracies of tcp "
-                        "positions. Use the ur_calibration tool to extract the correct calibration from the robot and "
-                        "pass that into the description. See "
-                        "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
-                        "README.md] for details.");
-  }
 
   ur_driver_->startRTDECommunication();
 

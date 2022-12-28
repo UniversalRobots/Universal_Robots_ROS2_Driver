@@ -58,6 +58,7 @@ def launch_setup(context, *args, **kwargs):
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
+    simulated_robot = LaunchConfiguration("simulated_robot")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
     use_tool_communication = LaunchConfiguration("use_tool_communication")
     tool_parity = LaunchConfiguration("tool_parity")
@@ -144,6 +145,9 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "headless_mode:=",
             headless_mode,
+            " ",
+            "simulated_robot:=",
+            simulated_robot,
             " ",
             "use_tool_communication:=",
             use_tool_communication,
@@ -439,6 +443,13 @@ def generate_launch_description():
             "headless_mode",
             default_value="false",
             description="Enable headless mode for robot control",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "simulated_robot",
+            default_value="false",
+            description="Determine whether the robot is simulated or real",
         )
     )
     declared_arguments.append(
