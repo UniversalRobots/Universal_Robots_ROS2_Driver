@@ -347,6 +347,8 @@ ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*p
 
 bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp)
 {
+  const auto maximum_retries = params_.check_io_successfull_retries;
+
   if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= 17) {
     // io async success
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
@@ -354,9 +356,16 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
+    int retries = 0;
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
       // Asynchronous wait until the hardware interface has set the io value
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      retries++;
+
+      if(retries > maximum_retries){
+        RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
+        break;
+      }
     }
 
     resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_value());
@@ -368,9 +377,16 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
 
+    int retries = 0;
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
       // Asynchronous wait until the hardware interface has set the io value
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      retries++;
+
+      if(retries > maximum_retries){
+        RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
+        break;
+      }
     }
 
     resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value());
