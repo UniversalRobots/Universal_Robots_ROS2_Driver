@@ -49,6 +49,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ur_robot_driver/hardware_interface.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
+#include "ur_robot_driver/rt_priority.h"
 
 namespace rtde = urcl::rtde_interface;
 
@@ -495,6 +496,10 @@ void URPositionHardwareInterface::asyncThread()
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
+  if(!rt_prio_has_been_set_){
+    setRealtimePriority(99,1);
+    rt_prio_has_been_set_ = true;
+  }
   //We want to start the rtde comm the latest point possible due to the delay times arising from setting up the communication with multiple arms
   if(!rtde_comm_has_been_started_) {
     rtde_comm_has_been_started_  = true;
