@@ -63,16 +63,19 @@ enum CommandInterfaces
 {
   DIGITAL_OUTPUTS_CMD = 0u,
   ANALOG_OUTPUTS_CMD = 18,
-  IO_ASYNC_SUCCESS = 20,
-  TARGET_SPEED_FRACTION_CMD = 21,
-  TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 22,
-  RESEND_ROBOT_PROGRAM_CMD = 23,
-  RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS = 24,
-  PAYLOAD_MASS = 25,
-  PAYLOAD_COG_X = 26,
-  PAYLOAD_COG_Y = 27,
-  PAYLOAD_COG_Z = 28,
-  PAYLOAD_ASYNC_SUCCESS = 29,
+  TOOL_VOLTAGE_CMD = 20,
+  IO_ASYNC_SUCCESS = 21,
+  TARGET_SPEED_FRACTION_CMD = 22,
+  TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 23,
+  RESEND_ROBOT_PROGRAM_CMD = 24,
+  RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS = 25,
+  PAYLOAD_MASS = 26,
+  PAYLOAD_COG_X = 27,
+  PAYLOAD_COG_Y = 28,
+  PAYLOAD_COG_Z = 29,
+  PAYLOAD_ASYNC_SUCCESS = 30,
+  ZERO_FTSENSOR_CMD = 31,
+  ZERO_FTSENSOR_ASYNC_SUCCESS = 32,
 };
 
 enum StateInterfaces
@@ -125,6 +128,8 @@ private:
   bool setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                   ur_msgs::srv::SetPayload::Response::SharedPtr resp);
 
+  bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
+
   void publishIO();
 
   void publishToolData();
@@ -150,6 +155,7 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetSpeedSliderFraction>::SharedPtr set_speed_slider_srv_;
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
