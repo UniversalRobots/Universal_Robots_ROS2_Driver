@@ -61,6 +61,8 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
     config.names.emplace_back("gpio/standard_analog_output_cmd_" + std::to_string(i));
   }
 
+  config.names.emplace_back("gpio/tool_voltage_cmd");
+
   config.names.emplace_back("gpio/io_async_success");
 
   config.names.emplace_back("speed_scaling/target_speed_fraction_cmd");
@@ -77,6 +79,10 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back("payload/cog.y");
   config.names.emplace_back("payload/cog.z");
   config.names.emplace_back("payload/payload_async_success");
+
+  // zero ft sensor
+  config.names.emplace_back("zero_ftsensor/zero_ftsensor_cmd");
+  config.names.emplace_back("zero_ftsensor/zero_ftsensor_async_success");
 
   return config;
 }
@@ -274,6 +280,10 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
         "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+
+    tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/zero_ftsensor",
+        std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -320,6 +330,19 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->pin].set_value(static_cast<double>(req->state));
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
+
+    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+      // Asynchronous wait until the hardware interface has set the io value
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value());
+    return resp->success;
+  } else if (req->fun == req->FUN_SET_TOOL_VOLTAGE) {
+    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+    command_interfaces_[CommandInterfaces::TOOL_VOLTAGE_CMD].set_value(static_cast<double>(req->state));
+
+    RCLCPP_INFO(get_node()->get_logger(), "Setting tool voltage to: '%1.0f'.", req->state);
 
     while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
       // Asynchronous wait until the hardware interface has set the io value
@@ -407,6 +430,31 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
     RCLCPP_INFO(get_node()->get_logger(), "Payload has been set successfully");
   } else {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not set the payload");
+    return false;
+  }
+
+  return true;
+}
+
+bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
+                                  std_srvs::srv::Trigger::Response::SharedPtr resp)
+{
+  // reset success flag
+  command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+  // call the service in the hardware
+  command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_CMD].set_value(1.0);
+
+  while (command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+    // Asynchronous wait until the hardware interface has set the slider value
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+
+  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value());
+
+  if (resp->success) {
+    RCLCPP_INFO(get_node()->get_logger(), "Successfully zeroed the force torque sensor");
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not zero the force torque sensor");
     return false;
   }
 
