@@ -119,6 +119,7 @@ public:
 
   void asyncThread();
 
+  virtual ~URPositionHardwareInterface();
 protected:
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
