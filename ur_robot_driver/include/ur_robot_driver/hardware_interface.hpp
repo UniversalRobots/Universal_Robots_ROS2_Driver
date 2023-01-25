@@ -222,6 +222,8 @@ protected:
   bool rtde_comm_has_been_started_ = false;
 
   bool rt_prio_has_been_set_ = false;
+
+
 };
 }  // namespace ur_robot_driver
 

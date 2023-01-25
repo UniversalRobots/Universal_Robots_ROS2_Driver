@@ -391,7 +391,11 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     // is set to TRUE.  Then, this parameter is required.
     const int tx_idle_chars = std::stoi(info_.hardware_parameters["tool_tx_idle_chars"]);
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
+
+    
   }
+  //Amount of allowed timed out reads before the reverse interface will be dropped
+  const int keep_alive_count = std::stoi(info_.hardware_parameters["keep_alive_count"]);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver. Ip: %s, reverse_port: %i, script_sender_port: %i, trajectory_port: %i, script_command_port: %i, non_blocking_read: %s", robot_ip.c_str(), reverse_port, script_sender_port, trajectory_port, script_command_port, non_blocking_read_? "true" : "false");
   registerUrclLogHandler();
@@ -413,6 +417,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
         reverse_ip,
         trajectory_port, 
         script_command_port);
+    ur_driver_->setKeepaliveCount(keep_alive_count);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
