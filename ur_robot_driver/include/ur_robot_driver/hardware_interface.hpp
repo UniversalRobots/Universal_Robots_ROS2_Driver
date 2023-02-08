@@ -119,6 +119,8 @@ public:
 
   void asyncThread();
 
+  virtual ~URPositionHardwareInterface();
+
 protected:
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
@@ -219,7 +221,6 @@ protected:
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::shared_ptr<std::thread> async_thread_;
-
 
   bool rtde_comm_has_been_started_ = false;
 };

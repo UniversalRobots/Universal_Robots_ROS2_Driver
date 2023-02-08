@@ -54,6 +54,11 @@ namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
+
+URPositionHardwareInterface::~URPositionHardwareInterface() 
+{
+  on_deactivate(rclcpp_lifecycle::State());
+}
 hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& system_info)
 {
@@ -386,6 +391,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     const int rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
     tool_comm_setup->setRxIdleChars(rx_idle_chars);
 
+
     // Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the
     // robot is started. Valid values: min=0.0, max=40.0
     //
@@ -402,6 +408,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   registerUrclLogHandler();
   try {
+    rtde_comm_has_been_started_ = false;
     ur_driver_ = std::make_unique<urcl::UrDriver>(
         robot_ip, 
         script_filename,
@@ -443,7 +450,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
                         "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
                         "README.md] for details.");
   }
-
 
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
@@ -507,6 +513,11 @@ void URPositionHardwareInterface::asyncThread()
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
+  //We want to start the rtde comm the latest point possible due to the delay times arising from setting up the communication with multiple arms
+  if(!rtde_comm_has_been_started_) {
+    rtde_comm_has_been_started_  = true;
+      ur_driver_->startRTDECommunication();
+  }
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
   if (data_pkg) {
@@ -587,7 +598,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     return hardware_interface::return_type::OK;
   }
 
-  RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
+  if(!non_blocking_read_)
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
   // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
   return hardware_interface::return_type::OK;
 }
@@ -640,6 +652,7 @@ void URPositionHardwareInterface::initAsyncIO()
 
 void URPositionHardwareInterface::checkAsyncIO()
 {
+  if(rtde_comm_has_been_started_){
   for (size_t i = 0; i < 18; ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
@@ -693,6 +706,7 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  }
   }
 }
 
