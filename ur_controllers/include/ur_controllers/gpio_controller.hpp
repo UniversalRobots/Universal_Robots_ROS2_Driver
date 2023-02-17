@@ -117,6 +117,8 @@ public:
 
   CallbackReturn on_init() override;
 
+  
+
 private:
   bool setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp);
 
@@ -140,6 +142,11 @@ private:
   void publishSafetyMode();
 
   void publishProgramRunning();
+
+  /**
+   * @brief wait until a command interface isn't in state ASYNC_WAITING anymore or until the parameter maximum_retries have been reached
+  */
+  bool waitForAsyncCommand(std::function<double(void)> get_value);
 
 protected:
   void initMsgs();

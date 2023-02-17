@@ -66,10 +66,10 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", params_.prefix.c_str());
+  RCLCPP_DEBUG(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", params_.prefix.c_str());
 
   const std::string prefix = params_.prefix;
-  RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", prefix.c_str());
+  RCLCPP_DEBUG(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", prefix.c_str());
 
   
   for (size_t i = 0; i < 18; ++i) {
@@ -360,18 +360,11 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
-    int retries = 0;
-    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-      // Asynchronous wait until the hardware interface has set the io value
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
-      retries++;
-
-      if(retries > maximum_retries){
-        RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
-        break;
-      }
+    if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+    {
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
     }
-
+    
     resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_value());
     return resp->success;
   } else if (req->fun == req->FUN_SET_ANALOG_OUT && req->pin >= 0 && req->pin <= 2) {
@@ -381,16 +374,9 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
 
-    int retries = 0;
-    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-      // Asynchronous wait until the hardware interface has set the io value
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
-      retries++;
-
-      if(retries > maximum_retries){
-        RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
-        break;
-      }
+    if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+    {
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
     }
 
     resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value());
@@ -401,9 +387,9 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting tool voltage to: '%1.0f'.", req->state);
 
-    while (command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-      // Asynchronous wait until the hardware interface has set the io value
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+    {
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
     }
 
     resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value());
@@ -417,6 +403,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                                     ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp)
 {
+  const auto maximum_retries = params_.check_io_successfull_retries;
   if (req->speed_slider_fraction >= 0.01 && req->speed_slider_fraction <= 1.0) {
     RCLCPP_INFO(get_node()->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction * 100.0);
     // reset success flag
@@ -425,10 +412,11 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
     command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_CMD].set_value(
         static_cast<double>(req->speed_slider_fraction));
 
-    while (command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-      // Asynchronouse wait until the hardware interface has set the slider value
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value();}))
+    {
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that speed slider was set. (This might happen when using the mocked interface)");
     }
+   
     resp->success =
         static_cast<bool>(command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value());
   } else {
@@ -443,15 +431,17 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
 bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                         std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  const auto maximum_retries = params_.check_io_successfull_retries;
   // reset success flag
   command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   // call the service in the hardware
   command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_CMD].set_value(1.0);
 
-  while (command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-    // Asynchronous wait until the hardware interface has set the slider value
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value();}))
+  {
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that robot program was resent. (This might happen when using the mocked interface)");
   }
+ 
   resp->success =
       static_cast<bool>(command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value());
 
@@ -476,11 +466,11 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
   command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
 
-  while (command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-    // Asynchronous wait until the hardware interface has set the payload
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value();}))
+  {
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that payload was set. (This might happen when using the mocked interface)");
   }
-
+  
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value());
 
   if (resp->success) {
@@ -501,11 +491,11 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
   // call the service in the hardware
   command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_CMD].set_value(1.0);
 
-  while (command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-    // Asynchronous wait until the hardware interface has set the slider value
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value();}))
+  {
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that ft sensor was zeroed. (This might happen when using the mocked interface)");
   }
-
+  
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value());
 
   if (resp->success) {
@@ -524,6 +514,19 @@ void GPIOController::initMsgs()
   io_msg_.digital_out_states.resize(standard_digital_output_cmd_.size());
   io_msg_.analog_in_states.resize(2);
   io_msg_.analog_out_states.resize(2);
+}
+
+bool GPIOController::waitForAsyncCommand(std::function<double(void)> get_value){
+  const auto maximum_retries = params_.check_io_successfull_retries;
+  int retries = 0;
+  while(get_value() == ASYNC_WAITING){
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    retries++;
+
+    if(retries > maximum_retries)
+      return false;
+  }
+  return true;
 }
 
 }  // namespace ur_controllers
