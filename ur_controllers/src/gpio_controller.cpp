@@ -98,6 +98,10 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(prefix + "payload/cog.z");
   config.names.emplace_back(prefix + "payload/payload_async_success");
 
+  //Force torque sensor
+  config.names.emplace_back(prefix+"zero_ftsensor/zero_ftsensor_cmd");
+  config.names.emplace_back(prefix+"zero_ftsensor/zero_ftsensor_async_success");
+
   return config;
 }
 
