@@ -72,6 +72,9 @@ ament_target_dependencies(
 )
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
 
+#
+# dashboard_client
+#
 add_executable(dashboard_client
   src/dashboard_client_ros.cpp
   src/dashboard_client_node.cpp
@@ -80,15 +83,20 @@ add_executable(dashboard_client
 target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-add_executable(ur_ros2_control_node src/ur_ros2_control_node.cpp)
-target_include_directories(ur_ros2_control_node PUBLIC ${controller_manager_INCLUDE_DIRS})
-target_link_libraries(ur_ros2_control_node ${controller_manager_LIBRARIES})
+#
+# ur_ros2_control_node
+#
+add_executable(ur_ros2_control_node
+  src/ur_ros2_control_node.cpp
+)
 ament_target_dependencies(ur_ros2_control_node
-  controller_interface
-  hardware_interface
+  controller_manager
   rclcpp
 )
 
+#
+# controller_stopper_node
+#
 add_executable(controller_stopper_node
   src/controller_stopper.cpp
   src/controller_stopper_node.cpp
