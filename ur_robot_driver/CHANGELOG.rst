@@ -1,3 +1,67 @@
+Forthcoming
+-----------
+* Fix cmake dependency on controller_manager
+* Correct calibration correction launch file in doc
+* Added services to set tool voltage and zero force torque sensor (`#466 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/466>`_)
+  Added launch arguments for reverse ip and script command interface port.
+* Fix comment in test file
+* Default path to ur_client_library urscript (`#316 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/316>`_)
+  * Change default path for urscript for headless mode.
+  * Replace urscript path also in newer ur_robot_driver launchfile
+  * Remove ros_control.urscript
+  Co-authored-by: Felix Exner <exner@fzi.de>
+* Clean up & improve execution tests (`#512 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/512>`_)
+  * Clean up execution test files
+  * Start ursim as part of the execution tests
+  * Dont use custom dockerursim for humble and rolling execution tests
+  * Clean up test implementations
+  * pep257 fixes
+  * Perform rolling and humble execution tests as part of normal pipelines
+  * Increase admissible timeouts as the CI needs to pull ursim first
+  * Add more debug messages during tests
+  * Wait until robot is in POWER_OFF mode before trying to power it on
+  * Fix error introduced in last commit
+  * Add additional cmake option to enable integration tests
+  * Increase timeout for robot tests
+  * Add CMake comment describing the execution test integration
+  * Run source tests on pull request
+  This is only here for testing the test setup! Remove before merging
+  * call resend_robot_program twice
+  This seems to be necessary, as otherwise the robot hangs after bootup.
+  The first program execution (that gets automatically started at driver
+  startup because of the headless_mode) gets paused, since it is sent while
+  the robotis not yet switched on. To mitigate this, we send the robot program
+  again after switching on the robot, but this seems to stop the robot program.
+  Sending it again seems to set it correctly to a started state.
+  * Increase timeouts for dashboard_client tests
+  Otherwise they can fail, since in parallel we pull and start the docker
+  container.
+  Co-authored-by: Felix Exner <exner@fzi.de>
+* Update and thin down README (`#494 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/494>`_)
+  Avoid duplication between README and package doc.
+  * Updated documentation about fake_hardware and MoveIt!
+  * Remove trailing WS
+  * [documentation] do not suggest -r for rosdep install
+  * Added note about tool0_controller to docs.
+  * Add additional part about calibration to toplevel README.
+  * Added note about sourcing ROS in build instructions
+* ur_robot_driver: Controller_stopper fix deprecation warning
+  Use ``activate_controllers`` instead of ``start_controllers``.
+* Fix tool voltage setup (`#526 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/526>`_)
+  * Move BEGIN_REPLACE inside of header
+  * Change default value of tool_voltage
+  Keeping this at 0 requires users to explicitly set it to non-zero. This way
+  we won't accitentally destroy hardware that cannot handle 24V.
+* Added dependency to socat (`#527 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/527>`_)
+  This is needed for the tool forwarding.
+* Add a note in the tool_comm doc about a URCap conflict (`#524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/524>`_)
+  * Add a note in the tool_comm doc about a URCap conflict
+  * Update ur_robot_driver/doc/setup_tool_communication.rst
+  Co-authored-by: Mads Holm Peters <79145214+urmahp@users.noreply.github.com>
+  * Fix formatting and one spelling mistake
+  Co-authored-by: Mads Holm Peters <79145214+urmahp@users.noreply.github.com>
+* Contributors: Felix Exner, Felix Exner (fexner), Mads Holm Peters, Robert Wilbrandt, RobertWilbrandt, livanov93
+
 2.2.4 (2022-10-07)
 ------------------
 * Remove the custom ursim docker files (`#478 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/478>`_)

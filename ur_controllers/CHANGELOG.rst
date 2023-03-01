@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added services to set tool voltage and zero force torque sensor (`#466 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/466>`_)
+  Added launch arguments for reverse ip and script command interface port.
+* Contributors: Mads Holm Peters
+
 2.2.4 (2022-10-07)
 ------------------
 * Adapt jtc controller params to new param api

@@ -2,6 +2,11 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix capitalization of docstring
+* Contributors: Felix Exner
+
 2.2.4 (2022-10-07)
 ------------------
 * Fix selecting the right controller given fake_hw
