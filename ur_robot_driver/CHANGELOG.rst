@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.0 (2023-03-02)
+------------------
 * Fix cmake dependency on controller_manager
 * Correct calibration correction launch file in doc
 * Added services to set tool voltage and zero force torque sensor (`#466 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/466>`_)
