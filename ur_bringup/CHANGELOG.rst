@@ -2,8 +2,8 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.0 (2023-03-02)
+------------------
 * Default path to ur_client_library urscript (`#316 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/316>`_)
   * Change default path for urscript for headless mode.
   * Replace urscript path also in newer ur_robot_driver launchfile
