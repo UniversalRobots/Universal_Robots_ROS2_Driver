@@ -147,10 +147,17 @@ class RobotDriverTest(unittest.TestCase):
 
     def init_robot(self):
 
-        # Wait longer for the first service client as the robot driver is still starting up
-        power_on_client = waitForService(
-            self.node, "/dashboard_client/power_on", Trigger, timeout=TIMEOUT_WAIT_SERVICE_INITIAL
-        )
+        # Wait longer for the first service clients (for both the driver and the dashboard client) as the robot driver is still starting up
+        service_interfaces_initial = {
+            "/dashboard_client/power_on": Trigger,
+            "/controller_manager/switch_controller": SwitchController,
+        }
+        self.service_clients = {
+            srv_name: waitForService(
+                self.node, srv_name, srv_type, timeout=TIMEOUT_WAIT_SERVICE_INITIAL
+            )
+            for (srv_name, srv_type) in service_interfaces_initial.items()
+        }
 
         # Connect to the rest of the required interfaces
         service_interfaces = {
@@ -159,12 +166,12 @@ class RobotDriverTest(unittest.TestCase):
             "/io_and_status_controller/set_io": SetIO,
             "/io_and_status_controller/resend_robot_program": Trigger,
         }
-        self.service_clients = {
-            srv_name: waitForService(self.node, srv_name, srv_type)
-            for (srv_name, srv_type) in service_interfaces.items()
-        }
-
-        self.service_clients["/dashboard_client/power_on"] = power_on_client
+        self.service_clients.update(
+            {
+                srv_name: waitForService(self.node, srv_name, srv_type)
+                for (srv_name, srv_type) in service_interfaces.items()
+            }
+        )
 
         # test action appearance
         self.jtc_action_client = waitForAction(
