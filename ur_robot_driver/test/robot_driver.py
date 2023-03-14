@@ -94,6 +94,7 @@ def generate_test_description():
             "robot_ip": "192.168.56.101",
             "ur_type": ur_type,
             "launch_rviz": "false",
+            "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
             "initial_joint_controller": "scaled_joint_trajectory_controller",
             "headless_mode": "true",
             "launch_dashboard_client": "false",
