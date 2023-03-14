@@ -54,7 +54,7 @@ repos:
     rev: 3.9.0
     hooks:
     - id: flake8
-      args: ["--ignore=E501"]
+      args: ["--ignore=E501,W503"]
 
   # CPP hooks
   # The same options as in ament_cppcheck are used, but its not working...
