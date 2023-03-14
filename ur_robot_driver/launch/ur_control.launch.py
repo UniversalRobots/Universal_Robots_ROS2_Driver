@@ -29,13 +29,13 @@
 #
 # Author: Denis Stogl
 
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.actions import OpaqueFunction
-from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 
 
 def launch_setup(context, *args, **kwargs):
@@ -279,43 +279,26 @@ def launch_setup(context, *args, **kwargs):
         arguments=["-d", rviz_config_file],
     )
 
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
+    # Spawn controllers
+    def controller_spawner(name, active=True):
+        inactive_flags = ["--inactive"] if not active else []
+        return Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=[name, "--controller-manager", "/controller_manager"] + inactive_flags,
+        )
 
-    io_and_status_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["io_and_status_controller", "-c", "/controller_manager"],
-    )
+    controller_spawner_names = [
+        "joint_state_broadcaster",
+        "io_and_status_controller",
+        "speed_scaling_state_broadcaster",
+        "force_torque_sensor_broadcaster",
+    ]
+    controller_spawner_inactive_names = ["forward_position_controller"]
 
-    speed_scaling_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "speed_scaling_state_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    force_torque_sensor_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "force_torque_sensor_broadcaster",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    forward_position_controller_spawner_stopped = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["forward_position_controller", "-c", "/controller_manager", "--inactive"],
-    )
+    controller_spawners = [controller_spawner(name) for name in controller_spawner_names] + [
+        controller_spawner(name, active=False) for name in controller_spawner_inactive_names
+    ]
 
     # There may be other controllers of the joints, but this is the initially-started one
     initial_joint_controller_spawner_started = Node(
@@ -339,14 +322,9 @@ def launch_setup(context, *args, **kwargs):
         controller_stopper_node,
         robot_state_publisher_node,
         rviz_node,
-        joint_state_broadcaster_spawner,
-        io_and_status_controller_spawner,
-        speed_scaling_state_broadcaster_spawner,
-        force_torque_sensor_broadcaster_spawner,
-        forward_position_controller_spawner_stopped,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
-    ]
+    ] + controller_spawners
 
     return nodes_to_start
 
