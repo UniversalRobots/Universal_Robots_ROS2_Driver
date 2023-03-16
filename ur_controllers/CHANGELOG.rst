@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.1 (2023-03-16)
+------------------
 * Adjust scaled jtc to new publish_state interface
   Until next sync we need to build against upstream ros2_controllers, as
   this is an API-breaking change

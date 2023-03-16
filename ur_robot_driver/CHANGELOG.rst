@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.1 (2023-03-16)
+------------------
 * Adjust controller switching to message change
 * Controller spawner timeout (`#608 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/608>`_)
   * Simplify controller spawner definitions
