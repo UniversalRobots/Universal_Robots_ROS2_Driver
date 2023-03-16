@@ -1,3 +1,17 @@
+Forthcoming
+-----------
+* Adjust controller switching to message change
+* Controller spawner timeout (`#608 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/608>`_)
+  * Simplify controller spawner definitions
+  * Ignore flake8 W503 as it clashes with black and goes against PEP8 style
+  * Add argument to set controller spawner timeout
+  * Use longer controller manager timeout in CI
+  The default timeout of 10s is the same as our RTDE retry timeout, which
+  means if RTDE does not immediately connect (which happens regularly in
+  CI runners) controller spawning would fail.
+* Increase timeout for first test service call to driver (`#605 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/605>`_)
+* Contributors: Robert Wilbrandt, RobertWilbrandt
+
 2.3.0 (2023-03-02)
 ------------------
 * Fix cmake dependency on controller_manager
