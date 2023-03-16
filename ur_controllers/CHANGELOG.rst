@@ -2,6 +2,13 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Adjust scaled jtc to new publish_state interface
+  Until next sync we need to build against upstream ros2_controllers, as
+  this is an API-breaking change
+* Contributors: Robert Wilbrandt
+
 2.3.0 (2023-03-02)
 ------------------
 * Added services to set tool voltage and zero force torque sensor (`#466 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/466>`_)
