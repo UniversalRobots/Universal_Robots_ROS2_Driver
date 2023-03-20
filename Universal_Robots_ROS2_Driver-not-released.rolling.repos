@@ -4,6 +4,10 @@
 # Once Upstream packages are released and synced to the target distributions in the required
 # version, the entry in this file shall be removed again.
 repositories:
+  ros2_tracing:
+    type: git
+    url: https://github.com/ros2/ros2_tracing.git
+    version: 8096196
   moveit2:
     type: git
     url: https://github.com/ros-planning/moveit2.git
