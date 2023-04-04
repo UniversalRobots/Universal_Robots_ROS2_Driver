@@ -355,10 +355,10 @@ def generate_launch_description():
         DeclareLaunchArgument("launch_servo", default_value="true", description="Launch Servo?")
     )
     declared_arguments.append(
-        DeclareLaunchArgument("publish_robot_description", default_value="true", "MoveGroup publishes robot description")
+        DeclareLaunchArgument("publish_robot_description", default_value="true", description="MoveGroup publishes robot description")
     )
     declared_arguments.append(
-        DeclareLaunchArgument("publish_robot_description", default_value="true", "MoveGroup publishes robot descripion semantic")
+        DeclareLaunchArgument("publish_robot_description", default_value="true", description="MoveGroup publishes robot descripion semantic")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
