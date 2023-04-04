@@ -57,7 +57,7 @@ def launch_setup(context, *args, **kwargs):
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_servo = LaunchConfiguration("launch_servo")
     publish_robot_description = LaunchConfiguration("publish_robot_description")
-    publish_robot_description_semantic = LaunchConfiguration("publish_robot_decsription_semantic")
+    publish_robot_description_semantic = LaunchConfiguration("publish_robot_description_semantic")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
