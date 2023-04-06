@@ -58,6 +58,7 @@ from ur_msgs.srv import SetIO
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
 TIMEOUT_WAIT_ACTION = 10
+TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 ROBOT_JOINTS = [
     "elbow_joint",
@@ -283,7 +284,9 @@ class RobotDriverTest(unittest.TestCase):
 
         # Verify execution
         result = self.get_result(
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            goal_response,
+            TIMEOUT_EXECUTE_TRAJECTORY,
         )
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
         self.node.get_logger().info("Received result SUCCESSFUL")
@@ -349,7 +352,9 @@ class RobotDriverTest(unittest.TestCase):
 
         if goal_response.accepted:
             result = self.get_result(
-                "/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response
+                "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+                goal_response,
+                TIMEOUT_EXECUTE_TRAJECTORY,
             )
             self.assertIn(
                 result.error_code,
@@ -373,7 +378,7 @@ class RobotDriverTest(unittest.TestCase):
         # self.assertEqual(goal_response.accepted, True)
         #
         # if goal_response.accepted:
-        #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response)
+        #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
         #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
         #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
 
@@ -401,10 +406,12 @@ class RobotDriverTest(unittest.TestCase):
         else:
             raise Exception(f"Exception while calling action: {future.exception()}")
 
-    def get_result(self, action_name, goal_response):
-        self.node.get_logger().info(f"Waiting for result for action server '{action_name}'")
+    def get_result(self, action_name, goal_response, timeout):
+        self.node.get_logger().info(
+            f"Waiting for result for action server '{action_name}' (timeout: {timeout} seconds)"
+        )
         future_res = self.action_clients[action_name]._get_result_async(goal_response)
-        rclpy.spin_until_future_complete(self.node, future_res)
+        rclpy.spin_until_future_complete(self.node, future_res, timeout_sec=timeout)
 
         if future_res.result() is not None:
             self.node.get_logger().info(f"Received result {future_res.result().result}")
