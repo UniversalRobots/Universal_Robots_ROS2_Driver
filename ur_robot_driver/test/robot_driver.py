@@ -174,12 +174,13 @@ class RobotDriverTest(unittest.TestCase):
             }
         )
 
-        # test action appearance
-        self.jtc_action_client = waitForAction(
-            self.node,
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
-            FollowJointTrajectory,
-        )
+        action_interfaces = {
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory": FollowJointTrajectory
+        }
+        self.action_clients = {
+            action_name: waitForAction(self.node, action_name, action_type)
+            for (action_name, action_type) in action_interfaces.items()
+        }
 
         # Start robot
         empty_req = Trigger.Request()
@@ -275,12 +276,15 @@ class RobotDriverTest(unittest.TestCase):
         # Sending trajectory goal
         self.node.get_logger().info("Sending simple goal")
         goal_response = self.call_action(
-            self.jtc_action_client, FollowJointTrajectory.Goal(trajectory=trajectory)
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory.Goal(trajectory=trajectory),
         )
         self.assertEqual(goal_response.accepted, True)
 
         # Verify execution
-        result = self.get_result(self.jtc_action_client, goal_response)
+        result = self.get_result(
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response
+        )
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
         self.node.get_logger().info("Received result SUCCESSFUL")
 
@@ -307,7 +311,8 @@ class RobotDriverTest(unittest.TestCase):
         # Send illegal goal
         self.node.get_logger().info("Sending illegal goal")
         goal_response = self.call_action(
-            self.jtc_action_client, FollowJointTrajectory.Goal(trajectory=trajectory)
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory.Goal(trajectory=trajectory),
         )
 
         # Verify the failure is correctly detected
@@ -336,12 +341,16 @@ class RobotDriverTest(unittest.TestCase):
         # see https://github.com/ros-controls/ros2_controllers/issues/249
         # self.node.get_logger().info("Sending scaled goal without time restrictions")
         self.node.get_logger().info("Sending goal for robot to follow")
-        goal_response = self.call_action(self.jtc_action_client, goal)
+        goal_response = self.call_action(
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory", goal
+        )
 
         self.assertEqual(goal_response.accepted, True)
 
         if goal_response.accepted:
-            result = self.get_result(self.jtc_action_client, goal_response)
+            result = self.get_result(
+                "/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response
+            )
             self.assertIn(
                 result.error_code,
                 (
@@ -359,12 +368,12 @@ class RobotDriverTest(unittest.TestCase):
         # self.node.get_logger().info("Sending scaled goal with time restrictions")
         #
         # goal.goal_time_tolerance = Duration(nanosec=10000000)
-        # goal_response = self.call_action(self.jtc_action_client, goal)
+        # goal_response = self.call_action("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal)
         #
         # self.assertEqual(goal_response.accepted, True)
         #
         # if goal_response.accepted:
-        #     result = self.get_result(self.jtc_action_client, goal_response)
+        #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response)
         #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
         #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
 
@@ -382,8 +391,9 @@ class RobotDriverTest(unittest.TestCase):
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")
 
-    def call_action(self, ac_client, g):
-        future = ac_client.send_goal_async(g)
+    def call_action(self, action_name, goal):
+        self.node.get_logger().info(f"Sending goal to action server '{action_name}'")
+        future = self.action_clients[action_name].send_goal_async(goal)
         rclpy.spin_until_future_complete(self.node, future)
 
         if future.result() is not None:
@@ -391,10 +401,13 @@ class RobotDriverTest(unittest.TestCase):
         else:
             raise Exception(f"Exception while calling action: {future.exception()}")
 
-    def get_result(self, ac_client, goal_response):
-        future_res = ac_client._get_result_async(goal_response)
+    def get_result(self, action_name, goal_response):
+        self.node.get_logger().info(f"Waiting for result for action server '{action_name}'")
+        future_res = self.action_clients[action_name]._get_result_async(goal_response)
         rclpy.spin_until_future_complete(self.node, future_res)
+
         if future_res.result() is not None:
+            self.node.get_logger().info(f"Received result {future_res.result().result}")
             return future_res.result().result
         else:
             raise Exception(f"Exception while calling action: {future_res.exception()}")
