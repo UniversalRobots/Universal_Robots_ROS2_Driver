@@ -264,6 +264,14 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
         "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
 
+  command_interfaces.emplace_back(hardware_interface::CommandInterface("gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("zero_ftsensor", "zero_ftsensor_cmd", &zero_ftsensor_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface("zero_ftsensor", "zero_ftsensor_async_success",
+                                                                       &zero_ftsensor_async_success_));
+
   return command_interfaces;
 }
 
@@ -289,6 +297,16 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   int reverse_port = stoi(info_.hardware_parameters["reverse_port"]);
   // The driver will offer an interface to receive the program's URScript on this port.
   int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
+  // IP that will be used for the robot controller to communicate back to the driver.
+  std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
+  if (reverse_ip == "0.0.0.0") {
+    reverse_ip = "";
+  }
+  // Port that will be opened to send trajectory points from the driver to the robot. Note: this feature hasn't been
+  // implemented in ROS2
+  int trajectory_port = 50003;
+  // Port that will be opened to forward script commands from the driver to the robot
+  int script_command_port = stoi(info_.hardware_parameters["script_command_port"]);
   //  std::string tf_prefix = info_.hardware_parameters["tf_prefix"];
   //  std::string tf_prefix;
 
@@ -381,7 +399,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
         robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
         std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
-        servoj_lookahead_time, non_blocking_read_);
+        servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
@@ -541,6 +559,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
       resend_robot_program_cmd_ = NO_NEW_CMD_;
+      zero_ftsensor_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -594,6 +613,8 @@ void URPositionHardwareInterface::initAsyncIO()
     standard_analog_output_cmd_[i] = NO_NEW_CMD_;
   }
 
+  tool_voltage_cmd_ = NO_NEW_CMD_;
+
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
 }
@@ -623,6 +644,11 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
   }
 
+  if (!std::isnan(tool_voltage_cmd_) && ur_driver_ != nullptr) {
+    io_async_success_ = ur_driver_->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage_cmd_));
+    tool_voltage_cmd_ = NO_NEW_CMD_;
+  }
+
   if (!std::isnan(target_speed_fraction_cmd_) && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
     target_speed_fraction_cmd_ = NO_NEW_CMD_;
@@ -640,21 +666,14 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) &&
       !std::isnan(payload_center_of_gravity_[1]) && !std::isnan(payload_center_of_gravity_[2]) &&
       ur_driver_ != nullptr) {
-    try {
-      // create command as string from interfaces
-      // ROS1 driver hardware_interface.cpp#L450-L456
-      std::stringstream str_command;
-      str_command.imbue(std::locale::classic());
-      str_command << "sec setup():" << std::endl
-                  << " set_payload(" << payload_mass_ << ", [" << payload_center_of_gravity_[0] << ", "
-                  << payload_center_of_gravity_[1] << ", " << payload_center_of_gravity_[2] << "])" << std::endl
-                  << "end";
-      payload_async_success_ = ur_driver_->sendScript(str_command.str());
-    } catch (const urcl::UrException& e) {
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
-    }
+    payload_async_success_ = ur_driver_->setPayload(payload_mass_, payload_center_of_gravity_);
     payload_mass_ = NO_NEW_CMD_;
     payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  }
+
+  if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
+    zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
+    zero_ftsensor_cmd_ = NO_NEW_CMD_;
   }
 }
 
