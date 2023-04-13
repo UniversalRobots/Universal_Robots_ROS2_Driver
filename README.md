@@ -40,10 +40,6 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Foxy Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml?query=branch%3Afoxy+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml/badge.svg?branch=foxy"
-              alt="Foxy Source Build"/>
       </a>
     </td>
     <td>
@@ -54,10 +50,6 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Galactic Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml?query=branch%3Agalactic+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml/badge.svg?branch=galactic"
-              alt="Galactic Source Build"/>
       </a>
     </td>
     <td>
@@ -68,10 +60,6 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Humble Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml?query=branch%3Ahumble">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml/badge.svg?branch=humble"
-              alt="Humble Source Build"/>
       </a>
     </td>
     <td>
@@ -82,17 +70,13 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?query=branch%3Amain+">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main"
               alt="Rolling Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml/badge.svg?branch=main"
-              alt="Rolling Source Build"/>
       </a>
     </td>
   </tr>
 </table>
 
 
-**NOTE**: There are three build stages checking current and future compatibility of the driver.
+**NOTE**: There are two build stages checking current and future compatibility of the driver.
 
 1. Binary builds - against released packages (main and testing) in ROS distributions. Shows that direct local build is possible.
 
@@ -102,8 +86,6 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
    Shows that local build with dependencies is possible and if fails there we can expect that after the next package sync we will not be able to build.
 
    Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos`
-
-1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
 
 Each of these stages also performs integration tests using ursim. In order to execute these tests locally, they have to be enabled:
   ```
