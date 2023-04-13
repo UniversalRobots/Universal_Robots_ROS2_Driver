@@ -305,7 +305,10 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   if (reverse_ip == "0.0.0.0") {
     reverse_ip = "";
   }
-  //Port of the trajectory interface
+
+  //Port (on the host pc) of the trajectory interface
+
+  // Port (on the host PC) that will be used to forward script commands from the driver to the robot
   const int trajectory_port = stoi(info_.hardware_parameters["trajectory_port"]);
 
   const int script_command_port = stoi(info_.hardware_parameters["script_command_port"]);
