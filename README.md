@@ -37,10 +37,6 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Foxy Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml?query=branch%3Afoxy+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-source-build.yml/badge.svg?branch=foxy"
-              alt="Foxy Source Build"/>
       </a>
     </td>
     <td>
@@ -51,10 +47,6 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Galactic Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml?query=branch%3Agalactic+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-source-build.yml/badge.svg?branch=galactic"
-              alt="Galactic Source Build"/>
       </a>
     </td>
     <td>
@@ -65,10 +57,6 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml?query=branch%3Amain+">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml/badge.svg?branch=main"
               alt="Humble Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml?branch=main">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-source-build.yml/badge.svg?branch=main"
-              alt="Humble Source Build"/>
       </a>
     </td>
     <td>
@@ -79,10 +67,6 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?query=branch%3Amain+">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main"
               alt="Rolling Semi-Binary Build"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-source-build.yml/badge.svg?branch=main"
-              alt="Rolling Source Build"/>
       </a>
     </td>
   </tr>
@@ -111,7 +95,7 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
   </tr>
 </table>
 
-**NOTE**: There are three build stages checking current and future compatibility of the driver.
+**NOTE**: There are two build stages checking current and future compatibility of the driver.
 
 1. Binary builds - against released packages (main and testing) in ROS distributions. Shows that direct local build is possible.
 
@@ -121,9 +105,6 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
    Shows that local build with dependencies is possible and if fails there we can expect that after the next package sync we will not be able to build.
 
    Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos`
-
-1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
-
 
 ## Known Issues
 
@@ -300,14 +281,3 @@ Prepare the pre-commit formatting to run like this:
   ```
   pre-commit install`
   ```
-
-## CI setup
-
-There are three build stages checking current and future compatibility of the driver.
-
-1. Binary builds - against released packages (main and testing) in ROS distributions. Shows that direct local build is possible.
-
-1. Semi-binary builds - against released core ROS packages (main and testing), but the immediate dependencies are pulled from source.
-   Shows that local build with dependencies is possible and if fails there we can expect that after the next package sync we will not be able to build.
-
-1. Source build - also core ROS packages are build from source. It shows potential issues in the mid future.
