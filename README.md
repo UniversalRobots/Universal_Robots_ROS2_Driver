@@ -40,7 +40,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Foxy Semi-Binary Build"/>
-      </a> <br />
+      </a>
     </td>
     <td>
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?query=event%3Aschedule++">
@@ -50,7 +50,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Galactic Semi-Binary Build"/>
-      </a> <br />
+      </a>
     </td>
     <td>
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-build.yml?query=event%3Aschedule++">
@@ -60,7 +60,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-build.yml/badge.svg?event=schedule"
               alt="Humble Semi-Binary Build"/>
-      </a> <br />
+      </a>
     </td>
     <td>
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-build.yml?query=branch%3Amain+">
@@ -70,7 +70,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml?query=branch%3Amain+">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-build.yml/badge.svg?branch=main"
               alt="Rolling Semi-Binary Build"/>
-      </a> <br />
+      </a>
     </td>
   </tr>
 </table>
