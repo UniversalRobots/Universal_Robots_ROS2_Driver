@@ -300,24 +300,23 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   //  std::string tf_prefix = info_.hardware_parameters["tf_prefix"];
   //  std::string tf_prefix;
 
-  //The ip address of the host the driver runs on 
+  // The ip address of the host the driver runs on
   std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
   if (reverse_ip == "0.0.0.0") {
     reverse_ip = "";
   }
 
-  //Port (on the host pc) of the trajectory interface
-
-  // Port (on the host PC) that will be used to forward script commands from the driver to the robot
+  // Port (on the host pc) of the trajectory interface
   const int trajectory_port = stoi(info_.hardware_parameters["trajectory_port"]);
 
+  // Port (on the host PC) that will be used to forward script commands from the driver to the robot
   const int script_command_port = stoi(info_.hardware_parameters["script_command_port"]);
 
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
   // not used with combined_robot_hw can suppress important errors and affect real-time performance.
   non_blocking_read_ = (info_.hardware_parameters["non_blocking_read"] == "true") ||
-                                (info_.hardware_parameters["non_blocking_read"] == "True");
+                       (info_.hardware_parameters["non_blocking_read"] == "True");
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
@@ -327,7 +326,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   const double servoj_lookahead_time = stod(info_.hardware_parameters["servoj_lookahead_time"]);
 
   const bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
-                                (info_.hardware_parameters["use_tool_communication"] == "True");
+                                      (info_.hardware_parameters["use_tool_communication"] == "True");
 
   // Hash of the calibration reported by the robot. This is used for validating the robot
   // description is using the correct calibration. If the robot's calibration doesn't match this
@@ -349,7 +348,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     tool_comm_setup->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage));
 
     using ParityT = std::underlying_type<urcl::Parity>::type;
-  
+
     // Parity used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. Can be 0 (None), 1 (odd) and 2 (even).
     //
@@ -382,7 +381,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     const int rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
     tool_comm_setup->setRxIdleChars(rx_idle_chars);
 
-
     // Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the
     // robot is started. Valid values: min=0.0, max=40.0
     //
@@ -392,29 +390,17 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
-  //Amount of allowed timed out reads before the reverse interface will be dropped
+  // Amount of allowed timed out reads before the reverse interface will be dropped
   const int keep_alive_count = std::stoi(info_.hardware_parameters["keep_alive_count"]);
-
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   registerUrclLogHandler();
   try {
     ur_driver_ = std::make_unique<urcl::UrDriver>(
-        robot_ip, 
-        script_filename,
-        output_recipe_filename,
-        input_recipe_filename,
-        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), 
-        headless_mode,
-        std::move(tool_comm_setup),
-        (uint32_t)reverse_port, 
-        (uint32_t)script_sender_port,
-        servoj_gain,
-        servoj_lookahead_time,
-        non_blocking_read_, 
-        reverse_ip,
-        trajectory_port, 
-        script_command_port);
+        robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
+        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
+        std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
+        servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
     ur_driver_->setKeepaliveCount(keep_alive_count);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
