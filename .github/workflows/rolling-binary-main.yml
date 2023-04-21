@@ -1,4 +1,4 @@
-name: Rolling Binary Build Testing
+name: Rolling Binary Build Main
 on:
   workflow_dispatch:
     branches:
