@@ -359,7 +359,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     //
     // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
     // is set to TRUE.  Then, this parameter is required.
-    parity = std::stoi(info_.hardware_parameters["tool_parity"]);
+    const ParityT parity = std::stoi(info_.hardware_parameters["tool_parity"]);
     tool_comm_setup->setParity(static_cast<urcl::Parity>(parity));
 
 
