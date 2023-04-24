@@ -183,13 +183,14 @@ class RobotDriverTest(unittest.TestCase):
             for (action_name, action_type) in action_interfaces.items()
         }
 
+    def setUp(self):
         # Start robot
         empty_req = Trigger.Request()
-        self.call_service(self, "/dashboard_client/power_on", empty_req)
-        self.call_service(self, "/dashboard_client/brake_release", empty_req)
-        self.call_service(self, "/io_and_status_controller/resend_robot_program", empty_req)
+        self.call_service("/dashboard_client/power_on", empty_req)
+        self.call_service("/dashboard_client/brake_release", empty_req)
+        self.call_service("/io_and_status_controller/resend_robot_program", empty_req)
         time.sleep(1)
-        self.call_service(self, "/io_and_status_controller/resend_robot_program", empty_req)
+        self.call_service("/io_and_status_controller/resend_robot_program", empty_req)
 
     #
     # Test functions
