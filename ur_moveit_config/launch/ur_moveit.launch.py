@@ -161,12 +161,6 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_yaml = load_yaml("ur_moveit_config", "config/ompl_planning.yaml")
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
-    # Joint limits configuration
-    description_pkg_str = context.perform_substitution(description_package)
-    ur_type_str = context.perform_substitution(ur_type)
-    joint_limits_yaml = load_yaml(description_pkg_str, f"config/{ur_type_str}/joint_limits.yaml")
-    joint_limits = {"robot_description_planning": joint_limits_yaml}
-
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
     # the scaled_joint_trajectory_controller does not work on fake hardware
