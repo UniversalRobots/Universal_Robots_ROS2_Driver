@@ -38,7 +38,7 @@ from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from ur_moveit_config.launch_common import load_yaml
+from ur_moveit_config.launch_common import load_yaml, load_yaml_abs
 
 
 def launch_setup(context, *args, **kwargs):
@@ -146,9 +146,9 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare(moveit_config_package), "config", "kinematics.yaml"]
     )
 
-    # robot_description_planning = {
-    # "robot_description_planning": load_yaml_abs(str(joint_limit_params.perform(context)))
-    # }
+    robot_description_planning = {
+        "robot_description_planning": load_yaml_abs(str(joint_limit_params.perform(context)))
+    }
 
     # Planning Configuration
     ompl_planning_pipeline_config = {
@@ -208,9 +208,8 @@ def launch_setup(context, *args, **kwargs):
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,
-            # robot_description_planning,
+            robot_description_planning,
             ompl_planning_pipeline_config,
-            joint_limits,
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
@@ -235,7 +234,7 @@ def launch_setup(context, *args, **kwargs):
             robot_description_semantic,
             ompl_planning_pipeline_config,
             robot_description_kinematics,
-            # robot_description_planning,
+            robot_description_planning,
             warehouse_ros_config,
         ],
     )
@@ -251,7 +250,7 @@ def launch_setup(context, *args, **kwargs):
             servo_params,
             robot_description,
             robot_description_semantic,
-            joint_limits,
+            robot_description_planning,
         ],
         output="screen",
     )
