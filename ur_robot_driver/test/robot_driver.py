@@ -151,10 +151,14 @@ class RobotDriverTest(unittest.TestCase):
 
     def init_robot(self):
 
-        # Wait longer for the first service clients (for both the driver and the dashboard client) as the robot driver is still starting up
+        # Wait longer for the first service clients:
+        #  - The robot has to start up
+        #  - The controller_manager has to start
+        #  - The controllers need to load and activate
         service_interfaces_initial = {
             "/dashboard_client/power_on": Trigger,
             "/controller_manager/switch_controller": SwitchController,
+            "/io_and_status_controller/set_io": SetIO,
         }
         self.service_clients = {
             srv_name: waitForService(
@@ -169,7 +173,6 @@ class RobotDriverTest(unittest.TestCase):
             "/dashboard_client/stop": Trigger,
             "/dashboard_client/get_robot_mode": GetRobotMode,
             "/controller_manager/switch_controller": SwitchController,
-            "/io_and_status_controller/set_io": SetIO,
             "/io_and_status_controller/resend_robot_program": Trigger,
         }
         self.service_clients.update(
