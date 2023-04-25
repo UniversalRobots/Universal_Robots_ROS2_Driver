@@ -54,6 +54,8 @@ from std_srvs.srv import Trigger
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from ur_msgs.msg import IOStates
 from ur_msgs.srv import SetIO
+from ur_dashboard_msgs.msg import RobotMode
+from ur_dashboard_msgs.srv import GetRobotMode
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
@@ -164,6 +166,8 @@ class RobotDriverTest(unittest.TestCase):
         # Connect to the rest of the required interfaces
         service_interfaces = {
             "/dashboard_client/brake_release": Trigger,
+            "/dashboard_client/stop": Trigger,
+            "/dashboard_client/get_robot_mode": GetRobotMode,
             "/controller_manager/switch_controller": SwitchController,
             "/io_and_status_controller/set_io": SetIO,
             "/io_and_status_controller/resend_robot_program": Trigger,
@@ -183,13 +187,19 @@ class RobotDriverTest(unittest.TestCase):
             for (action_name, action_type) in action_interfaces.items()
         }
 
+    def setUp(self):
         # Start robot
         empty_req = Trigger.Request()
-        self.call_service(self, "/dashboard_client/power_on", empty_req)
-        self.call_service(self, "/dashboard_client/brake_release", empty_req)
-        self.call_service(self, "/io_and_status_controller/resend_robot_program", empty_req)
+        self.call_service("/dashboard_client/power_on", empty_req)
+        self.call_service("/dashboard_client/brake_release", empty_req)
         time.sleep(1)
-        self.call_service(self, "/io_and_status_controller/resend_robot_program", empty_req)
+        robot_mode_resp = self.call_service(
+            "/dashboard_client/get_robot_mode", GetRobotMode.Request()
+        )
+        self.assertEqual(robot_mode_resp.robot_mode.mode, RobotMode.RUNNING)
+        self.call_service("/dashboard_client/stop", empty_req)
+        time.sleep(1)
+        self.call_service("/io_and_status_controller/resend_robot_program", empty_req)
 
     #
     # Test functions
