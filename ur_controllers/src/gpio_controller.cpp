@@ -281,12 +281,8 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
   }
 
   try {
-    std::string prefix = params_.prefix;
-    //If no prefix was given we enforce the old behaviour of prefixing the topics with the controller name
-    if(prefix.empty()) {
-      prefix = "~/";
-    }
-    RCLCPP_INFO(get_node()->get_logger(), "%s", prefix.c_str());
+    const std::string prefix = "~/";
+
     // register publisher
     io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>(prefix+"io_states", rclcpp::SystemDefaultsQoS());
 
