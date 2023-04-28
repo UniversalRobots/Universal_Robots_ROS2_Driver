@@ -60,6 +60,8 @@ def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time")
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_servo = LaunchConfiguration("launch_servo")
+    publish_robot_description = LaunchConfiguration("publish_robot_description")
+    publish_robot_description_semantic = LaunchConfiguration("publish_robot_description_semantic")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -211,8 +213,11 @@ def launch_setup(context, *args, **kwargs):
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
-            {"use_sim_time": use_sim_time},
+            {"use_sim_time": use_sim_time,
+            "publish_robot_description": publish_robot_description,
++           "publish_robot_description_semantic": publish_robot_description_semantic},
             warehouse_ros_config,
+
         ],
     )
 
@@ -362,6 +367,12 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument("launch_servo", default_value="true", description="Launch Servo?")
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument("publish_robot_description", default_value="true", description="MoveGroup publishes robot description")
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument("publish_robot_description_semantic", default_value="true", description="MoveGroup publishes robot descripion semantic")
     )
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
