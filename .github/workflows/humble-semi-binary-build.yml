@@ -27,3 +27,6 @@ jobs:
           ROS_DISTRO: ${{ matrix.ROS_DISTRO }}
           ROS_REPO: ${{ matrix.ROS_REPO }}
           CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
+          # Because of the way the JTC is exposing its headers we can run into ABI incompatibilities
+          # when we install the binary package.
+          ROSDEP_SKIP_KEYS: "joint_trajectory_controller"
