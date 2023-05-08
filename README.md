@@ -167,7 +167,7 @@ building might fail occasionally.
    For using this driver with ROS2 `foxy`. Checkout [foxy
    branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy), for using it
    with ROS2 ``galactic``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic), for using it
-   with ROS2 ``humble``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble).
+   with ROS2 ``humble``, use the [humble branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble).
 
    Once installed, please make sure to actually [source ROS2](https://docs.ros.org/en/rolling/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html#source-the-setup-files) before proceeding.
 
