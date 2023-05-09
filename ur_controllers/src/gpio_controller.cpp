@@ -425,7 +425,7 @@ bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr 
   command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_CMD].set_value(1.0);
 
   while (command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-    // Asynchronous wait until the hardware interface has set the slider value
+    // Asynchronous wait until the command has been executed
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
   resp->success =
