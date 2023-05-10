@@ -244,6 +244,12 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
 
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("hand_back_control", "hand_back_control_cmd", &hand_back_control_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      "hand_back_control", "hand_back_control_async_success", &hand_back_control_async_success_));
+
   command_interfaces.emplace_back(hardware_interface::CommandInterface("payload", "mass", &payload_mass_));
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface("payload", "cog.x", &payload_center_of_gravity_[0]));
@@ -562,6 +568,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
+      hand_back_control_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -663,6 +670,12 @@ void URPositionHardwareInterface::checkAsyncIO()
       RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
     }
     resend_robot_program_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(hand_back_control_cmd_) && ur_driver_ != nullptr) {
+    robot_program_running_ = false;
+    hand_back_control_async_success_ = true;
+    hand_back_control_cmd_ = NO_NEW_CMD_;
   }
 
   if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) &&
