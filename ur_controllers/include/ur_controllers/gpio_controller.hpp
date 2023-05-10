@@ -76,6 +76,8 @@ enum CommandInterfaces
   PAYLOAD_ASYNC_SUCCESS = 30,
   ZERO_FTSENSOR_CMD = 31,
   ZERO_FTSENSOR_ASYNC_SUCCESS = 32,
+  HAND_BACK_CONTROL_CMD = 33,
+  HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
 };
 
 enum StateInterfaces
@@ -125,6 +127,9 @@ private:
   bool resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr req,
                           std_srvs::srv::Trigger::Response::SharedPtr resp);
 
+  bool handBackControl(std_srvs::srv::Trigger::Request::SharedPtr req,
+                       std_srvs::srv::Trigger::Response::SharedPtr resp);
+
   bool setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                   ur_msgs::srv::SetPayload::Response::SharedPtr resp);
 
@@ -152,6 +157,7 @@ protected:
 
   // services
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr resend_robot_program_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr hand_back_control_srv_;
   rclcpp::Service<ur_msgs::srv::SetSpeedSliderFraction>::SharedPtr set_speed_slider_srv_;
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
