@@ -250,6 +250,11 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       prefix +"resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(prefix +"hand_back_control", "hand_back_control_cmd", &hand_back_control_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      prefix +"hand_back_control", "hand_back_control_async_success", &hand_back_control_async_success_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(prefix +"payload", "mass", &payload_mass_));
   command_interfaces.emplace_back(
@@ -312,16 +317,18 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   if (reverse_ip == "0.0.0.0") {
     reverse_ip = "";
   }
-  //Port of the trajectory interface
+
+  // Port (on the host pc) of the trajectory interface
   const int trajectory_port = stoi(info_.hardware_parameters["trajectory_port"]);
 
+  // Port (on the host PC) that will be used to forward script commands from the driver to the robot
   const int script_command_port = stoi(info_.hardware_parameters["script_command_port"]);
 
   // Enables non_blocking_read mode. Should only be used with combined_robot_hw. Disables error generated when read
   // returns without any data, sets the read timeout to zero, and synchronises read/write operations. Enabling this when
   // not used with combined_robot_hw can suppress important errors and affect real-time performance.
   non_blocking_read_ = (info_.hardware_parameters["non_blocking_read"] == "true") ||
-                                (info_.hardware_parameters["non_blocking_read"] == "True");
+                       (info_.hardware_parameters["non_blocking_read"] == "True");
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
@@ -331,7 +338,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   const double servoj_lookahead_time = stod(info_.hardware_parameters["servoj_lookahead_time"]);
 
   const bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
-                                (info_.hardware_parameters["use_tool_communication"] == "True");
+                                      (info_.hardware_parameters["use_tool_communication"] == "True");
 
   // Hash of the calibration reported by the robot. This is used for validating the robot
   // description is using the correct calibration. If the robot's calibration doesn't match this
@@ -362,7 +369,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     const ParityT parity = std::stoi(info_.hardware_parameters["tool_parity"]);
     tool_comm_setup->setParity(static_cast<urcl::Parity>(parity));
 
-
     // Baud rate used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. See UR documentation for valid baud rates.
     //
@@ -371,7 +377,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     const int baud_rate = std::stoi(info_.hardware_parameters["tool_baud_rate"]);
     tool_comm_setup->setBaudRate(static_cast<uint32_t>(baud_rate));
 
-   
     // Number of stop bits used for tool communication. Will be set as soon as the UR-Program on the robot is
     // started. Can be 1 or 2.
     //
@@ -379,7 +384,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     // is set to TRUE.  Then, this parameter is required.
     const int stop_bits = std::stoi(info_.hardware_parameters["tool_stop_bits"]);
     tool_comm_setup->setStopBits(static_cast<uint32_t>(stop_bits));
-
 
     // Number of idle chars for the RX unit used for tool communication. Will be set as soon as the UR-Program on the
     // robot is started. Valid values: min=1.0, max=40.0
@@ -398,29 +402,17 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
-  //Amount of allowed timed out reads before the reverse interface will be dropped
+  // Amount of allowed timed out reads before the reverse interface will be dropped
   const int keep_alive_count = std::stoi(info_.hardware_parameters["keep_alive_count"]);
-
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   registerUrclLogHandler();
   try {
     ur_driver_ = std::make_unique<urcl::UrDriver>(
-        robot_ip, 
-        script_filename,
-        output_recipe_filename,
-        input_recipe_filename,
-        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), 
-        headless_mode,
-        std::move(tool_comm_setup),
-        (uint32_t)reverse_port, 
-        (uint32_t)script_sender_port,
-        servoj_gain,
-        servoj_lookahead_time,
-        non_blocking_read_, 
-        reverse_ip,
-        trajectory_port, 
-        script_command_port);
+        robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
+        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
+        std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
+        servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
     ur_driver_->setKeepaliveCount(keep_alive_count);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
@@ -447,8 +439,8 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
                         "README.md] for details.");
   }
 
-
   ur_driver_->startRTDECommunication();
+
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");

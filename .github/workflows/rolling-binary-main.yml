@@ -1,0 +1,23 @@
+name: Rolling Binary Build Main
+on:
+  workflow_dispatch:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '13 4 * * *'
+
+jobs:
+  binary:
+    uses: ./.github/workflows/reusable_ici.yml
+    with:
+      ros_distro: rolling
+      ros_repo: main
+      upstream_workspace: Universal_Robots_ROS2_Driver-not-released.rolling.repos
+      ref_for_scheduled_build: main

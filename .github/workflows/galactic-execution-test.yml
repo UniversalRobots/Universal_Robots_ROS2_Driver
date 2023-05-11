@@ -21,7 +21,7 @@ jobs:
       IMMEDIATE_TEST_OUTPUT: true
       PARALLEL_TESTS: 2
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
         with:
           ref: galactic
       - name: start ursim
