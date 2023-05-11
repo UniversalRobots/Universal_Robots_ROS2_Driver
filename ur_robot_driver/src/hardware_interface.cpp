@@ -155,8 +155,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   //Obtain the prefix from the urdf so that we can have the general interface multiple times
   //NOTE using the prefix at this point is some kind of workaround. One should actually go through the list of gpio state interface in info_ and match them accordingly
-  const std::string prefix = info_.hardware_parameters.at("tf_prefix");
-
+  std::string prefix = info_.hardware_parameters.at("tf_prefix");
+  prefix.erase(0,1);
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(prefix+"speed_scaling", "speed_scaling_factor", &speed_scaling_combined_));
 
@@ -235,8 +235,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   }
   //Obtain the prefix from the urdf so that we can have the general interface multiple times
   //NOTE using the prefix at this point is some kind of workaround. One should actually go through the list of gpio command interface in info_ and match them accordingly
-  const std::string prefix = info_.hardware_parameters.at("tf_prefix");
-
+  std::string prefix = info_.hardware_parameters.at("tf_prefix");
+  prefix.erase(0,1);
   command_interfaces.emplace_back(hardware_interface::CommandInterface(prefix +"gpio", "io_async_success", &io_async_success_));
 
   command_interfaces.emplace_back(
