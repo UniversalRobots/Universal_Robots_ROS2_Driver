@@ -61,10 +61,10 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", params_.prefix.c_str());
 
-  const std::string prefix = params_.prefix;
-  RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", prefix.c_str());
+
+  const std::string prefix = params_.tf_prefix;
+    RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", prefix.c_str());
 
   for (size_t i = 0; i < 18; ++i) {
     config.names.emplace_back(prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
@@ -104,7 +104,7 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
-  const std::string prefix = params_.prefix;
+  const std::string prefix = params_.tf_prefix;
 
   // digital io
   for (size_t i = 0; i < 18; ++i) {

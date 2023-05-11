@@ -1,5 +1,5 @@
 gpio_controller:
-   prefix: {
+   tf_prefix: {
     type: string,
     default_value: "",
     description: "Urdf prefix of the corresponding arm"

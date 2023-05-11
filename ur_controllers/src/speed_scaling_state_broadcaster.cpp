@@ -41,7 +41,6 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/event_handler.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rcpputils/split.hpp"
@@ -66,7 +65,7 @@ controller_interface::CallbackReturn SpeedScalingStateBroadcaster::on_init()
     params_ = param_listener_->get_params();
 
     RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with prefix: %s",
-                params_.prefix.c_str());
+                params_.tf_prefix.c_str());
 
   } catch (std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
@@ -86,7 +85,7 @@ controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::state
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
-  const std::string prefix = params_.prefix;
+  const std::string prefix = params_.tf_prefix;
   config.names.push_back(prefix + "speed_scaling/speed_scaling_factor");
   return config;
 }
@@ -105,18 +104,14 @@ SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*prev
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
 
-  std::string prefix = params_.prefix;
-  // If no prefix was given we enforce the old behaviour of prefixing the topics with the controller name
-  if (prefix.empty()) {
-    prefix = "~/";
-  }
+
   publish_rate_ = params_.state_publish_rate;
 
   RCLCPP_INFO(get_node()->get_logger(), "Publisher rate set to : %.1f Hz", publish_rate_);
 
   try {
     speed_scaling_state_publisher_ =
-        get_node()->create_publisher<std_msgs::msg::Float64>(prefix + "speed_scaling", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<std_msgs::msg::Float64>( "~/speed_scaling", rclcpp::SystemDefaultsQoS());
   } catch (const std::exception& e) {
     // get_node() may throw, logging raw here
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
