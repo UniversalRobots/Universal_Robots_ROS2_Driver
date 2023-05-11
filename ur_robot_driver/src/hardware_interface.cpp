@@ -314,8 +314,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   const int reverse_port = stoi(info_.hardware_parameters["reverse_port"]);
   // The driver will offer an interface to receive the program's URScript on this port.
   const int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
-  //  std::string tf_prefix = info_.hardware_parameters["tf_prefix"];
-  //  std::string tf_prefix;
 
   // The ip address of the host the driver runs on
   std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
