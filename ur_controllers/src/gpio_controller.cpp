@@ -63,38 +63,38 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
 
-  const std::string prefix = params_.tf_prefix;
-    RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", prefix.c_str());
+  const std::string tf_prefix = params_.tf_prefix;
+    RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with tf_prefix: %s", tf_prefix.c_str());
 
   for (size_t i = 0; i < 18; ++i) {
-    config.names.emplace_back(prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back(prefix + "gpio/standard_analog_output_cmd_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_analog_output_cmd_" + std::to_string(i));
   }
-  config.names.emplace_back(prefix + "gpio/tool_voltage_cmd");
+  config.names.emplace_back(tf_prefix + "gpio/tool_voltage_cmd");
 
-  config.names.emplace_back(prefix + "gpio/io_async_success");
+  config.names.emplace_back(tf_prefix + "gpio/io_async_success");
 
-  config.names.emplace_back(prefix + "speed_scaling/target_speed_fraction_cmd");
+  config.names.emplace_back(tf_prefix + "speed_scaling/target_speed_fraction_cmd");
 
-  config.names.emplace_back(prefix + "speed_scaling/target_speed_fraction_async_success");
+  config.names.emplace_back(tf_prefix + "speed_scaling/target_speed_fraction_async_success");
 
-  config.names.emplace_back(prefix + "resend_robot_program/resend_robot_program_cmd");
+  config.names.emplace_back(tf_prefix + "resend_robot_program/resend_robot_program_cmd");
 
-  config.names.emplace_back(prefix + "resend_robot_program/resend_robot_program_async_success");
+  config.names.emplace_back(tf_prefix + "resend_robot_program/resend_robot_program_async_success");
 
   // payload stuff
-  config.names.emplace_back(prefix + "payload/mass");
-  config.names.emplace_back(prefix + "payload/cog.x");
-  config.names.emplace_back(prefix + "payload/cog.y");
-  config.names.emplace_back(prefix + "payload/cog.z");
-  config.names.emplace_back(prefix + "payload/payload_async_success");
+  config.names.emplace_back(tf_prefix + "payload/mass");
+  config.names.emplace_back(tf_prefix + "payload/cog.x");
+  config.names.emplace_back(tf_prefix + "payload/cog.y");
+  config.names.emplace_back(tf_prefix + "payload/cog.z");
+  config.names.emplace_back(tf_prefix + "payload/payload_async_success");
 
   // hand back control --> make UR-program return
-  config.names.emplace_back("hand_back_control/hand_back_control_cmd");
-  config.names.emplace_back("hand_back_control/hand_back_control_async_success");
+  config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_cmd");
+  config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
   return config;
 }
@@ -104,58 +104,58 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
-  const std::string prefix = params_.tf_prefix;
+  const std::string tf_prefix = params_.tf_prefix;
 
   // digital io
   for (size_t i = 0; i < 18; ++i) {
-    config.names.emplace_back(prefix + "gpio/digital_output_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/digital_output_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 18; ++i) {
-    config.names.emplace_back(prefix + "gpio/digital_input_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/digital_input_" + std::to_string(i));
   }
 
   // analog io
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back(prefix + "gpio/standard_analog_output_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_analog_output_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back(prefix + "gpio/standard_analog_input_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_analog_input_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 4; ++i) {
-    config.names.emplace_back(prefix + "gpio/analog_io_type_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/analog_io_type_" + std::to_string(i));
   }
 
   // tool
-  config.names.emplace_back(prefix + "gpio/tool_mode");
-  config.names.emplace_back(prefix + "gpio/tool_output_voltage");
-  config.names.emplace_back(prefix + "gpio/tool_output_current");
-  config.names.emplace_back(prefix + "gpio/tool_temperature");
+  config.names.emplace_back(tf_prefix + "gpio/tool_mode");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_voltage");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_current");
+  config.names.emplace_back(tf_prefix + "gpio/tool_temperature");
 
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back(prefix + "gpio/tool_analog_input_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/tool_analog_input_" + std::to_string(i));
   }
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back(prefix + "gpio/tool_analog_input_type_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/tool_analog_input_type_" + std::to_string(i));
   }
 
   // robot
-  config.names.emplace_back(prefix + "gpio/robot_mode");
+  config.names.emplace_back(tf_prefix + "gpio/robot_mode");
   for (size_t i = 0; i < 4; ++i) {
-    config.names.emplace_back(prefix + "gpio/robot_status_bit_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/robot_status_bit_" + std::to_string(i));
   }
 
   // safety
-  config.names.emplace_back(prefix + "gpio/safety_mode");
+  config.names.emplace_back(tf_prefix + "gpio/safety_mode");
   for (size_t i = 0; i < 11; ++i) {
-    config.names.emplace_back(prefix + "gpio/safety_status_bit_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/safety_status_bit_" + std::to_string(i));
   }
-  config.names.emplace_back(prefix + "system_interface/initialized");
+  config.names.emplace_back(tf_prefix + "system_interface/initialized");
 
   // program running
-  config.names.emplace_back(prefix + "gpio/program_running");
+  config.names.emplace_back(tf_prefix + "gpio/program_running");
 
   return config;
 }
@@ -277,34 +277,32 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
   }
 
   try {
-    const std::string prefix = "~/";
-
     // register publisher
-    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>(prefix + "io_states", rclcpp::SystemDefaultsQoS());
+    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
 
     tool_data_pub_ =
-        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>(prefix + "tool_data", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
 
-    robot_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>(prefix + "robot_mode",
+    robot_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode",
                                                                                       rclcpp::SystemDefaultsQoS());
 
-    safety_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>(prefix + "safety_mode",
+    safety_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode",
                                                                                         rclcpp::SystemDefaultsQoS());
 
     auto program_state_pub_qos = rclcpp::SystemDefaultsQoS();
     program_state_pub_qos.transient_local();
     program_state_pub_ =
-        get_node()->create_publisher<std_msgs::msg::Bool>(prefix + "robot_program_running", program_state_pub_qos);
+        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", program_state_pub_qos);
 
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
-        prefix + "set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
 
     set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
-        prefix + "set_speed_slider",
+        "~/set_speed_slider",
         std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
 
     resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        prefix + "resend_robot_program",
+        "~/resend_robot_program",
         std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
 
     hand_back_control_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
@@ -312,11 +310,11 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
         std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
-        prefix + "set_payload",
+        "~/set_payload",
         std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
 
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        prefix + "zero_ftsensor",
+        "~/zero_ftsensor",
         std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;

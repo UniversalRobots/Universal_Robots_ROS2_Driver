@@ -64,7 +64,7 @@ controller_interface::CallbackReturn SpeedScalingStateBroadcaster::on_init()
     param_listener_ = std::make_shared<speed_scaling_state_broadcaster::ParamListener>(get_node());
     params_ = param_listener_->get_params();
 
-    RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with prefix: %s",
+    RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with tf_prefix: %s",
                 params_.tf_prefix.c_str());
 
   } catch (std::exception& e) {
@@ -85,8 +85,8 @@ controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::state
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
-  const std::string prefix = params_.tf_prefix;
-  config.names.push_back(prefix + "speed_scaling/speed_scaling_factor");
+  const std::string tf_prefix = params_.tf_prefix;
+  config.names.push_back(tf_prefix + "speed_scaling/speed_scaling_factor");
   return config;
 }
 
