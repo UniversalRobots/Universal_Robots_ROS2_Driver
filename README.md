@@ -217,10 +217,10 @@ guide](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.h
 
 
 ## Contributor Guidelines
-Code is auto-formatted with clang-format 10 whenever a git commit is made. Please ensure these dependencies are installed:
+Code is auto-formatted with clang-format 14 whenever a git commit is made. Please ensure these dependencies are installed:
   ```
   pip3 install pre-commit
-  sudo apt install clang-format-10
+  sudo apt install clang-format-14
   ```
 
 Prepare the pre-commit formatting to run like this:
