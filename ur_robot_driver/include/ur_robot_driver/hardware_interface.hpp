@@ -221,8 +221,6 @@ protected:
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::shared_ptr<std::thread> async_thread_;
-
- 
 };
 }  // namespace ur_robot_driver
 

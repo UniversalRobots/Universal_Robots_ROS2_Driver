@@ -62,9 +62,8 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
-
   const std::string tf_prefix = params_.tf_prefix;
-    RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with tf_prefix: %s", tf_prefix.c_str());
+  RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with tf_prefix: %s", tf_prefix.c_str());
 
   for (size_t i = 0; i < 18; ++i) {
     config.names.emplace_back(tf_prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
@@ -283,11 +282,11 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     tool_data_pub_ =
         get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
 
-    robot_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode",
-                                                                                      rclcpp::SystemDefaultsQoS());
+    robot_mode_pub_ =
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", rclcpp::SystemDefaultsQoS());
 
-    safety_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode",
-                                                                                        rclcpp::SystemDefaultsQoS());
+    safety_mode_pub_ =
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", rclcpp::SystemDefaultsQoS());
 
     auto program_state_pub_qos = rclcpp::SystemDefaultsQoS();
     program_state_pub_qos.transient_local();
@@ -310,8 +309,7 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
         std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
-        "~/set_payload",
-        std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+        "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
 
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
         "~/zero_ftsensor",

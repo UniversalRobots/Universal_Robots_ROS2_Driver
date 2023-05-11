@@ -158,8 +158,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   // state interface in info_ and match them accordingly
   std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   tf_prefix.erase(0, 1);
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor", &speed_scaling_combined_));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
+                                                                   &speed_scaling_combined_));
 
   for (auto& sensor : info_.sensors) {
     for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
@@ -204,9 +204,11 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
 
   state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
 
@@ -216,8 +218,8 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized", &system_interface_initialized_));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized",
+                                                                   &system_interface_initialized_));
 
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));

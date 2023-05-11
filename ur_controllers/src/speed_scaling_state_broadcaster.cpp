@@ -104,14 +104,13 @@ SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*prev
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
 
-
   publish_rate_ = params_.state_publish_rate;
 
   RCLCPP_INFO(get_node()->get_logger(), "Publisher rate set to : %.1f Hz", publish_rate_);
 
   try {
     speed_scaling_state_publisher_ =
-        get_node()->create_publisher<std_msgs::msg::Float64>( "~/speed_scaling", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<std_msgs::msg::Float64>("~/speed_scaling", rclcpp::SystemDefaultsQoS());
   } catch (const std::exception& e) {
     // get_node() may throw, logging raw here
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
