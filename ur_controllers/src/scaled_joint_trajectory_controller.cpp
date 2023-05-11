@@ -45,7 +45,8 @@
 namespace ur_controllers
 {
 
-controller_interface::CallbackReturn ScaledJointTrajectoryController::on_init() {
+controller_interface::CallbackReturn ScaledJointTrajectoryController::on_init()
+{
   // Create the parameter listener and get the parameters
   scaled_param_listener_ = std::make_shared<scaled_joint_trajectory_controller::ParamListener>(get_node());
   scaled_params_ = scaled_param_listener_->get_params();
@@ -78,7 +79,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   if (state_interfaces_.back().get_name() == scaled_params_.speed_scaling_interface_name) {
     scaling_factor_ = state_interfaces_.back().get_value();
   } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface (%s) not found in hardware interface.", scaled_params_.speed_scaling_interface_name.c_str());
+    RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface (%s) not found in hardware interface.",
+                 scaled_params_.speed_scaling_interface_name.c_str());
   }
 
   if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {

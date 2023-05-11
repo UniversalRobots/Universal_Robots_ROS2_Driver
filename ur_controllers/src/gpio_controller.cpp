@@ -43,21 +43,16 @@ namespace ur_controllers
 {
 controller_interface::CallbackReturn GPIOController::on_init()
 {
-  try
-  {
+  try {
     initMsgs();
     // Create the parameter listener and get the parameters
     param_listener_ = std::make_shared<gpio_controller::ParamListener>(get_node());
     params_ = param_listener_->get_params();
 
-   
-  }
-  catch (const std::exception & e)
-  {
+  } catch (const std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
   }
-
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -71,7 +66,6 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   const std::string prefix = params_.prefix;
   RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with prefix: %s", prefix.c_str());
 
-  
   for (size_t i = 0; i < 18; ++i) {
     config.names.emplace_back(prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
   }
@@ -111,8 +105,7 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
   const std::string prefix = params_.prefix;
-   
-  
+
   // digital io
   for (size_t i = 0; i < 18; ++i) {
     config.names.emplace_back(prefix + "gpio/digital_output_" + std::to_string(i));
@@ -183,8 +176,7 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 {
   const auto logger = get_node()->get_logger();
 
-  if (!param_listener_)
-  {
+  if (!param_listener_) {
     RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
     return controller_interface::CallbackReturn::ERROR;
   }
@@ -288,31 +280,31 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     const std::string prefix = "~/";
 
     // register publisher
-    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>(prefix+"io_states", rclcpp::SystemDefaultsQoS());
+    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>(prefix + "io_states", rclcpp::SystemDefaultsQoS());
 
     tool_data_pub_ =
-        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>(prefix+"tool_data", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>(prefix + "tool_data", rclcpp::SystemDefaultsQoS());
 
-    robot_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>(prefix+"robot_mode", rclcpp::SystemDefaultsQoS());
+    robot_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>(prefix + "robot_mode",
+                                                                                      rclcpp::SystemDefaultsQoS());
 
-    safety_mode_pub_ =
-        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>(prefix+"safety_mode", rclcpp::SystemDefaultsQoS());
+    safety_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>(prefix + "safety_mode",
+                                                                                        rclcpp::SystemDefaultsQoS());
 
     auto program_state_pub_qos = rclcpp::SystemDefaultsQoS();
     program_state_pub_qos.transient_local();
     program_state_pub_ =
-        get_node()->create_publisher<std_msgs::msg::Bool>(prefix+"robot_program_running", program_state_pub_qos);
+        get_node()->create_publisher<std_msgs::msg::Bool>(prefix + "robot_program_running", program_state_pub_qos);
 
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
-        prefix+"set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+        prefix + "set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
 
     set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
-        prefix+"set_speed_slider",
+        prefix + "set_speed_slider",
         std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
 
     resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        prefix+"resend_robot_program",
+        prefix + "resend_robot_program",
         std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
 
     hand_back_control_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
@@ -320,10 +312,11 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
         std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
-        prefix+"set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+        prefix + "set_payload",
+        std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
 
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        prefix+"zero_ftsensor",
+        prefix + "zero_ftsensor",
         std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;

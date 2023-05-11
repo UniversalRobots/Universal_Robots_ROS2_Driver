@@ -59,7 +59,6 @@ public:
 
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
-
   CallbackReturn on_init() override;
 
 protected:

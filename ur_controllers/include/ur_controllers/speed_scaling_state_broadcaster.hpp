@@ -78,7 +78,6 @@ protected:
   std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
   std_msgs::msg::Float64 speed_scaling_state_msg_;
 
-
   // Parameters from ROS for SpeedScalingStateBroadcaster
   std::shared_ptr<speed_scaling_state_broadcaster::ParamListener> param_listener_;
   speed_scaling_state_broadcaster::Params params_;

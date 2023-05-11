@@ -65,7 +65,8 @@ controller_interface::CallbackReturn SpeedScalingStateBroadcaster::on_init()
     param_listener_ = std::make_shared<speed_scaling_state_broadcaster::ParamListener>(get_node());
     params_ = param_listener_->get_params();
 
-    RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with prefix: %s", params_.prefix.c_str());
+    RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with prefix: %s",
+                params_.prefix.c_str());
 
   } catch (std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
@@ -86,16 +87,14 @@ controller_interface::InterfaceConfiguration SpeedScalingStateBroadcaster::state
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
   const std::string prefix = params_.prefix;
-  config.names.push_back(prefix+"speed_scaling/speed_scaling_factor");
+  config.names.push_back(prefix + "speed_scaling/speed_scaling_factor");
   return config;
 }
 
 controller_interface::CallbackReturn
 SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
-{ 
-
-  if (!param_listener_)
-  {
+{
+  if (!param_listener_) {
     RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
     return controller_interface::CallbackReturn::ERROR;
   }
@@ -107,18 +106,17 @@ SpeedScalingStateBroadcaster::on_configure(const rclcpp_lifecycle::State& /*prev
   params_ = param_listener_->get_params();
 
   std::string prefix = params_.prefix;
-  //If no prefix was given we enforce the old behaviour of prefixing the topics with the controller name
-  if(prefix.empty()) {
+  // If no prefix was given we enforce the old behaviour of prefixing the topics with the controller name
+  if (prefix.empty()) {
     prefix = "~/";
   }
   publish_rate_ = params_.state_publish_rate;
 
   RCLCPP_INFO(get_node()->get_logger(), "Publisher rate set to : %.1f Hz", publish_rate_);
-  
 
   try {
     speed_scaling_state_publisher_ =
-        get_node()->create_publisher<std_msgs::msg::Float64>(prefix+"speed_scaling", rclcpp::SystemDefaultsQoS());
+        get_node()->create_publisher<std_msgs::msg::Float64>(prefix + "speed_scaling", rclcpp::SystemDefaultsQoS());
   } catch (const std::exception& e) {
     // get_node() may throw, logging raw here
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
