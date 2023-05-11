@@ -26,7 +26,6 @@ jobs:
           # build all packages listed in the meta package
           package-name:
             ur
-            ur_bringup
             ur_controllers
             ur_dashboard_msgs
             ur_moveit_config
