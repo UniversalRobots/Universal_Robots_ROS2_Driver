@@ -43,6 +43,7 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
+#include "scaled_joint_trajectory_controller_parameters.hpp"
 
 namespace ur_controllers
 {
@@ -58,6 +59,8 @@ public:
 
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
+  CallbackReturn on_init() override;
+
 protected:
   struct TimeData
   {
@@ -70,8 +73,11 @@ protected:
   };
 
 private:
-  double scaling_factor_;
+  double scaling_factor_{};
   realtime_tools::RealtimeBuffer<TimeData> time_data_;
+
+  std::shared_ptr<scaled_joint_trajectory_controller::ParamListener> scaled_param_listener_;
+  scaled_joint_trajectory_controller::Params scaled_params_;
 };
 }  // namespace ur_controllers
 

@@ -1,0 +1,11 @@
+speed_scaling_state_broadcaster:
+   tf_prefix: {
+    type: string,
+    default_value: "",
+    description: "Urdf prefix of the corresponding arm"
+   }
+   state_publish_rate: {
+    type: double,
+    default_value: 100.0,
+    description: "Rate at which the speedscaling state will be published."
+   }
