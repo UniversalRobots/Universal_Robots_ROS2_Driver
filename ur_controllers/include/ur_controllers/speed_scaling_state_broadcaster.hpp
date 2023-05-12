@@ -48,6 +48,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "speed_scaling_state_broadcaster_parameters.hpp"
 
 namespace ur_controllers
 {
@@ -76,6 +77,10 @@ protected:
 
   std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
   std_msgs::msg::Float64 speed_scaling_state_msg_;
+
+  // Parameters from ROS for SpeedScalingStateBroadcaster
+  std::shared_ptr<speed_scaling_state_broadcaster::ParamListener> param_listener_;
+  speed_scaling_state_broadcaster::Params params_;
 };
 }  // namespace ur_controllers
 #endif  // UR_CONTROLLERS__SPEED_SCALING_STATE_BROADCASTER_HPP_
