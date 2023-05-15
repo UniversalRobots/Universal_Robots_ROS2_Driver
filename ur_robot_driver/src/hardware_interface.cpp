@@ -54,6 +54,13 @@ namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
 {
+URPositionHardwareInterface::~URPositionHardwareInterface() 
+{
+  //If the controller manager is shutdown via Ctrl + C the on_deactivate methods won't be called. 
+  //We therefore need to make sure to actually deactivate the communication 
+  on_deactivate(rclcpp_lifecycle::State());
+}
+
 hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& system_info)
 {
@@ -413,6 +420,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   registerUrclLogHandler();
   try {
+    rtde_comm_has_been_started_ = false;
     ur_driver_ = std::make_unique<urcl::UrDriver>(
         robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
@@ -507,6 +515,12 @@ void URPositionHardwareInterface::asyncThread()
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
+
+    //We want to start the rtde comm the latest point possible due to the delay times arising from setting up the communication with multiple arms
+  if(!rtde_comm_has_been_started_) {
+    rtde_comm_has_been_started_  = true;
+      ur_driver_->startRTDECommunication();
+  }
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
   if (data_pkg) {
@@ -587,8 +601,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
     return hardware_interface::return_type::OK;
   }
-
-  RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
+  if(!non_blocking_read_)
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
   // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
   return hardware_interface::return_type::OK;
 }
@@ -641,6 +655,9 @@ void URPositionHardwareInterface::initAsyncIO()
 
 void URPositionHardwareInterface::checkAsyncIO()
 {
+  if(!rtde_comm_has_been_started_){
+    return;
+  }
   for (size_t i = 0; i < 18; ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
