@@ -398,9 +398,9 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
     command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_CMD].set_value(
         static_cast<double>(req->speed_slider_fraction));
 
-    if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+    if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value();}))
     {
-      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
+      RCLCPP_WARN(get_node()->get_logger(),"Could not verify that target speed fraction was set. (This might happen when using the mocked interface)");
     }
     resp->success =
         static_cast<bool>(command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value());
@@ -421,9 +421,9 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
   // call the service in the hardware
   command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_CMD].set_value(1.0);
 
-  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value();}))
   {
-    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
+    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that program was sent. (This might happen when using the mocked interface)");
   }
   resp->success =
       static_cast<bool>(command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value());
@@ -446,9 +446,9 @@ bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr 
   // call the service in the hardware
   command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_CMD].set_value(1.0);
 
-  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value();}))
   {
-    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
+    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that hand_back_control was correctly triggered. (This might happen when using the mocked interface)");
   }
   resp->success =
       static_cast<bool>(command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value());
@@ -474,9 +474,9 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
   command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
 
-  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value();}))
   {
-    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
+    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that payload was set. (This might happen when using the mocked interface)");
   }
 
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value());
@@ -499,9 +499,9 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
   // call the service in the hardware
   command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_CMD].set_value(1.0);
 
-  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value();}))
+  if(!waitForAsyncCommand([&](){return command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value();}))
   {
-    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that io was set. (This might happen when using the mocked interface)");
+    RCLCPP_WARN(get_node()->get_logger(),"Could not verify that FTS was zeroed. (This might happen when using the mocked interface)");
   }
 
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value());
