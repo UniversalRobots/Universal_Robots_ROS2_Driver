@@ -186,10 +186,10 @@ protected:
   // TODO(anyone) service servers to add: resend_robot_program_srv_, deactivate_srv_, set_payload_srv_, tare_sensor_srv_
 
   /**
-   * @brief wait until a command interface isn't in state ASYNC_WAITING anymore or until the parameter maximum_retries have been reached
-  */
+   * @brief wait until a command interface isn't in state ASYNC_WAITING anymore or until the parameter maximum_retries
+   * have been reached
+   */
   bool waitForAsyncCommand(std::function<double(void)> get_value);
-
 };
 }  // namespace ur_controllers
 
