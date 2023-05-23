@@ -452,7 +452,7 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
                         "README.md] for details.");
   }
 
-  ur_driver_->startRTDECommunication();
+
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
