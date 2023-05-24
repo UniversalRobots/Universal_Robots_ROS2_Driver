@@ -121,7 +121,6 @@ class DashboardClientTest(unittest.TestCase):
         rclpy.shutdown()
 
     def init_robot(self):
-
         # We wait longer for the first client, as the robot is still starting up
         power_on_client = waitForService(
             self.node, "/dashboard_client/power_on", Trigger, timeout=TIMEOUT_WAIT_SERVICE_INITIAL

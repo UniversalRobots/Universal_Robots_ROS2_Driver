@@ -38,7 +38,6 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-
     position_goals = PathJoinSubstitution(
         [FindPackageShare("ur_robot_driver"), "config", "test_goal_publishers_config.yaml"]
     )

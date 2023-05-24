@@ -150,7 +150,6 @@ class RobotDriverTest(unittest.TestCase):
         rclpy.shutdown()
 
     def init_robot(self):
-
         # Wait longer for the first service clients:
         #  - The robot has to start up
         #  - The controller_manager has to start
