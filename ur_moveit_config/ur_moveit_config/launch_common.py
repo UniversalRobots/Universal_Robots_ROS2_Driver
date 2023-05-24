@@ -70,7 +70,6 @@ def load_yaml(package_name, file_path):
 
 
 def load_yaml_abs(absolute_file_path):
-
     try:
         yaml.SafeLoader.add_constructor("!radians", construct_angle_radians)
         yaml.SafeLoader.add_constructor("!degrees", construct_angle_degrees)
