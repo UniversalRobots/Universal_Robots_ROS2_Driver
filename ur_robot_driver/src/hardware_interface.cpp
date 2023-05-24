@@ -446,8 +446,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
                         "README.md] for details.");
   }
 
-
-
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
@@ -509,11 +507,11 @@ void URPositionHardwareInterface::asyncThread()
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
-
-    //We want to start the rtde comm the latest point possible due to the delay times arising from setting up the communication with multiple arms
-  if(!rtde_comm_has_been_started_) {
-    rtde_comm_has_been_started_  = true;
-      ur_driver_->startRTDECommunication();
+  // We want to start the rtde comm the latest point possible due to the delay times arising from setting up the
+  // communication with multiple arms
+  if (!rtde_comm_has_been_started_) {
+    rtde_comm_has_been_started_ = true;
+    ur_driver_->startRTDECommunication();
   }
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
@@ -595,7 +593,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
     return hardware_interface::return_type::OK;
   }
-  if(!non_blocking_read_)
+  if (!non_blocking_read_)
     RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
   // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
   return hardware_interface::return_type::OK;
@@ -649,7 +647,7 @@ void URPositionHardwareInterface::initAsyncIO()
 
 void URPositionHardwareInterface::checkAsyncIO()
 {
-  if(!rtde_comm_has_been_started_){
+  if (!rtde_comm_has_been_started_) {
     return;
   }
   for (size_t i = 0; i < 18; ++i) {
