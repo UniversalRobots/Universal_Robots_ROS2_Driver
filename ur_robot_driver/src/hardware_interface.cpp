@@ -157,8 +157,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
   // state interface in info_ and match them accordingly
-  std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
-  tf_prefix.erase(0, 1);
+  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
                                                                    &speed_scaling_combined_));
 

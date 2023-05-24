@@ -39,7 +39,6 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 
 
 def launch_setup(context, *args, **kwargs):
-
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
