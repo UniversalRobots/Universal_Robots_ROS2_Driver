@@ -33,6 +33,8 @@ jobs:
           branch: update-ci/pre-commit-autoupdate
           delete-branch: true
           title: Auto-update pre-commit hooks
+          committer: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           commit-message: Auto-update pre-commit hooks
           labels: CI
       - name: Check outputs
