@@ -227,5 +227,5 @@ Code is auto-formatted with clang-format 10 whenever a git commit is made. Pleas
 
 Prepare the pre-commit formatting to run like this:
   ```
-  pre-commit install`
+  pre-commit install
   ```
