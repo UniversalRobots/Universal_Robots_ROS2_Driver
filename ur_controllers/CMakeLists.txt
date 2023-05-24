@@ -59,6 +59,10 @@ add_library(${PROJECT_NAME} SHARED
   src/speed_scaling_state_broadcaster.cpp
   src/gpio_controller.cpp)
 
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  target_compile_definitions(${PROJECT_NAME} PRIVATE ROS_DISTRO_HUMBLE=1)
+endif()
+
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
