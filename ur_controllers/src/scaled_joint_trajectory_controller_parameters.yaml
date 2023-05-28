@@ -1,0 +1,6 @@
+scaled_joint_trajectory_controller:
+    speed_scaling_interface_name: {
+      type: string,
+      default_value: "speed_scaling/speed_scaling_factor",
+      description: "Fully qualified name of the speed scaling interface name"
+    }

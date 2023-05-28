@@ -18,6 +18,7 @@ find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
+find_package(generate_parameter_library REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   angles
@@ -32,9 +33,26 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   std_srvs
   ur_dashboard_msgs
   ur_msgs
+  generate_parameter_library
 )
 
 include_directories(include)
+
+
+generate_parameter_library(
+  gpio_controller_parameters
+  src/gpio_controller_parameters.yaml
+)
+
+generate_parameter_library(
+  speed_scaling_state_broadcaster_parameters
+  src/speed_scaling_state_broadcaster_parameters.yaml
+)
+
+generate_parameter_library(
+  scaled_joint_trajectory_controller_parameters
+  src/scaled_joint_trajectory_controller_parameters.yaml
+)
 
 add_library(${PROJECT_NAME} SHARED
   src/scaled_joint_trajectory_controller.cpp
@@ -44,10 +62,16 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
-
+target_link_libraries(${PROJECT_NAME}
+  gpio_controller_parameters
+  speed_scaling_state_broadcaster_parameters
+  scaled_joint_trajectory_controller_parameters
+)
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror=return-type)
 
 # prevent pluginlib from using boost
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")

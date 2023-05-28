@@ -43,7 +43,16 @@ namespace ur_controllers
 {
 controller_interface::CallbackReturn GPIOController::on_init()
 {
-  initMsgs();
+  try {
+    initMsgs();
+    // Create the parameter listener and get the parameters
+    param_listener_ = std::make_shared<gpio_controller::ParamListener>(get_node());
+    params_ = param_listener_->get_params();
+
+  } catch (const std::exception& e) {
+    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    return CallbackReturn::ERROR;
+  }
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -53,40 +62,38 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
+  const std::string tf_prefix = params_.tf_prefix;
+  RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with tf_prefix: %s", tf_prefix.c_str());
+
   for (size_t i = 0; i < 18; ++i) {
-    config.names.emplace_back("gpio/standard_digital_output_cmd_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back("gpio/standard_analog_output_cmd_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_analog_output_cmd_" + std::to_string(i));
   }
+  config.names.emplace_back(tf_prefix + "gpio/tool_voltage_cmd");
 
-  config.names.emplace_back("gpio/tool_voltage_cmd");
+  config.names.emplace_back(tf_prefix + "gpio/io_async_success");
 
-  config.names.emplace_back("gpio/io_async_success");
+  config.names.emplace_back(tf_prefix + "speed_scaling/target_speed_fraction_cmd");
 
-  config.names.emplace_back("speed_scaling/target_speed_fraction_cmd");
+  config.names.emplace_back(tf_prefix + "speed_scaling/target_speed_fraction_async_success");
 
-  config.names.emplace_back("speed_scaling/target_speed_fraction_async_success");
+  config.names.emplace_back(tf_prefix + "resend_robot_program/resend_robot_program_cmd");
 
-  config.names.emplace_back("resend_robot_program/resend_robot_program_cmd");
-
-  config.names.emplace_back("resend_robot_program/resend_robot_program_async_success");
+  config.names.emplace_back(tf_prefix + "resend_robot_program/resend_robot_program_async_success");
 
   // payload stuff
-  config.names.emplace_back("payload/mass");
-  config.names.emplace_back("payload/cog.x");
-  config.names.emplace_back("payload/cog.y");
-  config.names.emplace_back("payload/cog.z");
-  config.names.emplace_back("payload/payload_async_success");
-
-  // zero ft sensor
-  config.names.emplace_back("zero_ftsensor/zero_ftsensor_cmd");
-  config.names.emplace_back("zero_ftsensor/zero_ftsensor_async_success");
+  config.names.emplace_back(tf_prefix + "payload/mass");
+  config.names.emplace_back(tf_prefix + "payload/cog.x");
+  config.names.emplace_back(tf_prefix + "payload/cog.y");
+  config.names.emplace_back(tf_prefix + "payload/cog.z");
+  config.names.emplace_back(tf_prefix + "payload/payload_async_success");
 
   // hand back control --> make UR-program return
-  config.names.emplace_back("hand_back_control/hand_back_control_cmd");
-  config.names.emplace_back("hand_back_control/hand_back_control_async_success");
+  config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_cmd");
+  config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
   return config;
 }
@@ -96,56 +103,58 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
+  const std::string tf_prefix = params_.tf_prefix;
+
   // digital io
   for (size_t i = 0; i < 18; ++i) {
-    config.names.emplace_back("gpio/digital_output_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/digital_output_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 18; ++i) {
-    config.names.emplace_back("gpio/digital_input_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/digital_input_" + std::to_string(i));
   }
 
   // analog io
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back("gpio/standard_analog_output_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_analog_output_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back("gpio/standard_analog_input_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/standard_analog_input_" + std::to_string(i));
   }
 
   for (size_t i = 0; i < 4; ++i) {
-    config.names.emplace_back("gpio/analog_io_type_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/analog_io_type_" + std::to_string(i));
   }
 
   // tool
-  config.names.emplace_back("gpio/tool_mode");
-  config.names.emplace_back("gpio/tool_output_voltage");
-  config.names.emplace_back("gpio/tool_output_current");
-  config.names.emplace_back("gpio/tool_temperature");
+  config.names.emplace_back(tf_prefix + "gpio/tool_mode");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_voltage");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_current");
+  config.names.emplace_back(tf_prefix + "gpio/tool_temperature");
 
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back("gpio/tool_analog_input_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/tool_analog_input_" + std::to_string(i));
   }
   for (size_t i = 0; i < 2; ++i) {
-    config.names.emplace_back("gpio/tool_analog_input_type_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/tool_analog_input_type_" + std::to_string(i));
   }
 
   // robot
-  config.names.emplace_back("gpio/robot_mode");
+  config.names.emplace_back(tf_prefix + "gpio/robot_mode");
   for (size_t i = 0; i < 4; ++i) {
-    config.names.emplace_back("gpio/robot_status_bit_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/robot_status_bit_" + std::to_string(i));
   }
 
   // safety
-  config.names.emplace_back("gpio/safety_mode");
+  config.names.emplace_back(tf_prefix + "gpio/safety_mode");
   for (size_t i = 0; i < 11; ++i) {
-    config.names.emplace_back("gpio/safety_status_bit_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "gpio/safety_status_bit_" + std::to_string(i));
   }
-  config.names.emplace_back("system_interface/initialized");
+  config.names.emplace_back(tf_prefix + "system_interface/initialized");
 
   // program running
-  config.names.emplace_back("gpio/program_running");
+  config.names.emplace_back(tf_prefix + "gpio/program_running");
 
   return config;
 }
@@ -164,6 +173,19 @@ controller_interface::return_type ur_controllers::GPIOController::update(const r
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  const auto logger = get_node()->get_logger();
+
+  if (!param_listener_) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
+    return controller_interface::CallbackReturn::ERROR;
+  }
+
+  // update the dynamic map parameters
+  param_listener_->refresh_dynamic_parameters();
+
+  // get parameters from the listener in case they were updated
+  params_ = param_listener_->get_params();
+
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
