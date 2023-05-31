@@ -213,6 +213,10 @@ section](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage
 of the [Usage
 guide](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for details.
 
+## Support for multiple arms
+
+How to setup and configure multiple arms is documented in the [description repository](https://github.com/UniversalRobots/Universal_Robots_ROS2_Description)
+
 ## Expected Changes in the Near Future
 
 - Trajectory control currently only supports position commands. In the future, velocity control will be added.
