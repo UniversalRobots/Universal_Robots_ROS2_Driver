@@ -55,6 +55,13 @@ namespace rtde = urcl::rtde_interface;
 namespace ur_robot_driver
 {
 
+URPositionHardwareInterface::~URPositionHardwareInterface()
+{
+  // If the controller manager is shutdown via Ctrl + C the on_deactivate methods won't be called.
+  // We therefore need to make sure to actually deactivate the communication
+  on_deactivate(rclcpp_lifecycle::State());
+}
+
 hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& system_info)
 {
@@ -240,8 +247,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
   // command interface in info_ and match them accordingly
-  std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
-  tf_prefix.erase(0, 1);
+  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
+
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "gpio", "io_async_success", &io_async_success_));
 
