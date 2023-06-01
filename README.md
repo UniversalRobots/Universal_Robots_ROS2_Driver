@@ -144,7 +144,7 @@ that will behave almost exactly like the real robot.
 
 ### Install from binary packages
 1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html). This
-      branch supports only ROS2 Humble and Rolling. For other ROS2 versions, please see the respective
+      branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective
       branches.
 2. Install the driver using
    ```
@@ -160,11 +160,9 @@ require upstream repositories to be present in a certain version as otherwise bu
 Starting from scratch following exactly the steps below should always work, but simply pulling and
 building might fail occasionally.
 
-1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html).
-   For using this driver with ROS2 `foxy`. Checkout [foxy
-   branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy), for using it
-   with ROS2 ``galactic``, use the [galactic branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic), for using it
-   with ROS2 ``humble``, use the [humble branch](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble).
+1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html). This
+      branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective
+      branches.
 
    Once installed, please make sure to actually [source ROS2](https://docs.ros.org/en/rolling/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html#source-the-setup-files) before proceeding.
 
@@ -219,10 +217,10 @@ guide](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.h
 
 
 ## Contributor Guidelines
-Code is auto-formatted with clang-format 10 whenever a git commit is made. Please ensure these dependencies are installed:
+Code is auto-formatted with clang-format 14 whenever a git commit is made. Please ensure these dependencies are installed:
   ```
   pip3 install pre-commit
-  sudo apt install clang-format-10
+  sudo apt install clang-format-14
   ```
 
 Prepare the pre-commit formatting to run like this:
