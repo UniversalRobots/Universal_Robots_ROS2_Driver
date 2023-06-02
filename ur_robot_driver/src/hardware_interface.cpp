@@ -516,8 +516,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   // We want to start the rtde comm the latest point possible due to the delay times arising from setting up the
   // communication with multiple arms
   if (!rtde_comm_has_been_started_) {
-    rtde_comm_has_been_started_ = true;
     ur_driver_->startRTDECommunication();
+    rtde_comm_has_been_started_ = true;
   }
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
