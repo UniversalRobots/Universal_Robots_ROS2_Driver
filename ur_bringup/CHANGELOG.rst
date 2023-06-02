@@ -2,6 +2,14 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Default path to ur_client_library urscript (`#316 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/316>`_) (`#553 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/553>`_)
+  * Change default path for urscript for headless mode.
+  * Replace urscript path also in newer ur_robot_driver launchfile
+* This commits adds additional configuration parameters needed for multiarm support.
+* Contributors: Lennart Nachtigall, mergify[bot], livanov93
+
 2.2.6 (2022-11-28)
 ------------------
 

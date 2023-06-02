@@ -2,6 +2,15 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* added missing command interfaces into gpio controller (`#693 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/693>`_) (`#702 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/702>`_)
+* Adding maximum retry counter in gpio controller (Multiarm part 3) - v2 (`#672 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/672>`_) (`#696 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/696>`_)
+* Ported controllers to generate_parameters library and added prefix for controllers (Multiarm part 2) (`#594 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/594>`_) (`#695 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/695>`_)
+* Introduce hand back control service (`#528 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/528>`_) (`#670 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/670>`_)
+* Added services to set tool voltage and zero force torque sensor (`#466 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/466>`_) (`#582 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/582>`_)
+* Contributors: mergify[bot], Mads Holm Peters, Lennart Nachtigall, livanov93
+
 2.2.6 (2022-11-28)
 ------------------
 * Ros2 controllers 2.14 (`#547 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/547>`_)
