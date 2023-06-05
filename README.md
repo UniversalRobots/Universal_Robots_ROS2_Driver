@@ -154,11 +154,14 @@ building might fail occasionally.
    source install/setup.bash
    ```
 
-6. When consecutive pulls leads to build errors, please make sure to update the upstream packages before
-   filing an issue:
+6. When consecutive pulls lead to build errors it is possible that you'll have to build an upstream
+   package from source, as well. See the [detailed build status](ci_status.md). When the binary builds are red, but
+   the semi-binary builds are green, you need to build the upstream dependencies from source. The
+   easiest way to achieve this, is using the repos file:
+
    ```
    cd $COLCON_WS
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
+   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.${ROS_DISTRO}.repos
    rosdep update
    rosdep install --ignore-src --from-paths src -y
    ```
