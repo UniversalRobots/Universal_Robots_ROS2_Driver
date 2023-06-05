@@ -115,6 +115,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     fill_partial_goal(*new_external_msg);
     sort_to_local_joint_order(*new_external_msg);
     traj_external_point_ptr_->update(*new_external_msg);
+    // set the active trajectory pointer to the new goal
+    traj_point_active_ptr_ = &traj_external_point_ptr_;
   }
 
   JointTrajectoryPoint state_current, state_desired, state_error;
@@ -238,6 +240,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
           }
           active_goal->setAborted(result);
           rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+          // remove the active trajectory pointer so that we stop commanding the hardware
+          traj_point_active_ptr_ = nullptr;
         }
 
         // check goal tolerance
@@ -247,7 +251,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
             res->set__error_code(FollowJTrajAction::Result::SUCCESSFUL);
             active_goal->setSucceeded(res);
             rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-
+            // remove the active trajectory pointer so that we stop commanding the hardware
+            traj_point_active_ptr_ = nullptr;
             RCLCPP_INFO(get_node()->get_logger(), "Goal reached, success!");
           } else if (default_tolerances_.goal_time_tolerance != 0.0) {
             // if we exceed goal_time_toleralance set it to aborted
@@ -262,6 +267,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
               result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
               active_goal->setAborted(result);
               rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+
               RCLCPP_WARN(get_node()->get_logger(), "Aborted due goal_time_tolerance exceeding by %f seconds",
                           difference);
             }
