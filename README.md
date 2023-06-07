@@ -70,7 +70,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
   </tr>
 </table>
 
-The table above shows the build status for each package of this repo from the [ROS buildfarm](https://build.ros2.org/). For end-of-life (EOL) distributions the nightly binary builds from our CI is shown until things work. EOL distributions will receive no more updates and may be lacking features.
+The table above shows the build status for each package of this repo from the [ROS buildfarm](https://build.ros2.org/). For end-of-life (EOL) distributions the nightly binary builds from our CI are shown. EOL distributions will receive no more updates and may be lacking features.
 
 A more [detailed build status](ci_status.md) shows the state of all CI workflows inside this repo.
 Please note that the detailed view is intended for developers, while the one here should give end
