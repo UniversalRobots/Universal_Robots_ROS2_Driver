@@ -83,7 +83,10 @@ public:
    */
   void log(const char* file, int line, urcl::LogLevel loglevel, const char* message) override;
 
-
+  /**
+   * @brief getTFPrefix - obtain the currently set tf_prefix
+   * @return
+   */
   const std::string& getTFPrefix() const{return tf_prefix_;}
 
 private:
@@ -91,10 +94,13 @@ private:
 
 
 
-
+  /**
+   * @brief setTFPrefix - set the tf_prefix the logger will append to the node name
+   * @param tf_prefix
+   */
   void setTFPrefix(const std::string& tf_prefix){tf_prefix_ = tf_prefix;}
 
-
+  //Declare the register method as a friend so that we can access setTFPrefix from it
   friend void registerUrclLogHandler(const std::string& tf_prefix);
 };
 
