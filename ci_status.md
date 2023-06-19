@@ -109,7 +109,7 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
    Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.<ros-distro>.repos`
 
 1. Semi-binary builds - against released core ROS packages (main and testing), but the immediate dependencies are pulled from source.
-   Shows that local build with dependencies is possible and if fails there we can expect that after the next package sync we will not be able to build.
+   Shows that local build with dependencies is possible and if this fails we can expect that after the next package sync we will not be able to build.
 
    Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos`
 
