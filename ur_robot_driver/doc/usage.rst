@@ -233,6 +233,10 @@ restarted again. Depending whether you use headless mode or not, you'll have to 
 ``resend_program`` service or press the ``play`` button on the teach panel to start the
 external_control program again.
 
+.. note::
+  Currently, there is no feedback on the code's correctness. If the code sent to the
+  robot is incorrect, it will silently not get executed. Make sure that you send valid URScript code!
+
 Multi-line programs
 ^^^^^^^^^^^^^^^^^^^
 
