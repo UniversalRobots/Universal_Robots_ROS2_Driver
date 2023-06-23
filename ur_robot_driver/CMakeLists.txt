@@ -187,5 +187,9 @@ if(BUILD_TESTING)
       TIMEOUT
         500
     )
+    add_launch_test(test/urscript_interface.py
+      TIMEOUT
+        500
+    )
   endif()
 endif()
