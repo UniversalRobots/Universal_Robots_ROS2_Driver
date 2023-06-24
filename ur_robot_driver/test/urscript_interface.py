@@ -201,6 +201,28 @@ class URScriptInterfaceTest(unittest.TestCase):
         time.sleep(1)
         self.set_digout_checked(0, False)
 
+        self.io_msg = None
+        self.io_states_sub = self.node.create_subscription(
+            IOStates,
+            "/io_and_status_controller/io_states",
+            self.io_msg_cb,
+            rclpy.qos.qos_profile_system_default,
+        )
+
+        script_msg = StringMsg(
+            data="sec my_program():\n  set_digital_out(0, False)\n  set_digital_out(1,True)\nend"
+        )
+        self.urscript_pub.publish(script_msg)
+        self.check_pin_states([0, 1], [False, True])
+
+        time.sleep(1)
+
+        script_msg = StringMsg(
+            data="sec my_program():\n  set_digital_out(0, True)\n  set_digital_out(1,False)\nend"
+        )
+        self.urscript_pub.publish(script_msg)
+        self.check_pin_states([0, 1], [True, False])
+
     def io_msg_cb(self, msg):
         self.io_msg = msg
 
@@ -221,28 +243,6 @@ class URScriptInterfaceTest(unittest.TestCase):
                 for i, pin_id in enumerate(pins):
                     pin_states[i] = self.io_msg.digital_out_states[pin_id].state
         self.assertEqual(pin_states, states)
-
-    def test_multiline_script(self):
-        """Tests sending a multiline script as secondary program."""
-        self.io_msg = None
-        self.io_states_sub = self.node.create_subscription(
-            IOStates,
-            "/io_and_status_controller/io_states",
-            self.io_msg_cb,
-            rclpy.qos.qos_profile_system_default,
-        )
-
-        script_msg = StringMsg(
-            data="sec my_program():\n  set_digital_out(0, False)\n  set_digital_out(1,True)\nend"
-        )
-        self.urscript_pub.publish(script_msg)
-        self.check_pin_states([0, 1], [False, True])
-
-        script_msg = StringMsg(
-            data="sec my_program():\n  set_digital_out(0, True)\n  set_digital_out(1,False)\nend"
-        )
-        self.urscript_pub.publish(script_msg)
-        self.check_pin_states([0, 1], [True, False])
 
     def dashboard_call(self, srv_name, request):
         self.node.get_logger().info(f"Calling service '{srv_name}' with request {request}")
