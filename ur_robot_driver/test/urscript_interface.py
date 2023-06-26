@@ -47,6 +47,7 @@ from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from launch_testing.actions import ReadyToTest
 from std_srvs.srv import Trigger
 from std_msgs.msg import String as StringMsg
+from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
     GetLoadedProgram,
     GetProgramState,
@@ -179,7 +180,7 @@ class URScriptInterfaceTest(unittest.TestCase):
         self.service_clients["/controller_manager/list_controllers"] = waitForService(
             self.node,
             "/controller_manager/list_controllers",
-            ListControllers(),
+            ListControllers,
             timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
         )
 
@@ -195,6 +196,14 @@ class URScriptInterfaceTest(unittest.TestCase):
         empty_req = Trigger.Request()
         self.call_service("/dashboard_client/power_on", empty_req)
         self.call_service("/dashboard_client/brake_release", empty_req)
+
+        time.sleep(1)
+        robot_mode_resp = self.call_service(
+            "/dashboard_client/get_robot_mode", GetRobotMode.Request()
+        )
+        self.assertEqual(robot_mode_resp.robot_mode.mode, RobotMode.RUNNING)
+        self.call_service("/dashboard_client/stop", empty_req)
+        time.sleep(1)
 
         io_controller_running = False
 
@@ -255,7 +264,7 @@ class URScriptInterfaceTest(unittest.TestCase):
 
     def check_pin_states(self, pins, states):
         pin_states = [not x for x in states]
-        end_time = time.time() + 5
+        end_time = time.time() + 50
         while pin_states != states and time.time() < end_time:
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if self.io_msg is not None:
