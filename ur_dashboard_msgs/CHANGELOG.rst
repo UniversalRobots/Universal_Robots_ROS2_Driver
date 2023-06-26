@@ -2,6 +2,9 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.2.7 (2023-06-02)
 ------------------
 

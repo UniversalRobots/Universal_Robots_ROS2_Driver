@@ -2,6 +2,9 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.2.7 (2023-06-02)
 ------------------
 * Update linters & checkers (backport `#426 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/426>`_) (`#556 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/556>`_)

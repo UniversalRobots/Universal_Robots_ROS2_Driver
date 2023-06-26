@@ -2,6 +2,9 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.2.7 (2023-06-02)
 ------------------
 * added missing command interfaces into gpio controller (`#693 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/693>`_) (`#702 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/702>`_)

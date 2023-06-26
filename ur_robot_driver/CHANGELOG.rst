@@ -1,3 +1,9 @@
+Forthcoming
+-----------
+* Use tf prefix properly (backport `#688 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/688>`_) (`#725 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/725>`_)
+* Use SCHED_FIFO for controller_manager's main thread (`#719 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/719>`_) (`#722 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/722>`_)
+* Contributors: mergify[bot]
+
 2.2.7 (2023-06-02)
 ------------------
 * Calling on_deactivate in dtr (`#679 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/679>`_) (`#704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/704>`_)
