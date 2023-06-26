@@ -70,6 +70,12 @@ public:
     m_secondary_stream = std::make_unique<urcl::comm::URStream<urcl::primary_interface::PrimaryPackage>>(
         this->get_parameter("robot_ip").as_string(), urcl::primary_interface::UR_SECONDARY_PORT);
     m_secondary_stream->connect();
+
+    auto program_with_newline = std::string("textmsg(\"urscript_interface connected\")\n");
+    size_t len = program_with_newline.size();
+    const auto* data = reinterpret_cast<const uint8_t*>(program_with_newline.c_str());
+    size_t written;
+    m_secondary_stream->write(data, len, written);
   }
   ~URScriptInterface() override = default;
 
