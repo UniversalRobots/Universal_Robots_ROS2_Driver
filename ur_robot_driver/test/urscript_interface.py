@@ -170,12 +170,18 @@ class URScriptInterfaceTest(unittest.TestCase):
             "/dashboard_client/program_running": IsProgramRunning,
             "/dashboard_client/play": Trigger,
             "/dashboard_client/stop": Trigger,
-            "/controller_manager/list_controllers": ListControllers,
         }
         self.service_clients = {
             srv_name: waitForService(self.node, f"{srv_name}", srv_type)
             for (srv_name, srv_type) in dashboard_interfaces.items()
         }
+
+        self.service_clients["/controller_manager/list_controllers"] = waitForService(
+            self.node,
+            "/controller_manager/list_controllers",
+            ListControllers(),
+            timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+        )
 
         # Add first client to dict
         self.service_clients["/dashboard_client/power_on"] = power_on_client
