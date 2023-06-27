@@ -279,57 +279,32 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "task_frame_x", &force_mode_task_frame_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "task_frame_y", &force_mode_task_frame_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "task_frame_z", &force_mode_task_frame_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "task_frame_rx", &force_mode_task_frame_[3]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "task_frame_ry", &force_mode_task_frame_[4]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "task_frame_rz", &force_mode_task_frame_[5]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "selection_vector_x", &force_mode_selection_vector_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "selection_vector_y", &force_mode_selection_vector_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "selection_vector_z", &force_mode_selection_vector_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "selection_vector_rx", &force_mode_selection_vector_[3]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "selection_vector_ry", &force_mode_selection_vector_[4]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "selection_vector_rz", &force_mode_selection_vector_[5]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "wrench_x", &force_mode_wrench_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "wrench_y", &force_mode_wrench_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "wrench_z", &force_mode_wrench_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "wrench_rx", &force_mode_wrench_[3]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "wrench_ry", &force_mode_wrench_[4]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "wrench_rz", &force_mode_wrench_[5]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("force_mode", "type", &force_mode_type_));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "limits_x", &force_mode_limits_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "limits_y", &force_mode_limits_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "limits_z", &force_mode_limits_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "limits_rx", &force_mode_limits_[3]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "limits_ry", &force_mode_limits_[4]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "limits_rz", &force_mode_limits_[5]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface("force_mode", "force_mode_async_success", &force_mode_async_success_));
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_x", &force_mode_task_frame_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_y", &force_mode_task_frame_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_z", &force_mode_task_frame_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_rx", &force_mode_task_frame_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_ry", &force_mode_task_frame_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_rz", &force_mode_task_frame_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_x", &force_mode_selection_vector_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_y", &force_mode_selection_vector_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_z", &force_mode_selection_vector_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_rx", &force_mode_selection_vector_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_ry", &force_mode_selection_vector_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_rz", &force_mode_selection_vector_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_x", &force_mode_wrench_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_y", &force_mode_wrench_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_z", &force_mode_wrench_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_rx", &force_mode_wrench_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_ry", &force_mode_wrench_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_rz", &force_mode_wrench_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "type", &force_mode_type_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_x", &force_mode_limits_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_y", &force_mode_limits_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_z", &force_mode_limits_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_rx", &force_mode_limits_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_ry", &force_mode_limits_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_rz", &force_mode_limits_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "force_mode_async_success", &force_mode_async_success_);
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(

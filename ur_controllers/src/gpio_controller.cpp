@@ -98,32 +98,32 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
   // force mode
-  config.names.emplace_back("force_mode/task_frame_x");
-  config.names.emplace_back("force_mode/task_frame_y");
-  config.names.emplace_back("force_mode/task_frame_z");
-  config.names.emplace_back("force_mode/task_frame_rx");
-  config.names.emplace_back("force_mode/task_frame_ry");
-  config.names.emplace_back("force_mode/task_frame_rz");
-  config.names.emplace_back("force_mode/selection_vector_x");
-  config.names.emplace_back("force_mode/selection_vector_y");
-  config.names.emplace_back("force_mode/selection_vector_z");
-  config.names.emplace_back("force_mode/selection_vector_rx");
-  config.names.emplace_back("force_mode/selection_vector_ry");
-  config.names.emplace_back("force_mode/selection_vector_rz");
-  config.names.emplace_back("force_mode/wrench_x");
-  config.names.emplace_back("force_mode/wrench_y");
-  config.names.emplace_back("force_mode/wrench_z");
-  config.names.emplace_back("force_mode/wrench_rx");
-  config.names.emplace_back("force_mode/wrench_ry");
-  config.names.emplace_back("force_mode/wrench_rz");
-  config.names.emplace_back("force_mode/type");
-  config.names.emplace_back("force_mode/limits_x");
-  config.names.emplace_back("force_mode/limits_y");
-  config.names.emplace_back("force_mode/limits_z");
-  config.names.emplace_back("force_mode/limits_rx");
-  config.names.emplace_back("force_mode/limits_ry");
-  config.names.emplace_back("force_mode/limits_rz");
-  config.names.emplace_back("force_mode/force_mode_async_success");
+  config.names.emplace_back(tf_prefix + "force_mode/task_frame_x");
+  config.names.emplace_back(tf_prefix + "force_mode/task_frame_y");
+  config.names.emplace_back(tf_prefix + "force_mode/task_frame_z");
+  config.names.emplace_back(tf_prefix + "force_mode/task_frame_rx");
+  config.names.emplace_back(tf_prefix + "force_mode/task_frame_ry");
+  config.names.emplace_back(tf_prefix + "force_mode/task_frame_rz");
+  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_x");
+  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_y");
+  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_z");
+  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_rx");
+  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_ry");
+  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_rz");
+  config.names.emplace_back(tf_prefix + "force_mode/wrench_x");
+  config.names.emplace_back(tf_prefix + "force_mode/wrench_y");
+  config.names.emplace_back(tf_prefix + "force_mode/wrench_z");
+  config.names.emplace_back(tf_prefix + "force_mode/wrench_rx");
+  config.names.emplace_back(tf_prefix + "force_mode/wrench_ry");
+  config.names.emplace_back(tf_prefix + "force_mode/wrench_rz");
+  config.names.emplace_back(tf_prefix + "force_mode/type");
+  config.names.emplace_back(tf_prefix + "force_mode/limits_x");
+  config.names.emplace_back(tf_prefix + "force_mode/limits_y");
+  config.names.emplace_back(tf_prefix + "force_mode/limits_z");
+  config.names.emplace_back(tf_prefix + "force_mode/limits_rx");
+  config.names.emplace_back(tf_prefix + "force_mode/limits_ry");
+  config.names.emplace_back(tf_prefix + "force_mode/limits_rz");
+  config.names.emplace_back(tf_prefix + "force_mode/force_mode_async_success");
 
   return config;
 }
