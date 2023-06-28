@@ -564,7 +564,6 @@ bool GPIOController::setForceMode(const ur_msgs::srv::SetForceMode::Request::Sha
                                   ur_msgs::srv::SetForceMode::Response::SharedPtr resp)
 {
   // reset success flag
-  RCLCPP_INFO(get_node()->get_logger(), "Currently we have %zu command interfaces", command_interfaces_.size());
 
   command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
@@ -581,9 +580,9 @@ bool GPIOController::setForceMode(const ur_msgs::srv::SetForceMode::Request::Sha
     tf2::Matrix3x3 rot_mat(quat_tf);
     std::vector<double> rot(3);
     rot_mat.getRPY(rot[0], rot[1], rot[2]);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RX].set_value(task_frame_transformed.pose.position.x);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RY].set_value(task_frame_transformed.pose.position.y);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RZ].set_value(task_frame_transformed.pose.position.z);
+    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RX].set_value(rot[0]);
+    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RY].set_value(rot[1]);
+    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RZ].set_value(rot[2]);
   } catch (const tf2::TransformException& ex) {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not transform %s to robot base: %s",
                  req->task_frame.header.frame_id.c_str(), ex.what());
@@ -608,7 +607,7 @@ bool GPIOController::setForceMode(const ur_msgs::srv::SetForceMode::Request::Sha
   }
   command_interfaces_[CommandInterfaces::FORCE_MODE_TYPE].set_value(unsigned(req->type));
 
-  RCLCPP_INFO(get_node()->get_logger(), "Waiting for force mode to be set.");
+  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be set.");
   while (command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
     // Asynchronous wait until the hardware interface has set the force mode
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -617,9 +616,9 @@ bool GPIOController::setForceMode(const ur_msgs::srv::SetForceMode::Request::Sha
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value());
 
   if (resp->success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Force mode has been set successfully");
+    RCLCPP_INFO(get_node()->get_logger(), "Force mode has been set successfully.");
   } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the force mode");
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the force mode.");
     return false;
   }
 
