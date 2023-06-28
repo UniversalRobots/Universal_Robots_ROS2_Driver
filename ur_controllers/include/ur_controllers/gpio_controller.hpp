@@ -109,6 +109,7 @@ enum CommandInterfaces
   FORCE_MODE_LIMITS_RY = 58,
   FORCE_MODE_LIMITS_RZ = 59,
   FORCE_MODE_ASYNC_SUCCESS = 60,
+  FORCE_MODE_DISABLE_CMD = 61,
 };
 
 enum StateInterfaces
@@ -167,6 +168,8 @@ private:
   bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
   bool setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
                     ur_msgs::srv::SetForceMode::Response::SharedPtr resp);
+  bool disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr req,
+                        std_srvs::srv::Trigger::Response::SharedPtr resp);
 
   void publishIO();
 
@@ -196,6 +199,7 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
   rclcpp::Service<ur_msgs::srv::SetForceMode>::SharedPtr set_force_mode_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr disable_force_mode_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;

@@ -305,6 +305,7 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_ry", &force_mode_limits_[4]);
   command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_rz", &force_mode_limits_[5]);
   command_interfaces.emplace_back(tf_prefix + "force_mode", "force_mode_async_success", &force_mode_async_success_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "disable_cmd", &force_mode_disable_cmd_);
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -619,6 +620,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
+      force_mode_disable_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -767,6 +769,11 @@ void URPositionHardwareInterface::checkAsyncIO()
       force_mode_limits_[i] = NO_NEW_CMD_;
     }
     force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+  }
+
+  if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr) {
+    force_mode_async_success_ = ur_driver_->endForceMode();
+    force_mode_disable_cmd_ = NO_NEW_CMD_;
   }
 }
 

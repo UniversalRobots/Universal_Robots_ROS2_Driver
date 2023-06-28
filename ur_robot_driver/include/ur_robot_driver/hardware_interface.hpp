@@ -202,6 +202,7 @@ protected:
   urcl::vector6d_t force_mode_limits_;
   double force_mode_type_;
   double force_mode_async_success_;
+  double force_mode_disable_cmd_;
 
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;
