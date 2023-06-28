@@ -38,11 +38,14 @@
 #ifndef UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 #define UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "std_srvs/srv/trigger.hpp"
 
 #include "controller_interface/controller_interface.hpp"
@@ -199,6 +202,9 @@ protected:
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
   std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Bool>> program_state_pub_;
+
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;
