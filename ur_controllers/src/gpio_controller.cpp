@@ -125,6 +125,7 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "force_mode/limits_ry");
   config.names.emplace_back(tf_prefix + "force_mode/limits_rz");
   config.names.emplace_back(tf_prefix + "force_mode/force_mode_async_success");
+  config.names.emplace_back(tf_prefix + "force_mode/disable_cmd");
 
   return config;
 }
@@ -347,6 +348,9 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     set_force_mode_srv_ = get_node()->create_service<ur_msgs::srv::SetForceMode>(
         "~/set_force_mode",
         std::bind(&GPIOController::setForceMode, this, std::placeholders::_1, std::placeholders::_2));
+    disable_force_mode_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/disable_force_mode",
+        std::bind(&GPIOController::disableForceMode, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -559,7 +563,6 @@ bool GPIOController::setForceMode(const ur_msgs::srv::SetForceMode::Request::Sha
                                   ur_msgs::srv::SetForceMode::Response::SharedPtr resp)
 {
   // reset success flag
-
   command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
   // transform task frame into base
@@ -617,6 +620,26 @@ bool GPIOController::setForceMode(const ur_msgs::srv::SetForceMode::Request::Sha
     return false;
   }
 
+  return true;
+}
+
+bool GPIOController::disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr req,
+                                      std_srvs::srv::Trigger::Response::SharedPtr resp)
+{
+  command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1);
+
+  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be disabled.");
+  while (command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+    // Asynchronous wait until the hardware interface has set the force mode
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value());
+  if (resp->success) {
+    RCLCPP_INFO(get_node()->get_logger(), "Force mode has been disabled successfully.");
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not disable force mode.");
+    return false;
+  }
   return true;
 }
 
