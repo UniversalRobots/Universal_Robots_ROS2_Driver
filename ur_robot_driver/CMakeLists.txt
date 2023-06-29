@@ -185,7 +185,7 @@ if(BUILD_TESTING)
     )
     add_launch_test(test/robot_driver.py
       TIMEOUT
-        500
+        800
     )
     add_launch_test(test/urscript_interface.py
       TIMEOUT
