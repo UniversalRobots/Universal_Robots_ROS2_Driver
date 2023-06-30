@@ -38,14 +38,11 @@
 #ifndef UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 #define UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "std_srvs/srv/trigger.hpp"
 
 #include "controller_interface/controller_interface.hpp"
@@ -56,7 +53,6 @@
 #include "ur_msgs/srv/set_io.hpp"
 #include "ur_msgs/srv/set_speed_slider_fraction.hpp"
 #include "ur_msgs/srv/set_payload.hpp"
-#include "ur_msgs/srv/set_force_mode.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
@@ -83,33 +79,6 @@ enum CommandInterfaces
   ZERO_FTSENSOR_ASYNC_SUCCESS = 32,
   HAND_BACK_CONTROL_CMD = 33,
   HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
-  FORCE_MODE_TASK_FRAME_X = 35,
-  FORCE_MODE_TASK_FRAME_Y = 36,
-  FORCE_MODE_TASK_FRAME_Z = 37,
-  FORCE_MODE_TASK_FRAME_RX = 38,
-  FORCE_MODE_TASK_FRAME_RY = 39,
-  FORCE_MODE_TASK_FRAME_RZ = 40,
-  FORCE_MODE_SELECTION_VECTOR_X = 41,
-  FORCE_MODE_SELECTION_VECTOR_Y = 42,
-  FORCE_MODE_SELECTION_VECTOR_Z = 43,
-  FORCE_MODE_SELECTION_VECTOR_RX = 44,
-  FORCE_MODE_SELECTION_VECTOR_RY = 45,
-  FORCE_MODE_SELECTION_VECTOR_RZ = 46,
-  FORCE_MODE_WRENCH_X = 47,
-  FORCE_MODE_WRENCH_Y = 48,
-  FORCE_MODE_WRENCH_Z = 49,
-  FORCE_MODE_WRENCH_RX = 50,
-  FORCE_MODE_WRENCH_RY = 51,
-  FORCE_MODE_WRENCH_RZ = 52,
-  FORCE_MODE_TYPE = 53,
-  FORCE_MODE_LIMITS_X = 54,
-  FORCE_MODE_LIMITS_Y = 55,
-  FORCE_MODE_LIMITS_Z = 56,
-  FORCE_MODE_LIMITS_RX = 57,
-  FORCE_MODE_LIMITS_RY = 58,
-  FORCE_MODE_LIMITS_RZ = 59,
-  FORCE_MODE_ASYNC_SUCCESS = 60,
-  FORCE_MODE_DISABLE_CMD = 61,
 };
 
 enum StateInterfaces
@@ -166,10 +135,6 @@ private:
                   ur_msgs::srv::SetPayload::Response::SharedPtr resp);
 
   bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
-  bool setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
-                    ur_msgs::srv::SetForceMode::Response::SharedPtr resp);
-  bool disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr req,
-                        std_srvs::srv::Trigger::Response::SharedPtr resp);
 
   void publishIO();
 
@@ -198,17 +163,12 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
-  rclcpp::Service<ur_msgs::srv::SetForceMode>::SharedPtr set_force_mode_srv_;
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr disable_force_mode_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
   std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Bool>> program_state_pub_;
-
-  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;

@@ -214,6 +214,7 @@ def launch_setup(context, *args, **kwargs):
         executable="ur_ros2_control_node",
         parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
         output="screen",
+        # prefix=["xterm -e gdb -ex run --args"],
         condition=UnlessCondition(use_fake_hardware),
     )
 
@@ -301,7 +302,7 @@ def launch_setup(context, *args, **kwargs):
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
     ]
-    controller_spawner_inactive_names = ["forward_position_controller"]
+    controller_spawner_inactive_names = ["forward_position_controller", "force_mode_controller"]
 
     controller_spawners = [controller_spawner(name) for name in controller_spawner_names] + [
         controller_spawner(name, active=False) for name in controller_spawner_inactive_names

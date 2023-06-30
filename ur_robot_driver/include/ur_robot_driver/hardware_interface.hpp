@@ -203,6 +203,8 @@ protected:
   double force_mode_type_;
   double force_mode_async_success_;
   double force_mode_disable_cmd_;
+  double force_mode_damping_;
+  double force_mode_gain_scaling_;
 
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;

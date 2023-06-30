@@ -44,6 +44,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 
 include_directories(include)
 
+generate_parameter_library(
+  force_mode_controller_parameters
+  src/force_mode_controller_parameters.yaml
+)
 
 generate_parameter_library(
   gpio_controller_parameters
@@ -61,6 +65,7 @@ generate_parameter_library(
 )
 
 add_library(${PROJECT_NAME} SHARED
+  src/force_mode_controller.cpp
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
   src/gpio_controller.cpp)
@@ -69,6 +74,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
 target_link_libraries(${PROJECT_NAME}
+  force_mode_controller_parameters
   gpio_controller_parameters
   speed_scaling_state_broadcaster_parameters
   scaled_joint_trajectory_controller_parameters

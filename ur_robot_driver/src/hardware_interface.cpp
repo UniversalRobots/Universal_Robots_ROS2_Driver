@@ -306,6 +306,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_rz", &force_mode_limits_[5]);
   command_interfaces.emplace_back(tf_prefix + "force_mode", "force_mode_async_success", &force_mode_async_success_);
   command_interfaces.emplace_back(tf_prefix + "force_mode", "disable_cmd", &force_mode_disable_cmd_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "damping", &force_mode_damping_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "gain_scaling", &force_mode_gain_scaling_);
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
