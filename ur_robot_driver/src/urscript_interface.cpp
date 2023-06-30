@@ -77,7 +77,6 @@ public:
     size_t written;
     m_secondary_stream->write(data, len, written);
   }
-  ~URScriptInterface() override = default;
 
 private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_script_sub;
