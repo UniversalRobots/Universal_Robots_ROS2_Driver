@@ -38,7 +38,6 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 
 #include "ur_controllers/gpio_controller.hpp"
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 namespace ur_controllers
 {
@@ -97,35 +96,6 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   // hand back control --> make UR-program return
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_cmd");
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
-
-  // force mode
-  config.names.emplace_back(tf_prefix + "force_mode/task_frame_x");
-  config.names.emplace_back(tf_prefix + "force_mode/task_frame_y");
-  config.names.emplace_back(tf_prefix + "force_mode/task_frame_z");
-  config.names.emplace_back(tf_prefix + "force_mode/task_frame_rx");
-  config.names.emplace_back(tf_prefix + "force_mode/task_frame_ry");
-  config.names.emplace_back(tf_prefix + "force_mode/task_frame_rz");
-  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_x");
-  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_y");
-  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_z");
-  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_rx");
-  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_ry");
-  config.names.emplace_back(tf_prefix + "force_mode/selection_vector_rz");
-  config.names.emplace_back(tf_prefix + "force_mode/wrench_x");
-  config.names.emplace_back(tf_prefix + "force_mode/wrench_y");
-  config.names.emplace_back(tf_prefix + "force_mode/wrench_z");
-  config.names.emplace_back(tf_prefix + "force_mode/wrench_rx");
-  config.names.emplace_back(tf_prefix + "force_mode/wrench_ry");
-  config.names.emplace_back(tf_prefix + "force_mode/wrench_rz");
-  config.names.emplace_back(tf_prefix + "force_mode/type");
-  config.names.emplace_back(tf_prefix + "force_mode/limits_x");
-  config.names.emplace_back(tf_prefix + "force_mode/limits_y");
-  config.names.emplace_back(tf_prefix + "force_mode/limits_z");
-  config.names.emplace_back(tf_prefix + "force_mode/limits_rx");
-  config.names.emplace_back(tf_prefix + "force_mode/limits_ry");
-  config.names.emplace_back(tf_prefix + "force_mode/limits_rz");
-  config.names.emplace_back(tf_prefix + "force_mode/force_mode_async_success");
-  config.names.emplace_back(tf_prefix + "force_mode/disable_cmd");
 
   return config;
 }
@@ -217,9 +187,6 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
-
-  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_node()->get_clock());
-  tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -345,12 +312,6 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
         "~/zero_ftsensor",
         std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
-    set_force_mode_srv_ = get_node()->create_service<ur_msgs::srv::SetForceMode>(
-        "~/set_force_mode",
-        std::bind(&GPIOController::setForceMode, this, std::placeholders::_1, std::placeholders::_2));
-    disable_force_mode_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/disable_force_mode",
-        std::bind(&GPIOController::disableForceMode, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -556,90 +517,6 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
     return false;
   }
 
-  return true;
-}
-
-bool GPIOController::setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
-                                  ur_msgs::srv::SetForceMode::Response::SharedPtr resp)
-{
-  // reset success flag
-  command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-
-  // transform task frame into base
-  const std::string tf_prefix = params_.tf_prefix;
-  try {
-    auto task_frame_transformed = tf_buffer_->transform(req->task_frame, tf_prefix + "base");
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_X].set_value(task_frame_transformed.pose.position.x);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_Y].set_value(task_frame_transformed.pose.position.y);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_Z].set_value(task_frame_transformed.pose.position.z);
-
-    tf2::Quaternion quat_tf;
-    tf2::convert(task_frame_transformed.pose.orientation, quat_tf);
-    tf2::Matrix3x3 rot_mat(quat_tf);
-    std::vector<double> rot(3);
-    rot_mat.getRPY(rot[0], rot[1], rot[2]);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RX].set_value(rot[0]);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RY].set_value(rot[1]);
-    command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RZ].set_value(rot[2]);
-  } catch (const tf2::TransformException& ex) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not transform %s to robot base: %s",
-                 req->task_frame.header.frame_id.c_str(), ex.what());
-  }
-
-  command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_X].set_value(req->selection_vector_x);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Y].set_value(req->selection_vector_y);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Z].set_value(req->selection_vector_z);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RX].set_value(req->selection_vector_rx);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RY].set_value(req->selection_vector_ry);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RZ].set_value(req->selection_vector_rz);
-
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(req->wrench.force.x);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(req->wrench.force.y);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(req->wrench.force.z);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(req->wrench.torque.x);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(req->wrench.torque.y);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(req->wrench.torque.z);
-
-  for (size_t i = 0; i < 6; i++) {
-    command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X + i].set_value(req->limits[i]);
-  }
-  command_interfaces_[CommandInterfaces::FORCE_MODE_TYPE].set_value(unsigned(req->type));
-
-  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be set.");
-  while (command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-    // Asynchronous wait until the hardware interface has set the force mode
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  }
-
-  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value());
-
-  if (resp->success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Force mode has been set successfully.");
-  } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the force mode.");
-    return false;
-  }
-
-  return true;
-}
-
-bool GPIOController::disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr req,
-                                      std_srvs::srv::Trigger::Response::SharedPtr resp)
-{
-  command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1);
-
-  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be disabled.");
-  while (command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
-    // Asynchronous wait until the hardware interface has set the force mode
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  }
-  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value());
-  if (resp->success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Force mode has been disabled successfully.");
-  } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not disable force mode.");
-    return false;
-  }
   return true;
 }
 
