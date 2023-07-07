@@ -134,7 +134,7 @@ that will behave almost exactly like the real robot.
       branches.
 2. Install the driver using
    ```
-   sudo apt-get install ros-${ROS_DISTRO}-ur-robot-driver
+   sudo apt-get install ros-${ROS_DISTRO}-ur
    ```
 
 ### Build from source
