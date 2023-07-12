@@ -35,9 +35,9 @@
  */
 //----------------------------------------------------------------------
 
-#include "ur_controllers/gpio_controller.hpp"
+#include <tf2/LinearMath/Matrix3x3.h>
 
-#include <string>
+#include "ur_controllers/gpio_controller.hpp"
 
 namespace ur_controllers
 {
@@ -48,7 +48,6 @@ controller_interface::CallbackReturn GPIOController::on_init()
     // Create the parameter listener and get the parameters
     param_listener_ = std::make_shared<gpio_controller::ParamListener>(get_node());
     params_ = param_listener_->get_params();
-
   } catch (const std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
