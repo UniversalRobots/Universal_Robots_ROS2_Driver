@@ -38,7 +38,7 @@ launch files:
 
 .. code-block:: bash
 
-   $ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_tool_communication:=true use_fake_hardware:=false launch_rviz:=false
+   $ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_tool_communication:=true use_mock_hardware:=false launch_rviz:=false
      # remember that your user needs to have the rights to write that file handle to /tmp/ttyUR
 
 Following parameters can be set `ur.ros2_control.xacro <https://github.com/UniversalRobots/Universal_Robots_ROS2_Description/blob/ros2/urdf/ur.ros2_control.xacro>`_\ :
