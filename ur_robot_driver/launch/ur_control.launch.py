@@ -30,6 +30,7 @@
 # Author: Denis Stogl
 
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.substitutions import FindPackageShare
 
 from launch import LaunchDescription
@@ -204,7 +205,11 @@ def launch_setup(context, *args, **kwargs):
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        parameters=[
+            robot_description,
+            update_rate_config_file,
+            ParameterFile(initial_joint_controllers, allow_substs=True),
+        ],
         output="screen",
         condition=IfCondition(use_mock_hardware),
     )
@@ -212,7 +217,11 @@ def launch_setup(context, *args, **kwargs):
     ur_control_node = Node(
         package="ur_robot_driver",
         executable="ur_ros2_control_node",
-        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        parameters=[
+            robot_description,
+            update_rate_config_file,
+            ParameterFile(initial_joint_controllers, allow_substs=True),
+        ],
         output="screen",
         condition=UnlessCondition(use_mock_hardware),
     )

@@ -31,9 +31,9 @@
 import time
 import unittest
 
+import launch_testing
 import pytest
 import rclpy
-import launch_testing
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from controller_manager_msgs.srv import SwitchController
@@ -53,10 +53,10 @@ from rclpy.action import ActionClient
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from ur_msgs.msg import IOStates
-from ur_msgs.srv import SetIO
 from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import GetRobotMode
+from ur_msgs.msg import IOStates
+from ur_msgs.srv import SetIO
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
@@ -75,10 +75,10 @@ ROBOT_JOINTS = [
 
 @pytest.mark.launch_test
 @launch_testing.parametrize(
-    "tf_prefix,controllers_yaml",
-    [("", "ur_controllers.yaml"), ("my_ur_", "ur_controllers_prefixed.yaml")],
+    "tf_prefix",
+    [(""), ("my_ur_")],
 )
-def generate_test_description(tf_prefix, controllers_yaml):
+def generate_test_description(tf_prefix):
     declared_arguments = []
 
     declared_arguments.append(
@@ -108,7 +108,6 @@ def generate_test_description(tf_prefix, controllers_yaml):
             "launch_dashboard_client": "false",
             "start_joint_controller": "false",
             "tf_prefix": tf_prefix,
-            "controllers_file": controllers_yaml,
         }.items(),
     )
     ursim = ExecuteProcess(
