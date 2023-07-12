@@ -242,6 +242,13 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
+    urscript_interface = Node(
+        package="ur_robot_driver",
+        executable="urscript_interface",
+        parameters=[{"robot_ip": robot_ip}],
+        output="screen",
+    )
+
     controller_stopper_node = Node(
         package="ur_robot_driver",
         executable="controller_stopper_node",
@@ -340,6 +347,7 @@ def launch_setup(context, *args, **kwargs):
         dashboard_client_node,
         tool_communication_node,
         controller_stopper_node,
+        urscript_interface,
         robot_state_publisher_node,
         rviz_node,
         initial_joint_controller_spawner_stopped,
