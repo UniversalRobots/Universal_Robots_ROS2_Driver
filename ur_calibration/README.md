@@ -74,5 +74,5 @@ Then, anybody cloning this repository can startup the robot simply by launching
 $ cd <colcon_ws>
 $ colcon build --packages-select <organization_name>_ur_launch
 $ ros2 launch <organization_name>_ur_launch ex-ur10-1.launch.py
-robot_ip:=xxx.yyy.zzz.www ur_type:=ur5e  use_fake_hardware:=false launch_rviz:=true
+robot_ip:=xxx.yyy.zzz.www ur_type:=ur5e  use_mock_hardware:=false launch_rviz:=true
 ```
