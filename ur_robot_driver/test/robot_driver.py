@@ -107,7 +107,12 @@ def generate_test_description():
     ursim = ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "lib", "ur_robot_driver", "start_ursim.sh"]
+                [
+                    FindPackagePrefix("ur_client_library"),
+                    "lib",
+                    "ur_client_library",
+                    "start_ursim.sh",
+                ]
             ),
             " ",
             "-m ",

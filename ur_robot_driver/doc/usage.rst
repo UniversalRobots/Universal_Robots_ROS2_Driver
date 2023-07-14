@@ -89,7 +89,7 @@ To start it, we've prepared a script:
 
 .. code-block:: bash
 
-   ros2 run ur_robot_driver start_ursim.sh -m <ur_type>
+   ros2 run ur_client_library start_ursim.sh -m <ur_type>
 
 With this, we can spin up a driver using
 
