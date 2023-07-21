@@ -1,0 +1,11 @@
+gpio_controller:
+   tf_prefix: {
+    type: string,
+    default_value: "",
+    description: "Urdf prefix of the corresponding arm"
+   }
+   check_io_successfull_retries: {
+      type: int,
+      default_value: 10,
+      description: "Amount of retries for checking if the selected gpio was set successfully"
+   }
