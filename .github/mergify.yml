@@ -7,21 +7,18 @@ pull_request_rules:
       backport:
         branches:
           - humble
+      label:
+        add:
+          - humble
 
-  - name: Backport to galactic branch
+  - name: Backport to iron branch
     conditions:
       - base=main
-      - label=backport-galactic
+      - label=backport-iron
     actions:
       backport:
         branches:
-          - galactic
-
-  - name: Backport to foxy branch
-    conditions:
-      - base=main
-      - label=backport-foxy
-    actions:
-      backport:
-        branches:
-          - foxy
+          - iron
+      label:
+        add:
+          - iron
