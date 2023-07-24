@@ -180,16 +180,18 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest)
 
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
-    add_launch_test(test/robot_driver.py
-      TIMEOUT
-        500
-    )
     add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
     )
     ament_add_pytest_test(dashboard_client
       test/dashboard_client.py
+      ENV
+        "PYTEST_ADDOPTS=-s --log-cli-level=INFO"
+      TIMEOUT 180
+    )
+    ament_add_pytest_test(robot_driver
+      test/robot_driver.py
       ENV
         "PYTEST_ADDOPTS=-s --log-cli-level=INFO"
       TIMEOUT 180

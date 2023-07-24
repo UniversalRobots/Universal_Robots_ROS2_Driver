@@ -26,36 +26,25 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
-
+import logging
 import time
-import unittest
 
 import pytest
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
-from controller_manager_msgs.srv import SwitchController
-from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    ExecuteProcess,
-    IncludeLaunchDescription,
-    RegisterEventHandler,
-)
-from launch.event_handlers import OnProcessExit
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
-from launch_testing.actions import ReadyToTest
-from rclpy.action import ActionClient
-from rclpy.node import Node
-from std_srvs.srv import Trigger
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from ur_msgs.msg import IOStates
 from ur_msgs.srv import SetIO
-from ur_dashboard_msgs.msg import RobotMode
-from ur_dashboard_msgs.srv import GetRobotMode
+
+from .conftest import (
+    call_action,
+    call_service,
+    get_action_result,
+    wait_for_action,
+    wait_for_service,
+)
+from .robot_launch_descriptions import *  # noqa: E402, F403
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
@@ -72,150 +61,17 @@ ROBOT_JOINTS = [
 ]
 
 
-@pytest.mark.launch_test
-def generate_test_description():
-    declared_arguments = []
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ur_type",
-            default_value="ur5e",
-            description="Type/series of used UR robot.",
-            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e"],
-        )
-    )
-
-    ur_type = LaunchConfiguration("ur_type")
-
-    robot_driver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
-            )
-        ),
-        launch_arguments={
-            "robot_ip": "192.168.56.101",
-            "ur_type": ur_type,
-            "launch_rviz": "false",
-            "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
-            "initial_joint_controller": "scaled_joint_trajectory_controller",
-            "headless_mode": "true",
-            "launch_dashboard_client": "false",
-            "start_joint_controller": "false",
-        }.items(),
-    )
-    ursim = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "lib", "ur_robot_driver", "start_ursim.sh"]
-            ),
-            " ",
-            "-m ",
-            ur_type,
-        ],
-        name="start_ursim",
-        output="screen",
-    )
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
-    driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
-    )
-
-    return LaunchDescription(
-        declared_arguments + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
-    )
-
-
-class RobotDriverTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        # Initialize the ROS context
-        rclpy.init()
-        cls.node = Node("robot_driver_test")
-        time.sleep(1)
-        cls.init_robot(cls)
-
-    @classmethod
-    def tearDownClass(cls):
-        # Shutdown the ROS context
-        cls.node.destroy_node()
-        rclpy.shutdown()
-
-    def init_robot(self):
-        # Wait longer for the first service clients:
-        #  - The robot has to start up
-        #  - The controller_manager has to start
-        #  - The controllers need to load and activate
-        service_interfaces_initial = {
-            "/dashboard_client/power_on": Trigger,
-            "/controller_manager/switch_controller": SwitchController,
-            "/io_and_status_controller/set_io": SetIO,
-        }
-        self.service_clients = {
-            srv_name: waitForService(
-                self.node, srv_name, srv_type, timeout=TIMEOUT_WAIT_SERVICE_INITIAL
-            )
-            for (srv_name, srv_type) in service_interfaces_initial.items()
-        }
-
-        # Connect to the rest of the required interfaces
-        service_interfaces = {
-            "/dashboard_client/brake_release": Trigger,
-            "/dashboard_client/stop": Trigger,
-            "/dashboard_client/get_robot_mode": GetRobotMode,
-            "/controller_manager/switch_controller": SwitchController,
-            "/io_and_status_controller/resend_robot_program": Trigger,
-        }
-        self.service_clients.update(
-            {
-                srv_name: waitForService(self.node, srv_name, srv_type)
-                for (srv_name, srv_type) in service_interfaces.items()
-            }
+@pytest.mark.launch(fixture=launch_robot_driver)  # noqa: F405
+@pytest.mark.parametrize("node", [("robot_driver_test")], indirect=True)
+class TestRobotDriver:
+    def test_start_scaled_jtc_controller(
+        self, dashboard_interface, controller_manager_interface, robot_program_running
+    ):
+        controller_manager_interface.switch_controller(
+            activate_controllers=["scaled_joint_trajectory_controller"]
         )
 
-        action_interfaces = {
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory": FollowJointTrajectory
-        }
-        self.action_clients = {
-            action_name: waitForAction(self.node, action_name, action_type)
-            for (action_name, action_type) in action_interfaces.items()
-        }
-
-    def setUp(self):
-        # Start robot
-        empty_req = Trigger.Request()
-        self.call_service("/dashboard_client/power_on", empty_req)
-        self.call_service("/dashboard_client/brake_release", empty_req)
-        time.sleep(1)
-        robot_mode_resp = self.call_service(
-            "/dashboard_client/get_robot_mode", GetRobotMode.Request()
-        )
-        self.assertEqual(robot_mode_resp.robot_mode.mode, RobotMode.RUNNING)
-        self.call_service("/dashboard_client/stop", empty_req)
-        time.sleep(1)
-        self.call_service("/io_and_status_controller/resend_robot_program", empty_req)
-
-    #
-    # Test functions
-    #
-
-    def test_start_scaled_jtc_controller(self):
-        req = SwitchController.Request()
-        req.strictness = SwitchController.Request.BEST_EFFORT
-        req.activate_controllers = ["scaled_joint_trajectory_controller"]
-        result = self.call_service("/controller_manager/switch_controller", req)
-
-        self.assertEqual(result.ok, True)
-
-    def test_set_io(self):
+    def test_set_io(self, node, robot_program_running):
         """Test to set an IO and check whether it has been set."""
         # Create io callback to verify result
         io_msg = None
@@ -224,12 +80,14 @@ class RobotDriverTest(unittest.TestCase):
             nonlocal io_msg
             io_msg = msg
 
-        io_states_sub = self.node.create_subscription(
+        io_states_sub = node.create_subscription(
             IOStates,
             "/io_and_status_controller/io_states",
             io_msg_cb,
             rclpy.qos.qos_profile_system_default,
         )
+
+        set_io_client = wait_for_service(node, "/io_and_status_controller/set_io", SetIO)
 
         # Set pin 0 to 1.0
         test_pin = 0
@@ -239,37 +97,37 @@ class RobotDriverTest(unittest.TestCase):
         set_io_req.pin = test_pin
         set_io_req.state = 1.0
 
-        self.node.get_logger().info(f"Setting pin {test_pin} to {set_io_req.state}")
-        self.call_service("/io_and_status_controller/set_io", set_io_req)
+        logging.info("Setting pin %d to %f", set_io_req.pin, set_io_req.state)
+        call_service(node, set_io_client, set_io_req)
 
         # Wait until the pin state has changed
         pin_state = False
         end_time = time.time() + 5
         while not pin_state and time.time() < end_time:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
+            rclpy.spin_once(node, timeout_sec=0.1)
             if io_msg is not None:
                 pin_state = io_msg.digital_out_states[test_pin].state
 
-        self.assertEqual(pin_state, set_io_req.state)
+        assert pin_state == set_io_req.state
 
         # Set pin 0 to 0.0
         set_io_req.state = 0.0
-        self.node.get_logger().info(f"Setting pin {test_pin} to {set_io_req.state}")
-        self.call_service("/io_and_status_controller/set_io", set_io_req)
+        logging.info("Setting pin %d to %f", set_io_req.pin, set_io_req.state)
+        call_service(node, set_io_client, set_io_req)
 
         # Wait until the pin state has changed back
         end_time = time.time() + 5
         while pin_state and time.time() < end_time:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
+            rclpy.spin_once(node, timeout_sec=0.1)
             if io_msg is not None:
                 pin_state = io_msg.digital_out_states[test_pin].state
 
-        self.assertEqual(pin_state, set_io_req.state)
+        assert pin_state == set_io_req.state
 
         # Clean up io subscription
-        self.node.destroy_subscription(io_states_sub)
+        node.destroy_subscription(io_states_sub)
 
-    def test_trajectory(self):
+    def test_trajectory(self, node, robot_program_running):
         """Test robot movement."""
         # Construct test trajectory
         test_trajectory = [
@@ -286,24 +144,28 @@ class RobotDriverTest(unittest.TestCase):
             ],
         )
 
+        follow_joint_trajectory_client = wait_for_action(
+            node,
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
+
         # Sending trajectory goal
-        self.node.get_logger().info("Sending simple goal")
-        goal_response = self.call_action(
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
-            FollowJointTrajectory.Goal(trajectory=trajectory),
+        logging.info("Sending simple test trajectory")
+        goal_response = call_action(
+            node, follow_joint_trajectory_client, FollowJointTrajectory.Goal(trajectory=trajectory)
         )
-        self.assertEqual(goal_response.accepted, True)
 
-        # Verify execution
-        result = self.get_result(
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
-            goal_response,
-            TIMEOUT_EXECUTE_TRAJECTORY,
+        assert goal_response.accepted
+        logging.info("Goal accepted")
+
+        result = get_action_result(
+            node, follow_joint_trajectory_client, goal_response, TIMEOUT_EXECUTE_TRAJECTORY
         )
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
-        self.node.get_logger().info("Received result SUCCESSFUL")
+        assert result.error_code == FollowJointTrajectory.Result.SUCCESSFUL
+        logging.info("Successfully executed simple test trajectory")
 
-    def test_illegal_trajectory(self):
+    def test_illegal_trajectory(self, node):
         """
         Test trajectory server.
 
@@ -323,18 +185,23 @@ class RobotDriverTest(unittest.TestCase):
             ],
         )
 
-        # Send illegal goal
-        self.node.get_logger().info("Sending illegal goal")
-        goal_response = self.call_action(
+        follow_joint_trajectory_client = wait_for_action(
+            node,
             "/scaled_joint_trajectory_controller/follow_joint_trajectory",
-            FollowJointTrajectory.Goal(trajectory=trajectory),
+            FollowJointTrajectory,
+        )
+
+        # Send illegal goal
+        logging.info("Sending illegal test trajectory")
+        goal_response = call_action(
+            node, follow_joint_trajectory_client, FollowJointTrajectory.Goal(trajectory=trajectory)
         )
 
         # Verify the failure is correctly detected
-        self.assertEqual(goal_response.accepted, False)
-        self.node.get_logger().info("Goal response REJECTED")
+        assert not goal_response.accepted
+        logging.info("Correctly rejected illegal trajectory")
 
-    def test_trajectory_scaled(self):
+    def test_trajectory_scaled(self, node):
         """Test robot movement."""
         # Construct test trajectory
         test_trajectory = [
@@ -350,34 +217,31 @@ class RobotDriverTest(unittest.TestCase):
             ],
         )
 
-        goal = FollowJointTrajectory.Goal(trajectory=trajectory)
+        follow_joint_trajectory_client = wait_for_action(
+            node,
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
 
         # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
         # see https://github.com/ros-controls/ros2_controllers/issues/249
         # self.node.get_logger().info("Sending scaled goal without time restrictions")
-        self.node.get_logger().info("Sending goal for robot to follow")
-        goal_response = self.call_action(
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory", goal
+        logging.info("Sending trajectory goal")
+        goal_response = call_action(
+            node, follow_joint_trajectory_client, FollowJointTrajectory.Goal(trajectory=trajectory)
         )
 
-        self.assertEqual(goal_response.accepted, True)
+        assert goal_response.accepted
+        logging.info("Goal accepted")
 
-        if goal_response.accepted:
-            result = self.get_result(
-                "/scaled_joint_trajectory_controller/follow_joint_trajectory",
-                goal_response,
-                TIMEOUT_EXECUTE_TRAJECTORY,
-            )
-            self.assertIn(
-                result.error_code,
-                (
-                    FollowJointTrajectory.Result.PATH_TOLERANCE_VIOLATED,
-                    FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED,
-                    FollowJointTrajectory.Result.SUCCESSFUL,
-                ),
-            )
-
-            self.node.get_logger().info("Received result")
+        result = get_action_result(
+            node, follow_joint_trajectory_client, goal_response, TIMEOUT_EXECUTE_TRAJECTORY
+        )
+        assert result.error_code in (
+            FollowJointTrajectory.Result.PATH_TOLERANCE_VIOLATED,
+            FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED,
+            FollowJointTrajectory.Result.SUCCESSFUL,
+        )
 
         # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
         # see https://github.com/ros-controls/ros2_controllers/issues/249
@@ -393,60 +257,3 @@ class RobotDriverTest(unittest.TestCase):
         #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
         #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
         #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
-
-    #
-    # Utility functions
-    #
-
-    def call_service(self, srv_name, request):
-        self.node.get_logger().info(f"Calling service '{srv_name}' with request {request}")
-        future = self.service_clients[srv_name].call_async(request)
-        rclpy.spin_until_future_complete(self.node, future)
-        if future.result() is not None:
-            self.node.get_logger().info(f"Received result {future.result()}")
-            return future.result()
-        else:
-            raise Exception(f"Exception while calling service: {future.exception()}")
-
-    def call_action(self, action_name, goal):
-        self.node.get_logger().info(f"Sending goal to action server '{action_name}'")
-        future = self.action_clients[action_name].send_goal_async(goal)
-        rclpy.spin_until_future_complete(self.node, future)
-
-        if future.result() is not None:
-            return future.result()
-        else:
-            raise Exception(f"Exception while calling action: {future.exception()}")
-
-    def get_result(self, action_name, goal_response, timeout):
-        self.node.get_logger().info(
-            f"Waiting for result for action server '{action_name}' (timeout: {timeout} seconds)"
-        )
-        future_res = self.action_clients[action_name]._get_result_async(goal_response)
-        rclpy.spin_until_future_complete(self.node, future_res, timeout_sec=timeout)
-
-        if future_res.result() is not None:
-            self.node.get_logger().info(f"Received result {future_res.result().result}")
-            return future_res.result().result
-        else:
-            raise Exception(f"Exception while calling action: {future_res.exception()}")
-
-
-def waitForService(node, srv_name, srv_type, timeout=TIMEOUT_WAIT_SERVICE):
-    client = node.create_client(srv_type, srv_name)
-    if client.wait_for_service(timeout) is False:
-        raise Exception(f"Could not reach service '{srv_name}' within timeout of {timeout}")
-
-    node.get_logger().info(f"Successfully connected to service '{srv_name}'")
-    return client
-
-
-def waitForAction(node, action_name, action_type, timeout=TIMEOUT_WAIT_ACTION):
-    client = ActionClient(node, action_type, action_name)
-    if client.wait_for_server(timeout) is False:
-        raise Exception(
-            f"Could not reach action server '{action_name}' within timeout of {timeout}"
-        )
-
-    node.get_logger().info(f"Successfully connected to action '{action_name}'")
-    return client
