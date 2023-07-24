@@ -56,30 +56,33 @@ UrclLogHandler::UrclLogHandler() = default;
 void UrclLogHandler::log(const char* file, int line, urcl::LogLevel loglevel, const char* message)
 {
   rcutils_log_location_t location = { "", file, static_cast<size_t>(line) };
+
+  const auto logger_name = "UR_Client_Library:" + tf_prefix_;
   switch (loglevel) {
     case urcl::LogLevel::DEBUG:
-      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_DEBUG, "UR_Client_Library", "%s", message);
+      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_DEBUG, logger_name.c_str(), "%s", message);
       break;
     case urcl::LogLevel::INFO:
-      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_INFO, "UR_Client_Library", "%s", message);
+      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_INFO, logger_name.c_str(), "%s", message);
       break;
     case urcl::LogLevel::WARN:
-      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_WARN, "UR_Client_Library", "%s", message);
+      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_WARN, logger_name.c_str(), "%s", message);
       break;
     case urcl::LogLevel::ERROR:
-      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_ERROR, "UR_Client_Library", "%s", message);
+      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_ERROR, logger_name.c_str(), "%s", message);
       break;
     case urcl::LogLevel::FATAL:
-      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_FATAL, "UR_Client_Library", "%s", message);
+      rcutils_log(&location, RCUTILS_LOG_SEVERITY::RCUTILS_LOG_SEVERITY_FATAL, logger_name.c_str(), "%s", message);
       break;
     default:
       break;
   }
 }
 
-void registerUrclLogHandler()
+void registerUrclLogHandler(const std::string& tf_prefix)
 {
   if (g_registered == false) {
+    g_log_handler->setTFPrefix(tf_prefix);
     // Log level is decided by ROS2 log level
     urcl::setLogLevel(urcl::LogLevel::DEBUG);
     urcl::registerLogHandler(std::move(g_log_handler));
