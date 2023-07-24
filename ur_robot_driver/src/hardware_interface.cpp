@@ -417,8 +417,11 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   // Amount of allowed timed out reads before the reverse interface will be dropped
   const int keep_alive_count = std::stoi(info_.hardware_parameters["keep_alive_count"]);
 
+  // Obtain the tf_prefix which is needed for the logging handler so that log messages from different arms are
+  // distiguishable in the log
+  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
-  registerUrclLogHandler();
+  registerUrclLogHandler(tf_prefix);
   try {
     rtde_comm_has_been_started_ = false;
     ur_driver_ = std::make_unique<urcl::UrDriver>(
