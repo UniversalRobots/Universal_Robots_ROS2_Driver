@@ -13,14 +13,15 @@ The driver is compatible across the entire line of UR robots -- from 3 kg payloa
 Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) about this driver.
 
 
-## Build Status
+## Release Status
 
 <table width="100%">
   <tr>
     <th>ROS2 Distro</th>
-    <th>Foxy</th>
-    <th>Galactic</th>
+    <th>Foxy (EOL)</th>
+    <th>Galactic (EOL)</th>
     <th>Humble</th>
+    <th>Iron</th>
     <th>Rolling</th>
   </tr>
   <tr>
@@ -28,87 +29,52 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy">foxy</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic">galactic</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/iron">iron</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
   </tr>
   <tr>
-    <th>Build Status</th>
+    <th>Release status</th>
     <td>
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?event=schedule"
               alt="Foxy Binary Build"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-semi-binary-build.yml/badge.svg?event=schedule"
-              alt="Foxy Semi-Binary Build"/>
-      </a>
     </td>
     <td>
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?query=event%3Aschedule++">
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?event=schedule"
               alt="Galactic Binary Build"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-semi-binary-build.yml/badge.svg?event=schedule"
-              alt="Galactic Semi-Binary Build"/>
-      </a>
     </td>
     <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-main.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-main.yml/badge.svg?event=schedule"
-              alt="Humble Binary Main"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-testing.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-binary-testing.yml/badge.svg?event=schedule"
-              alt="Humble Binary Testing"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-main.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-main.yml/badge.svg?event=schedule"
-              alt="Humble Semi-Binary Main"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-testing.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-testing.yml/badge.svg?event=schedule"
-              alt="Humble Semi-Binary Testing"/>
-      </a>
+      <a href='https://build.ros2.org/job/Hbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Hbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Hbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Hbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Hbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
     </td>
     <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-main.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-main.yml/badge.svg?branch=main"
-              alt="Rolling Binary Main"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-testing.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-testing.yml/badge.svg?branch=main"
-              alt="Rolling Binary Testing"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-main.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-main.yml/badge.svg?branch=main"
-              alt="Rolling Semi-Binary Main"/>
-      </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-testing.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-testing.yml/badge.svg?branch=main"
-              alt="Rolling Semi-Binary Testing"/>
-      </a>
+      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
+    </td>
+    <td>
+      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
     </td>
   </tr>
 </table>
 
+The table above shows the build status for each package of this repo from the [ROS buildfarm](https://build.ros2.org/). For end-of-life (EOL) distributions the nightly binary builds from our CI are shown. EOL distributions will receive no more updates and may be lacking features.
 
-**NOTE**: There are two build stages checking current and future compatibility of the driver.
-
-1. Binary builds - against released packages (main and testing) in ROS distributions. Shows that
-   direct local build is possible and is the most relevant workflow for users.
-
-   Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.<ros-distro>.repos`
-
-1. Semi-binary builds - against released core ROS packages (main and testing), but the immediate dependencies are pulled from source.
-   Shows that local build with dependencies is possible and if fails there we can expect that after the next package sync we will not be able to build.
-
-   Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos`
-
-Each of these stages also performs integration tests using ursim. In order to execute these tests locally, they have to be enabled:
-  ```
-  colcon build --packages-select ur_robot_driver --cmake-args -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=On
-  ```
-
+A more [detailed build status](ci_status.md) shows the state of all CI workflows inside this repo.
+Please note that the detailed view is intended for developers, while the one here should give end
+users an overview of the current released state.
 
 ## Packages in the Repository:
 
@@ -148,7 +114,7 @@ that will behave almost exactly like the real robot.
       branches.
 2. Install the driver using
    ```
-   sudo apt-get install ros-${ROS_DISTRO}-ur-robot-driver
+   sudo apt-get install ros-${ROS_DISTRO}-ur
    ```
 
 ### Build from source
@@ -188,11 +154,14 @@ building might fail occasionally.
    source install/setup.bash
    ```
 
-6. When consecutive pulls leads to build errors, please make sure to update the upstream packages before
-   filing an issue:
+6. When consecutive pulls lead to build errors it is possible that you'll have to build an upstream
+   package from source, as well. See the [detailed build status](ci_status.md). When the binary builds are red, but
+   the semi-binary builds are green, you need to build the upstream dependencies from source. The
+   easiest way to achieve this, is using the repos file:
+
    ```
    cd $COLCON_WS
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
+   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.${ROS_DISTRO}.repos
    rosdep update
    rosdep install --ignore-src --from-paths src -y
    ```
