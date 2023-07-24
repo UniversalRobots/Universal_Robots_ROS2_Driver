@@ -51,7 +51,7 @@ int main(int argc, char** argv)
   std::string robot_ip = node->declare_parameter<std::string>("robot_ip", "192.168.56.101");
   node->get_parameter<std::string>("robot_ip", robot_ip);
 
-  ur_robot_driver::registerUrclLogHandler();
+  ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
 
   ur_robot_driver::DashboardClientROS client(node, robot_ip);
 
