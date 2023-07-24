@@ -36,7 +36,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(

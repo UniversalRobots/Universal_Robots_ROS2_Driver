@@ -91,6 +91,10 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "payload/cog.z");
   config.names.emplace_back(tf_prefix + "payload/payload_async_success");
 
+  // FTS sensor
+  config.names.emplace_back(tf_prefix + "zero_ftsensor/zero_ftsensor_cmd");
+  config.names.emplace_back(tf_prefix + "zero_ftsensor/zero_ftsensor_async_success");
+
   // hand back control --> make UR-program return
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_cmd");
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
