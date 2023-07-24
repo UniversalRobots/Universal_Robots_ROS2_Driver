@@ -43,10 +43,22 @@
 #ifndef UR_ROBOT_DRIVER__URCL_LOG_HANDLER_HPP_
 #define UR_ROBOT_DRIVER__URCL_LOG_HANDLER_HPP_
 
+#include <string>
 #include "ur_client_library/log.h"
-
 namespace ur_robot_driver
 {
+
+/*!
+ * \brief Register the UrclLoghHandler, this will start logging messages from the client library with ROS2 logging.
+ * This function has to be called inside your node, to enable the log handler.
+ */
+void registerUrclLogHandler(const std::string& tf_prefix = "");
+
+/*!
+ * \brief Unregister the UrclLoghHandler, stop logging messages from the client library with ROS2 logging.
+ */
+void unregisterUrclLogHandler();
+
 /*!
  * \brief Loghandler for handling messages logged with the C++ client library. This loghandler will log the messages
  * from the client library with ROS2s logging.
@@ -69,18 +81,31 @@ public:
    * \param log Log message
    */
   void log(const char* file, int line, urcl::LogLevel loglevel, const char* message) override;
+
+  /**
+   * @brief getTFPrefix - obtain the currently set tf_prefix
+   * @return
+   */
+  const std::string& getTFPrefix() const
+  {
+    return tf_prefix_;
+  }
+
+private:
+  std::string tf_prefix_{};
+
+  /**
+   * @brief setTFPrefix - set the tf_prefix the logger will append to the node name
+   * @param tf_prefix
+   */
+  void setTFPrefix(const std::string& tf_prefix)
+  {
+    tf_prefix_ = tf_prefix;
+  }
+
+  // Declare the register method as a friend so that we can access setTFPrefix from it
+  friend void registerUrclLogHandler(const std::string& tf_prefix);
 };
-
-/*!
- * \brief Register the UrclLoghHandler, this will start logging messages from the client library with ROS2 logging.
- * This function has to be called inside your node, to enable the log handler.
- */
-void registerUrclLogHandler();
-
-/*!
- * \brief Unregister the UrclLoghHandler, stop logging messages from the client library with ROS2 logging.
- */
-void unregisterUrclLogHandler();
 
 }  // namespace ur_robot_driver
 
