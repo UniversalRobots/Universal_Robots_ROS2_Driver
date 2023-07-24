@@ -270,11 +270,11 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
       }
     }
   }
-  #ifdef ROS_DISTRO_HUMBLE
-    publish_state(state_desired, state_current, state_error);
-  #else
-    publish_state(time, state_desired, state_current, state_error);
-  #endif
+#ifdef ROS_DISTRO_HUMBLE
+  publish_state(state_desired, state_current, state_error);
+#else
+  publish_state(time, state_desired, state_current, state_error);
+#endif
 
   return controller_interface::return_type::OK;
 }
