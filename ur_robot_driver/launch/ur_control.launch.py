@@ -30,6 +30,7 @@
 # Author: Denis Stogl
 
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.substitutions import FindPackageShare
 
 from launch import LaunchDescription
@@ -51,8 +52,8 @@ def launch_setup(context, *args, **kwargs):
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     tf_prefix = LaunchConfiguration("tf_prefix")
-    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
-    fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     controller_spawner_timeout = LaunchConfiguration("controller_spawner_timeout")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
@@ -138,11 +139,11 @@ def launch_setup(context, *args, **kwargs):
             "tf_prefix:=",
             tf_prefix,
             " ",
-            "use_fake_hardware:=",
-            use_fake_hardware,
+            "use_mock_hardware:=",
+            use_mock_hardware,
             " ",
-            "fake_sensor_commands:=",
-            fake_sensor_commands,
+            "mock_sensor_commands:=",
+            mock_sensor_commands,
             " ",
             "headless_mode:=",
             headless_mode,
@@ -204,22 +205,30 @@ def launch_setup(context, *args, **kwargs):
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        parameters=[
+            robot_description,
+            update_rate_config_file,
+            ParameterFile(initial_joint_controllers, allow_substs=True),
+        ],
         output="screen",
-        condition=IfCondition(use_fake_hardware),
+        condition=IfCondition(use_mock_hardware),
     )
 
     ur_control_node = Node(
         package="ur_robot_driver",
         executable="ur_ros2_control_node",
-        parameters=[robot_description, update_rate_config_file, initial_joint_controllers],
+        parameters=[
+            robot_description,
+            update_rate_config_file,
+            ParameterFile(initial_joint_controllers, allow_substs=True),
+        ],
         output="screen",
-        condition=UnlessCondition(use_fake_hardware),
+        condition=UnlessCondition(use_mock_hardware),
     )
 
     dashboard_client_node = Node(
         package="ur_robot_driver",
-        condition=IfCondition(launch_dashboard_client) and UnlessCondition(use_fake_hardware),
+        condition=IfCondition(launch_dashboard_client) and UnlessCondition(use_mock_hardware),
         executable="dashboard_client",
         name="dashboard_client",
         output="screen",
@@ -242,13 +251,20 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
+    urscript_interface = Node(
+        package="ur_robot_driver",
+        executable="urscript_interface",
+        parameters=[{"robot_ip": robot_ip}],
+        output="screen",
+    )
+
     controller_stopper_node = Node(
         package="ur_robot_driver",
         executable="controller_stopper_node",
         name="controller_stopper",
         output="screen",
         emulate_tty=True,
-        condition=UnlessCondition(use_fake_hardware),
+        condition=UnlessCondition(use_mock_hardware),
         parameters=[
             {"headless_mode": headless_mode},
             {"joint_controller_active": activate_joint_controller},
@@ -340,6 +356,7 @@ def launch_setup(context, *args, **kwargs):
         dashboard_client_node,
         tool_communication_node,
         controller_stopper_node,
+        urscript_interface,
         robot_state_publisher_node,
         rviz_node,
         initial_joint_controller_spawner_stopped,
@@ -419,7 +436,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "tf_prefix",
-            default_value='""',
+            default_value="",
             description="tf_prefix of the joint names, useful for \
         multi-robot setup. If changed, also joint names in the controllers' configuration \
         have to be updated.",
@@ -427,17 +444,17 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_fake_hardware",
+            "use_mock_hardware",
             default_value="false",
-            description="Start robot with fake hardware mirroring command to its states.",
+            description="Start robot with mock hardware mirroring command to its states.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "fake_sensor_commands",
+            "mock_sensor_commands",
             default_value="false",
-            description="Enable fake command interfaces for sensors used for simple simulations. \
-            Used only if 'use_fake_hardware' parameter is true.",
+            description="Enable mock command interfaces for sensors used for simple simulations. \
+            Used only if 'use_mock_hardware' parameter is true.",
         )
     )
     declared_arguments.append(

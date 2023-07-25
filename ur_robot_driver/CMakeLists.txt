@@ -103,8 +103,13 @@ add_executable(controller_stopper_node
 )
 ament_target_dependencies(controller_stopper_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+add_executable(urscript_interface
+  src/urscript_interface.cpp
+)
+ament_target_dependencies(urscript_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 install(
-  TARGETS dashboard_client ur_ros2_control_node controller_stopper_node
+  TARGETS dashboard_client ur_ros2_control_node controller_stopper_node urscript_interface
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -179,6 +184,10 @@ if(BUILD_TESTING)
         180
     )
     add_launch_test(test/robot_driver.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
     )

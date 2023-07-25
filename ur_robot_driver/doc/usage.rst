@@ -22,9 +22,9 @@ The most relevant arguments are the following:
 
 * ``ur_type`` (\ *mandatory* ) - a type of used UR robot (\ *ur3*\ , *ur3e*\ , *ur5*\ , *ur5e*\ , *ur10*\ , *ur10e*\ , or *ur16e*\ ).
 * ``robot_ip`` (\ *mandatory* ) - IP address by which the root can be reached.
-* ``use_fake_hardware`` (default: *false* ) - use simple hardware emulator from ros2_control.
+* ``use_mock_hardware`` (default: *false* ) - use simple hardware emulator from ros2_control.
   Useful for testing launch files, descriptions, etc. See explanation below.
-* ``initial_positions`` (default: dictionary with all joint values set to 0) - Allows passing a dictionary to set the initial joint values for the fake hardware from `ros2_control <http://control.ros.org/>`_.  It can also be set from a yaml file with the ``load_yaml`` commands as follows:
+* ``initial_positions`` (default: dictionary with all joint values set to 0) - Allows passing a dictionary to set the initial joint values for the mock hardware from `ros2_control <http://control.ros.org/>`_.  It can also be set from a yaml file with the ``load_yaml`` commands as follows:
 
   .. code-block::
 
@@ -41,7 +41,7 @@ The most relevant arguments are the following:
      wrist_2_joint: -1.765
      wrist_3_joint: 0.0
 
-* ``fake_sensor_commands`` (default: *false* ) - enables setting sensor values for the hardware emulators.
+* ``mock_sensor_commands`` (default: *false* ) - enables setting sensor values for the hardware emulators.
   Useful for offline testing of controllers.
 
 * ``robot_controller`` (default: *joint_trajectory_controller* ) - controller for robot joints to be started.
@@ -55,12 +55,12 @@ The most relevant arguments are the following:
 
   *HINT* : list all loaded controllers using ``ros2 control list_controllers`` command.
 
-**NOTE**\ : The package can simulate hardware with the ros2_control ``FakeSystem``. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see `ros2_control documentation <https://ros-controls.github.io/control.ros.org/>`_ for more details.
+**NOTE**\ : The package can simulate hardware with the ros2_control ``MockSystem``. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see `ros2_control documentation <https://ros-controls.github.io/control.ros.org/>`_ for more details.
 
 Modes of operation
 ------------------
 
-As mentioned in the last section the driver has two basic modes of operation: Using fake hardware or
+As mentioned in the last section the driver has two basic modes of operation: Using mock hardware or
 using real hardware(Or the URSim simulator, which is equivalent from the driver's perspective).
 Additionally, the robot can be simulated using
 `Gazebo <https://github.com/UniversalRobots/Universal_Robots_ROS2_Gazebo_Simulation>`_ or
@@ -72,7 +72,7 @@ outside of this driver's scope.
 
    * - mode
      - available controllers
-   * - fake_hardware
+   * - mock_hardware
      - :raw-html-m2r:`<ul><li>joint_trajectory_controller</li><li>forward_velocity_controller</li><li>forward_position_controller</li></ul>`
    * - real hardware / URSim
      - :raw-html-m2r:`<ul><li>joint_trajectory_controller</li><li>scaled_joint_trajectory_controller </li><li>forward_velocity_controller</li><li>forward_position_controller</li></ul>`
@@ -124,11 +124,11 @@ Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10`
 
 * To do an offline test with URSim check details about it in `this section <#usage-with-official-ur-simulator>`_
 
-* To use mocked hardware(capability of ros2_control), use ``use_fake_hardware`` argument, like:
+* To use mocked hardware(capability of ros2_control), use ``use_mock_hardware`` argument, like:
 
   .. code-block::
 
-     ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+     ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_mock_hardware:=true launch_rviz:=true
 
   **NOTE**\ : Instead of using the global launch file for control stack, there are also prepeared launch files for each type of UR robots named. They accept the same arguments are the global one and are used by:
 
@@ -150,11 +150,11 @@ Before running any commands, first check the controllers' state using ``ros2 con
 
   After a few seconds the robot should move.
 
-* To test another controller, simply define it using ``initial_joint_controller`` argument, for example when using fake hardware:
+* To test another controller, simply define it using ``initial_joint_controller`` argument, for example when using mock hardware:
 
   .. code-block::
 
-     ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_fake_hardware:=true launch_rviz:=true
+     ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy initial_joint_controller:=joint_trajectory_controller use_mock_hardware:=true launch_rviz:=true
 
   And send the command using demo node:
 
@@ -191,17 +191,17 @@ To test the driver with the example MoveIt-setup, first start the driver as desc
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
 robot as explained `here <https://moveit.picknik.ai/galactic/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html>`_.
 
-Fake hardware
+Mock hardware
 ^^^^^^^^^^^^^
 
-Currently, the ``scaled_joint_trajectory_controller`` does not work with ros2_control fake_hardware. There is an
-`upstream Merge-Request <https://github.com/ros-controls/ros2_control/pull/822>`_ pending to fix that. Until this is merged and released, you'll have to fallback to the ``joint_trajectory_controller`` by passing ``initial_controller:=joint_trajectory_controller`` to the driver's startup. Also, you'll have to tell MoveIt! that you're using fake_hardware as it then has to map to the other controller:
+Currently, the ``scaled_joint_trajectory_controller`` does not work with ros2_control mock_hardware. There is an
+`upstream Merge-Request <https://github.com/ros-controls/ros2_control/pull/822>`_ pending to fix that. Until this is merged and released, you'll have to fallback to the ``joint_trajectory_controller`` by passing ``initial_controller:=joint_trajectory_controller`` to the driver's startup. Also, you'll have to tell MoveIt! that you're using mock_hardware as it then has to map to the other controller:
 
 .. code-block::
 
-   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_mock_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
    # and in another shell
-   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true use_fake_hardware:=true
+   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true use_mock_hardware:=true
 
 Robot frames
 ------------
@@ -214,3 +214,61 @@ are a couple of things to know:
   additional tool configured on the Teach pendant (TP), this should be equivalent to ``tool0`` given that
   the URDF uses the specific robot's :ref:`calibration <calibration_extraction>`. If a tool is
   configured on the TP, then the additional transformation will show in ``base`` -> ``tool0``.
+
+Custom URScript commands
+------------------------
+
+The driver's package contains a ``urscript_interface`` node that allows sending URScript snippets
+directly to the robot. It gets started in the driver's launchfiles by default. To use it, simply
+publish a message to its interface:
+
+.. code-block:: bash
+
+  # simple popup
+  ros2 topic pub /urscript_interface/script_command std_msgs/msg/String '{data: popup("hello")}' --once
+
+Be aware, that running a program on this interface (meaning publishing script code to that interface) stops any running program on the robot.
+Thus, the motion-interpreting program that is started by the driver gets stopped and has to be
+restarted again. Depending whether you use headless mode or not, you'll have to call the
+``resend_program`` service or press the ``play`` button on the teach panel to start the
+external_control program again.
+
+.. note::
+  Currently, there is no feedback on the code's correctness. If the code sent to the
+  robot is incorrect, it will silently not get executed. Make sure that you send valid URScript code!
+
+Multi-line programs
+^^^^^^^^^^^^^^^^^^^
+
+When you want to define multi-line programs, make sure to check that newlines are correctly
+interpreted from your message. For this purpose the driver prints the program as it is being sent to
+the robot. When sending a multi-line program from the command line, you can use an empty line
+between each statement:
+
+.. code-block:: bash
+
+   ros2 topic pub --once /urscript_interface/script_command std_msgs/msg/String '{data:
+   "def my_prog():
+
+     set_digital_out(1, True)
+
+     movej(p[0.2, 0.3, 0.8, 0, 0, 3.14], a=1.2, v=0.25, r=0)
+
+     textmsg(\"motion finished\")
+
+   end"}'
+
+Non-interrupting programs
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To prevent interrupting the main program, you can send certain commands as `secondary programs
+<https://www.universal-robots.com/articles/ur/programming/secondary-program/>`_.
+
+.. code-block:: bash
+
+   ros2 topic pub --once /urscript_interface/script_command std_msgs/msg/String '{data:
+     "sec my_prog():
+
+       textmsg(\"This is a log message\")
+
+     end"}'

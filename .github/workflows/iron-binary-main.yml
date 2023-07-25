@@ -1,0 +1,24 @@
+name: Iron Binary Build Main
+on:
+  workflow_dispatch:
+    branches:
+      - iron
+  pull_request:
+    branches:
+      - iron
+      - main # as long as rolling and iron should be compatible
+  push:
+    branches:
+      - iron
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '13 5 * * *'
+
+jobs:
+  binary:
+    uses: ./.github/workflows/reusable_ici.yml
+    with:
+      ros_distro: iron
+      ros_repo: main
+      upstream_workspace: Universal_Robots_ROS2_Driver-not-released.iron.repos
+      ref_for_scheduled_build: iron
