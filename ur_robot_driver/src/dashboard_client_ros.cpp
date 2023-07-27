@@ -269,7 +269,11 @@ bool DashboardClientROS::connect()
   tv.tv_sec = time_buffer;
   tv.tv_usec = 0;
   client_.setReceiveTimeout(tv);
-  return client_.connect();
+  bool success = client_.connect();
+  if (success) {
+    client_.setReceiveTimeout(tv);
+  }
+  return success;
 }
 
 bool DashboardClientROS::handleRunningQuery(const ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
