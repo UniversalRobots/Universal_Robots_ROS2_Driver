@@ -40,6 +40,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     RegisterEventHandler,
 )
+from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -79,7 +80,25 @@ def generate_test_description():
         )
     )
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "robot_ip",
+            default_value="192.168.56.101",
+            description="IP address of used UR robot.",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_ursim",
+            default_value="true",
+            description="Launches the ursim when running the test if True",
+        )
+    )
+
     ur_type = LaunchConfiguration("ur_type")
+    robot_ip = LaunchConfiguration("robot_ip")
+    launch_ursim = LaunchConfiguration("launch_ursim")
 
     robot_driver = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -97,6 +116,7 @@ def generate_test_description():
             "launch_dashboard_client": "false",
             "start_joint_controller": "false",
         }.items(),
+        condition=IfCondition(launch_ursim),
     )
 
     ursim = ExecuteProcess(
@@ -115,24 +135,47 @@ def generate_test_description():
         ],
         name="start_ursim",
         output="screen",
+        condition=IfCondition(launch_ursim),
     )
 
     wait_dashboard_server = ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
                 [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
+            ),
         ],
         name="wait_dashboard_server",
         output="screen",
+        condition=IfCondition(launch_ursim),
     )
 
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver),
+        condition=IfCondition(launch_ursim),
+    )
+
+    robot_driver_no_wait = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
+            )
+        ),
+        launch_arguments={
+            "robot_ip": robot_ip,
+            "ur_type": ur_type,
+            "launch_rviz": "false",
+            "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
+            "initial_joint_controller": "scaled_joint_trajectory_controller",
+            "headless_mode": "true",
+            "launch_dashboard_client": "false",
+            "start_joint_controller": "false",
+        }.items(),
+        condition=UnlessCondition(launch_ursim),
     )
 
     return LaunchDescription(
-        declared_arguments + [ReadyToTest(), wait_dashboard_server, driver_starter, ursim]
+        declared_arguments
+        + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter, robot_driver_no_wait]
     )
 
 

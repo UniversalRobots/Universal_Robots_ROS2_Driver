@@ -35,6 +35,7 @@ import pytest
 import rclpy
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
@@ -69,7 +70,25 @@ def generate_test_description():
         )
     )
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "robot_ip",
+            default_value="192.168.56.101",
+            description="IP address of used UR robot.",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_ursim",
+            default_value="true",
+            description="Launches the ursim when running the test if yes",
+        )
+    )
+
     ur_type = LaunchConfiguration("ur_type")
+    robot_ip = LaunchConfiguration("robot_ip")
+    launch_ursim = LaunchConfiguration("launch_ursim")
 
     dashboard_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -82,9 +101,10 @@ def generate_test_description():
             )
         ),
         launch_arguments={
-            "robot_ip": "192.168.56.101",
+            "robot_ip": robot_ip,
         }.items(),
     )
+
     ursim = ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
@@ -101,6 +121,7 @@ def generate_test_description():
         ],
         name="start_ursim",
         output="screen",
+        condition=IfCondition(launch_ursim),
     )
 
     return LaunchDescription(declared_arguments + [ReadyToTest(), dashboard_client, ursim])
@@ -159,7 +180,10 @@ class DashboardClientTest(unittest.TestCase):
         # Wait until the robot is booted completely
         end_time = time.time() + 10
         mode = RobotMode.DISCONNECTED
-        while mode != RobotMode.POWER_OFF and time.time() < end_time:
+        while (
+            mode not in (RobotMode.POWER_OFF, RobotMode.IDLE, RobotMode.RUNNING)
+            and time.time() < end_time
+        ):
             time.sleep(0.1)
             result = self.call_dashboard_service("get_robot_mode", GetRobotMode.Request())
             self.assertTrue(result.success)
