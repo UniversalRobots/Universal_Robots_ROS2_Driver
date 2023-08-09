@@ -89,9 +89,9 @@ def generate_test_description():
         cmd=[
             PathJoinSubstitution(
                 [
-                    FindPackagePrefix("ur_robot_driver"),
+                    FindPackagePrefix("ur_client_library"),
                     "lib",
-                    "ur_robot_driver",
+                    "ur_client_library",
                     "start_ursim.sh",
                 ]
             ),

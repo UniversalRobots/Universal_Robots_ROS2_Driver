@@ -28,97 +28,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-PERSISTENT_BASE="${HOME}/.ursim"
-URCAP_VERSION="1.0.5"
+ORANGE='\033[0;33m'
+NC='\033[0m' # No Color
 
-help()
-{
-  # Display Help
-  echo "Starts URSim inside a docker container"
-  echo
-  echo "Syntax: `basename "$0"` [-m|s|h]"
-  echo "options:"
-  echo "    -m <model>     Robot model. One of [ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e]. Defaults to ur5e."
-  echo "    -h             Print this Help."
-  echo
-}
+URSIM_CMD="ros2 run ur_client_library start_ursim.sh"
 
-ROBOT_MODEL=UR5
-ROBOT_SERIES=e-series
-
-validate_model()
-{
-  case $ROBOT_MODEL in
-    ur3|ur5|ur10)
-      ROBOT_MODEL=${ROBOT_MODEL^^}
-      ROBOT_SERIES=cb3
-      ;;
-    ur3e|ur5e|ur10e|ur16e)
-      ROBOT_MODEL=${ROBOT_MODEL^^}
-      ROBOT_MODEL=$(echo ${ROBOT_MODEL:0:$((${#ROBOT_MODEL}-1))})
-      ROBOT_SERIES=e-series
-      ;;
-    *)
-      echo "Not a valid robot model: $ROBOT_MODEL"
-      exit
-      ;;
-  esac
-}
-
-
-while getopts ":hm:s:" option; do
-  case $option in
-    h) # display Help
-      help
-      exit;;
-    m) # robot model
-      ROBOT_MODEL=${OPTARG}
-      validate_model
-      ;;
-    \?) # invalid option
-      echo "Error: Invalid option"
-      help
-      exit;;
-  esac
-done
-
-URCAP_STORAGE="${PERSISTENT_BASE}/${ROBOT_SERIES}/urcaps"
-PROGRAM_STORAGE="${PERSISTENT_BASE}/${ROBOT_SERIES}/programs"
-
-# Create local storage for programs and URCaps
-mkdir -p "${URCAP_STORAGE}"
-mkdir -p "${PROGRAM_STORAGE}"
-
-# Download external_control URCap
-if [[ ! -f "${URCAP_STORAGE}/externalcontrol-${URCAP_VERSION}.jar" ]]; then
-  curl -L -o "${URCAP_STORAGE}/externalcontrol-${URCAP_VERSION}.jar" \
-    "https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases/download/v${URCAP_VERSION}/externalcontrol-${URCAP_VERSION}.jar"
-fi
-
-# Check whether network already exists
-docker network inspect ursim_net > /dev/null
-if [ $? -eq 0 ]; then
-  echo "ursim_net already exists"
-else
-  echo "Creating ursim_net"
-  docker network create --subnet=192.168.56.0/24 ursim_net
-fi
-
-# run docker container
-docker run --rm -d --net ursim_net --ip 192.168.56.101\
-  -v "${URCAP_STORAGE}":/urcaps \
-  -v "${PROGRAM_STORAGE}":/ursim/programs \
-  -e ROBOT_MODEL="${ROBOT_MODEL}" \
-  --name ursim \
-  universalrobots/ursim_${ROBOT_SERIES} || exit
-
-trap "echo killing; docker container kill ursim; exit" SIGINT SIGTERM
-
-echo "Docker URSim is running"
-printf "\nTo access Polyscope, open the following URL in a web browser.\n\thttp://192.168.56.101:6080/vnc.html\n\n"
-echo "To exit, press CTRL+C"
-
-while :
-do
-  sleep 1
-done
+echo -e "${ORANGE} DEPRECATION WARNING: The script starting URSim was moved to the ur_client_library package. This script here does still work, but will be removed with ROS Jazzy. Please use `${URSIM_CMD}` to start URSim in future."
+$URSIM_CMD
