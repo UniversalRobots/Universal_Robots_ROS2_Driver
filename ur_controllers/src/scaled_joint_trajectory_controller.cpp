@@ -157,7 +157,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   }
 
   // currently carrying out a trajectory
-  if (traj_point_active_ptr_ && (*traj_point_active_ptr_)->has_trajectory_msg()) {
+  if (has_active_trajectory()) {
     // Main Speed scaling difference...
     // Adjust time with scaling factor
     TimeData time_data;
@@ -169,23 +169,21 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     time_data_.writeFromNonRT(time_data);
 
     // if sampling the first time, set the point before you sample
-    if (!(*traj_point_active_ptr_)->is_sampled_already()) {
-      (*traj_point_active_ptr_)->set_point_before_trajectory_msg(traj_time, state_current);
+    if (!traj_external_point_ptr_->is_sampled_already()) {
+      traj_external_point_ptr_->set_point_before_trajectory_msg(traj_time, state_current);
     }
     resize_joint_trajectory_point(state_error, joint_num);
 
     // find segment for current timestamp
     joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
-    const bool valid_point =
-        (*traj_point_active_ptr_)
-            ->sample(traj_time,
-                     joint_trajectory_controller::interpolation_methods::InterpolationMethod::VARIABLE_DEGREE_SPLINE,
-                     state_desired, start_segment_itr, end_segment_itr);
+    const bool valid_point = traj_external_point_ptr_->sample(
+        traj_time, joint_trajectory_controller::interpolation_methods::InterpolationMethod::VARIABLE_DEGREE_SPLINE,
+        state_desired, start_segment_itr, end_segment_itr);
 
     if (valid_point) {
       bool abort = false;
       bool outside_goal_tolerance = false;
-      const bool before_last_point = end_segment_itr != (*traj_point_active_ptr_)->end();
+      const bool before_last_point = end_segment_itr != traj_external_point_ptr_->end();
 
       // set values for next hardware write()
       if (has_position_command_interface_) {
@@ -251,7 +249,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
             RCLCPP_INFO(get_node()->get_logger(), "Goal reached, success!");
           } else if (default_tolerances_.goal_time_tolerance != 0.0) {
             // if we exceed goal_time_toleralance set it to aborted
-            const rclcpp::Time traj_start = (*traj_point_active_ptr_)->get_trajectory_start_time();
+            const rclcpp::Time traj_start = traj_external_point_ptr_->get_trajectory_start_time();
             const rclcpp::Time traj_end = traj_start + start_segment_itr->time_from_start;
 
             // TODO(anyone): This will break in speed scaling we have to discuss how to handle the goal
