@@ -2,6 +2,16 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Handle api changes related to traj_external_point_ptr\_ (`#779 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/779>`_)
+  * Handle api changes related to traj_external_point_ptr\_
+  * Fix formatting
+  ---------
+  Co-authored-by: Robert Wilbrandt <wilbrandt@fzi.de>
+  (cherry picked from commit e2b22b15ca627cfb375c3d58e585e1d3dee5f484)
+* Contributors: Yadu
+
 2.3.2 (2023-06-02)
 ------------------
 * added missing command interfaces into gpio controller (`#693 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/693>`_)
