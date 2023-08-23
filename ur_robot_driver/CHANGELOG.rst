@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.3 (2023-08-23)
+------------------
 * Run robot driver test also with tf_prefix (`#729 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/729>`_) (`#752 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/752>`_)
   * Run robot driver test also with tf_prefix
   * Use tf_prefix substitution in controllers config file
