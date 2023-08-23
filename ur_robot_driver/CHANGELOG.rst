@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.3 (2023-08-23)
+------------------
 * Start ursim from lib (`#733 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/733>`_)
   * Forward start_ursim.sh to the one from the client library
   * Update docs and tests to start ursim from the ur_client_library script
