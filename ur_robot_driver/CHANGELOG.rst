@@ -1,3 +1,36 @@
+Forthcoming
+-----------
+* Run robot driver test also with tf_prefix (`#729 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/729>`_) (`#752 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/752>`_)
+  * Run robot driver test also with tf_prefix
+  * Use tf_prefix substitution in controllers config file
+  * Set default value of tf_prefix in launchfile to empty instead of '""'
+  ---------
+  Co-authored-by: Robert Wilbrandt <wilbrandt@fzi.de>
+  (cherry picked from commit 79bfddc7ac4cd3a69594da26ce6ae8b8024eae73)
+  Co-authored-by: Felix Exner (fexner) <exner@fzi.de>
+* Urscript interface (`#721 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/721>`_)
+  * Add a urscript interface node
+  * Add urscript_interface to standard launchfile
+  * Added documentation for urscript_interface
+  * Add a notice about incorrect script code
+  * Add test for urscript interface
+  * Move tests to one single tests
+  This should avoid that different tests run in parallel
+  * Wait for IO controller before checking IOs
+  * Write an initial textmessage when connecting the urscript_interface
+  * Wait for controller_manager services longer
+  * Make sure we have a clean robot state without any program running once we enter our test
+  similar to how we did it on the robot_driver test
+  * Remove unneeded Destructor definition
+* Use SCHED_FIFO for controller_manager's main thread (`#719 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/719>`_)
+  Previous investigations showed that using FIFO scheduling helps keeping
+  cycle times also non non-RT kernels. This combined with non-blocking read
+  can result in a very stable system.
+  This is, in fact, very close to what the actual controller_manager_node
+  does except that we always use FIFO scheduling independent of the actual
+  kernel in use.
+* Contributors: Felix Exner (fexner), mergify[bot]
+
 2.3.2 (2023-06-02)
 ------------------
 * Adds full nonblocking readout support (Multiarm part 4)  - v2 (`#673 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/673>`_)
