@@ -119,7 +119,7 @@ def generate_test_description(tf_prefix):
             )
         ),
         launch_arguments={
-            "robot_ip": "192.168.56.101",
+            "robot_ip": robot_ip,
             "ur_type": ur_type,
             "launch_rviz": "false",
             "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
@@ -129,7 +129,6 @@ def generate_test_description(tf_prefix):
             "start_joint_controller": "false",
             "tf_prefix": tf_prefix,
         }.items(),
-        condition=IfCondition(launch_ursim),
     )
 
     ursim = ExecuteProcess(
@@ -156,40 +155,19 @@ def generate_test_description(tf_prefix):
             PathJoinSubstitution(
                 [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
             ),
+            robot_ip,
         ],
         name="wait_dashboard_server",
         output="screen",
-        condition=IfCondition(launch_ursim),
     )
 
     driver_starter = RegisterEventHandler(
         OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver),
-        condition=IfCondition(launch_ursim),
-    )
-
-    robot_driver_no_wait = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
-            )
-        ),
-        launch_arguments={
-            "robot_ip": robot_ip,
-            "ur_type": ur_type,
-            "launch_rviz": "false",
-            "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
-            "initial_joint_controller": "scaled_joint_trajectory_controller",
-            "headless_mode": "true",
-            "launch_dashboard_client": "false",
-            "start_joint_controller": "false",
-            "tf_prefix": tf_prefix,
-        }.items(),
-        condition=UnlessCondition(launch_ursim),
     )
 
     return LaunchDescription(
         declared_arguments
-        + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter, robot_driver_no_wait]
+        + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
     )
 
 
