@@ -153,8 +153,7 @@ def generate_test_description():
     )
 
     return LaunchDescription(
-        declared_arguments
-        + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
+        declared_arguments + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
     )
 
 

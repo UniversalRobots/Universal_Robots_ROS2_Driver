@@ -166,8 +166,7 @@ def generate_test_description(tf_prefix):
     )
 
     return LaunchDescription(
-        declared_arguments
-        + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
+        declared_arguments + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
     )
 
 
