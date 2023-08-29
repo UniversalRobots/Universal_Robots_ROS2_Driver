@@ -39,13 +39,14 @@ body:
       label: Which combination of platform is the ROS driver running on.
       multiple: true
       options:
-        - Linux without realtime patch
-        - Linux with realtime patch
+        - Ubuntu Linux with standard kernel
+        - Ubuntu Linux with lowlatency kernel
+        - Ubuntu Linux with realtime patch
         - Linux in a virtual machine
         - Docker
         - Windows using WSL2
         - Windows
-        - Linux
+        - Other Linux system
         - Mac
         - Other
     validations:
@@ -126,7 +127,7 @@ body:
     id: logs
     attributes:
       label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      description: Please copy and paste any relevant log output. For the output to be usable, please copy the complete output of the shell where you launch the driver. This will be automatically formatted into code, so no need for backticks.
       render: shell
 
   - type: checkboxes
