@@ -5,10 +5,14 @@ name: Format
 
 on:
   workflow_dispatch:
+    branches:
+      - iron
   pull_request:
+    branches:
+      - iron
   push:
     branches:
-      - main
+      - iron
 
 jobs:
   pre-commit:

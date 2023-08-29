@@ -2,7 +2,7 @@ name: Coverage Build
 on:
   pull_request:
     branches:
-      - main
+      - iron
 
 jobs:
   coverage:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
     env:
-      ROS_DISTRO: rolling
+      ROS_DISTRO: iron
       ros_version: 2
     steps:
       - uses: ros-tooling/setup-ros@v0.6
