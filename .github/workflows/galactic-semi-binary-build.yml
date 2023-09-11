@@ -18,7 +18,7 @@ jobs:
       NOT_TEST_BUILD: true
       NOT_TEST_DOWNSTREAM: true
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: galactic
       - uses: 'ros-industrial/industrial_ci@master'
