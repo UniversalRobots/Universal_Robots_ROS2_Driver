@@ -1,3 +1,50 @@
+2.4.0 (2023-08-28)
+------------------
+* Start ursim from lib (`#733 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/733>`_)
+  * Forward start_ursim.sh to the one from the client library
+  * Update docs and tests to start ursim from the ur_client_library script
+* Update velocity-control on feature list (`#573 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/573>`_)
+  ros2_controllers jtc does support velocity control by now, so we should not state it doesn't.
+* Introduced tf_prefix into log handler (`#713 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/713>`_)
+  * Introduced tf_prefix into log handler
+  * added default argument to prefix
+  ---------
+  Co-authored-by: Lennart Nachtigall <firesurfer@firesurfer.de>
+  Co-authored-by: Felix Exner <exner@fzi.de>
+  Co-authored-by: Lennart Nachtigall <lennart.nachtigall@sci-mo.de>
+* Run robot driver test also with tf_prefix (`#729 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/729>`_)
+  * Run robot driver test also with tf_prefix
+  * Use tf_prefix substitution in controllers config file
+  * Set default value of tf_prefix in launchfile to empty instead of '""'
+  ---------
+  Co-authored-by: Robert Wilbrandt <wilbrandt@fzi.de>
+* Use mock_hardware and mock_sensor_commands instead of fake (`#739 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/739>`_)
+  * Use mock_hardware and mock_sensor_commands instead of fake
+  This has been deprecated a while back and was never adapted.
+  * Update documentation to mock_hardware
+* Urscript interface (`#721 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/721>`_)
+  * Add a urscript interface node
+  * Add urscript_interface to standard launchfile
+  * Added documentation for urscript_interface
+  * Add a notice about incorrect script code
+  * Add test for urscript interface
+  * Move tests to one single tests
+  This should avoid that different tests run in parallel
+  * Wait for IO controller before checking IOs
+  * Write an initial textmessage when connecting the urscript_interface
+  * Wait for controller_manager services longer
+  * Make sure we have a clean robot state without any program running once we enter our test
+  similar to how we did it on the robot_driver test
+  * Remove unneeded Destructor definition
+* Use SCHED_FIFO for controller_manager's main thread (`#719 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/719>`_)
+  Previous investigations showed that using FIFO scheduling helps keeping
+  cycle times also non non-RT kernels. This combined with non-blocking read
+  can result in a very stable system.
+  This is, in fact, very close to what the actual controller_manager_node
+  does except that we always use FIFO scheduling independent of the actual
+  kernel in use.
+* Contributors: Felix Exner (fexner), Lennart Nachtigall
+
 2.3.2 (2023-06-02)
 ------------------
 * Adds full nonblocking readout support (Multiarm part 4)  - v2 (`#673 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/673>`_)
