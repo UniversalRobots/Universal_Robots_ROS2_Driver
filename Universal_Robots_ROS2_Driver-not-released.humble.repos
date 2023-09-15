@@ -7,4 +7,4 @@ repositories:
   Universal_Robots_ROS2_Description:
     type: git
     url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git
-    version: ros2
+    version: humble
