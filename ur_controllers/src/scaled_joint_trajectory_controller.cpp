@@ -249,7 +249,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
             RCLCPP_INFO(get_node()->get_logger(), "Goal reached, success!");
           } else if (default_tolerances_.goal_time_tolerance != 0.0) {
             // if we exceed goal_time_toleralance set it to aborted
-            const rclcpp::Time traj_start = traj_external_point_ptr_->get_trajectory_start_time();
+            const rclcpp::Time traj_start = traj_external_point_ptr_->time_from_start();
             const rclcpp::Time traj_end = traj_start + start_segment_itr->time_from_start;
 
             // TODO(anyone): This will break in speed scaling we have to discuss how to handle the goal
