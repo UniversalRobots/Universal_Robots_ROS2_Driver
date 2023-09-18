@@ -12,6 +12,9 @@ controller_manager:
     force_torque_sensor_broadcaster:
       type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
 
+    tcp_pose_broadcaster:
+      type: ur_controllers/PoseBroadcaster
+
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
@@ -46,6 +49,12 @@ force_torque_sensor_broadcaster:
       - torque.z
     frame_id: $(var tf_prefix)tool0
     topic_name: ft_data
+
+tcp_pose_broadcaster:
+  ros__parameters:
+    sensor_name: $(var tf_prefix)tcp_pose_sensor
+    child_frame_id: $(var tf_prefix)tool0_controller
+    parent_frame_id: $(var tf_prefix)base
 
 
 joint_trajectory_controller:

@@ -38,6 +38,7 @@
 //----------------------------------------------------------------------
 #include <algorithm>
 #include <memory>
+#include <rclcpp/logging.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -169,9 +170,16 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
                                                                    &speed_scaling_combined_));
 
   for (auto& sensor : info_.sensors) {
-    for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name,
-                                                                       &urcl_ft_sensor_measurements_[j]));
+    if (sensor.name == tf_prefix + "tcp_fts_sensor") {
+      for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
+        state_interfaces.emplace_back(hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name,
+                                                                         &urcl_ft_sensor_measurements_[j]));
+      }
+    } else if (sensor.name == tf_prefix + "tcp_pose_sensor") {
+      for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
+        state_interfaces.emplace_back(
+            hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name, &urcl_tcp_pose_[j]));
+      }
     }
   }
 
@@ -421,6 +429,8 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
   // distiguishable in the log
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
+  tcp_transform_.header.frame_id = tf_prefix + "base";
+  tcp_transform_.child_frame_id = tf_prefix + "tool0_controller";
   registerUrclLogHandler(tf_prefix);
   try {
     rtde_comm_has_been_started_ = false;
@@ -784,6 +794,8 @@ void URPositionHardwareInterface::extractToolPose()
   tcp_transform_.transform.translation.z = urcl_tcp_pose_[2];
 
   tcp_transform_.transform.rotation = tf2::toMsg(rotation);
+  RCLCPP_INFO_STREAM_THROTTLE(rclcpp::get_logger("URPositionHardwareInterface"), *this->get_clock(), 500,
+                              "TCP pose" << rosidl_generator_traits::to_yaml(tcp_transform_));
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
