@@ -20,7 +20,7 @@ The arguments for launch files can be listed using ``ros2 launch ur_robot_driver
 The most relevant arguments are the following:
 
 
-* ``ur_type`` (\ *mandatory* ) - a type of used UR robot (\ *ur3*\ , *ur3e*\ , *ur5*\ , *ur5e*\ , *ur10*\ , *ur10e*\ , or *ur16e*\ ).
+* ``ur_type`` (\ *mandatory* ) - a type of used UR robot (\ *ur3*\ , *ur3e*\ , *ur5*\ , *ur5e*\ , *ur10*\ , *ur10e*\ , or *ur16e*\ , *ur20*\ ).
 * ``robot_ip`` (\ *mandatory* ) - IP address by which the root can be reached.
 * ``use_mock_hardware`` (default: *false* ) - use simple hardware emulator from ros2_control.
   Useful for testing launch files, descriptions, etc. See explanation below.
@@ -106,7 +106,7 @@ For details on the Docker image, please see the more detailed guide :ref:`here <
 Example Commands for Testing the Driver
 ---------------------------------------
 
-Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10``\ , ``ur10e``\ , ``ur16e``.
+Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10``\ , ``ur10e``\ , ``ur16e``\ , ``ur20``.
 
 1. Start hardware, simulator or mockup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
