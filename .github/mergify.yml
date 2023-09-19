@@ -7,8 +7,7 @@ pull_request_rules:
       backport:
         branches:
           - humble
-      label:
-        add:
+        labels:
           - humble
 
   - name: Backport to iron branch
@@ -19,6 +18,5 @@ pull_request_rules:
       backport:
         branches:
           - iron
-      label:
-        add:
+        labels:
           - iron
