@@ -51,6 +51,7 @@ from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from launch_testing.actions import ReadyToTest
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from sensor_msgs.msg import JointState
 from std_srvs.srv import Trigger
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from ur_dashboard_msgs.msg import RobotMode
@@ -376,14 +377,80 @@ class RobotDriverTest(unittest.TestCase):
             )
             self.assertIn(
                 result.error_code,
-                (
-                    FollowJointTrajectory.Result.PATH_TOLERANCE_VIOLATED,
-                    FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED,
-                    FollowJointTrajectory.Result.SUCCESSFUL,
-                ),
+                (FollowJointTrajectory.Result.SUCCESSFUL,),
             )
 
             self.node.get_logger().info("Received result")
+
+    def test_trajectory_scaled_aborts_on_violation(self, tf_prefix):
+        """Test that the robot correctly aborts the trajectory when the constraints are violated."""
+        # Construct test trajectory
+        test_trajectory = [
+            (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
+            (
+                Duration(sec=6, nanosec=50000000),
+                [-1.0 for j in ROBOT_JOINTS],
+            ),  # physically unfeasible
+            (Duration(sec=8, nanosec=0), [-1.5 for j in ROBOT_JOINTS]),  # physically unfeasible
+        ]
+
+        trajectory = JointTrajectory(
+            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+            points=[
+                JointTrajectoryPoint(positions=test_pos, time_from_start=test_time)
+                for (test_time, test_pos) in test_trajectory
+            ],
+        )
+
+        last_joint_state = None
+
+        def js_cb(msg):
+            nonlocal last_joint_state
+            last_joint_state = msg
+
+        joint_state_sub = self.node.create_subscription(JointState, "/joint_states", js_cb, 1)
+        joint_state_sub  # prevent warning about unused variable
+
+        goal = FollowJointTrajectory.Goal(trajectory=trajectory)
+
+        self.node.get_logger().info("Sending goal for robot to follow")
+        goal_response = self.call_action(
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory", goal
+        )
+
+        self.assertEqual(goal_response.accepted, True)
+
+        if goal_response.accepted:
+            result = self.get_result(
+                "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+                goal_response,
+                TIMEOUT_EXECUTE_TRAJECTORY,
+            )
+            self.assertIn(
+                result.error_code,
+                (FollowJointTrajectory.Result.PATH_TOLERANCE_VIOLATED,),
+            )
+            self.node.get_logger().info("Received result")
+
+            # self.node.get_logger().info(f"Joint state before sleep {last_joint_state.position}")
+            state_when_aborted = last_joint_state
+
+            # This section is to make sure the robot stopped moving once the trajectory was aborted
+            time.sleep(2.0)
+            # Ugly workaround since we want to wait for a joint state in the same thread
+            while last_joint_state == state_when_aborted:
+                rclpy.spin_once(self.node)
+            state_after_sleep = last_joint_state
+            self.node.get_logger().info(f"before: {state_when_aborted.position.tolist()}")
+            self.node.get_logger().info(f"after: {state_after_sleep.position.tolist()}")
+            self.assertTrue(
+                all(
+                    [
+                        abs(a - b) < 0.01
+                        for a, b in zip(state_after_sleep.position, state_when_aborted.position)
+                    ]
+                )
+            )
 
         # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
         # see https://github.com/ros-controls/ros2_controllers/issues/249
