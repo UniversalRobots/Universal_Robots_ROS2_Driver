@@ -93,20 +93,24 @@ For getting started, you'll basically need three steps:
 binary package installation unless you want to join development and submit changes.
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
-robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html)
+   robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html)
+   and [create a program for external
+   control](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/install_urcap_e_series.html).
 
-Please do this step carefully and extract the calibration as explained
-[here](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html#extract-calibration-information).
-Otherwise the TCP's pose will not be correct inside the ROS ecosystem.
+   Please do this step carefully and extract the calibration as explained
+   [here](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html#extract-calibration-information).
+   Otherwise the TCP's pose will not be correct inside the ROS ecosystem.
 
-If no real robot is required, you can [use a simulated
-robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator)
-that will behave almost exactly like the real robot.
+   If no real robot is required, you can [use a simulated
+   robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator)
+   that will behave almost exactly like the real robot.
 
 
 3. **Start the driver**. See the [usage
    documentation](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for
    details.
+
+4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
 
 ### Install from binary packages
 1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html). This
