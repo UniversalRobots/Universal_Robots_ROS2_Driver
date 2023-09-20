@@ -74,7 +74,7 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_activat
 }
 
 controller_interface::return_type ScaledJointTrajectoryController::update(const rclcpp::Time& time,
-                                                                          const rclcpp::Duration& /*period*/)
+                                                                          const rclcpp::Duration& period)
 {
   if (state_interfaces_.back().get_name() == scaled_params_.speed_scaling_interface_name) {
     scaling_factor_ = state_interfaces_.back().get_value();
@@ -87,20 +87,17 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     return controller_interface::return_type::OK;
   }
 
-  auto resize_joint_trajectory_point = [&](trajectory_msgs::msg::JointTrajectoryPoint& point, size_t size) {
-    point.positions.resize(size);
-    if (has_velocity_state_interface_) {
-      point.velocities.resize(size);
-    }
-    if (has_acceleration_state_interface_) {
-      point.accelerations.resize(size);
-    }
-  };
-  auto compute_error_for_joint = [&](JointTrajectoryPoint& error, int index, const JointTrajectoryPoint& current,
+  auto compute_error_for_joint = [&](JointTrajectoryPoint& error, size_t index, const JointTrajectoryPoint& current,
                                      const JointTrajectoryPoint& desired) {
     // error defined as the difference between current and desired
-    error.positions[index] = angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
-    if (has_velocity_state_interface_ && has_velocity_command_interface_) {
+    if (normalize_joint_error_[index]) {
+      // if desired, the shortest_angular_distance is calculated, i.e., the error is
+      //  normalized between -pi<error<pi
+      error.positions[index] = angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
+    } else {
+      error.positions[index] = desired.positions[index] - current.positions[index];
+    }
+    if (has_velocity_state_interface_ && (has_velocity_command_interface_ || has_effort_command_interface_)) {
       error.velocities[index] = desired.velocities[index] - current.velocities[index];
     }
     if (has_acceleration_state_interface_ && has_acceleration_command_interface_) {
@@ -108,53 +105,31 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     }
   };
 
+  // don't update goal after we sampled the trajectory to avoid any racecondition
+  const auto active_goal = *rt_active_goal_.readFromRT();
+
   // Check if a new external message has been received from nonRT threads
   auto current_external_msg = traj_external_point_ptr_->get_trajectory_msg();
   auto new_external_msg = traj_msg_external_point_ptr_.readFromRT();
-  if (current_external_msg != *new_external_msg) {
+  // Discard, if a goal is pending but still not active (somewhere stuck in goal_handle_timer_)
+  if (current_external_msg != *new_external_msg && (*(rt_has_pending_goal_.readFromRT()) && !active_goal) == false) {
     fill_partial_goal(*new_external_msg);
     sort_to_local_joint_order(*new_external_msg);
+    // TODO(denis): Add here integration of position and velocity
     traj_external_point_ptr_->update(*new_external_msg);
   }
 
-  JointTrajectoryPoint state_current, state_desired, state_error;
-  const auto joint_num = params_.joints.size();
-  resize_joint_trajectory_point(state_current, joint_num);
+  // TODO(anyone): can I here also use const on joint_interface since the reference_wrapper is not
+  // changed, but its value only?
+  auto assign_interface_from_point = [&](auto& joint_interface, const std::vector<double>& trajectory_point_interface) {
+    for (size_t index = 0; index < dof_; ++index) {
+      joint_interface[index].get().set_value(trajectory_point_interface[index]);
+    }
+  };
 
   // current state update
-  auto assign_point_from_interface = [&, joint_num](std::vector<double>& trajectory_point_interface,
-                                                    const auto& joint_inteface) {
-    for (auto index = 0ul; index < joint_num; ++index) {
-      trajectory_point_interface[index] = joint_inteface[index].get().get_value();
-    }
-  };
-  auto assign_interface_from_point = [&, joint_num](auto& joint_inteface,
-                                                    const std::vector<double>& trajectory_point_interface) {
-    for (auto index = 0ul; index < joint_num; ++index) {
-      joint_inteface[index].get().set_value(trajectory_point_interface[index]);
-    }
-  };
-
-  state_current.time_from_start.set__sec(0);
-
-  // Assign values from the hardware
-  // Position states always exist
-  assign_point_from_interface(state_current.positions, joint_state_interface_[0]);
-  // velocity and acceleration states are optional
-  if (has_velocity_state_interface_) {
-    assign_point_from_interface(state_current.velocities, joint_state_interface_[1]);
-    // Acceleration is used only in combination with velocity
-    if (has_acceleration_state_interface_) {
-      assign_point_from_interface(state_current.accelerations, joint_state_interface_[2]);
-    } else {
-      // Make empty so the property is ignored during interpolation
-      state_current.accelerations.clear();
-    }
-  } else {
-    // Make empty so the property is ignored during interpolation
-    state_current.velocities.clear();
-    state_current.accelerations.clear();
-  }
+  state_current_.time_from_start.set__sec(0);
+  read_state_from_hardware(state_current_);
 
   // currently carrying out a trajectory
   if (has_active_trajectory()) {
@@ -162,114 +137,186 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     // Adjust time with scaling factor
     TimeData time_data;
     time_data.time = time;
-    rcl_duration_value_t period = (time_data.time - time_data_.readFromRT()->time).nanoseconds();
-    time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * period);
+    rcl_duration_value_t t_period = (time_data.time - time_data_.readFromRT()->time).nanoseconds();
+    time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * t_period);
     time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
-    rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration::from_nanoseconds(period);
+    rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration::from_nanoseconds(t_period);
     time_data_.writeFromNonRT(time_data);
 
+    bool first_sample = false;
     // if sampling the first time, set the point before you sample
     if (!traj_external_point_ptr_->is_sampled_already()) {
-      traj_external_point_ptr_->set_point_before_trajectory_msg(traj_time, state_current);
+      first_sample = true;
+      if (params_.open_loop_control) {
+        traj_external_point_ptr_->set_point_before_trajectory_msg(traj_time, last_commanded_state_);
+      } else {
+        traj_external_point_ptr_->set_point_before_trajectory_msg(traj_time, state_current_);
+      }
     }
-    resize_joint_trajectory_point(state_error, joint_num);
 
     // find segment for current timestamp
     joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
-    const bool valid_point = traj_external_point_ptr_->sample(
-        traj_time, joint_trajectory_controller::interpolation_methods::InterpolationMethod::VARIABLE_DEGREE_SPLINE,
-        state_desired, start_segment_itr, end_segment_itr);
+    const bool valid_point = traj_external_point_ptr_->sample(traj_time, interpolation_method_, state_desired_,
+                                                              start_segment_itr, end_segment_itr);
 
     if (valid_point) {
-      bool abort = false;
+      const rclcpp::Time traj_start = traj_external_point_ptr_->time_from_start();
+      // this is the time instance
+      // - started with the first segment: when the first point will be reached (in the future)
+      // - later: when the point of the current segment was reached
+      const rclcpp::Time segment_time_from_start = traj_start + start_segment_itr->time_from_start;
+      // time_difference is
+      // - negative until first point is reached
+      // - counting from zero to time_from_start of next point
+      double time_difference = time.seconds() - segment_time_from_start.seconds();
+      bool tolerance_violated_while_moving = false;
       bool outside_goal_tolerance = false;
+      bool within_goal_time = true;
       const bool before_last_point = end_segment_itr != traj_external_point_ptr_->end();
 
-      // set values for next hardware write()
-      if (has_position_command_interface_) {
-        assign_interface_from_point(joint_command_interface_[0], state_desired.positions);
-      }
-      if (has_velocity_command_interface_) {
-        assign_interface_from_point(joint_command_interface_[1], state_desired.velocities);
-      }
-      if (has_acceleration_command_interface_) {
-        assign_interface_from_point(joint_command_interface_[2], state_desired.accelerations);
+      // have we reached the end, are not holding position, and is a timeout configured?
+      // Check independently of other tolerances
+      if (!before_last_point && *(rt_is_holding_.readFromRT()) == false && cmd_timeout_ > 0.0 &&
+          time_difference > cmd_timeout_) {
+        RCLCPP_WARN(get_node()->get_logger(), "Aborted due to command timeout");
+
+        traj_msg_external_point_ptr_.reset();
+        traj_msg_external_point_ptr_.initRT(set_hold_position());
       }
 
-      for (size_t index = 0; index < joint_num; ++index) {
-        // set values for next hardware write()
-        compute_error_for_joint(state_error, index, state_current, state_desired);
+      // Check state/goal tolerance
+      for (size_t index = 0; index < dof_; ++index) {
+        compute_error_for_joint(state_error_, index, state_current_, state_desired_);
 
-        if (before_last_point &&
-            !check_state_tolerance_per_joint(state_error, index, default_tolerances_.state_tolerance[index], true)) {
-          abort = true;
+        // Always check the state tolerance on the first sample in case the first sample
+        // is the last point
+        if ((before_last_point || first_sample) &&
+            !check_state_tolerance_per_joint(state_error_, index, default_tolerances_.state_tolerance[index], false) &&
+            *(rt_is_holding_.readFromRT()) == false) {
+          tolerance_violated_while_moving = true;
         }
         // past the final point, check that we end up inside goal tolerance
-        if (!before_last_point && !check_state_tolerance_per_joint(
-                                      state_error, index, default_tolerances_.goal_state_tolerance[index], true)) {
+        if (!before_last_point &&
+            !check_state_tolerance_per_joint(state_error_, index, default_tolerances_.goal_state_tolerance[index],
+                                             false) &&
+            *(rt_is_holding_.readFromRT()) == false) {
           outside_goal_tolerance = true;
+
+          if (default_tolerances_.goal_time_tolerance != 0.0) {
+            if (time_difference > default_tolerances_.goal_time_tolerance) {
+              within_goal_time = false;
+            }
+          }
         }
       }
 
-      const auto active_goal = *rt_active_goal_.readFromRT();
+      // set values for next hardware write() if tolerance is met
+      if (!tolerance_violated_while_moving && within_goal_time) {
+        if (use_closed_loop_pid_adapter_) {
+          // Update PIDs
+          for (auto i = 0ul; i < dof_; ++i) {
+            tmp_command_[i] = (state_desired_.velocities[i] * ff_velocity_scale_[i]) +
+                              pids_[i]->computeCommand(state_error_.positions[i], state_error_.velocities[i],
+                                                       (uint64_t)period.nanoseconds());
+          }
+        }
+
+        // set values for next hardware write()
+        if (has_position_command_interface_) {
+          assign_interface_from_point(joint_command_interface_[0], state_desired_.positions);
+        }
+        if (has_velocity_command_interface_) {
+          if (use_closed_loop_pid_adapter_) {
+            assign_interface_from_point(joint_command_interface_[1], tmp_command_);
+          } else {
+            assign_interface_from_point(joint_command_interface_[1], state_desired_.velocities);
+          }
+        }
+        if (has_acceleration_command_interface_) {
+          assign_interface_from_point(joint_command_interface_[2], state_desired_.accelerations);
+        }
+        if (has_effort_command_interface_) {
+          assign_interface_from_point(joint_command_interface_[3], tmp_command_);
+        }
+
+        // store the previous command. Used in open-loop control mode
+        last_commanded_state_ = state_desired_;
+      }
+
       if (active_goal) {
         // send feedback
         auto feedback = std::make_shared<FollowJTrajAction::Feedback>();
         feedback->header.stamp = time;
         feedback->joint_names = params_.joints;
 
-        feedback->actual = state_current;
-        feedback->desired = state_desired;
-        feedback->error = state_error;
+        feedback->actual = state_current_;
+        feedback->desired = state_desired_;
+        feedback->error = state_error_;
         active_goal->setFeedback(feedback);
 
         // check abort
-        if (abort || outside_goal_tolerance) {
+        if (tolerance_violated_while_moving) {
           auto result = std::make_shared<FollowJTrajAction::Result>();
-
-          if (abort) {
-            RCLCPP_WARN(get_node()->get_logger(), "Aborted due to state tolerance violation");
-            result->set__error_code(FollowJTrajAction::Result::PATH_TOLERANCE_VIOLATED);
-          } else if (outside_goal_tolerance) {
-            RCLCPP_WARN(get_node()->get_logger(), "Aborted due to goal tolerance violation");
-            result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
-          }
+          result->set__error_code(FollowJTrajAction::Result::PATH_TOLERANCE_VIOLATED);
           active_goal->setAborted(result);
+          // TODO(matthew-reynolds): Need a lock-free write here
+          // See https://github.com/ros-controls/ros2_controllers/issues/168
           rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-        }
+          rt_has_pending_goal_.writeFromNonRT(false);
 
-        // check goal tolerance
-        if (!before_last_point) {
+          RCLCPP_WARN(get_node()->get_logger(), "Aborted due to state tolerance violation");
+
+          traj_msg_external_point_ptr_.reset();
+          traj_msg_external_point_ptr_.initRT(set_hold_position());
+        } else if (!before_last_point) {  // check goal tolerance
           if (!outside_goal_tolerance) {
             auto res = std::make_shared<FollowJTrajAction::Result>();
             res->set__error_code(FollowJTrajAction::Result::SUCCESSFUL);
             active_goal->setSucceeded(res);
+            // TODO(matthew-reynolds): Need a lock-free write here
+            // See https://github.com/ros-controls/ros2_controllers/issues/168
             rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+            rt_has_pending_goal_.writeFromNonRT(false);
 
             RCLCPP_INFO(get_node()->get_logger(), "Goal reached, success!");
-          } else if (default_tolerances_.goal_time_tolerance != 0.0) {
-            // if we exceed goal_time_toleralance set it to aborted
-            const rclcpp::Time traj_start = traj_external_point_ptr_->get_trajectory_start_time();
-            const rclcpp::Time traj_end = traj_start + start_segment_itr->time_from_start;
 
-            // TODO(anyone): This will break in speed scaling we have to discuss how to handle the goal
-            // time when the robot scales itself down.
-            const double difference = time.seconds() - traj_end.seconds();
-            if (difference > default_tolerances_.goal_time_tolerance) {
-              auto result = std::make_shared<FollowJTrajAction::Result>();
-              result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
-              active_goal->setAborted(result);
-              rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-              RCLCPP_WARN(get_node()->get_logger(), "Aborted due goal_time_tolerance exceeding by %f seconds",
-                          difference);
-            }
+            traj_msg_external_point_ptr_.reset();
+            traj_msg_external_point_ptr_.initRT(set_hold_position());
+          } else if (!within_goal_time) {
+            auto result = std::make_shared<FollowJTrajAction::Result>();
+            result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
+            active_goal->setAborted(result);
+            // TODO(matthew-reynolds): Need a lock-free write here
+            // See https://github.com/ros-controls/ros2_controllers/issues/168
+            rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+            rt_has_pending_goal_.writeFromNonRT(false);
+
+            RCLCPP_WARN(get_node()->get_logger(), "Aborted due goal_time_tolerance exceeding by %f seconds",
+                        time_difference);
+
+            traj_msg_external_point_ptr_.reset();
+            traj_msg_external_point_ptr_.initRT(set_hold_position());
           }
         }
+      } else if (tolerance_violated_while_moving && *(rt_has_pending_goal_.readFromRT()) == false) {
+        // we need to ensure that there is no pending goal -> we get a race condition otherwise
+        RCLCPP_ERROR(get_node()->get_logger(), "Holding position due to state tolerance violation");
+
+        traj_msg_external_point_ptr_.reset();
+        traj_msg_external_point_ptr_.initRT(set_hold_position());
+      } else if (!before_last_point && !within_goal_time && *(rt_has_pending_goal_.readFromRT()) == false) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Exceeded goal_time_tolerance: holding position...");
+
+        traj_msg_external_point_ptr_.reset();
+        traj_msg_external_point_ptr_.initRT(set_hold_position());
       }
+      // else, run another cycle while waiting for outside_goal_tolerance
+      // to be satisfied (will stay in this state until new message arrives)
+      // or outside_goal_tolerance violated within the goal_time_tolerance
     }
   }
 
-  publish_state(time, state_desired, state_current, state_error);
+  publish_state(time, state_desired_, state_current_, state_error_);
   return controller_interface::return_type::OK;
 }
 
