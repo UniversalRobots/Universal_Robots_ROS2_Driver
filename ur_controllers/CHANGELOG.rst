@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update sjtc to newest upstream API (`#813 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/813>`_)
+* Contributors: Felix Exner
+
 2.3.3 (2023-08-23)
 ------------------
 * Handle api changes related to traj_external_point_ptr\_ (`#779 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/779>`_)
