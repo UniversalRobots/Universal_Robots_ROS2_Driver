@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.4 (2023-09-21)
+------------------
 * Update sjtc to newest upstream API (`#813 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/813>`_)
 * Contributors: Felix Exner
 
