@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.4.1 (2023-09-21)
+------------------
 * Added a test that sjtc correctly aborts on violation of constraints (`#810 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/810>`_)
 * Added support for UR20 (`#797 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/797>`_)
 * Contributors: Felix Exner
