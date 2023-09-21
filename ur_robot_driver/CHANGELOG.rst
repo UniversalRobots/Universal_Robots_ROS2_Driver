@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.4 (2023-09-21)
+------------------
 * Added a test that sjtc correctly aborts on violation of constraints (`#813 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/813>`_)
 * Added support for UR20 (`#806 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/806>`_)
 * Introduced tf_prefix into log handler (`#713 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/713>`_)

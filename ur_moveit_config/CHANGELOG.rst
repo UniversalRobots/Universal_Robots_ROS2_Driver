@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.4 (2023-09-21)
+------------------
 * Added support for UR20 (`#806 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/806>`_)
 * Contributors: Felix Exner
 
