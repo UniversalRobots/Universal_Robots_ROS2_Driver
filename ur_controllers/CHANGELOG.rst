@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update sjtc to newest upstream API
+* Contributors: Felix Exner
+
 2.2.8 (2023-06-26)
 ------------------
 
