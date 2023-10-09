@@ -595,7 +595,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "reverse_port",
             default_value="50001",
-            description="Port that will be opened to communicate between the driver and the robot controller."
+            description="Port that will be opened to communicate between the driver and the robot controller.",
         )
     )
     declared_arguments.append(
