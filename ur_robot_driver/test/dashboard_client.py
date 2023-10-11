@@ -28,17 +28,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
+import os
+import sys
 import time
 import unittest
 
 import pytest
 import rclpy
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
-from launch_testing.actions import ReadyToTest
 from rclpy.node import Node
 from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
@@ -50,6 +46,9 @@ from ur_dashboard_msgs.srv import (
     Load,
 )
 
+sys.path.append(os.path.dirname(__file__))
+from test_common import generate_dashboard_test_description  # noqa: E402
+
 TIMEOUT_WAIT_SERVICE = 10
 # If we download the docker image simultaneously to the tests, it can take quite some time until the
 # dashboard server is reachable and usable.
@@ -58,52 +57,7 @@ TIMEOUT_WAIT_SERVICE_INITIAL = 120
 
 @pytest.mark.launch_test
 def generate_test_description():
-    declared_arguments = []
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ur_type",
-            default_value="ur5e",
-            description="Type/series of used UR robot.",
-            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20"],
-        )
-    )
-
-    ur_type = LaunchConfiguration("ur_type")
-
-    dashboard_client = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare("ur_robot_driver"),
-                    "launch",
-                    "ur_dashboard_client.launch.py",
-                ]
-            )
-        ),
-        launch_arguments={
-            "robot_ip": "192.168.56.101",
-        }.items(),
-    )
-    ursim = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [
-                    FindPackagePrefix("ur_client_library"),
-                    "lib",
-                    "ur_client_library",
-                    "start_ursim.sh",
-                ]
-            ),
-            " ",
-            "-m ",
-            ur_type,
-        ],
-        name="start_ursim",
-        output="screen",
-    )
-
-    return LaunchDescription(declared_arguments + [ReadyToTest(), dashboard_client, ursim])
+    return generate_dashboard_test_description()
 
 
 class DashboardClientTest(unittest.TestCase):

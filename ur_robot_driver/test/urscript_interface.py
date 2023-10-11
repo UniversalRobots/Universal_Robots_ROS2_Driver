@@ -27,26 +27,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import pytest
+import os
+import sys
 import time
 import unittest
 
+import pytest
 import rclpy
 import rclpy.node
-from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    ExecuteProcess,
-    IncludeLaunchDescription,
-    RegisterEventHandler,
-)
-from launch.event_handlers import OnProcessExit
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
-from launch_testing.actions import ReadyToTest
-from std_srvs.srv import Trigger
+from controller_manager_msgs.srv import ListControllers
 from std_msgs.msg import String as StringMsg
+from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
     GetLoadedProgram,
@@ -56,8 +47,9 @@ from ur_dashboard_msgs.srv import (
     Load,
 )
 from ur_msgs.msg import IOStates
-from controller_manager_msgs.srv import ListControllers
 
+sys.path.append(os.path.dirname(__file__))
+from test_common import generate_driver_test_description  # noqa: E402
 
 ROBOT_IP = "192.168.56.101"
 TIMEOUT_WAIT_SERVICE = 10
@@ -68,72 +60,7 @@ TIMEOUT_WAIT_SERVICE_INITIAL = 120
 
 @pytest.mark.launch_test
 def generate_test_description():
-    declared_arguments = []
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ur_type",
-            default_value="ur5e",
-            description="Type/series of used UR robot.",
-            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20"],
-        )
-    )
-
-    ur_type = LaunchConfiguration("ur_type")
-
-    robot_driver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
-            )
-        ),
-        launch_arguments={
-            "robot_ip": "192.168.56.101",
-            "ur_type": ur_type,
-            "launch_rviz": "false",
-            "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
-            "initial_joint_controller": "scaled_joint_trajectory_controller",
-            "headless_mode": "true",
-            "launch_dashboard_client": "false",
-            "start_joint_controller": "false",
-        }.items(),
-    )
-
-    ursim = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [
-                    FindPackagePrefix("ur_client_library"),
-                    "lib",
-                    "ur_client_library",
-                    "start_ursim.sh",
-                ]
-            ),
-            " ",
-            "-m ",
-            ur_type,
-        ],
-        name="start_ursim",
-        output="screen",
-    )
-
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
-
-    driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
-    )
-
-    return LaunchDescription(
-        declared_arguments + [ReadyToTest(), wait_dashboard_server, driver_starter, ursim]
-    )
+    return generate_driver_test_description()
 
 
 class URScriptInterfaceTest(unittest.TestCase):

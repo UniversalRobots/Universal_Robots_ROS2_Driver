@@ -28,6 +28,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
+import os
+import sys
 import time
 import unittest
 
@@ -37,18 +39,6 @@ import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from controller_manager_msgs.srv import SwitchController
-from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    ExecuteProcess,
-    IncludeLaunchDescription,
-    RegisterEventHandler,
-)
-from launch.event_handlers import OnProcessExit
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
-from launch_testing.actions import ReadyToTest
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
@@ -58,6 +48,9 @@ from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import GetRobotMode
 from ur_msgs.msg import IOStates
 from ur_msgs.srv import SetIO
+
+sys.path.append(os.path.dirname(__file__))
+from test_common import generate_driver_test_description  # noqa: 402
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
@@ -80,69 +73,8 @@ ROBOT_JOINTS = [
     [(""), ("my_ur_")],
 )
 def generate_test_description(tf_prefix):
-    declared_arguments = []
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ur_type",
-            default_value="ur5e",
-            description="Type/series of used UR robot.",
-            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20"],
-        )
-    )
-
-    ur_type = LaunchConfiguration("ur_type")
-
-    robot_driver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
-            )
-        ),
-        launch_arguments={
-            "robot_ip": "192.168.56.101",
-            "ur_type": ur_type,
-            "launch_rviz": "false",
-            "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
-            "initial_joint_controller": "scaled_joint_trajectory_controller",
-            "headless_mode": "true",
-            "launch_dashboard_client": "false",
-            "start_joint_controller": "false",
-            "tf_prefix": tf_prefix,
-        }.items(),
-    )
-    ursim = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [
-                    FindPackagePrefix("ur_client_library"),
-                    "lib",
-                    "ur_client_library",
-                    "start_ursim.sh",
-                ]
-            ),
-            " ",
-            "-m ",
-            ur_type,
-        ],
-        name="start_ursim",
-        output="screen",
-    )
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
-    driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
-    )
-
-    return LaunchDescription(
-        declared_arguments + [ReadyToTest(), wait_dashboard_server, ursim, driver_starter]
+    return generate_driver_test_description(
+        tf_prefix=tf_prefix, controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL
     )
 
 
