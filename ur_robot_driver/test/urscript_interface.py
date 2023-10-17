@@ -40,10 +40,10 @@ from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
-    ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
     generate_driver_test_description,
+    ControllerManagerInterface,
 )
 
 ROBOT_IP = "192.168.56.101"
@@ -92,14 +92,7 @@ class URScriptInterfaceTest(unittest.TestCase):
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
-        io_controller_running = False
-
-        while not io_controller_running:
-            time.sleep(1)
-            response = self._controller_manager_interface.list_controllers()
-            for controller in response.controller:
-                if controller.name == "io_and_status_controller":
-                    io_controller_running = controller.state == "active"
+        self._controller_manager_interface.wait_for_controller("io_and_status_controller")
 
     def test_set_io(self):
         """Test setting an IO using a direct program call."""

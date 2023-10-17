@@ -26,6 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 import logging
+import time
 
 import rclpy
 from controller_manager_msgs.srv import ListControllers, SwitchController
@@ -207,7 +208,14 @@ class ControllerManagerInterface(
     initial_services={"switch_controller": SwitchController},
     services={"list_controllers": ListControllers},
 ):
-    pass
+    def wait_for_controller(self, controller_name, target_state="active"):
+        while True:
+            controllers = self.list_controllers().controller
+            for controller in controllers:
+                if (controller.name == controller_name) and (controller.state == target_state):
+                    return
+
+            time.sleep(1)
 
 
 class IoStatusInterface(
