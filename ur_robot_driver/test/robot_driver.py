@@ -26,6 +26,7 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+import logging
 import os
 import sys
 import time
@@ -44,7 +45,7 @@ from ur_dashboard_msgs.msg import RobotMode
 from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))
-from test_common import (  # noqa: 402
+from test_common import (  # noqa: E402
     ControllerManagerInterface,
     ActionInterface,
     DashboardInterface,
@@ -149,7 +150,7 @@ class RobotDriverTest(unittest.TestCase):
         # Set pin 0 to 1.0
         test_pin = 0
 
-        self.node.get_logger().info(f"Setting pin {test_pin} to 1.0")
+        logging.info("Setting pin %d to 1.0", test_pin)
         self._io_status_controller_interface.set_io(fun=1, pin=test_pin, state=1.0)
 
         # Wait until the pin state has changed
@@ -163,7 +164,7 @@ class RobotDriverTest(unittest.TestCase):
         self.assertEqual(pin_state, 1.0)
 
         # Set pin 0 to 0.0
-        self.node.get_logger().info(f"Setting pin {test_pin} to 0.0")
+        logging.info("Setting pin %d to 0.0", test_pin)
         self._io_status_controller_interface.set_io(fun=1, pin=test_pin, state=0.0)
 
         # Wait until the pin state has changed back
@@ -196,8 +197,7 @@ class RobotDriverTest(unittest.TestCase):
         )
 
         # Sending trajectory goal
-        self.node.get_logger().info("Sending simple goal")
-
+        logging.info("Sending simple goal")
         goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
         self.assertTrue(goal_handle.accepted)
 
@@ -206,7 +206,6 @@ class RobotDriverTest(unittest.TestCase):
             goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
         )
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
-        self.node.get_logger().info("Received result SUCCESSFUL")
 
     def test_illegal_trajectory(self, tf_prefix):
         """
@@ -229,14 +228,13 @@ class RobotDriverTest(unittest.TestCase):
         )
 
         # Send illegal goal
-        self.node.get_logger().info("Sending illegal goal")
+        logging.info("Sending illegal goal")
         goal_handle = self._scaled_follow_joint_trajectory.send_goal(
             trajectory=trajectory,
         )
 
         # Verify the failure is correctly detected
         self.assertFalse(goal_handle.accepted)
-        self.node.get_logger().info("Goal response REJECTED")
 
     def test_trajectory_scaled(self, tf_prefix):
         """Test robot movement."""
@@ -255,7 +253,7 @@ class RobotDriverTest(unittest.TestCase):
         )
 
         # Execute trajectory
-        self.node.get_logger().info("Sending goal for robot to follow")
+        logging.info("Sending goal for robot to follow")
         goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
         self.assertTrue(goal_handle.accepted)
 
@@ -265,8 +263,6 @@ class RobotDriverTest(unittest.TestCase):
             TIMEOUT_EXECUTE_TRAJECTORY,
         )
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
-
-        self.node.get_logger().info("Received result")
 
     def test_trajectory_scaled_aborts_on_violation(self, tf_prefix):
         """Test that the robot correctly aborts the trajectory when the constraints are violated."""
@@ -298,7 +294,7 @@ class RobotDriverTest(unittest.TestCase):
         joint_state_sub  # prevent warning about unused variable
 
         # Send goal
-        self.node.get_logger().info("Sending goal for robot to follow")
+        logging.info("Sending goal for robot to follow")
         goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
         self.assertTrue(goal_handle.accepted)
 
@@ -309,7 +305,6 @@ class RobotDriverTest(unittest.TestCase):
         )
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.PATH_TOLERANCE_VIOLATED)
 
-        # self.node.get_logger().info(f"Joint state before sleep {last_joint_state.position}")
         state_when_aborted = last_joint_state
 
         # This section is to make sure the robot stopped moving once the trajectory was aborted
@@ -318,8 +313,10 @@ class RobotDriverTest(unittest.TestCase):
         while last_joint_state == state_when_aborted:
             rclpy.spin_once(self.node)
         state_after_sleep = last_joint_state
-        self.node.get_logger().info(f"before: {state_when_aborted.position.tolist()}")
-        self.node.get_logger().info(f"after: {state_after_sleep.position.tolist()}")
+
+        logging.info("Joint states before sleep:\t %s", state_when_aborted.position.tolist())
+        logging.info("Joint states after sleep:\t %s", state_after_sleep.position.tolist())
+
         self.assertTrue(
             all(
                 [
