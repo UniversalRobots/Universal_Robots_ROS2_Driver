@@ -26,7 +26,6 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
 import os
 import sys
 import time
@@ -35,27 +34,19 @@ import unittest
 import pytest
 import rclpy
 import rclpy.node
-from controller_manager_msgs.srv import ListControllers
 from std_msgs.msg import String as StringMsg
-from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
-from ur_dashboard_msgs.srv import (
-    GetLoadedProgram,
-    GetProgramState,
-    GetRobotMode,
-    IsProgramRunning,
-    Load,
-)
 from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))
-from test_common import generate_driver_test_description  # noqa: E402
+from test_common import (  # noqa: E402
+    ControllerManagerInterface,
+    DashboardInterface,
+    IoStatusInterface,
+    generate_driver_test_description,
+)
 
 ROBOT_IP = "192.168.56.101"
-TIMEOUT_WAIT_SERVICE = 10
-# If we download the docker image simultaneously to the tests, it can take quite some time until the
-# dashboard server is reachable and usable.
-TIMEOUT_WAIT_SERVICE_INITIAL = 120
 
 
 @pytest.mark.launch_test
@@ -78,41 +69,9 @@ class URScriptInterfaceTest(unittest.TestCase):
         rclpy.shutdown()
 
     def init_robot(self):
-        # We wait longer for the first client, as the robot is still starting up
-        power_on_client = waitForService(
-            self.node, "/dashboard_client/power_on", Trigger, timeout=TIMEOUT_WAIT_SERVICE_INITIAL
-        )
-
-        # Connect to all other expected services
-        dashboard_interfaces = {
-            "/dashboard_client/power_off": Trigger,
-            "/dashboard_client/brake_release": Trigger,
-            "/dashboard_client/unlock_protective_stop": Trigger,
-            "/dashboard_client/restart_safety": Trigger,
-            "/dashboard_client/get_robot_mode": GetRobotMode,
-            "/dashboard_client/load_installation": Load,
-            "/dashboard_client/load_program": Load,
-            "/dashboard_client/close_popup": Trigger,
-            "/dashboard_client/get_loaded_program": GetLoadedProgram,
-            "/dashboard_client/program_state": GetProgramState,
-            "/dashboard_client/program_running": IsProgramRunning,
-            "/dashboard_client/play": Trigger,
-            "/dashboard_client/stop": Trigger,
-        }
-        self.service_clients = {
-            srv_name: waitForService(self.node, f"{srv_name}", srv_type)
-            for (srv_name, srv_type) in dashboard_interfaces.items()
-        }
-
-        self.service_clients["/controller_manager/list_controllers"] = waitForService(
-            self.node,
-            "/controller_manager/list_controllers",
-            ListControllers,
-            timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
-        )
-
-        # Add first client to dict
-        self.service_clients["/dashboard_client/power_on"] = power_on_client
+        self._dashboard_interface = DashboardInterface(self.node)
+        self._controller_manager_interface = ControllerManagerInterface(self.node)
+        self._io_status_controller_interface = IoStatusInterface(self.node)
 
         self.urscript_pub = self.node.create_publisher(
             StringMsg, "/urscript_interface/script_command", 1
@@ -120,25 +79,24 @@ class URScriptInterfaceTest(unittest.TestCase):
 
     def setUp(self):
         # Start robot
-        empty_req = Trigger.Request()
-        self.call_service("/dashboard_client/power_on", empty_req)
-        self.call_service("/dashboard_client/brake_release", empty_req)
+        self.assertTrue(self._dashboard_interface.power_on().success)
+        self.assertTrue(self._dashboard_interface.brake_release().success)
 
         time.sleep(1)
-        robot_mode_resp = self.call_service(
-            "/dashboard_client/get_robot_mode", GetRobotMode.Request()
-        )
-        self.assertEqual(robot_mode_resp.robot_mode.mode, RobotMode.RUNNING)
-        self.call_service("/dashboard_client/stop", empty_req)
+
+        robot_mode = self._dashboard_interface.get_robot_mode()
+        self.assertTrue(robot_mode.success)
+        self.assertEqual(robot_mode.robot_mode.mode, RobotMode.RUNNING)
+
+        self.assertTrue(self._dashboard_interface.stop().success)
         time.sleep(1)
+        self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
         io_controller_running = False
 
         while not io_controller_running:
             time.sleep(1)
-            response = self.call_service(
-                "/controller_manager/list_controllers", ListControllers.Request()
-            )
+            response = self._controller_manager_interface.list_controllers()
             for controller in response.controller:
                 if controller.name == "io_and_status_controller":
                     io_controller_running = controller.state == "active"
@@ -199,22 +157,3 @@ class URScriptInterfaceTest(unittest.TestCase):
                     pin_states[i] = self.io_msg.digital_out_states[pin_id].state
         self.assertIsNotNone(self.io_msg, "Did not receive an IO state in requested time.")
         self.assertEqual(pin_states, states)
-
-    def call_service(self, srv_name, request):
-        self.node.get_logger().info(f"Calling service '{srv_name}' with request {request}")
-        future = self.service_clients[srv_name].call_async(request)
-        rclpy.spin_until_future_complete(self.node, future)
-        if future.result() is not None:
-            self.node.get_logger().info(f"Received result {future.result()}")
-            return future.result()
-        else:
-            raise Exception(f"Exception while calling service: {future.exception()}")
-
-
-def waitForService(node, srv_name, srv_type, timeout=TIMEOUT_WAIT_SERVICE):
-    client = node.create_client(srv_type, srv_name)
-    if client.wait_for_service(timeout) is False:
-        raise Exception(f"Could not reach service '{srv_name}' within timeout of {timeout}")
-
-    node.get_logger().info(f"Successfully connected to service '{srv_name}'")
-    return client
