@@ -48,7 +48,6 @@ controller_interface::CallbackReturn GPIOController::on_init()
     // Create the parameter listener and get the parameters
     param_listener_ = std::make_shared<gpio_controller::ParamListener>(get_node());
     params_ = param_listener_->get_params();
-
   } catch (const std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
@@ -63,7 +62,6 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
   const std::string tf_prefix = params_.tf_prefix;
-  RCLCPP_INFO(get_node()->get_logger(), "Configure UR gpio controller with tf_prefix: %s", tf_prefix.c_str());
 
   for (size_t i = 0; i < 18; ++i) {
     config.names.emplace_back(tf_prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
