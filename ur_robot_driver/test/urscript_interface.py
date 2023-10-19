@@ -35,15 +35,14 @@ import pytest
 import rclpy
 import rclpy.node
 from std_msgs.msg import String as StringMsg
-from ur_dashboard_msgs.msg import RobotMode
 from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
     generate_driver_test_description,
-    ControllerManagerInterface,
 )
 
 ROBOT_IP = "192.168.56.101"
@@ -78,17 +77,7 @@ class URScriptInterfaceTest(unittest.TestCase):
         )
 
     def setUp(self):
-        # Start robot
-        self.assertTrue(self._dashboard_interface.power_on().success)
-        self.assertTrue(self._dashboard_interface.brake_release().success)
-
-        time.sleep(1)
-
-        robot_mode = self._dashboard_interface.get_robot_mode()
-        self.assertTrue(robot_mode.success)
-        self.assertEqual(robot_mode.robot_mode.mode, RobotMode.RUNNING)
-
-        self.assertTrue(self._dashboard_interface.stop().success)
+        self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 

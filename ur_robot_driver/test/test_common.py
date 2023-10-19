@@ -44,6 +44,7 @@ from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from launch_testing.actions import ReadyToTest
 from rclpy.action import ActionClient
 from std_srvs.srv import Trigger
+from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
     GetLoadedProgram,
     GetProgramState,
@@ -199,7 +200,24 @@ class DashboardInterface(
         "stop": Trigger,
     },
 ):
-    pass
+    def start_robot(self):
+        self._check_call(self.power_on())
+        self._check_call(self.brake_release())
+
+        time.sleep(1)
+
+        robot_mode = self.get_robot_mode()
+        self._check_call(robot_mode)
+        if robot_mode.robot_mode.mode != RobotMode.RUNNING:
+            raise Exception(
+                f"Incorrect robot mode: Expected {RobotMode.RUNNING}, got {robot_mode.robot_mode.mode}"
+            )
+
+        self._check_call(self.stop())
+
+    def _check_call(self, result):
+        if not result.success:
+            raise Exception("Service call not successful")
 
 
 class ControllerManagerInterface(
