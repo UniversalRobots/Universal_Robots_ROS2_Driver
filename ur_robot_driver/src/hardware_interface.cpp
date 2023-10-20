@@ -36,18 +36,29 @@
  *
  */
 //----------------------------------------------------------------------
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Vector3.h>
+
+#include <ur_client_library/exceptions.h>
+#include <ur_client_library/ur/tool_communication.h>
+
 #include <algorithm>
+#include <iostream>
 #include <memory>
-#include <rclcpp/logging.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "ur_client_library/exceptions.h"
-#include "ur_client_library/ur/tool_communication.h"
+#include <rclcpp/clock.hpp>
+#include <rclcpp/logger.hpp>
+#include <rclcpp/logging.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include "rclcpp/rclcpp.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include <geometry_msgs/msg/vector3.hpp>
+
+#include <hardware_interface/types/hardware_interface_type_values.hpp>
+
 #include "ur_robot_driver/hardware_interface.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
 
@@ -78,6 +89,10 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   urcl_joint_efforts_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_tcp_target_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_tcp_offset_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_flange_position_ = { { 0.0, 0.0, 0.0 } };
+  urcl_flange_orientation_ = { { 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
@@ -175,10 +190,14 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
         state_interfaces.emplace_back(hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name,
                                                                          &urcl_ft_sensor_measurements_[j]));
       }
-    } else if (sensor.name == tf_prefix + "tcp_pose_sensor") {
-      for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
-        state_interfaces.emplace_back(
-            hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name, &urcl_tcp_pose_[j]));
+    } else if (sensor.name == tf_prefix + "flange_pose_sensor") {
+      for (uint j = 0; j < 3; ++j) {
+        state_interfaces.emplace_back(hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name,
+                                                                         &urcl_flange_position_[j]));
+      }
+      for (uint j = 0; j < 4; ++j) {
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            sensor.name, sensor.state_interfaces[j + 3].name, &urcl_flange_orientation_[j]));
       }
     }
   }
@@ -545,6 +564,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     readData(data_pkg, "runtime_state", runtime_state_);
     readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
     readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+    readData(data_pkg, "target_TCP_pose", urcl_tcp_target_pose_);
+    readData(data_pkg, "tcp_offset", urcl_tcp_offset_);
     readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
     readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
     readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
@@ -776,26 +797,38 @@ void URPositionHardwareInterface::transformForceTorque()
                                    tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
 }
 
+tf2::Quaternion URPositionHardwareInterface::quaternionFromURPose(const urcl::vector6d_t& pose)
+{
+  double rot_angle = std::sqrt(std::pow(pose[3], 2) + std::pow(pose[4], 2) + std::pow(pose[5], 2));
+  if (rot_angle > 1e-16) {
+    return tf2::Quaternion{ { pose[3] / rot_angle, pose[4] / rot_angle, pose[5] / rot_angle }, rot_angle };
+  }
+
+  return tf2::Quaternion(0, 0, 0, 1);
+}
+
 void URPositionHardwareInterface::extractToolPose()
 {
-  // imported from ROS1 driver hardware_interface.cpp#L911-L928
-  double tcp_angle =
-      std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
+  tf2::Quaternion rot_tool = quaternionFromURPose(urcl_tcp_pose_);
+  tf2::Quaternion rot_offset = quaternionFromURPose(urcl_tcp_offset_);
 
-  tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
-  tf2::Quaternion rotation;
-  if (tcp_angle > 1e-16) {
-    rotation.setRotation(rotation_vec.normalized(), tcp_angle);
-  } else {
-    rotation.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
-  }
-  tcp_transform_.transform.translation.x = urcl_tcp_pose_[0];
-  tcp_transform_.transform.translation.y = urcl_tcp_pose_[1];
-  tcp_transform_.transform.translation.z = urcl_tcp_pose_[2];
+  tf2::Vector3 tcp_offset_in_tcp = tf2::quatRotate(
+      rot_offset.inverse(), tf2::Vector3(urcl_tcp_offset_[0], urcl_tcp_offset_[1], urcl_tcp_offset_[2]));
+  tf2::Vector3 tcp_offset_in_base = tf2::quatRotate(rot_tool, tcp_offset_in_tcp);
 
+  urcl_flange_position_[0] = urcl_tcp_pose_[0] - tcp_offset_in_base.x();
+  urcl_flange_position_[1] = urcl_tcp_pose_[1] - tcp_offset_in_base.y();
+  urcl_flange_position_[2] = urcl_tcp_pose_[2] - tcp_offset_in_base.z();
+  tcp_transform_.transform.translation.x = urcl_flange_position_[0];
+  tcp_transform_.transform.translation.y = urcl_flange_position_[1];
+  tcp_transform_.transform.translation.z = urcl_flange_position_[2];
+
+  tf2::Quaternion rotation = rot_tool * rot_offset.inverse();
+  urcl_flange_orientation_[0] = rotation.x();
+  urcl_flange_orientation_[1] = rotation.y();
+  urcl_flange_orientation_[2] = rotation.z();
+  urcl_flange_orientation_[3] = rotation.w();
   tcp_transform_.transform.rotation = tf2::toMsg(rotation);
-  RCLCPP_INFO_STREAM_THROTTLE(rclcpp::get_logger("URPositionHardwareInterface"), *this->get_clock(), 500,
-                              "TCP pose" << rosidl_generator_traits::to_yaml(tcp_transform_));
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(

@@ -40,6 +40,8 @@
 #define UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
 
 // System
+#include <tf2/LinearMath/Quaternion.h>
+#include <ur_client_library/types.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -127,6 +129,7 @@ protected:
   template <typename T, size_t N>
   void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
                       std::bitset<N>& data);
+  tf2::Quaternion quaternionFromURPose(const urcl::vector6d_t& rotation_vec);
 
   void initAsyncIO();
   void checkAsyncIO();
@@ -142,6 +145,10 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
+  urcl::vector6d_t urcl_tcp_target_pose_;
+  urcl::vector6d_t urcl_tcp_offset_;
+  urcl::vector3d_t urcl_flange_position_;
+  std::array<double, 4> urcl_flange_orientation_;
 
   bool packet_read_;
 

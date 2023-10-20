@@ -35,14 +35,16 @@
  */
 //----------------------------------------------------------------------
 
+#pragma once
+
 #include <tf2/tf2/LinearMath/Quaternion.h>
-#ifndef UR_CONTROLLERS__SC_POSE_HPP_
-#include <geometry_msgs/msg/pose.hpp>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <limits>
 #include <string>
 #include <vector>
+
+#include <geometry_msgs/msg/pose.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <hardware_interface/loaned_state_interface.hpp>
 #include <semantic_components/semantic_component_interface.hpp>
@@ -54,12 +56,13 @@ class PoseComponent : public semantic_components::SemanticComponentInterface<geo
 public:
   explicit PoseComponent(const std::string& name) : SemanticComponentInterface(name, 6)
   {
-    interface_names_.emplace_back(name_ + "/" + "x");
-    interface_names_.emplace_back(name_ + "/" + "y");
-    interface_names_.emplace_back(name_ + "/" + "z");
-    interface_names_.emplace_back(name_ + "/" + "rx");
-    interface_names_.emplace_back(name_ + "/" + "ry");
-    interface_names_.emplace_back(name_ + "/" + "rz");
+    interface_names_.emplace_back(name_ + "/" + "position.x");
+    interface_names_.emplace_back(name_ + "/" + "position.y");
+    interface_names_.emplace_back(name_ + "/" + "position.z");
+    interface_names_.emplace_back(name_ + "/" + "orientation.x");
+    interface_names_.emplace_back(name_ + "/" + "orientation.y");
+    interface_names_.emplace_back(name_ + "/" + "orientation.z");
+    interface_names_.emplace_back(name_ + "/" + "orientation.w");
 
     std::fill(position_.begin(), position_.end(), std::numeric_limits<double>::quiet_NaN());
     std::fill(orientation_.begin(), orientation_.end(), std::numeric_limits<double>::quiet_NaN());
@@ -77,20 +80,15 @@ public:
     get_position();
     get_orientation();
 
-    std::cout << orientation_[0] << std::endl;
-
     // update the message values
     message.position.x = position_[0];
     message.position.y = position_[1];
     message.position.z = position_[2];
 
-    tf2::Quaternion q;
-    q.setEuler(orientation_[2], orientation_[1], orientation_[0]);
-
-    message.orientation.w = q.w();
-    message.orientation.x = q.x();
-    message.orientation.y = q.y();
-    message.orientation.z = q.z();
+    message.orientation.x = orientation_[0];
+    message.orientation.y = orientation_[1];
+    message.orientation.z = orientation_[2];
+    message.orientation.w = orientation_[3];
 
     return true;
   }
@@ -105,19 +103,17 @@ protected:
     }
     return position_;
   }
-  std::array<double, 3> get_orientation()
+  std::array<double, 4> get_orientation()
   {
-    size_t interface_counter = 0;
-    for (size_t i = 3; i < 6; ++i) {
+    size_t interface_counter = 3;
+    for (size_t i = 0; i < 4; ++i) {
       orientation_[i] = state_interfaces_[interface_counter].get().get_value();
       ++interface_counter;
     }
     return orientation_;
   }
   std::array<double, 3> position_;
-  std::array<double, 3> orientation_;
+  std::array<double, 4> orientation_;
 };
 
 }  // namespace ur_controllers
-#define UR_CONTROLLERS__SC_POSE_HPP_
-#endif  // ifndef UR_CONTROLLERS__SC_POSE_HPP_
