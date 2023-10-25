@@ -44,6 +44,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     RegisterEventHandler,
 )
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -58,6 +59,7 @@ from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import GetRobotMode
 from ur_msgs.msg import IOStates
 from ur_msgs.srv import SetIO
+from controller_manager_msgs.srv import ListControllers
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
@@ -91,7 +93,25 @@ def generate_test_description(tf_prefix):
         )
     )
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "robot_ip",
+            default_value="192.168.56.101",
+            description="IP address of used UR robot.",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_ursim",
+            default_value="true",
+            description="Launches the ursim when running the test if True",
+        )
+    )
+
     ur_type = LaunchConfiguration("ur_type")
+    robot_ip = LaunchConfiguration("robot_ip")
+    launch_ursim = LaunchConfiguration("launch_ursim")
 
     robot_driver = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -100,7 +120,7 @@ def generate_test_description(tf_prefix):
             )
         ),
         launch_arguments={
-            "robot_ip": "192.168.56.101",
+            "robot_ip": robot_ip,
             "ur_type": ur_type,
             "launch_rviz": "false",
             "controller_spawner_timeout": str(TIMEOUT_WAIT_SERVICE_INITIAL),
@@ -111,6 +131,7 @@ def generate_test_description(tf_prefix):
             "tf_prefix": tf_prefix,
         }.items(),
     )
+
     ursim = ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
@@ -127,18 +148,22 @@ def generate_test_description(tf_prefix):
         ],
         name="start_ursim",
         output="screen",
+        condition=IfCondition(launch_ursim),
     )
+
     wait_dashboard_server = ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
                 [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
+            ),
+            robot_ip,
         ],
         name="wait_dashboard_server",
         output="screen",
     )
+
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver),
     )
 
     return LaunchDescription(
@@ -185,6 +210,7 @@ class RobotDriverTest(unittest.TestCase):
             "/dashboard_client/get_robot_mode": GetRobotMode,
             "/controller_manager/switch_controller": SwitchController,
             "/io_and_status_controller/resend_robot_program": Trigger,
+            "/controller_manager/list_controllers": ListControllers,
         }
         self.service_clients.update(
             {
@@ -283,6 +309,9 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_trajectory(self, tf_prefix):
         """Test robot movement."""
+        # Wait for controller to be active
+        self.waitForController("scaled_joint_trajectory_controller")
+
         # Construct test trajectory
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -321,6 +350,9 @@ class RobotDriverTest(unittest.TestCase):
 
         This is more of a validation test that the testing suite does the right thing
         """
+        # Wait for controller to be active
+        self.waitForController("scaled_joint_trajectory_controller")
+
         # Construct test trajectory, the second point wrongly starts before the first
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -348,6 +380,9 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_trajectory_scaled(self, tf_prefix):
         """Test robot movement."""
+        # Wait for controller to be active
+        self.waitForController("scaled_joint_trajectory_controller")
+
         # Construct test trajectory
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -508,6 +543,25 @@ class RobotDriverTest(unittest.TestCase):
             return future_res.result().result
         else:
             raise Exception(f"Exception while calling action: {future_res.exception()}")
+
+    def waitForController(
+        self, controller_name, controller_status="active", timeout=TIMEOUT_WAIT_SERVICE
+    ):
+        controller_running = False
+        end_time = time.time() + timeout
+        while controller_running is False and time.time() < end_time:
+            time.sleep(1)
+            response = self.call_service(
+                "/controller_manager/list_controllers", ListControllers.Request()
+            )
+            for controller in response.controller:
+                if controller.name == controller_name:
+                    controller_running = controller.state == controller_status
+
+        if controller_running is False:
+            raise Exception(
+                f"Controller {controller_name} did not reach controller state {controller_status} within timeout of {timeout}"
+            )
 
 
 def waitForService(node, srv_name, srv_type, timeout=TIMEOUT_WAIT_SERVICE):
