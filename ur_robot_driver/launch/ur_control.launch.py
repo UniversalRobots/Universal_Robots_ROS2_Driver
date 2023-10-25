@@ -330,7 +330,7 @@ def launch_setup(context, *args, **kwargs):
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
-        # "tcp_pose_broadcaster"
+        "tcp_pose_broadcaster",
     ]
     controller_spawner_inactive_names = ["forward_position_controller"]
 
