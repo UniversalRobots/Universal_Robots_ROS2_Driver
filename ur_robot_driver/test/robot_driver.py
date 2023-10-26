@@ -109,10 +109,6 @@ class RobotDriverTest(unittest.TestCase):
     #
 
     def test_start_scaled_jtc_controller(self):
-        req = SwitchController.Request()
-        req.strictness = SwitchController.Request.BEST_EFFORT
-        req.activate_controllers = ["scaled_joint_trajectory_controller"]
-
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
