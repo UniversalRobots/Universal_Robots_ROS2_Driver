@@ -113,8 +113,10 @@ For getting started, you'll basically need three steps:
    documentation](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for
    details.
 
-   ```
-   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=<ur_type> robot_ip:=192.168.56.101
+   ```bash
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20
+   # Replace the IP address with the IP address of your actual robot / URSim
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
    ```
 
 4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
