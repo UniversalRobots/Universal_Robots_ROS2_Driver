@@ -52,7 +52,7 @@ namespace ur_controllers
 class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
 {
 public:
-  using ScalingFactorMsg =  std_msgs::msg::Float64;
+  using ScalingFactorMsg = std_msgs::msg::Float64;
 
   ScaledJointTrajectoryController() = default;
   ~ScaledJointTrajectoryController() override = default;
@@ -77,7 +77,7 @@ protected:
   };
 
 private:
-  double scaling_factor_{1.0};
+  double scaling_factor_{ 1.0 };
   realtime_tools::RealtimeBuffer<TimeData> time_data_;
 
   std::shared_ptr<scaled_joint_trajectory_controller::ParamListener> scaled_param_listener_;

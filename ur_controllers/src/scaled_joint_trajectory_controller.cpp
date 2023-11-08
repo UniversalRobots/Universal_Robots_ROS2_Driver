@@ -58,7 +58,7 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
 {
   controller_interface::InterfaceConfiguration conf;
   conf = JointTrajectoryController::state_interface_configuration();
-  if(!scaled_params_.use_speed_scaling_topic_instead)
+  if (!scaled_params_.use_speed_scaling_topic_instead)
     conf.names.push_back(scaled_params_.speed_scaling_interface_name);
 
   return conf;
@@ -66,12 +66,11 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
 
 controller_interface::CallbackReturn ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
 {
-  if(scaled_params_.use_speed_scaling_topic_instead){
-    scaling_factor_sub_ = get_node()->create_subscription<ScalingFactorMsg>("~/speed_scaling_factor",10, [&](const ScalingFactorMsg& msg){
-      scaling_factor_ = std::clamp( msg.data/100.0, 0.0,1.0);
-    });
+  if (scaled_params_.use_speed_scaling_topic_instead) {
+    scaling_factor_sub_ = get_node()->create_subscription<ScalingFactorMsg>(
+        "~/speed_scaling_factor", 10,
+        [&](const ScalingFactorMsg& msg) { scaling_factor_ = std::clamp(msg.data / 100.0, 0.0, 1.0); });
   }
-
 
   TimeData time_data;
   time_data.time = get_node()->now();
@@ -83,13 +82,13 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_activat
 
 controller_interface::return_type ScaledJointTrajectoryController::update(const rclcpp::Time& time,
                                                                           const rclcpp::Duration& period)
-{ 
-  if(!scaled_params_.use_speed_scaling_topic_instead){
+{
+  if (!scaled_params_.use_speed_scaling_topic_instead) {
     if (state_interfaces_.back().get_name() == scaled_params_.speed_scaling_interface_name) {
       scaling_factor_ = state_interfaces_.back().get_value();
     } else {
       RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface (%s) not found in hardware interface.",
-                  scaled_params_.speed_scaling_interface_name.c_str());
+                   scaled_params_.speed_scaling_interface_name.c_str());
     }
   }
 
