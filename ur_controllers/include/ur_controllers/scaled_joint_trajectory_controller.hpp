@@ -45,11 +45,15 @@
 #include "rclcpp/duration.hpp"
 #include "scaled_joint_trajectory_controller_parameters.hpp"
 
+#include <std_msgs/msg/float64.hpp>
+
 namespace ur_controllers
 {
 class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
 {
 public:
+  using ScalingFactorMsg =  std_msgs::msg::Float64;
+
   ScaledJointTrajectoryController() = default;
   ~ScaledJointTrajectoryController() override = default;
 
@@ -73,11 +77,13 @@ protected:
   };
 
 private:
-  double scaling_factor_{};
+  double scaling_factor_{1.0};
   realtime_tools::RealtimeBuffer<TimeData> time_data_;
 
   std::shared_ptr<scaled_joint_trajectory_controller::ParamListener> scaled_param_listener_;
   scaled_joint_trajectory_controller::Params scaled_params_;
+
+  rclcpp::Subscription<ScalingFactorMsg>::SharedPtr scaling_factor_sub_;
 };
 }  // namespace ur_controllers
 
