@@ -67,8 +67,11 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
 controller_interface::CallbackReturn ScaledJointTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
 {
   if (scaled_params_.use_speed_scaling_topic_instead) {
+    auto qos = rclcpp::QoS(10);
+    qos.transient_local();
+
     scaling_factor_sub_ = get_node()->create_subscription<ScalingFactorMsg>(
-        "~/speed_scaling_factor", 10,
+        scaled_params_.speed_scaling_topic_name, qos,
         [&](const ScalingFactorMsg& msg) { scaling_factor_ = std::clamp(msg.data / 100.0, 0.0, 1.0); });
   }
 

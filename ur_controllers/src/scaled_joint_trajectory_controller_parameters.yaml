@@ -7,5 +7,10 @@ scaled_joint_trajectory_controller:
     use_speed_scaling_topic_instead: {
       type: bool,
       default_value: false,
-      description: "Instead of using the speed_scaling_interface_name listen on ~/speed_scaling_factor"
+      description: "Instead of using the speed_scaling_interface_name listen on <speed_scaling_topic_name>"
+    }
+    speed_scaling_topic_name: {
+      type: string,
+      default_value: "~/speed_scaling_factor",
+      description: "Topic name for the speed scaling factor (if enabled)"
     }
