@@ -236,6 +236,14 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{"robot_ip": robot_ip}],
     )
 
+    robot_state_helper_node = Node(
+        package="ur_robot_driver",
+        executable="robot_state_helper",
+        name="robot_state_helper",
+        output="screen",
+    )
+
+    
     tool_communication_node = Node(
         package="ur_robot_driver",
         condition=IfCondition(use_tool_communication),
@@ -354,6 +362,7 @@ def launch_setup(context, *args, **kwargs):
         control_node,
         ur_control_node,
         dashboard_client_node,
+        robot_state_helper_node,
         tool_communication_node,
         controller_stopper_node,
         urscript_interface,
