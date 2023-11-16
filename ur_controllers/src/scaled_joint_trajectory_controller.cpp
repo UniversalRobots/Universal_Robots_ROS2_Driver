@@ -129,7 +129,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
 
   // current state update
   state_current_.time_from_start.set__sec(0);
-  read_state_from_hardware(state_current_);
+  read_state_from_state_interfaces(state_current_);
 
   // currently carrying out a trajectory
   if (has_active_trajectory()) {
