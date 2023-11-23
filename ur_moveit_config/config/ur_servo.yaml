@@ -40,7 +40,7 @@ move_group_name:  ur_manipulator  # Often 'manipulator' or 'arm'
 planning_frame: base_link  # The MoveIt planning frame. Often 'base_link' or 'world'
 
 ## Other frames
-ee_frame_name: tool0  # The name of the end effector link, used to return the EE pose
+ee_frame: tool0  # The name of the end effector link, used to return the EE pose
 robot_link_command_frame:  tool0  # commands must be given in the frame of a robot link. Usually either the base or end effector
 
 ## Stopping behaviour
