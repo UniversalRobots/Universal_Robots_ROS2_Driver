@@ -89,8 +89,11 @@ users an overview of the current released state.
 
 For getting started, you'll basically need three steps:
 
-1. **Install the driver** (see below). You can either install this driver from binary packages or build it from source. We recommend a
-binary package installation unless you want to join development and submit changes.
+1. **Install the driver**
+   ```bash
+   sudo apt-get install ros-rolling-ur
+   ```
+   See the [installation instructions](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/installation.html) for more details and source-build instructions.
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
    robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html)
@@ -110,65 +113,14 @@ binary package installation unless you want to join development and submit chang
    documentation](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for
    details.
 
+   ```bash
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20
+   # Replace the IP address with the IP address of your actual robot / URSim
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
+   ```
+
 4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
 
-### Install from binary packages
-1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html). This
-      branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective
-      branches.
-2. Install the driver using
-   ```
-   sudo apt-get install ros-${ROS_DISTRO}-ur
-   ```
-
-### Build from source
-Before building from source please make sure that you actually need to do that. Building from source
-might require some special treatment, especially when it comes to dependency management.
-Dependencies might change from time to time. Upstream packages (such as the library) might change
-their features / API which require changes in this repo. Therefore, this repo's source builds might
-require upstream repositories to be present in a certain version as otherwise builds might fail.
-Starting from scratch following exactly the steps below should always work, but simply pulling and
-building might fail occasionally.
-
-1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html). This
-      branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective
-      branches.
-
-   Once installed, please make sure to actually [source ROS2](https://docs.ros.org/en/rolling/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html#source-the-setup-files) before proceeding.
-
-3. Make sure that `colcon`, its extensions and `vcs` are installed:
-   ```
-   sudo apt install python3-colcon-common-extensions python3-vcstool
-   ```
-
-4. Create a new ROS2 workspace:
-   ```
-   export COLCON_WS=~/workspace/ros_ur_driver
-   mkdir -p $COLCON_WS/src
-   ```
-
-5. Clone relevant packages, install dependencies, compile, and source the workspace by using:
-   ```
-   cd $COLCON_WS
-   git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
-   rosdep update
-   rosdep install --ignore-src --from-paths src -y
-   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-   source install/setup.bash
-   ```
-
-6. When consecutive pulls lead to build errors it is possible that you'll have to build an upstream
-   package from source, as well. See the [detailed build status](ci_status.md). When the binary builds are red, but
-   the semi-binary builds are green, you need to build the upstream dependencies from source. The
-   easiest way to achieve this, is using the repos file:
-
-   ```
-   cd $COLCON_WS
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.${ROS_DISTRO}.repos
-   rosdep update
-   rosdep install --ignore-src --from-paths src -y
-   ```
 
 ## MoveIt! support
 
