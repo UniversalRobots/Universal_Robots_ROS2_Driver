@@ -134,21 +134,11 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     
     TimeData time_data;
     time_data.time = time;
-    
-    // update() has 'period', time since last update call, extract the nanoseconds so it can be scaled
-    rcl_duration_value_t nsec_period = period.nanoseconds();
-    // scale the period                                 
+    rcl_duration_value_t nsec_period = period.nanoseconds();                                
     time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * nsec_period);
-    // increment uptime by the scaled period
     time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
-    // uptime is just a cummulative sum of the *scaled* periods, used for scaled time-ordering of trajectory segments
-    // something like an internal, slowed down clock
-
-    // but for traj_time, increment the uptime by the *unscaled* period - WHY?
-    // this only makes it so the traj_time is a few miliseconds more than the uptime - not noticeable or necessary.
+    
     rclcpp::Time traj_time = time_data_.readFromRT()->uptime + period;
-
-    // save the as a starting point 
     time_data_.writeFromNonRT(time_data);
 
     bool first_sample = false;
