@@ -166,7 +166,7 @@ def launch_setup(context, *args, **kwargs):
     servo_node = Node(
         package="moveit_servo",
         condition=IfCondition(launch_servo),
-        executable="servo_node",
+        executable="servo_node_main",
         parameters=[
             servo_params,
             robot_description_semantic,
