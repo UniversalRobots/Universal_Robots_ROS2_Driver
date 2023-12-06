@@ -85,6 +85,10 @@ users an overview of the current released state.
   - `ur_moveit_config` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
+## System Requirements
+
+Please see the [requirements for the Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library#requirements), as this driver is build on top of Universal_Robots_Client_Library.
+
 ## Getting Started
 
 For getting started, you'll basically need three steps:
