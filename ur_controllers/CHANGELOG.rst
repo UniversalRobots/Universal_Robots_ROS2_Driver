@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.5 (2023-12-06)
+------------------
 * Update read_state_from_hardware
   (cherry picked from commit d77db8355ce1e2c5ecacb94a9616777789d26e38)
 * Renamed normalize_joint_error\_ to joints_angle_wraparound\_
