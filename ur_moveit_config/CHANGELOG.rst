@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.5 (2023-12-06)
+------------------
 * moveit_servo package executable name has changed (`#886 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/886>`_)
 * Contributors: Felix Durchdewald, mergify[bot]
 

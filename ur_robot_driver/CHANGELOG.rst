@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.5 (2023-12-06)
+------------------
 * Move installation instructions to subpage (`#885 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/885>`_)
   (cherry picked from commit 202a70c5f8f67c9e3ee2723084c0170a5a1050ae)
   Co-authored-by: Felix Exner (fexner) <exner@fzi.de>
