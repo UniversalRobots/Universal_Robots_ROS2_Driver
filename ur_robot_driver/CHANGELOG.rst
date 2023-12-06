@@ -1,3 +1,19 @@
+Forthcoming
+-----------
+* Move installation instructions to subpage (`#885 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/885>`_)
+  (cherry picked from commit 202a70c5f8f67c9e3ee2723084c0170a5a1050ae)
+  Co-authored-by: Felix Exner (fexner) <exner@fzi.de>
+* Add backward_ros to driver (`#872 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/872>`_) (`#879 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/879>`_)
+  (cherry picked from commit 21b7aa38e27382a206066111833c0a62377aa589)
+  Co-authored-by: Felix Exner (fexner) <exner@fzi.de>
+* Port configuration  (`#835 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/835>`_) (`#848 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/848>`_)
+  (cherry picked from commit f16ae2af7eb63f8d1c74c7e873347d4f32cacf4f)
+  Co-authored-by: Felix Durchdewald <145785497+fdurchdewald@users.noreply.github.com>
+* Update link to MoveIt! documentation (`#846 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/846>`_)
+  (cherry picked from commit 3311cf849578ae38408088555c79397932c03cc4)
+  Co-authored-by: Felix Exner (fexner) <exner@fzi.de>
+* Contributors: mergify[bot]
+
 2.3.4 (2023-09-21)
 ------------------
 * Added a test that sjtc correctly aborts on violation of constraints (`#813 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/813>`_)
