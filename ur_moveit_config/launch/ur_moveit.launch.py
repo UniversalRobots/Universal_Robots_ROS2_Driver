@@ -44,6 +44,7 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 def launch_setup(context, *args, **kwargs):
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
+    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     # General arguments
     moveit_config_package = LaunchConfiguration("moveit_config_package")
     moveit_joint_limits_file = LaunchConfiguration("moveit_joint_limits_file")
@@ -53,7 +54,6 @@ def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time")
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_servo = LaunchConfiguration("launch_servo")
-
     # MoveIt Configuration
     robot_description_semantic_content = Command(
         [
@@ -97,6 +97,8 @@ def launch_setup(context, *args, **kwargs):
 
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
+    initial_controller = context.perform_substitution(initial_joint_controller)
+    controllers_yaml[initial_controller]["default"] = True
 
     moveit_controllers = {
         "moveit_simple_controller_manager": controllers_yaml,
@@ -109,7 +111,6 @@ def launch_setup(context, *args, **kwargs):
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
     }
-
     planning_scene_monitor_parameters = {
         "publish_planning_scene": True,
         "publish_geometry_updates": True,
@@ -187,6 +188,14 @@ def generate_launch_description():
             "ur_type",
             description="Type/series of used UR robot.",
             choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20"],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "initial_joint_controller",
+            default_value="scaled_joint_trajectory_controller",
+            description="Initial controller used by MoveIt!.",
+            choices=["scaled_joint_trajectory_controller", "joint_trajectory_controller"],
         )
     )
     declared_arguments.append(
