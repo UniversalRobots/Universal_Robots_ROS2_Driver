@@ -24,7 +24,7 @@
     reverse_ip:=0.0.0.0
     script_command_port:=50004
     trajectory_port:=50003
-    non_blocking_read:=false
+    non_blocking_read:=true
     keep_alive_count:=2
     ">
 
