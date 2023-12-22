@@ -22,7 +22,7 @@ publisher_scaled_joint_trajectory_controller:
       - wrist_2_joint
       - wrist_3_joint
 
-    check_starting_point: true
+    check_starting_point: false
     starting_point_limits:
       shoulder_pan_joint: [-0.1,0.1]
       shoulder_lift_joint: [-1.6,-1.5]
@@ -55,7 +55,7 @@ publisher_joint_trajectory_controller:
       - wrist_2_joint
       - wrist_3_joint
 
-    check_starting_point: true
+    check_starting_point: false
     starting_point_limits:
       shoulder_pan_joint: [-0.1,0.1]
       shoulder_lift_joint: [-1.6,-1.5]
