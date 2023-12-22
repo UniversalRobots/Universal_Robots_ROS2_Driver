@@ -128,6 +128,7 @@ that will behave almost exactly like the real robot.
    documentation](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html) for
    details.
 
+<<<<<<< HEAD
 ### Install from binary packages
 1. [Install ROS2](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). This
       branch supports only ROS2 Humble. For other ROS2 versions, please see the respective
@@ -135,6 +136,12 @@ that will behave almost exactly like the real robot.
 2. Install the driver using
    ```
    sudo apt-get install ros-${ROS_DISTRO}-ur
+=======
+   ```bash
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20, ur30
+   # Replace the IP address with the IP address of your actual robot / URSim
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
+>>>>>>> 60f26aa (Add UR30 support (#899))
    ```
 
 ### Build from source
