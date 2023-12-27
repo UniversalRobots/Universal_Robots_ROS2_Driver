@@ -86,11 +86,16 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     return controller_interface::return_type::OK;
   }
+  // update dynamic parameters
+  if (param_listener_->is_old(params_)) {
+    params_ = param_listener_->get_params();
+    default_tolerances_ = get_segment_tolerances(params_);
+  }
 
   auto compute_error_for_joint = [&](JointTrajectoryPoint& error, int index, const JointTrajectoryPoint& current,
                                      const JointTrajectoryPoint& desired) {
     // error defined as the difference between current and desired
-    if (normalize_joint_error_[index]) {
+    if (joints_angle_wraparound_[index]) {
       // if desired, the shortest_angular_distance is calculated, i.e., the error is
       //  normalized between -pi<error<pi
       error.positions[index] = angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
@@ -105,16 +110,18 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     }
   };
 
+  // don't update goal after we sampled the trajectory to avoid any racecondition
+  const auto active_goal = *rt_active_goal_.readFromRT();
+
   // Check if a new external message has been received from nonRT threads
   auto current_external_msg = traj_external_point_ptr_->get_trajectory_msg();
   auto new_external_msg = traj_msg_external_point_ptr_.readFromRT();
-  if (current_external_msg != *new_external_msg) {
+  // Discard, if a goal is pending but still not active (somewhere stuck in goal_handle_timer_)
+  if (current_external_msg != *new_external_msg && (*(rt_has_pending_goal_.readFromRT()) && !active_goal) == false) {
     fill_partial_goal(*new_external_msg);
     sort_to_local_joint_order(*new_external_msg);
     // TODO(denis): Add here integration of position and velocity
     traj_external_point_ptr_->update(*new_external_msg);
-    // set the active trajectory pointer to the new goal
-    traj_point_active_ptr_ = &traj_external_point_ptr_;
   }
 
   // TODO(anyone): can I here also use const on joint_interface since the reference_wrapper is not
@@ -127,11 +134,10 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
 
   // current state update
   state_current_.time_from_start.set__sec(0);
-  read_state_from_hardware(state_current_);
+  read_state_from_state_interfaces(state_current_);
 
   // currently carrying out a trajectory
-  if (traj_point_active_ptr_ && (*traj_point_active_ptr_)->has_trajectory_msg()) {
-    // Main Speed scaling difference...
+  if (has_active_trajectory()) {
     // Adjust time with scaling factor
     TimeData time_data;
     time_data.time = time;
@@ -139,31 +145,49 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     time_data.period = rclcpp::Duration::from_nanoseconds(scaling_factor_ * t_period);
     time_data.uptime = time_data_.readFromRT()->uptime + time_data.period;
     rclcpp::Time traj_time = time_data_.readFromRT()->uptime + rclcpp::Duration::from_nanoseconds(t_period);
-    time_data_.writeFromNonRT(time_data);
+    time_data_.reset();
+    time_data_.initRT(time_data);
 
     bool first_sample = false;
     // if sampling the first time, set the point before you sample
-    if (!(*traj_point_active_ptr_)->is_sampled_already()) {
+    if (!traj_external_point_ptr_->is_sampled_already()) {
       first_sample = true;
       if (params_.open_loop_control) {
-        (*traj_point_active_ptr_)->set_point_before_trajectory_msg(traj_time, last_commanded_state_);
+        traj_external_point_ptr_->set_point_before_trajectory_msg(traj_time, last_commanded_state_);
       } else {
-        (*traj_point_active_ptr_)->set_point_before_trajectory_msg(traj_time, state_current_);
+        traj_external_point_ptr_->set_point_before_trajectory_msg(traj_time, state_current_);
       }
     }
 
     // find segment for current timestamp
     joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
-    const bool valid_point =
-        (*traj_point_active_ptr_)
-            ->sample(traj_time, interpolation_method_, state_desired_, start_segment_itr, end_segment_itr);
+    const bool valid_point = traj_external_point_ptr_->sample(traj_time, interpolation_method_, state_desired_,
+                                                              start_segment_itr, end_segment_itr);
 
     if (valid_point) {
+      const rclcpp::Time traj_start = traj_external_point_ptr_->time_from_start();
+      // this is the time instance
+      // - started with the first segment: when the first point will be reached (in the future)
+      // - later: when the point of the current segment was reached
+      const rclcpp::Time segment_time_from_start = traj_start + start_segment_itr->time_from_start;
+      // time_difference is
+      // - negative until first point is reached
+      // - counting from zero to time_from_start of next point
+      double time_difference = time.seconds() - segment_time_from_start.seconds();
       bool tolerance_violated_while_moving = false;
       bool outside_goal_tolerance = false;
       bool within_goal_time = true;
-      double time_difference = 0.0;
-      const bool before_last_point = end_segment_itr != (*traj_point_active_ptr_)->end();
+      const bool before_last_point = end_segment_itr != traj_external_point_ptr_->end();
+
+      // have we reached the end, are not holding position, and is a timeout configured?
+      // Check independently of other tolerances
+      if (!before_last_point && *(rt_is_holding_.readFromRT()) == false && cmd_timeout_ > 0.0 &&
+          time_difference > cmd_timeout_) {
+        RCLCPP_WARN(get_node()->get_logger(), "Aborted due to command timeout");
+
+        traj_msg_external_point_ptr_.reset();
+        traj_msg_external_point_ptr_.initRT(set_hold_position());
+      }
 
       // Check state/goal tolerance
       for (size_t index = 0; index < dof_; ++index) {
@@ -172,21 +196,18 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
         // Always check the state tolerance on the first sample in case the first sample
         // is the last point
         if ((before_last_point || first_sample) &&
-            !check_state_tolerance_per_joint(state_error_, index, default_tolerances_.state_tolerance[index], false)) {
+            !check_state_tolerance_per_joint(state_error_, index, default_tolerances_.state_tolerance[index], false) &&
+            *(rt_is_holding_.readFromRT()) == false) {
           tolerance_violated_while_moving = true;
         }
         // past the final point, check that we end up inside goal tolerance
-        if (!before_last_point && !check_state_tolerance_per_joint(
-                                      state_error_, index, default_tolerances_.goal_state_tolerance[index], false)) {
+        if (!before_last_point &&
+            !check_state_tolerance_per_joint(state_error_, index, default_tolerances_.goal_state_tolerance[index],
+                                             false) &&
+            *(rt_is_holding_.readFromRT()) == false) {
           outside_goal_tolerance = true;
 
           if (default_tolerances_.goal_time_tolerance != 0.0) {
-            // if we exceed goal_time_tolerance set it to aborted
-            const rclcpp::Time traj_start = (*traj_point_active_ptr_)->get_trajectory_start_time();
-            const rclcpp::Time traj_end = traj_start + start_segment_itr->time_from_start;
-
-            time_difference = time.seconds() - traj_end.seconds();
-
             if (time_difference > default_tolerances_.goal_time_tolerance) {
               within_goal_time = false;
             }
@@ -227,7 +248,6 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
         last_commanded_state_ = state_desired_;
       }
 
-      const auto active_goal = *rt_active_goal_.readFromRT();
       if (active_goal) {
         // send feedback
         auto feedback = std::make_shared<FollowJTrajAction::Feedback>();
@@ -241,19 +261,18 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
 
         // check abort
         if (tolerance_violated_while_moving) {
-          set_hold_position();
           auto result = std::make_shared<FollowJTrajAction::Result>();
-
-          RCLCPP_WARN(get_node()->get_logger(), "Aborted due to state tolerance violation");
           result->set__error_code(FollowJTrajAction::Result::PATH_TOLERANCE_VIOLATED);
           active_goal->setAborted(result);
           // TODO(matthew-reynolds): Need a lock-free write here
           // See https://github.com/ros-controls/ros2_controllers/issues/168
           rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-          // remove the active trajectory pointer so that we stop commanding the hardware
-          traj_point_active_ptr_ = nullptr;
+          rt_has_pending_goal_.writeFromNonRT(false);
 
-          // check goal tolerance
+          RCLCPP_WARN(get_node()->get_logger(), "Aborted due to state tolerance violation");
+
+          traj_msg_external_point_ptr_.reset();
+          traj_msg_external_point_ptr_.initRT(set_hold_position());
         } else if (!before_last_point) {
           if (!outside_goal_tolerance) {
             auto res = std::make_shared<FollowJTrajAction::Result>();
@@ -262,28 +281,43 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
             // TODO(matthew-reynolds): Need a lock-free write here
             // See https://github.com/ros-controls/ros2_controllers/issues/168
             rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-            // remove the active trajectory pointer so that we stop commanding the hardware
-            traj_point_active_ptr_ = nullptr;
+            rt_has_pending_goal_.writeFromNonRT(false);
 
             RCLCPP_INFO(get_node()->get_logger(), "Goal reached, success!");
+
+            traj_msg_external_point_ptr_.reset();
+            traj_msg_external_point_ptr_.initRT(set_success_trajectory_point());
           } else if (!within_goal_time) {
-            set_hold_position();
             auto result = std::make_shared<FollowJTrajAction::Result>();
             result->set__error_code(FollowJTrajAction::Result::GOAL_TOLERANCE_VIOLATED);
             active_goal->setAborted(result);
             // TODO(matthew-reynolds): Need a lock-free write here
             // See https://github.com/ros-controls/ros2_controllers/issues/168
             rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+            rt_has_pending_goal_.writeFromNonRT(false);
+
             RCLCPP_WARN(get_node()->get_logger(), "Aborted due goal_time_tolerance exceeding by %f seconds",
                         time_difference);
+
+            traj_msg_external_point_ptr_.reset();
+            traj_msg_external_point_ptr_.initRT(set_hold_position());
           }
-          // else, run another cycle while waiting for outside_goal_tolerance
-          // to be satisfied or violated within the goal_time_tolerance
         }
-      } else if (tolerance_violated_while_moving) {
-        set_hold_position();
+      } else if (tolerance_violated_while_moving && *(rt_has_pending_goal_.readFromRT()) == false) {
+        // we need to ensure that there is no pending goal -> we get a race condition otherwise
         RCLCPP_ERROR(get_node()->get_logger(), "Holding position due to state tolerance violation");
+
+        traj_msg_external_point_ptr_.reset();
+        traj_msg_external_point_ptr_.initRT(set_hold_position());
+      } else if (!before_last_point && !within_goal_time && *(rt_has_pending_goal_.readFromRT()) == false) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Exceeded goal_time_tolerance: holding position...");
+
+        traj_msg_external_point_ptr_.reset();
+        traj_msg_external_point_ptr_.initRT(set_hold_position());
       }
+      // else, run another cycle while waiting for outside_goal_tolerance
+      // to be satisfied (will stay in this state until new message arrives)
+      // or outside_goal_tolerance violated within the goal_time_tolerance
     }
   }
 
