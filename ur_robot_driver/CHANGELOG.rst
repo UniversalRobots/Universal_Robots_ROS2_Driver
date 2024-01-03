@@ -1,3 +1,10 @@
+Forthcoming
+-----------
+* Add backward_ros to driver (`#872 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/872>`_) (`#878 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/878>`_)
+* Port configuration  (`#835 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/835>`_) (`#847 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/847>`_)
+* Update link to MoveIt! documentation (`#845 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/845>`_)
+* Contributors: mergify[bot]
+
 2.2.9 (2023-09-22)
 ------------------
 * Added a test that sjtc correctly aborts on violation of constraints
