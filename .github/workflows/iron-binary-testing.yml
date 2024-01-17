@@ -6,7 +6,6 @@ on:
   pull_request:
     branches:
       - iron
-      - main # as long as rolling and iron should be compatible
   push:
     branches:
       - iron

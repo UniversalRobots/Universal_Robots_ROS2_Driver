@@ -2,6 +2,13 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.2 (2023-11-23)
+------------------
+* Update read_state_from_hardware
+* Renamed normalize_joint_error to joints_angle_wraparound
+* Remove noisy controller log message
+* Contributors: Felix Exner, Robert Wilbrandt
+
 2.4.1 (2023-09-21)
 ------------------
 * Update sjtc to newest upstream API (`#810 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/810>`_)

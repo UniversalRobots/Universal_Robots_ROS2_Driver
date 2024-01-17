@@ -1,3 +1,14 @@
+2.4.2 (2023-11-23)
+------------------
+* [README] Move installation instructions to subpage (`#870 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/870>`_)
+* Add backward_ros to driver (`#872 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/872>`_)
+* Simplify tests (`#849 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/849>`_)
+* Port configuration  (`#835 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/835>`_)
+  Added possibility to change the reverse_port, script_sender_port and trajectory_port
+* [README] Update link to MoveIt! documentation
+* Do not start urscipt_interface when using mock hardware
+* Contributors: Felix Durchdewald, Felix Exner, RobertWilbrandt
+
 2.4.1 (2023-09-21)
 ------------------
 * Added a test that sjtc correctly aborts on violation of constraints (`#810 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/810>`_)
