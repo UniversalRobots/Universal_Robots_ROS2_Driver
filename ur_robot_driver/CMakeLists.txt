@@ -167,7 +167,7 @@ install(PROGRAMS scripts/start_ursim.sh
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY config launch
+install(DIRECTORY config launch urdf
   DESTINATION share/${PROJECT_NAME}
 )
 

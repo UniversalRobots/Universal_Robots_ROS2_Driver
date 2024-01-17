@@ -90,7 +90,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   auto compute_error_for_joint = [&](JointTrajectoryPoint& error, size_t index, const JointTrajectoryPoint& current,
                                      const JointTrajectoryPoint& desired) {
     // error defined as the difference between current and desired
-    if (normalize_joint_error_[index]) {
+    if (joints_angle_wraparound_[index]) {
       // if desired, the shortest_angular_distance is calculated, i.e., the error is
       //  normalized between -pi<error<pi
       error.positions[index] = angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
@@ -129,7 +129,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
 
   // current state update
   state_current_.time_from_start.set__sec(0);
-  read_state_from_hardware(state_current_);
+  read_state_from_state_interfaces(state_current_);
 
   // currently carrying out a trajectory
   if (has_active_trajectory()) {
