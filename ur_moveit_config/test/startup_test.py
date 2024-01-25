@@ -154,6 +154,9 @@ class TestReadyForPlanning(unittest.TestCase):
     def test_read_stdout(self, proc_output):
         """Check if 'You can start planning now!' was found in the stdout."""
         proc_output.assertWaitFor("You can start planning now!", timeout=120, stream="stdout")
+        proc_output.assertWaitFor(
+            "Dashboard server connections are possible.", timeout=120, stream="stdout"
+        )
 
 
 @launch_testing.post_shutdown_test()
