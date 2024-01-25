@@ -115,5 +115,5 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
 
 Each of these stages also performs integration tests using ursim. In order to execute these tests locally, they have to be enabled:
   ```
-  colcon build --packages-select ur_robot_driver --cmake-args -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=On
+  colcon build --packages-select ur_robot_driver ur_moveit_config --cmake-args -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=On
   ```
