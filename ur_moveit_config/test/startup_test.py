@@ -115,6 +115,10 @@ def generate_test_description():
         launch_arguments={
             "ur_type": ur_type,
             "launch_rviz": "false",
+            "launch_servo": "false",  # the servo node currently doesn't startup correctly,
+            # it waits for the robot state until the robot has actually
+            # executed a plan. Therefore, it doesn't exit cleanly which
+            # breaks this test.
         }.items(),
     )
 
