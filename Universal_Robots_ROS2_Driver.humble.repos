@@ -27,3 +27,12 @@ repositories:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
     version: humble
+  moveit2:
+    type: git
+    url: https://github.com/ros-planning/moveit2.git
+    version: humble
+
+  moveit_msgs:
+    type: git
+    url: https://github.com/ros-planning/moveit_msgs.git
+    version: humble
