@@ -44,6 +44,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from launch.event_handlers import OnProcessExit
 
+import rclpy
+import rclpy.node
+from moveit_msgs.srv import GetPlanningScene
+
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
 
 
@@ -157,6 +161,15 @@ class TestReadyForPlanning(unittest.TestCase):
         proc_output.assertWaitFor(
             "Dashboard server connections are possible.", timeout=120, stream="stdout"
         )
+
+    def testCallingMoveItService(self):
+        # Dummy test to make sure MoveIt lives long enough...
+        rclpy.init()
+        node = rclpy.node.Node("ur_moveit_test")
+
+        cli = node.create_client(GetPlanningScene, "/get_planning_scene")
+        while not cli.wait_for_service(timeout_sec=120.0):
+            node.get_logger().info("service not available, waiting again...")
 
 
 @launch_testing.post_shutdown_test()
