@@ -114,7 +114,7 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "output_recipe_filename:=rtde_output_recipe.txt",
             " ",
-            "prefix:=",
+            "tf_prefix:=",
             prefix,
             " ",
         ]
