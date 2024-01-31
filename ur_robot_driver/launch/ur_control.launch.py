@@ -36,7 +36,12 @@ from launch_ros.substitutions import FindPackageShare
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 
 
 def launch_setup(context, *args, **kwargs):
@@ -79,16 +84,35 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
     )
     kinematics_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "default_kinematics.yaml"]
+        [
+            FindPackageShare(description_package),
+            "config",
+            ur_type,
+            "default_kinematics.yaml",
+        ]
     )
     physical_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "physical_parameters.yaml"]
+        [
+            FindPackageShare(description_package),
+            "config",
+            ur_type,
+            "physical_parameters.yaml",
+        ]
     )
     visual_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "visual_parameters.yaml"]
+        [
+            FindPackageShare(description_package),
+            "config",
+            ur_type,
+            "visual_parameters.yaml",
+        ]
     )
     script_filename = PathJoinSubstitution(
-        [FindPackageShare("ur_client_library"), "resources", "external_control.urscript"]
+        [
+            FindPackageShare("ur_client_library"),
+            "resources",
+            "external_control.urscript",
+        ]
     )
     input_recipe_filename = PathJoinSubstitution(
         [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
@@ -308,31 +332,31 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # Spawn controllers
-    def controller_spawner(name, active=True):
+    def controller_spawner(controllers, active=True):
         inactive_flags = ["--inactive"] if not active else []
         return Node(
             package="controller_manager",
             executable="spawner",
             arguments=[
-                name,
                 "--controller-manager",
                 "/controller_manager",
                 "--controller-manager-timeout",
                 controller_spawner_timeout,
             ]
-            + inactive_flags,
+            + inactive_flags
+            + controllers,
         )
 
-    controller_spawner_names = [
+    controllers_active = [
         "joint_state_broadcaster",
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
     ]
-    controller_spawner_inactive_names = ["forward_position_controller"]
+    controllers_inactive = ["forward_position_controller"]
 
-    controller_spawners = [controller_spawner(name) for name in controller_spawner_names] + [
-        controller_spawner(name, active=False) for name in controller_spawner_inactive_names
+    controller_spawners = [controller_spawner(controllers_active)] + [
+        controller_spawner(controllers_inactive, active=False)
     ]
 
     # There may be other controllers of the joints, but this is the initially-started one
@@ -385,7 +409,17 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "ur_type",
             description="Type/series of used UR robot.",
-            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20", "ur30"],
+            choices=[
+                "ur3",
+                "ur3e",
+                "ur5",
+                "ur5e",
+                "ur10",
+                "ur10e",
+                "ur16e",
+                "ur20",
+                "ur30",
+            ],
         )
     )
     declared_arguments.append(
@@ -502,7 +536,9 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "launch_dashboard_client", default_value="true", description="Launch Dashboard Client?"
+            "launch_dashboard_client",
+            default_value="true",
+            description="Launch Dashboard Client?",
         )
     )
     declared_arguments.append(
