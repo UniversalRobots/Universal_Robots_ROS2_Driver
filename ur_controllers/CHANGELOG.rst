@@ -2,6 +2,9 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.3 (2024-02-02)
+------------------
+
 2.4.2 (2023-11-23)
 ------------------
 * Update read_state_from_hardware

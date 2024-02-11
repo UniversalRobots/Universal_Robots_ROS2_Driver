@@ -1,3 +1,9 @@
+2.4.3 (2024-02-02)
+------------------
+* Add UR30 support (`#899 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/899>`_)
+* Add control description and ros2_control tag to driver. (`#877 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/877>`_)
+* Contributors: Felix Exner (fexner)
+
 2.4.2 (2023-11-23)
 ------------------
 * [README] Move installation instructions to subpage (`#870 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/870>`_)

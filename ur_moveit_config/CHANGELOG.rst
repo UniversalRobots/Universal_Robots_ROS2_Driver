@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.3 (2024-02-02)
+------------------
+* fix move_group_node crash during initialization (`#906 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/906>`_)
+* Add UR30 support (`#899 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/899>`_)
+* Contributors: Chen Chen, Felix Exner (fexner)
+
 2.4.2 (2023-11-23)
 ------------------
 * moveit_servo package executable name has changed (`#854 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/854>`_)
