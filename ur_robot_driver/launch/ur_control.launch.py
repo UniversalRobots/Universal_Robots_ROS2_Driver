@@ -243,7 +243,6 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
     )
 
-    
     tool_communication_node = Node(
         package="ur_robot_driver",
         condition=IfCondition(use_tool_communication),
