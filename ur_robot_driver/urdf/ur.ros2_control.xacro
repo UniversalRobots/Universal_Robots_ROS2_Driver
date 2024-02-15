@@ -86,7 +86,7 @@
       <gpio name="${tf_prefix}speed_scaling">
         <state_interface name="speed_scaling_factor">
           <param name="initial_value">1.0</param>
-          </state_interface>
+        </state_interface>
         <command_interface name="target_speed_fraction_cmd"/>
         <command_interface name="target_speed_fraction_async_success"/>
       </gpio>
