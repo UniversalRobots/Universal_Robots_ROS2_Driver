@@ -84,8 +84,9 @@
 
       <!-- NOTE The following are joints used only for testing with mock hardware and will change in the future -->
       <gpio name="${tf_prefix}speed_scaling">
-        <state_interface name="speed_scaling_factor"/>
-        <param name="initial_speed_scaling_factor">1</param>
+        <state_interface name="speed_scaling_factor">
+          <param name="initial_value">1.0</param>
+        </state_interface>
         <command_interface name="target_speed_fraction_cmd"/>
         <command_interface name="target_speed_fraction_async_success"/>
       </gpio>
