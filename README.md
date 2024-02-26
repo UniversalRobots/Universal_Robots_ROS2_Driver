@@ -109,8 +109,11 @@ Deprecation: The `ur_bringup` package is deprecated and will be removed from Iro
 
 For getting started, you'll basically need three steps:
 
-1. **Install the driver** (see below). You can either install this driver from binary packages or build it from source. We recommend a
-binary package installation unless you want to join development and submit changes.
+1. **Install the driver**
+   ```bash
+   sudo apt-get install ros-rolling-ur
+   ```
+   See the [installation instructions](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/installation.html) for more details and source-build instructions.
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
    robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/robot_setup.html)
@@ -128,6 +131,7 @@ that will behave almost exactly like the real robot.
    documentation](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html) for
    details.
 
+<<<<<<< HEAD
 ### Install from binary packages
 1. [Install ROS2](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). This
       branch supports only ROS2 Humble. For other ROS2 versions, please see the respective
@@ -182,6 +186,16 @@ building might fail occasionally.
    rosdep update
    rosdep install --ignore-src --from-paths src -y
    ```
+=======
+   ```bash
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20
+   # Replace the IP address with the IP address of your actual robot / URSim
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
+   ```
+
+4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
+
+>>>>>>> 202a70c (Move installation instructions to subpage (#870))
 
 ## MoveIt! support
 
