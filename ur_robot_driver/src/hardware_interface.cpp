@@ -59,7 +59,7 @@ URPositionHardwareInterface::~URPositionHardwareInterface()
 {
   // If the controller manager is shutdown via Ctrl + C the on_deactivate methods won't be called.
   // We therefore need to make sure to actually deactivate the communication
-  on_deactivate(rclcpp_lifecycle::State());
+  on_cleanup(rclcpp_lifecycle::State());
 }
 
 hardware_interface::CallbackReturn
@@ -302,7 +302,7 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 }
 
 hardware_interface::CallbackReturn
-URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous_state)
+URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
 
@@ -463,13 +463,22 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
 }
 
 hardware_interface::CallbackReturn
-URPositionHardwareInterface::on_deactivate(const rclcpp_lifecycle::State& previous_state)
+URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous_state)
+{
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Activating HW interface");
+  return hardware_interface::CallbackReturn::SUCCESS;
+}
+
+hardware_interface::CallbackReturn
+URPositionHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
 
-  async_thread_shutdown_ = true;
-  async_thread_->join();
-  async_thread_.reset();
+  if (async_thread_) {
+    async_thread_shutdown_ = true;
+    async_thread_->join();
+    async_thread_.reset();
+  }
 
   ur_driver_.reset();
 
