@@ -40,8 +40,9 @@ jobs:
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
           skip-tests: true
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
+          fail_ci_if_error: true
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
