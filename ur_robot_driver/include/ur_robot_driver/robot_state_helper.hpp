@@ -29,11 +29,11 @@ private:
   void robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);
   void safetyModeCallback(ur_dashboard_msgs::msg::SafetyMode::SharedPtr msg);
 
-  void updateRobotState(bool called_from_thread = false);
+  void updateRobotState();
 
-  void doTransition(bool called_from_thread = false);
+  void doTransition();
 
-  bool safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv, bool called_from_thread = false);
+  bool safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv);
 
   void setModeAcceptCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
   rclcpp_action::GoalResponse setModeGoalCallback(const rclcpp_action::GoalUUID& uuid,
@@ -45,6 +45,7 @@ private:
 
   void startActionServer();
   bool is_started_;
+  bool in_action_;
 
   std::shared_ptr<ur_dashboard_msgs::action::SetMode::Result> result_;
   std::shared_ptr<ur_dashboard_msgs::action::SetMode::Feedback> feedback_;
@@ -56,8 +57,18 @@ private:
 
   rclcpp_action::Server<ur_dashboard_msgs::action::SetMode>::SharedPtr set_mode_as_;
 
+  rclcpp::CallbackGroup::SharedPtr robot_mode_sub_cb_;
+
   rclcpp::Subscription<ur_dashboard_msgs::msg::RobotMode>::SharedPtr robot_mode_sub_;
   rclcpp::Subscription<ur_dashboard_msgs::msg::SafetyMode>::SharedPtr safety_mode_sub_;
+
+  rclcpp::CallbackGroup::SharedPtr unlock_cb_;
+  rclcpp::CallbackGroup::SharedPtr restart_cb_;
+  rclcpp::CallbackGroup::SharedPtr power_on_cb_;
+  rclcpp::CallbackGroup::SharedPtr power_off_cb_;
+  rclcpp::CallbackGroup::SharedPtr brake_release_cb_;
+  rclcpp::CallbackGroup::SharedPtr stop_program_cb_;
+  rclcpp::CallbackGroup::SharedPtr play_program_cb_;
 
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_srv_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr restart_safety_srv_;
