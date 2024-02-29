@@ -99,7 +99,7 @@ add_executable(urscript_interface
 ament_target_dependencies(urscript_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(
-  TARGETS dashboard_client ur_ros2_control_node controller_stopper_node urscript_interface
+  TARGETS dashboard_client controller_stopper_node urscript_interface
   DESTINATION lib/${PROJECT_NAME}
 )
 
