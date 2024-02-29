@@ -298,6 +298,36 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
 
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "start_tool_contact", "start_tool_contact_cmd", &start_tool_contact_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "start_tool_contact", "start_tool_contact_async_success", &start_tool_contact_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "end_tool_contact",
+                                                                       "end_tool_contact_cmd", &end_tool_contact_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "end_tool_contact", "end_tool_contact_async_success", &end_tool_contact_async_success_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_cmd", &get_version_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "get_version", "get_version_async_success", &get_version_async_success_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_major", &get_version_major_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_minor", &get_version_minor_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_bugfix", &get_version_bugfix_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_build", &get_version_build_));
+
   return command_interfaces;
 }
 
@@ -603,6 +633,9 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
+      start_tool_contact_cmd_ = NO_NEW_CMD_;
+      end_tool_contact_cmd_ = NO_NEW_CMD_;
+      get_version_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -726,6 +759,26 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(start_tool_contact_cmd_) && ur_driver_ != nullptr) {
+    start_tool_contact_async_success_ = ur_driver_->startToolContact();
+    start_tool_contact_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(end_tool_contact_cmd_) && ur_driver_ != nullptr) {
+    end_tool_contact_async_success_ = ur_driver_->endToolContact();
+    end_tool_contact_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(get_version_cmd_) && ur_driver_ != nullptr) {
+    urcl::VersionInformation version_info = ur_driver_->getVersion();
+    get_version_cmd_ = NO_NEW_CMD_;
+    get_version_major_ = version_info.major;
+    get_version_minor_ = version_info.minor;
+    get_version_bugfix_ = version_info.bugfix;
+    get_version_build_ = version_info.build;
+    get_version_async_success_ = 1.0;
   }
 }
 

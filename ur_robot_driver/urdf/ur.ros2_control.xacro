@@ -224,6 +224,25 @@
         <command_interface name="zero_ftsensor_async_success"/>
       </gpio>
 
+      <gpio name="${tf_prefix}start_tool_contact">
+        <command_interface name="start_tool_contact_cmd"/>
+        <command_interface name="start_tool_contact_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}end_tool_contact">
+        <command_interface name="end_tool_contact_cmd"/>
+        <command_interface name="end_tool_contact_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}get_version">
+        <command_interface name="get_version_cmd"/>
+        <command_interface name="get_version_async_success"/>
+        <command_interface name="get_version_major"/>
+        <command_interface name="get_version_minor"/>
+        <command_interface name="get_version_bugfix"/>
+        <command_interface name="get_version_build"/>
+      </gpio>
+
       <gpio name="${tf_prefix}system_interface">
         <state_interface name="initialized"/>
       </gpio>
