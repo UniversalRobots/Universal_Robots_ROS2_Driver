@@ -242,7 +242,6 @@ def launch_setup(context, *args, **kwargs):
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[
-            robot_description,
             update_rate_config_file,
             ParameterFile(initial_joint_controllers, allow_substs=True),
         ],
