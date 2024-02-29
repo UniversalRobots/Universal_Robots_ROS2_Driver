@@ -247,19 +247,6 @@ def launch_setup(context, *args, **kwargs):
             ParameterFile(initial_joint_controllers, allow_substs=True),
         ],
         output="screen",
-        condition=IfCondition(use_mock_hardware),
-    )
-
-    ur_control_node = Node(
-        package="ur_robot_driver",
-        executable="ur_ros2_control_node",
-        parameters=[
-            robot_description,
-            update_rate_config_file,
-            ParameterFile(initial_joint_controllers, allow_substs=True),
-        ],
-        output="screen",
-        condition=UnlessCondition(use_mock_hardware),
     )
 
     dashboard_client_node = Node(
@@ -389,7 +376,6 @@ def launch_setup(context, *args, **kwargs):
 
     nodes_to_start = [
         control_node,
-        ur_control_node,
         dashboard_client_node,
         tool_communication_node,
         controller_stopper_node,
