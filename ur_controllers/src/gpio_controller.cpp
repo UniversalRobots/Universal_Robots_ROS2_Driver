@@ -97,6 +97,20 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_cmd");
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
+  // Start or stop tool contact functionality
+  config.names.emplace_back(tf_prefix + "start_tool_contact/start_tool_contact_cmd");
+  config.names.emplace_back(tf_prefix + "start_tool_contact/start_tool_contact_async_success");
+  config.names.emplace_back(tf_prefix + "end_tool_contact/end_tool_contact_cmd");
+  config.names.emplace_back(tf_prefix + "end_tool_contact/end_tool_contact_async_success");
+
+  // Get version service
+  config.names.emplace_back(tf_prefix + "get_version/get_version_cmd");
+  config.names.emplace_back(tf_prefix + "get_version/get_version_async_success");
+  config.names.emplace_back(tf_prefix + "get_version/get_version_major");
+  config.names.emplace_back(tf_prefix + "get_version/get_version_minor");
+  config.names.emplace_back(tf_prefix + "get_version/get_version_bugfix");
+  config.names.emplace_back(tf_prefix + "get_version/get_version_build");
+
   return config;
 }
 
@@ -312,6 +326,17 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
         "~/zero_ftsensor",
         std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
+
+    start_tool_contact_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/start_tool_contact",
+        std::bind(&GPIOController::startToolContact, this, std::placeholders::_1, std::placeholders::_2));
+
+    end_tool_contact_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/end_tool_contact",
+        std::bind(&GPIOController::endToolContact, this, std::placeholders::_1, std::placeholders::_2));
+
+    get_version_srv_ = get_node()->create_service<ur_msgs::srv::GetVersion>(
+        "~/get_version", std::bind(&GPIOController::getVersion, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -516,6 +541,81 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
     RCLCPP_ERROR(get_node()->get_logger(), "Could not zero the force torque sensor");
     return false;
   }
+
+  return true;
+}
+
+bool GPIOController::startToolContact(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
+                                      std_srvs::srv::Trigger::Response::SharedPtr resp)
+{
+  // reset success flag
+  command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+
+  // call the service in the hardware
+  command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_CMD].set_value(1.0);
+
+  if (!waitForAsyncCommand(
+          [&]() { return command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_ASYNC_SUCCESS].get_value(); })) {
+    RCLCPP_WARN(get_node()->get_logger(), "Could not verify that tool contact was started.");
+  }
+
+  resp->success =
+      static_cast<bool>(command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_ASYNC_SUCCESS].get_value());
+
+  if (resp->success) {
+    RCLCPP_INFO(get_node()->get_logger(), "Successfully started tool contact");
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not start tool contact");
+    return false;
+  }
+
+  return true;
+}
+
+bool GPIOController::endToolContact(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
+                                    std_srvs::srv::Trigger::Response::SharedPtr resp)
+{
+  // reset success flag
+  command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+
+  // call the service in the hardware
+  command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_CMD].set_value(1.0);
+
+  if (!waitForAsyncCommand(
+          [&]() { return command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_ASYNC_SUCCESS].get_value(); })) {
+    RCLCPP_WARN(get_node()->get_logger(), "Could not verify that tool contact was stopped.");
+  }
+
+  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_ASYNC_SUCCESS].get_value());
+
+  if (resp->success) {
+    RCLCPP_INFO(get_node()->get_logger(), "Successfully stopped tool contact");
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not stop tool contact");
+    return false;
+  }
+
+  return true;
+}
+
+bool GPIOController::getVersion(ur_msgs::srv::GetVersion::Request::SharedPtr /*req*/,
+                                ur_msgs::srv::GetVersion::Response::SharedPtr resp)
+{
+  // reset success flag
+  command_interfaces_[CommandInterfaces::GET_VERSION_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+
+  // call the service in the hardware
+  command_interfaces_[CommandInterfaces::GET_VERSION_CMD].set_value(1.0);
+
+  if (!waitForAsyncCommand(
+          [&]() { return command_interfaces_[CommandInterfaces::GET_VERSION_ASYNC_SUCCESS].get_value(); })) {
+    RCLCPP_WARN(get_node()->get_logger(), "Could not verify software version of robot.");
+  }
+
+  resp->major = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_MAJOR].get_value());
+  resp->minor = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_MINOR].get_value());
+  resp->bugfix = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_BUGFIX].get_value());
+  resp->build = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_BUILD].get_value());
 
   return true;
 }
