@@ -1,6 +1,11 @@
-forward_position_controller:
+passthrough_trajectory_controller:
     speed_scaling_interface_name: {
       type: string,
       default_value: "speed_scaling/speed_scaling_factor",
       description: "Fully qualified name of the speed scaling interface name"
+    }
+    tf_prefix: {
+      type: string,
+      default_value: "",
+      description: "Urdf prefix of the corresponding arm"
     }

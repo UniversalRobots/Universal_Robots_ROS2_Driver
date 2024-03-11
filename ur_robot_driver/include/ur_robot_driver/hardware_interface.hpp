@@ -77,7 +77,7 @@ enum StoppingInterface
   NONE,
   STOP_POSITION,
   STOP_VELOCITY,
-  STOP_FORWARD
+  STOP_PASSTHROUGH
 };
 
 /*!
@@ -135,6 +135,7 @@ protected:
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
+  void check_passthrough_trajectory_controller();
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -191,6 +192,12 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   bool async_thread_shutdown_;
+  double passthrough_trajectory_present_;
+  double passthrough_trajectory_number_of_points_;
+  std::array<double, 6> passthrough_trajectory_positions_ = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+  std::array<double, 6> passthrough_trajectory_velocities_;
+  std::array<double, 6> passthrough_trajectory_accelerations_;
+  double passthrough_trajectory_time_from_start_;
 
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
@@ -212,6 +219,7 @@ protected:
   bool robot_program_running_;
   bool non_blocking_read_;
   double robot_program_running_copy_;
+  bool passthrough_trajectory_executing_;
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
@@ -221,7 +229,7 @@ protected:
   std::vector<std::string> start_modes_;
   bool position_controller_running_;
   bool velocity_controller_running_;
-  bool forward_position_controller_running_;
+  bool passthrough_trajectory_controller_running_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::shared_ptr<std::thread> async_thread_;
