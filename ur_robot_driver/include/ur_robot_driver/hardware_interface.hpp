@@ -76,7 +76,8 @@ enum StoppingInterface
 {
   NONE,
   STOP_POSITION,
-  STOP_VELOCITY
+  STOP_VELOCITY,
+  STOP_FORWARD
 };
 
 /*!
@@ -220,6 +221,7 @@ protected:
   std::vector<std::string> start_modes_;
   bool position_controller_running_;
   bool velocity_controller_running_;
+  bool forward_position_controller_running_;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::shared_ptr<std::thread> async_thread_;
