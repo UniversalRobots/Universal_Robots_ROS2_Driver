@@ -85,7 +85,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   start_modes_ = {};
   position_controller_running_ = false;
   velocity_controller_running_ = false;
-  forward_position_controller_running_ = false;
+  passthrough_trajectory_controller_running_ = false;
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
@@ -94,6 +94,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   initialized_ = false;
   async_thread_shutdown_ = false;
   system_interface_initialized_ = 0.0;
+  passthrough_trajectory_executing_ = false;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -298,6 +299,35 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_present", &passthrough_trajectory_present_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
+                                                                       "passthrough_trajectory_number_of_points",
+                                                                       &passthrough_trajectory_number_of_points_));
+
+  for (size_t i = 0; i < 6; ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "passthrough_controller", "passthrough_trajectory_positions_" + std::to_string(i),
+        &passthrough_trajectory_positions_[i]));
+  }
+
+  for (size_t i = 0; i < 6; ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "passthrough_controller", "passthrough_trajectory_velocities_" + std::to_string(i),
+        &passthrough_trajectory_velocities_[i]));
+  }
+
+  for (size_t i = 0; i < 6; ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "passthrough_controller", "passthrough_trajectory_accelerations_" + std::to_string(i),
+        &passthrough_trajectory_accelerations_[i]));
+  }
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
+                                                                       "passthrough_trajectory_time_from_start",
+                                                                       &passthrough_trajectory_time_from_start_));
 
   return command_interfaces;
 }
@@ -517,6 +547,9 @@ void URPositionHardwareInterface::asyncThread()
     if (initialized_) {
       //        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initialized in async thread");
       checkAsyncIO();
+      if (passthrough_trajectory_controller_running_) {
+        check_passthrough_trajectory_controller();
+      }
     }
     std::this_thread::sleep_for(std::chrono::nanoseconds(20000000));
   }
@@ -632,7 +665,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
 
-    } else if (forward_position_controller_running_) {
+    } else if (passthrough_trajectory_controller_running_) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP);
     } else {
       ur_driver_->writeKeepalive();
@@ -882,6 +915,22 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 
   return ret_val;
 }
+
+void URPositionHardwareInterface::check_passthrough_trajectory_controller()
+{
+  if (!std::isnan(passthrough_trajectory_present_)) {
+    if (!passthrough_trajectory_executing_) {
+      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
+                                                static_cast<int>(passthrough_trajectory_number_of_points_));
+      passthrough_trajectory_executing_ = true;
+    }
+    if (passthrough_trajectory_executing_) {
+      ur_driver_->writeTrajectoryPoint(passthrough_trajectory_positions_, false,
+                                       passthrough_trajectory_time_from_start_);
+    }
+  }
+}
+
 }  // namespace ur_robot_driver
 
 #include "pluginlib/class_list_macros.hpp"

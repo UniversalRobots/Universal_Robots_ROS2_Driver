@@ -38,35 +38,60 @@
  */
 //----------------------------------------------------------------------
 
-#ifndef UR_CONTROLLERS__FORWARD_POSITION_CONTROLLER_HPP_
-#define UR_CONTROLLERS__FORWARD_POSITION_CONTROLLER_HPP_
+#ifndef UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_
+#define UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_
 
 #include <memory>
-// #include "controller_interface/controller_interface.hpp"
-#include "joint_trajectory_controller/joint_trajectory_controller.hpp"
-#include "forward_position_controller_parameters.hpp"
+#include <string>
+#include <vector>
 
-namespace forward_controller
+#include "controller_interface/controller_interface.hpp"
+#include "rclcpp_action/server.hpp"
+#include "rclcpp_action/create_server.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/server_goal_handle.hpp"
+
+#include "trajectory_msgs/msg/joint_trajectory.hpp"
+#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
+#include "control_msgs/action/follow_joint_trajectory.hpp"
+#include "control_msgs/action/joint_trajectory.hpp"
+
+#include "passthrough_trajectory_controller_parameters.hpp"
+
+namespace ur_controllers
 {
-class ForwardPositionController : public joint_trajectory_controller::JointTrajectoryController
+class PassthroughTrajectoryController : public controller_interface::ControllerInterface
 {
 public:
-  ForwardPositionController() = default;
-  ~ForwardPositionController() override = default;
+  PassthroughTrajectoryController() = default;
+  ~PassthroughTrajectoryController() override = default;
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
+
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
+
+  controller_interface::CallbackReturn on_init() override;
+
+  controller_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
 
   controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& state) override;
 
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
-  controller_interface::CallbackReturn on_init() override;
-
-  void start_interpolation();
-
 private:
-  std::shared_ptr<forward_position_controller::ParamListener> forward_param_listener_;
-  forward_position_controller::Params forward_params_;
+  std::shared_ptr<passthrough_trajectory_controller::ParamListener> passthrough_param_listener_;
+  passthrough_trajectory_controller::Params passthrough_params_;
+
+  rclcpp_action::Server<control_msgs::action::JointTrajectory>::SharedPtr send_trajectory_action_server_;
+
+  rclcpp_action::GoalResponse goal_received_callback(
+      const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const control_msgs::action::JointTrajectory::Goal> goal);
+
+  rclcpp_action::CancelResponse goal_cancelled_callback(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle);
+
+  void goal_accepted_callback(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle);
 };
-}  // namespace forward_controller
-#endif  // UR_CONTROLLERS__FORWARD_POSITION_CONTROLLER_HPP_
+}  // namespace ur_controllers
+#endif  // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_

@@ -14,7 +14,7 @@
       This controller publishes the Tool IO.
     </description>
   </class>
-  <class name="ur_controllers/ForwardPositionController" type="ur_controllers::ForwardPositionController" base_class_type="controller_interface::ControllerInterface">
+  <class name="ur_controllers/PassthroughTrajectoryController" type="ur_controllers::PassthroughTrajectoryController" base_class_type="controller_interface::ControllerInterface">
     <description>
       This controller forwards a cartesian trajectory to the robot controller for interpolation.
     </description>
