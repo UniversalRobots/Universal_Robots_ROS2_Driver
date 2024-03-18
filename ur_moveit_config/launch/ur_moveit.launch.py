@@ -44,13 +44,8 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 def launch_setup(context, *args, **kwargs):
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
-    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    safety_limits = LaunchConfiguration("safety_limits")
-    safety_pos_margin = LaunchConfiguration("safety_pos_margin")
-    safety_k_position = LaunchConfiguration("safety_k_position")
+    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     # General arguments
-    description_package = LaunchConfiguration("description_package")
-    description_file = LaunchConfiguration("description_file")
     moveit_config_package = LaunchConfiguration("moveit_config_package")
     moveit_joint_limits_file = LaunchConfiguration("moveit_joint_limits_file")
     moveit_config_file = LaunchConfiguration("moveit_config_file")
@@ -59,68 +54,6 @@ def launch_setup(context, *args, **kwargs):
     use_sim_time = LaunchConfiguration("use_sim_time")
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_servo = LaunchConfiguration("launch_servo")
-
-    joint_limit_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
-    )
-    kinematics_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "default_kinematics.yaml"]
-    )
-    physical_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "physical_parameters.yaml"]
-    )
-    visual_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "visual_parameters.yaml"]
-    )
-
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
-            " ",
-            "robot_ip:=xxx.yyy.zzz.www",
-            " ",
-            "joint_limit_params:=",
-            joint_limit_params,
-            " ",
-            "kinematics_params:=",
-            kinematics_params,
-            " ",
-            "physical_params:=",
-            physical_params,
-            " ",
-            "visual_params:=",
-            visual_params,
-            " ",
-            "safety_limits:=",
-            safety_limits,
-            " ",
-            "safety_pos_margin:=",
-            safety_pos_margin,
-            " ",
-            "safety_k_position:=",
-            safety_k_position,
-            " ",
-            "name:=",
-            "ur",
-            " ",
-            "ur_type:=",
-            ur_type,
-            " ",
-            "script_filename:=ros_control.urscript",
-            " ",
-            "input_recipe_filename:=rtde_input_recipe.txt",
-            " ",
-            "output_recipe_filename:=rtde_output_recipe.txt",
-            " ",
-            "prefix:=",
-            prefix,
-            " ",
-        ]
-    )
-    robot_description = {"robot_description": robot_description_content}
-
     # MoveIt Configuration
     robot_description_semantic_content = Command(
         [
@@ -131,9 +64,7 @@ def launch_setup(context, *args, **kwargs):
             ),
             " ",
             "name:=",
-            # Also ur_type parameter could be used but then the planning group names in yaml
-            # configs has to be updated!
-            "ur",
+            ur_type,
             " ",
             "prefix:=",
             prefix,
@@ -175,11 +106,8 @@ def launch_setup(context, *args, **kwargs):
 
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
-    # the scaled_joint_trajectory_controller does not work on mock hardware
-    change_controllers = context.perform_substitution(use_mock_hardware)
-    if change_controllers == "true":
-        controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
-        controllers_yaml["joint_trajectory_controller"]["default"] = True
+    initial_controller = context.perform_substitution(initial_joint_controller)
+    controllers_yaml[initial_controller]["default"] = True
 
     moveit_controllers = {
         "moveit_simple_controller_manager": controllers_yaml,
@@ -192,7 +120,6 @@ def launch_setup(context, *args, **kwargs):
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
     }
-
     planning_scene_monitor_parameters = {
         "publish_planning_scene": True,
         "publish_geometry_updates": True,
@@ -211,7 +138,6 @@ def launch_setup(context, *args, **kwargs):
         executable="move_group",
         output="screen",
         parameters=[
-            robot_description,
             robot_description_semantic,
             robot_description_kinematics,
             robot_description_planning,
@@ -236,7 +162,6 @@ def launch_setup(context, *args, **kwargs):
         output="log",
         arguments=["-d", rviz_config_file],
         parameters=[
-            robot_description,
             robot_description_semantic,
             ompl_planning_pipeline_config,
             robot_description_kinematics,
@@ -254,7 +179,6 @@ def launch_setup(context, *args, **kwargs):
         executable="servo_node",
         parameters=[
             servo_params,
-            robot_description,
             robot_description_semantic,
         ],
         output="screen",
@@ -267,7 +191,7 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     declared_arguments = []
-    # UR specific arguments
+    # UR specific arguments.
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
@@ -277,9 +201,10 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_mock_hardware",
-            default_value="false",
-            description="Indicate whether robot is running with mock hardware mirroring command to its states.",
+            "initial_joint_controller",
+            default_value="scaled_joint_trajectory_controller",
+            description="Initial controller used by MoveIt!.",
+            choices=["scaled_joint_trajectory_controller", "joint_trajectory_controller"],
         )
     )
     declared_arguments.append(
