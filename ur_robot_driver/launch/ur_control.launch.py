@@ -260,7 +260,7 @@ def launch_setup(context, *args, **kwargs):
 
     tool_communication_node = Node(
         package="ur_robot_driver",
-        condition=IfCondition(use_tool_communication),
+        condition=IfCondition(use_tool_communication) and UnlessCondition(use_mock_hardware),
         executable="tool_communication.py",
         name="ur_tool_comm",
         output="screen",
