@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2019, FZI Forschungszentrum Informatik
 #
 # Redistribution and use in source and binary forms, with or without
@@ -113,6 +113,14 @@ class RobotDriverTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
                 activate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
+
+    def test_start_passthrough_controller(self):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
             ).ok
         )
 
@@ -311,17 +319,17 @@ class RobotDriverTest(unittest.TestCase):
             )
         )
 
-        # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
-        # see https://github.com/ros-controls/ros2_controllers/issues/249
-        # Now do the same again, but with a goal time constraint
-        # self.node.get_logger().info("Sending scaled goal with time restrictions")
-        #
-        # goal.goal_time_tolerance = Duration(nanosec=10000000)
-        # goal_response = self.call_action("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal)
-        #
-        # self.assertEqual(goal_response.accepted, True)
-        #
-        # if goal_response.accepted:
-        #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
-        #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
-        #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
+    # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
+    # see https://github.com/ros-controls/ros2_controllers/issues/249
+    # Now do the same again, but with a goal time constraint
+    # self.node.get_logger().info("Sending scaled goal with time restrictions")
+    #
+    # goal.goal_time_tolerance = Duration(nanosec=10000000)
+    # goal_response = self.call_action("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal)
+    #
+    # self.assertEqual(goal_response.accepted, True)
+    #
+    # if goal_response.accepted:
+    #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
+    #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
+    #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")

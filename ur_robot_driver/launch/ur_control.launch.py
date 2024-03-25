@@ -151,6 +151,7 @@ def launch_setup():
             ]
             + inactive_flags
             + controllers,
+            # ros_arguments=['--log-level', 'debug']
         )
 
     controllers_active = [
@@ -159,9 +160,8 @@ def launch_setup():
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
         "passthrough_trajectory_controller",
-        "scaled_joint_trajectory_controller",
     ]
-    controllers_inactive = ["forward_position_controller"]
+    controllers_inactive = ["forward_position_controller", "scaled_joint_trajectory_controller"]
 
     controller_spawners = [controller_spawner(controllers_active)] + [
         controller_spawner(controllers_inactive, active=False)
@@ -179,6 +179,7 @@ def launch_setup():
             controller_spawner_timeout,
         ],
         condition=IfCondition(activate_joint_controller),
+        # ros_arguments=['--log-level', 'debug']
     )
     initial_joint_controller_spawner_stopped = Node(
         package="controller_manager",
@@ -192,6 +193,7 @@ def launch_setup():
             "--inactive",
         ],
         condition=UnlessCondition(activate_joint_controller),
+        # ros_arguments=['--log-level', 'debug']
     )
 
     rsp = IncludeLaunchDescription(
@@ -325,7 +327,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "initial_joint_controller",
-            default_value="scaled_joint_trajectory_controller",
+            default_value="passthrough_trajectory_controller",
             description="Initially loaded robot controller.",
         )
     )
