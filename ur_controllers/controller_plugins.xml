@@ -16,7 +16,7 @@
   </class>
   <class name="ur_controllers/PassthroughTrajectoryController" type="ur_controllers::PassthroughTrajectoryController" base_class_type="controller_interface::ControllerInterface">
     <description>
-      This controller forwards a cartesian trajectory to the robot controller for interpolation.
+      This controller forwards a joint-based trajectory to the robot controller for interpolation.
     </description>
   </class>
 </library>
