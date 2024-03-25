@@ -38,6 +38,7 @@
  */
 //----------------------------------------------------------------------
 
+#include <cmath>
 #include "ur_controllers/passthrough_trajectory_controller.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
@@ -48,9 +49,9 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
   passthrough_param_listener_ = std::make_shared<passthrough_trajectory_controller::ParamListener>(get_node());
   passthrough_params_ = passthrough_param_listener_->get_params();
 
-  std::cout << "-------------------------------Initialised passthrough "
+  /*std::cout << "-------------------------------Initialised passthrough "
                "controller-------------------------------------------------"
-            << std::endl;
+            << std::endl;*/
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -58,18 +59,24 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
 controller_interface::CallbackReturn
 PassthroughTrajectoryController::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
+  start_action_server();
+  trajectory_active_ = false;
+  /*std::cout << "-------------------------------Configured passthrough "
+               "controller-------------------------------------------------"
+            << std::endl;*/
+
+  return ControllerInterface::on_configure(previous_state);
+}
+
+void PassthroughTrajectoryController::start_action_server(void)
+{
   send_trajectory_action_server_ = rclcpp_action::create_server<control_msgs::action::JointTrajectory>(
       get_node(), std::string(get_node()->get_name()) + "/forward_joint_trajectory",
       std::bind(&PassthroughTrajectoryController::goal_received_callback, this, std::placeholders::_1,
                 std::placeholders::_2),
       std::bind(&PassthroughTrajectoryController::goal_cancelled_callback, this, std::placeholders::_1),
       std::bind(&PassthroughTrajectoryController::goal_accepted_callback, this, std::placeholders::_1));
-
-  std::cout << "-------------------------------Configured passthrough "
-               "controller-------------------------------------------------"
-            << std::endl;
-
-  return ControllerInterface::on_configure(previous_state);
+  return;
 }
 
 controller_interface::InterfaceConfiguration PassthroughTrajectoryController::state_interface_configuration() const
@@ -80,11 +87,11 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::st
 
   conf.names.push_back(passthrough_params_.speed_scaling_interface_name);
 
-  std::cout << conf.names[0] << " / " << conf.names.size() << std::endl;
+  // std::cout << conf.names[0] << " / " << conf.names.size() << std::endl;
 
-  std::cout << "------------------------------- Configured passthrough "
+  /*std::cout << "------------------------------- Configured passthrough "
                "controller state interface -------------------------------------------------"
-            << std::endl;
+            << std::endl;*/
 
   return conf;
 }
@@ -98,7 +105,11 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
 
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_present");
 
-  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_number_of_points_");
+  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_point_written");
+
+  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_number_of_points");
+
+  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_cancel");
 
   for (size_t i = 0; i < 6; ++i) {
     config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_positions_" +
@@ -115,34 +126,45 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
 
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_time_from_start");
 
-  std::cout << "------------------------------- Configured passthrough "
+  /*std::cout << "------------------------------- Configured passthrough "
                "controller command interface -------------------------------------------------"
-            << std::endl;
+            << std::endl;*/
 
   return config;
 }
 
 controller_interface::CallbackReturn PassthroughTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
 {
-  std::cout << "-------------------------------Activated passthrough "
+  /*std::cout << "-------------------------------Activated passthrough "
                "controller-------------------------------------------------"
-            << std::endl;
+            << std::endl;*/
   return ControllerInterface::on_activate(state);
 }
 
 controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& /*time*/,
-                                                                          const rclcpp::Duration& /*period*/)
+                                                                          const rclcpp::Duration& period)
 {
   static int delay = 500;
+  // Debug message
   if (!delay) {
     std::cout << "-------------------------------Updated passthrough "
                  "controller-------------------------------------------------"
               << std::endl;
-
-    // std::cout << command_interfaces_.at(2).get_name() << " = " << command_interfaces_.at(2).get_value() << std::endl;
-    delay = 500;
+    delay--;
   }
-  delay--;
+  if (delay)
+    delay--;
+  if (trajectory_active_) {
+    scaling_factor_ = state_interfaces_[0].get_value();
+    active_trajectory_elapsed_time_ +=
+        static_cast<int>(scaling_factor_ * ((period.seconds() * pow(10, 9)) + period.nanoseconds()));
+
+    if (active_trajectory_elapsed_time_ > max_trajectory_time_) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Trajectory should be finished by now. You may want to cancel this goal, "
+                                             "if it is not.");
+      trajectory_active_ = false;
+    }
+  }
   return controller_interface::return_type::OK;
 }
 
@@ -156,6 +178,14 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new trajectories. Controller is not running.");
     return rclcpp_action::GoalResponse::REJECT;
   }
+  // Check dimensions of the trajectory
+  for (uint32_t i = 0; i < goal->trajectory.points.size(); i++) {
+    if (goal->trajectory.points[i].positions.size() != 6) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new trajectory. All trajectory points must have positions "
+                                             "for all joints of the robot. (6 joint positions per point)");
+      return rclcpp_action::GoalResponse::REJECT;
+    }
+  }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
@@ -163,6 +193,12 @@ rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_ca
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle)
 {
   RCLCPP_INFO(get_node()->get_logger(), "Canceling active trajectory because cancel callback received.");
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(0.0);
+  current_point_ = 0;
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_CANCEL].set_value(1.0);
+  std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
+      std::make_shared<control_msgs::action::JointTrajectory::Result>();
+  goal_handle->canceled(result);
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
@@ -170,9 +206,78 @@ void PassthroughTrajectoryController::goal_accepted_callback(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle)
 {
   RCLCPP_INFO(get_node()->get_logger(), "Accepted new trajectory.");
+  trajectory_active_ = true;
+  active_trajectory_elapsed_time_ = 0;
+  current_point_ = 0;
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_CANCEL].set_value(0.0);
+  active_joint_traj_ = goal_handle->get_goal()->trajectory;
+  max_trajectory_time_ = (active_joint_traj_.points.back().time_from_start.sec * pow(10, 9)) +
+                         active_joint_traj_.points.back().time_from_start.nanosec;
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_NUMBER_OF_POINTS].set_value(
+      active_joint_traj_.points.size());
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(1.0);
+  for (int i = 0; i < 6; i++) {
+    command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
+        active_joint_traj_.points[current_point_].positions[i]);
+  }
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
+      active_joint_traj_.points[current_point_].time_from_start.sec +
+      (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].set_value(0.0);
+  current_point_++;
+  std::thread{ std::bind(&PassthroughTrajectoryController::execute, this, std::placeholders::_1), goal_handle }
+      .detach();
   return;
 }
 
+void PassthroughTrajectoryController::execute(
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle)
+{
+  std::cout << "------------------Entered Execute loop--------------------------" << std::endl;
+  rclcpp::Rate loop_rate(500);
+  while (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].get_value() == 1.0) {
+    if (command_interfaces_[PASSTHROUGH_TRAJECTORY_CANCEL].get_value() == 1.0) {
+      std::cout << "------------------Entered cancel--------------------------" << std::endl;
+      std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::JointTrajectory::Result>();
+      goal_handle->abort(result);
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(0.0);
+      trajectory_active_ = false;
+      return;
+    }
+    if (goal_handle->is_canceling()) {
+      std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::JointTrajectory::Result>();
+      goal_handle->canceled(result);
+    } else {
+      // Write a new point to the command interface, if the previous point has been written to the hardware.
+      if (command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].get_value() == 1.0 &&
+          current_point_ < active_joint_traj_.points.size()) {
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
+            active_joint_traj_.points[current_point_].time_from_start.sec +
+            (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
+        for (int i = 0; i < 6; i++) {
+          command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
+              active_joint_traj_.points[current_point_].positions[i]);
+        }
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].set_value(0.0);
+        current_point_++;
+      }
+    }
+    // Check if all points have been written to the hardware
+    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].get_value() == 1.0 &&
+        current_point_ == active_joint_traj_.points.size() &&
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].get_value() == 1.0) {
+      RCLCPP_INFO(get_node()->get_logger(), "All points sent to the robot!");
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(0.0);
+      std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::JointTrajectory::Result>();
+      goal_handle->succeed(result);
+    }
+    loop_rate.sleep();
+  }
+  return;
+}
 }  // namespace ur_controllers
 
 #include "pluginlib/class_list_macros.hpp"

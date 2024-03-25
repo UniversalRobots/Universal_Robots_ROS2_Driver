@@ -148,6 +148,7 @@ install(PROGRAMS
   scripts/wait_for_robot_description
   scripts/example_move.py
   scripts/start_ursim.sh
+  ../examples/examples.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

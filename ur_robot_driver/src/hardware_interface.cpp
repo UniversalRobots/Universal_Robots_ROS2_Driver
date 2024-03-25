@@ -145,7 +145,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -303,9 +302,15 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "passthrough_controller", "passthrough_trajectory_present", &passthrough_trajectory_present_));
 
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_point_written", &passthrough_point_written_));
+
   command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
                                                                        "passthrough_trajectory_number_of_points",
                                                                        &passthrough_trajectory_number_of_points_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_cancel", &passthrough_trajectory_cancel_));
 
   for (size_t i = 0; i < 6; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -489,6 +494,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
+  ur_driver_->registerTrajectoryDoneCallback(
+      std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -665,7 +673,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
 
-    } else if (passthrough_trajectory_controller_running_) {
+    } else if (passthrough_trajectory_controller_running_ && passthrough_trajectory_executing_ != 1.0) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP);
     } else {
       ur_driver_->writeKeepalive();
@@ -848,6 +856,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
       }
+      if (key == PASSTHROUGH_TRAJECTORY_CONTROLLER + std::to_string(i)) {
+        start_modes_.push_back(PASSTHROUGH_TRAJECTORY_CONTROLLER);
+      }
     }
   }
   // set new mode to all interfaces at the same time
@@ -869,6 +880,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       }
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
+      }
+      if (key == PASSTHROUGH_TRAJECTORY_CONTROLLER + std::to_string(i)) {
+        stop_modes_.push_back(StoppingInterface::STOP_PASSTHROUGH);
       }
     }
   }
@@ -895,19 +909,31 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
              std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_VELOCITY) != stop_modes_.end()) {
     velocity_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
+                                                  StoppingInterface::STOP_PASSTHROUGH) != stop_modes_.end()) {
+    passthrough_trajectory_controller_running_ = false;
+    std::cout << "---------------------Stopped passthrough controller---------------" << std::endl;
   }
 
   if (start_modes_.size() != 0 &&
       std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
     velocity_controller_running_ = false;
+    passthrough_trajectory_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
 
   } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
                                                    hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
     position_controller_running_ = false;
+    passthrough_trajectory_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
+  } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
+                                                   PASSTHROUGH_TRAJECTORY_CONTROLLER) != start_modes_.end()) {
+    velocity_controller_running_ = false;
+    position_controller_running_ = false;
+    passthrough_trajectory_controller_running_ = true;
+    std::cout << "---------------------Started passthrough controller---------------" << std::endl;
   }
 
   start_modes_.clear();
@@ -918,17 +944,44 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 
 void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 {
-  if (!std::isnan(passthrough_trajectory_present_)) {
+  static double last_time = 0.0;
+  if (passthrough_trajectory_present_ == 1.0) {
     if (!passthrough_trajectory_executing_) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
                                                 static_cast<int>(passthrough_trajectory_number_of_points_));
       passthrough_trajectory_executing_ = true;
+      std::cout << "Received points to passthrough: " << passthrough_trajectory_number_of_points_ << std::endl;
     }
-    if (passthrough_trajectory_executing_) {
-      ur_driver_->writeTrajectoryPoint(passthrough_trajectory_positions_, false,
-                                       passthrough_trajectory_time_from_start_);
+    if (passthrough_trajectory_executing_ && passthrough_point_written_ == 0.0) {
+      std::cout << "Writing point to robot with time parameter: " << passthrough_trajectory_time_from_start_
+                << std::endl;
+
+      bool status = ur_driver_->writeTrajectoryPoint(passthrough_trajectory_positions_, false,
+                                                     passthrough_trajectory_time_from_start_ - last_time);
+
+      std::cout << "Status of write: " << status << std::endl;
+      if (!status) {
+        std::cout << "Write failed, cancelling trajectory" << std::endl;
+        passthrough_trajectory_cancel_ = 1.0;
+        std::cout << "----------------------------Cancelling trajectory in hardware interface------------------"
+                  << std::endl;
+        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+      } else {
+        last_time = passthrough_trajectory_time_from_start_;
+        passthrough_point_written_ = 1.0;
+      }
     }
+  } else {
+    passthrough_trajectory_executing_ = false;
   }
+}
+
+void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
+{
+  std::cout << "-------------------Triggered trajectory callback!--------------------------" << std::endl;
+  std::cout << "Result is: " << int(result) << std::endl;
+  passthrough_trajectory_executing_ = false;
+  return;
 }
 
 }  // namespace ur_robot_driver

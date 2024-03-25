@@ -35,9 +35,10 @@ from launch.actions import (
     DeclareLaunchArgument,
     ExecuteProcess,
     IncludeLaunchDescription,
-    RegisterEventHandler,
+    # RegisterEventHandler,
 )
-from launch.event_handlers import OnProcessExit
+
+# from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
@@ -326,22 +327,29 @@ def generate_driver_test_description(
                 [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
             )
         ),
-        launch_arguments=launch_arguments.items(),
+        launch_arguments={
+            "robot_ip": "172.17.0.3",
+            "ur_type": ur_type,
+            "launch_rviz": "false",
+            "controller_spawner_timeout": str(controller_spawner_timeout),
+            "initial_joint_controller": "scaled_joint_trajectory_controller",
+            "headless_mode": "true",
+            "launch_dashboard_client": "false",
+            "start_joint_controller": "false",
+            "tf_prefix": tf_prefix,
+        }.items(),
     )
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
-    driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
-    )
+    # wait_dashboard_server = ExecuteProcess(
+    #     cmd=[
+    #         PathJoinSubstitution(
+    #             [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
+    #         )
+    #     ],
+    #     name="wait_dashboard_server",
+    #     output="screen",
+    # )
+    # driver_starter = RegisterEventHandler(
+    #     OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+    # )
 
-    return LaunchDescription(
-        _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, _ursim_action(), driver_starter]
-    )
+    return LaunchDescription(_declare_launch_arguments() + [ReadyToTest(), robot_driver])

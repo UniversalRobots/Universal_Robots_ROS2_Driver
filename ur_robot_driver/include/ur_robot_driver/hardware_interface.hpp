@@ -137,6 +137,7 @@ protected:
   void extractToolPose();
   void transformForceTorque();
   void check_passthrough_trajectory_controller();
+  void trajectory_done_callback(urcl::control::TrajectoryResult result);
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -194,8 +195,10 @@ protected:
   double system_interface_initialized_;
   bool async_thread_shutdown_;
   double passthrough_trajectory_present_;
+  double passthrough_trajectory_cancel_;
+  double passthrough_point_written_;
   double passthrough_trajectory_number_of_points_;
-  std::array<double, 6> passthrough_trajectory_positions_ = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+  std::array<double, 6> passthrough_trajectory_positions_;
   std::array<double, 6> passthrough_trajectory_velocities_;
   std::array<double, 6> passthrough_trajectory_accelerations_;
   double passthrough_trajectory_time_from_start_;
@@ -238,6 +241,8 @@ protected:
   std::atomic_bool rtde_comm_has_been_started_ = false;
 
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
+
+  const std::string PASSTHROUGH_TRAJECTORY_CONTROLLER = "passthrough_controller/passthrough_trajectory_positions_";
 };
 }  // namespace ur_robot_driver
 
