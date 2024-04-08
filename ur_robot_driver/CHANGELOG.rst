@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.6 (2024-04-08)
+------------------
 * Add UR30 support (`#949 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/949>`_)
 * Move communication setup to on_configure instead of on_activate (`#937 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/937>`_)
 * Contributors: Felix Exner, Vincenzo Di Pentima, Robert Wilbrandt
