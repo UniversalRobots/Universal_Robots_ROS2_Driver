@@ -114,7 +114,7 @@ For getting started, you'll basically need three steps:
    details.
 
    ```bash
-   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20, ur30
    # Replace the IP address with the IP address of your actual robot / URSim
    ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
    ```
