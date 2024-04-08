@@ -2,6 +2,9 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.2.10 (2024-01-03)
 -------------------
 * Update JTC API (`#896 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/896>`_)
