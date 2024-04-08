@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ur_bringup</name>
-  <version>2.2.10</version>
+  <version>2.2.11</version>
   <description>Launch file and run-time configurations, e.g. controllers.</description>
 
   <maintainer email="denis@stoglrobotics.de">Denis Stogl</maintainer>
