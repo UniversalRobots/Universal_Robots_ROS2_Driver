@@ -31,13 +31,14 @@ exist)
 ```bash
 # Replace your actual colcon_ws folder
 $ cd <colcon_ws>/src
-$ ros2 pkg  create <organization_name>_ur_launch --build-type ament_cmake  --dependencies ur_client_library \
+$ export PKG_NAME="my_org_ur_launch"
+$ ros2 pkg  create $PKG_NAME --build-type ament_cmake  --dependencies ur_robot_driver \
 --description "Package containing calibrations and launch files for our UR robots."
 # Create a skeleton package
-$ mkdir -p <organization_name>_ur_launch/etc
-$ mkdir -p <organization_name>_ur_launch/launch
-$ echo 'install(DIRECTORY etc launch DESTINATION share/${PROJECT_NAME})' >> <organization_name>_ur_launch/CMakeLists.txt
-$ colcon build --packages-select <organization_name>_ur_launch
+$ mkdir -p $PKG_NAME/etc
+$ mkdir -p $PKG_NAME/launch
+$ echo 'install(DIRECTORY etc launch DESTINATION share/${PROJECT_NAME})' >> $PKG_NAME/CMakeLists.txt
+$ cd .. && colcon build --packages-select $PKG_NAME
 ```
 
 We can use the new package to store the calibration data in that package. We recommend naming each
@@ -46,7 +47,7 @@ robot individually, e.g. *ex-ur10-1*.
 ```bash
 $ ros2 launch ur_calibration calibration_correction.launch.py \
 robot_ip:=<robot_ip> \
-target_filename:="$(ros2 pkg prefix <organization_name>_ur_launch)/share/<organization_name>_ur_launch/etc/ex-ur10-1_calibration.yaml"
+target_filename:="$PKG_NAME/etc/ex-ur10-1_calibration.yaml"
 ```
 
 To make life easier, we create a launchfile for this particular robot. We base it upon the
@@ -54,7 +55,7 @@ respective launchfile in the driver:
 
 ```bash
 # Replace your actual colcon_ws folder
-$ cd <colcon_ws>/src/<organization_name>_ur_launch/launch
+$ cd <colcon_ws>/src/$PKG_NAME/launch
 $ cp $(ros2 pkg prefix ur_robot_driver)/share/ur_robot_driver/launch/ur_control.launch.py ex-ur10-1.launch.py
 ```
 
@@ -62,17 +63,19 @@ Next, modify the parameter section of the new launchfile to match your actual ca
 
 ```py
 kinematics_params = PathJoinSubstitution(
-        [FindPackageShare("<organization_name>_ur_launch"), "etc", "", "ex-ur10-1_calibration.yaml"]
+        [FindPackageShare("$PKG_NAME"), "etc", "ex-ur10-1_calibration.yaml"]
     )
-
 ```
+
+You can also set default values for the robot's IP address and its ur_type by providing respective
+`default_value` entries inside the respective `declared_arguments.append(..)` statements.
 
 Then, anybody cloning this repository can startup the robot simply by launching
 
 ```bash
 # Replace your actual colcon_ws folder
 $ cd <colcon_ws>
-$ colcon build --packages-select <organization_name>_ur_launch
-$ ros2 launch <organization_name>_ur_launch ex-ur10-1.launch.py
-robot_ip:=xxx.yyy.zzz.www ur_type:=ur5e  use_mock_hardware:=false launch_rviz:=true
+$ colcon build --packages-select $PKG_NAME
+# Replace your robot's IP address and ur_type if you didn't set them inside the launchfile
+$ ros2 launch $PKG_NAME ex-ur10-1.launch.py robot_ip:=xxx.yyy.zzz.www ur_type:=ur5e
 ```
