@@ -57,6 +57,7 @@
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "gpio_controller_parameters.hpp"
+#include "ur_msgs/srv/get_version.hpp"
 
 namespace ur_controllers
 {
@@ -79,6 +80,12 @@ enum CommandInterfaces
   ZERO_FTSENSOR_ASYNC_SUCCESS = 32,
   HAND_BACK_CONTROL_CMD = 33,
   HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
+  GET_VERSION_CMD = 39,
+  GET_VERSION_ASYNC_SUCCESS = 40,
+  GET_VERSION_MAJOR = 41,
+  GET_VERSION_MINOR = 42,
+  GET_VERSION_BUGFIX = 43,
+  GET_VERSION_BUILD = 44
 };
 
 enum StateInterfaces
@@ -136,6 +143,8 @@ private:
 
   bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
 
+  bool getVersion(ur_msgs::srv::GetVersion::Request::SharedPtr req, ur_msgs::srv::GetVersion::Response::SharedPtr resp);
+
   void publishIO();
 
   void publishToolData();
@@ -163,6 +172,7 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
+  rclcpp::Service<ur_msgs::srv::GetVersion>::SharedPtr get_version_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
