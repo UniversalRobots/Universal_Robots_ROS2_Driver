@@ -1,3 +1,11 @@
+2.4.4 (2024-04-04)
+------------------
+* Use ros2 control node from controller_manager and description topic (`#939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/939>`_)
+* Move communication setup to on_configure instead of on_activate (`#732 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/732>`_)
+* [URDF] Fix initial value of speed scaling factor syntax (`#920 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/920>`_)
+* Reduce number of controller_spawners to 3 (`#919 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/919>`_)
+* Contributors: Felix Exner
+
 2.4.3 (2024-02-02)
 ------------------
 * Add UR30 support (`#899 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/899>`_)
