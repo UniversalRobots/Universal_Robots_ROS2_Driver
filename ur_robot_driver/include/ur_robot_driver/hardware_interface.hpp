@@ -194,7 +194,7 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   bool async_thread_shutdown_;
-  double passthrough_trajectory_present_;
+  double passthrough_trajectory_transfer_state_;
   double passthrough_trajectory_cancel_;
   double passthrough_point_written_;
   double passthrough_trajectory_number_of_points_;
@@ -224,6 +224,8 @@ protected:
   bool non_blocking_read_;
   double robot_program_running_copy_;
   bool passthrough_trajectory_executing_;
+  std::vector<std::array<double, 6>> trajectory_joint_positions_;
+  std::vector<double> trajectory_times_;
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
