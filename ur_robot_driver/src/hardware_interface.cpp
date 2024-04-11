@@ -299,8 +299,9 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "passthrough_controller", "passthrough_trajectory_present", &passthrough_trajectory_present_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
+                                                                       "passthrough_trajectory_transfer_state",
+                                                                       &passthrough_trajectory_transfer_state_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "passthrough_controller", "passthrough_point_written", &passthrough_point_written_));
@@ -945,40 +946,55 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 {
   static double last_time = 0.0;
-  if (passthrough_trajectory_present_ == 1.0) {
-    if (!passthrough_trajectory_executing_) {
-      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
-                                                static_cast<int>(passthrough_trajectory_number_of_points_));
-      passthrough_trajectory_executing_ = true;
-      std::cout << "Received points to passthrough: " << passthrough_trajectory_number_of_points_ << std::endl;
+  if (passthrough_trajectory_transfer_state_ == 1.0) {
+    trajectory_joint_positions_.push_back(passthrough_trajectory_positions_);
+    trajectory_times_.push_back(passthrough_trajectory_time_from_start_ - last_time);
+    last_time = passthrough_trajectory_time_from_start_;
+    passthrough_point_written_ = 1.0;
+  } else if (passthrough_trajectory_transfer_state_ == 2.0) {
+    ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
+                                              trajectory_joint_positions_.size());
+    for (int i = 0; i < trajectory_joint_positions_.size(); i++) {
+      ur_driver_->writeTrajectoryPoint(trajectory_joint_positions_[i], false, trajectory_times_[i]);
     }
-    if (passthrough_trajectory_executing_ && passthrough_point_written_ == 0.0) {
-      std::cout << "Writing point to robot with time parameter: " << passthrough_trajectory_time_from_start_
-                << std::endl;
-
-      bool status = ur_driver_->writeTrajectoryPoint(passthrough_trajectory_positions_, false,
-                                                     passthrough_trajectory_time_from_start_ - last_time);
-
-      std::cout << "Status of write: " << status << std::endl;
-      if (!status) {
-        std::cout << "Write failed, cancelling trajectory" << std::endl;
-        passthrough_trajectory_cancel_ = 1.0;
-        std::cout << "----------------------------Cancelling trajectory in hardware interface------------------"
-                  << std::endl;
-        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
-      } else {
-        last_time = passthrough_trajectory_time_from_start_;
-        passthrough_point_written_ = 1.0;
-      }
-    }
-  } else {
-    passthrough_trajectory_executing_ = false;
+    passthrough_trajectory_transfer_state_ = 3.0;
   }
+
+  // if (passthrough_trajectory_transfer_state_ == 1.0) {
+  //   if (!passthrough_trajectory_executing_) {
+  //     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
+  //                                               static_cast<int>(passthrough_trajectory_number_of_points_));
+  //     passthrough_trajectory_executing_ = true;
+  //     std::cout << "Received points to passthrough: " << passthrough_trajectory_number_of_points_ << std::endl;
+  //   }
+  //   if (passthrough_trajectory_executing_ && passthrough_point_written_ == 0.0) {
+  //     std::cout << "Writing point to robot with time parameter: " << passthrough_trajectory_time_from_start_
+  //               << std::endl;
+
+  //     bool status = ur_driver_->writeTrajectoryPoint(passthrough_trajectory_positions_, false,
+  //                                                    passthrough_trajectory_time_from_start_ - last_time);
+
+  //     std::cout << "Status of write: " << status << std::endl;
+  //     if (!status) {
+  //       std::cout << "Write failed, cancelling trajectory" << std::endl;
+  //       passthrough_trajectory_cancel_ = 1.0;
+  //       std::cout << "----------------------------Cancelling trajectory in hardware interface------------------"
+  //                 << std::endl;
+  //       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+  //     } else {
+  //       last_time = passthrough_trajectory_time_from_start_;
+  //       passthrough_point_written_ = 1.0;
+  //     }
+  //   }
+  // } else {
+  //   passthrough_trajectory_executing_ = false;
+  // }
 }
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
 {
   std::cout << "-------------------Triggered trajectory callback!--------------------------" << std::endl;
+  passthrough_trajectory_transfer_state_ = 4.0;
   std::cout << "Result is: " << int(result) << std::endl;
   passthrough_trajectory_executing_ = false;
   return;

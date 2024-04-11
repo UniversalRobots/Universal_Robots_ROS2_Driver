@@ -193,7 +193,7 @@ rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_ca
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle)
 {
   RCLCPP_INFO(get_node()->get_logger(), "Canceling active trajectory because cancel callback received.");
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(0.0);
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(0.0);
   current_point_ = 0;
   command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_CANCEL].set_value(1.0);
   std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
@@ -215,16 +215,7 @@ void PassthroughTrajectoryController::goal_accepted_callback(
                          active_joint_traj_.points.back().time_from_start.nanosec;
   command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_NUMBER_OF_POINTS].set_value(
       active_joint_traj_.points.size());
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(1.0);
-  for (int i = 0; i < 6; i++) {
-    command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
-        active_joint_traj_.points[current_point_].positions[i]);
-  }
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
-      active_joint_traj_.points[current_point_].time_from_start.sec +
-      (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].set_value(0.0);
-  current_point_++;
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(1.0);
   std::thread{ std::bind(&PassthroughTrajectoryController::execute, this, std::placeholders::_1), goal_handle }
       .detach();
   return;
@@ -235,44 +226,50 @@ void PassthroughTrajectoryController::execute(
 {
   std::cout << "------------------Entered Execute loop--------------------------" << std::endl;
   rclcpp::Rate loop_rate(500);
-  while (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].get_value() == 1.0) {
+  while (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() != 0.0) {
     if (command_interfaces_[PASSTHROUGH_TRAJECTORY_CANCEL].get_value() == 1.0) {
       std::cout << "------------------Entered cancel--------------------------" << std::endl;
       std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
           std::make_shared<control_msgs::action::JointTrajectory::Result>();
       goal_handle->abort(result);
-      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(0.0);
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(0.0);
       trajectory_active_ = false;
       return;
     }
+
     if (goal_handle->is_canceling()) {
       std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
           std::make_shared<control_msgs::action::JointTrajectory::Result>();
       goal_handle->canceled(result);
-    } else {
-      // Write a new point to the command interface, if the previous point has been written to the hardware.
-      if (command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].get_value() == 1.0 &&
-          current_point_ < active_joint_traj_.points.size()) {
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
-            active_joint_traj_.points[current_point_].time_from_start.sec +
-            (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
-        for (int i = 0; i < 6; i++) {
-          command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
-              active_joint_traj_.points[current_point_].positions[i]);
-        }
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].set_value(0.0);
-        current_point_++;
+      return;
+    }
+
+    // Write a new point to the command interface, if the previous point has been written to the hardware interface.
+    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].get_value() == 1.0 &&
+        current_point_ < active_joint_traj_.points.size()) {
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
+          active_joint_traj_.points[current_point_].time_from_start.sec +
+          (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
+      for (int i = 0; i < 6; i++) {
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
+            active_joint_traj_.points[current_point_].positions[i]);
       }
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].set_value(0.0);
+      current_point_++;
     }
     // Check if all points have been written to the hardware
     if (command_interfaces_[CommandInterfaces::PASSTHROUGH_POINT_WRITTEN].get_value() == 1.0 &&
         current_point_ == active_joint_traj_.points.size() &&
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].get_value() == 1.0) {
-      RCLCPP_INFO(get_node()->get_logger(), "All points sent to the robot!");
-      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_PRESENT].set_value(0.0);
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 1.0) {
+      RCLCPP_INFO(get_node()->get_logger(), "All points sent to the hardware interface, trajecotry will now execute!");
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(2.0);
+    }
+    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 4.0) {
       std::shared_ptr<control_msgs::action::JointTrajectory::Result> result =
           std::make_shared<control_msgs::action::JointTrajectory::Result>();
       goal_handle->succeed(result);
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(0.0);
+      return;
     }
     loop_rate.sleep();
   }
