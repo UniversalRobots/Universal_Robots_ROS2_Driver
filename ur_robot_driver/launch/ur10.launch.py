@@ -55,8 +55,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "fake_sensor_commands",
             default_value="false",
-            description="Enable fake command interfaces for sensors used for simple simulations. \
-            Used only if 'use_fake_hardware' parameter is true.",
+            description="Enable fake command interfaces for sensors used for simple simulations. "
+            "Used only if 'use_fake_hardware' parameter is true.",
         )
     )
     declared_arguments.append(
