@@ -46,12 +46,12 @@ building might fail occasionally.
      export COLCON_WS=~/workspace/ros_ur_driver
      mkdir -p $COLCON_WS/src
 
-5. Clone relevant packages, install dependencies, compile, and source the workspace by using:
+5. Clone relevant packages (replace ``<branch>`` with ``humble``, ``iron`` or ``main`` for rolling), install dependencies, compile, and source the workspace by using:
 
    .. code-block:: bash
 
      cd $COLCON_WS
-     git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
+     git clone -b <branch> https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
      vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
      rosdep update
      rosdep install --ignore-src --from-paths src -y
