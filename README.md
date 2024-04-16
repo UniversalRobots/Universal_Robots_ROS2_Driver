@@ -105,22 +105,23 @@ For getting started, you'll basically need three steps:
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
    robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/robot_setup.html)
+   and [create a program for external
+   control](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/install_urcap_e_series.html).
 
-Please do this step carefully and extract the calibration as explained
-[here](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/robot_setup.html#extract-calibration-information).
-Otherwise the TCP's pose will not be correct inside the ROS ecosystem.
+   Please do this step carefully and extract the calibration as explained
+   [here](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/robot_setup.html#extract-calibration-information).
+   Otherwise the TCP's pose will not be correct inside the ROS ecosystem.
 
-If no real robot is required, you can [use a simulated
-robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator)
-that will behave almost exactly like the real robot.
-
+   If no real robot is required, you can [use a simulated
+   robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator)
+   that will behave almost exactly like the real robot.
 
 3. **Start the driver**. See the [usage
    documentation](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html) for
    details.
 
    ```bash
-   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20, ur30
    # Replace the IP address with the IP address of your actual robot / URSim
    ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
    ```
