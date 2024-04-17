@@ -34,28 +34,29 @@ from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.substitutions import FindPackageShare
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
 )
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import AnyLaunchDescriptionSource
 
 
-def launch_setup(context, *args, **kwargs):
+def launch_setup():
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
     # General arguments
     runtime_config_package = LaunchConfiguration("runtime_config_package")
     controllers_file = LaunchConfiguration("controllers_file")
-    description_package = LaunchConfiguration("description_package")
+    description_launchfile = LaunchConfiguration("description_launchfile")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     controller_spawner_timeout = LaunchConfiguration("controller_spawner_timeout")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
+    rviz_config_file = LaunchConfiguration("rviz_config_file")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
     use_tool_communication = LaunchConfiguration("use_tool_communication")
@@ -66,16 +67,12 @@ def launch_setup(context, *args, **kwargs):
         [FindPackageShare(runtime_config_package), "config", controllers_file]
     )
 
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(description_package), "rviz", "view_robot.rviz"]
-    )
-
     # define update rate
     update_rate_config_file = PathJoinSubstitution(
         [
             FindPackageShare(runtime_config_package),
             "config",
-            ur_type.perform(context) + "_update_rate.yaml",
+            f"{ur_type}_update_rate.yaml",
         ]
     )
 
@@ -208,11 +205,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     rsp = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_rsp.launch.py"]
-            )
-        ),
+        AnyLaunchDescriptionSource(description_launchfile),
         launch_arguments={
             "robot_ip": robot_ip,
             "ur_type": ur_type,
@@ -298,10 +291,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "description_package",
-            default_value="ur_description",
-            description="Description package with robot URDF/XACRO files. Usually the argument "
-            "is not set, it enables use of a custom description.",
+            "description_launchfile",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_rsp.launch.py"]
+            ),
+            description="Launchfile (absolute path) providing the description. "
+            "The launchfile has to start a robot_state_publisher node that "
+            "publishes the description topic.",
         )
     )
     declared_arguments.append(
@@ -365,6 +361,15 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "rviz_config_file",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("ur_description"), "rviz", "view_robot.rviz"]
+            ),
+            description="RViz config file to use when launching rviz.",
+        )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -479,4 +484,4 @@ def generate_launch_description():
             description="Port that will be opened for trajectory control.",
         )
     )
-    return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
+    return LaunchDescription(declared_arguments + launch_setup())
