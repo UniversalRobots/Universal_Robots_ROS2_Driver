@@ -115,7 +115,7 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("ur_robot_driver"), "urdf", description_file]),
+            description_file,
             " ",
             "robot_ip:=",
             robot_ip,
@@ -259,21 +259,6 @@ def generate_launch_description():
     # General arguments
     declared_arguments.append(
         DeclareLaunchArgument(
-            "runtime_config_package",
-            default_value="ur_robot_driver",
-            description='Package with the controller\'s configuration in "config" folder. '
-            "Usually the argument is not set, it enables use of a custom setup.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "controllers_file",
-            default_value="ur_controllers.yaml",
-            description="YAML file with the controllers configuration.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "description_package",
             default_value="ur_description",
             description="Description package with robot URDF/XACRO files. Usually the argument "
@@ -283,7 +268,9 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_file",
-            default_value="ur.urdf.xacro",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "urdf", "ur.urdf.xacro"]
+            ),
             description="URDF/XACRO description file with the robot.",
         )
     )
@@ -316,13 +303,6 @@ def generate_launch_description():
             "headless_mode",
             default_value="false",
             description="Enable headless mode for robot control",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "controller_spawner_timeout",
-            default_value="10",
-            description="Timeout used when spawning controllers.",
         )
     )
     declared_arguments.append(
@@ -465,25 +445,5 @@ def generate_launch_description():
                 output="both",
                 parameters=[robot_description],
             ),
-            # Node(
-            # package="controller_manager",
-            # executable="ros2_control_node",
-            # parameters=[
-            # update_rate_config_file,
-            # ParameterFile(initial_joint_controllers, allow_substs=True),
-            # ],
-            # output="screen",
-            # ),
-            # Node(
-            # package="controller_manager",
-            # executable="spawner",
-            # arguments=[
-            # "--controller-manager",
-            # "/controller_manager",
-            # "--controller-manager-timeout",
-            # controller_spawner_timeout,
-            # "joint_state_broadcaster"
-            # ]
-            # )
         ]
     )
