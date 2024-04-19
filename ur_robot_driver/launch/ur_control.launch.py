@@ -48,7 +48,6 @@ def launch_setup():
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
     # General arguments
-    runtime_config_package = LaunchConfiguration("runtime_config_package")
     controllers_file = LaunchConfiguration("controllers_file")
     description_launchfile = LaunchConfiguration("description_launchfile")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
@@ -63,25 +62,12 @@ def launch_setup():
     tool_device_name = LaunchConfiguration("tool_device_name")
     tool_tcp_port = LaunchConfiguration("tool_tcp_port")
 
-    initial_joint_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
-    )
-
-    # define update rate
-    update_rate_config_file = PathJoinSubstitution(
-        [
-            FindPackageShare(runtime_config_package),
-            "config",
-            f"{ur_type}_update_rate.yaml",
-        ]
-    )
-
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[
-            update_rate_config_file,
-            ParameterFile(initial_joint_controllers, allow_substs=True),
+            LaunchConfiguration("update_rate_config_file"),
+            ParameterFile(controllers_file, allow_substs=True),
         ],
         output="screen",
     )
@@ -276,16 +262,10 @@ def generate_launch_description():
     # General arguments
     declared_arguments.append(
         DeclareLaunchArgument(
-            "runtime_config_package",
-            default_value="ur_robot_driver",
-            description='Package with the controller\'s configuration in "config" folder. '
-            "Usually the argument is not set, it enables use of a custom setup.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "controllers_file",
-            default_value="ur_controllers.yaml",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "config", "ur_controllers.yaml"]
+            ),
             description="YAML file with the controllers configuration.",
         )
     )
@@ -298,13 +278,6 @@ def generate_launch_description():
             description="Launchfile (absolute path) providing the description. "
             "The launchfile has to start a robot_state_publisher node that "
             "publishes the description topic.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "description_file",
-            default_value="ur.urdf.xacro",
-            description="URDF/XACRO description file with the robot.",
         )
     )
     declared_arguments.append(
@@ -482,6 +455,23 @@ def generate_launch_description():
             "trajectory_port",
             default_value="50003",
             description="Port that will be opened for trajectory control.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            name="update_rate_config_file",
+            # default_value=[LaunchConfiguration("ur_type"), "_update_rate.yaml"],
+            default_value=[
+                PathJoinSubstitution(
+                    [
+                        FindPackageShare("ur_robot_driver"),
+                        "config",
+                    ]
+                ),
+                "/",
+                LaunchConfiguration("ur_type"),
+                "_update_rate.yaml",
+            ],
         )
     )
     return LaunchDescription(declared_arguments + launch_setup())
