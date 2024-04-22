@@ -49,7 +49,10 @@ def generate_launch_description():
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
     # General arguments
-    description_package = LaunchConfiguration("description_package")
+    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
+    physical_params_file = LaunchConfiguration("physical_params_file")
+    visual_params_file = LaunchConfiguration("visual_params_file")
+    joint_limit_params_file = LaunchConfiguration("joint_limit_params_file")
     description_file = LaunchConfiguration("description_file")
     tf_prefix = LaunchConfiguration("tf_prefix")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
@@ -70,33 +73,6 @@ def generate_launch_description():
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
 
-    joint_limit_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
-    )
-    kinematics_params = PathJoinSubstitution(
-        [
-            FindPackageShare(description_package),
-            "config",
-            ur_type,
-            "default_kinematics.yaml",
-        ]
-    )
-    physical_params = PathJoinSubstitution(
-        [
-            FindPackageShare(description_package),
-            "config",
-            ur_type,
-            "physical_parameters.yaml",
-        ]
-    )
-    visual_params = PathJoinSubstitution(
-        [
-            FindPackageShare(description_package),
-            "config",
-            ur_type,
-            "visual_parameters.yaml",
-        ]
-    )
     script_filename = PathJoinSubstitution(
         [
             FindPackageShare("ur_client_library"),
@@ -121,16 +97,16 @@ def generate_launch_description():
             robot_ip,
             " ",
             "joint_limit_params:=",
-            joint_limit_params,
+            joint_limit_params_file,
             " ",
             "kinematics_params:=",
-            kinematics_params,
+            kinematics_params_file,
             " ",
             "physical_params:=",
-            physical_params,
+            physical_params_file,
             " ",
             "visual_params:=",
-            visual_params,
+            visual_params_file,
             " ",
             "safety_limits:=",
             safety_limits,
@@ -256,13 +232,60 @@ def generate_launch_description():
             description="k-position factor in the safety controller.",
         )
     )
-    # General arguments
     declared_arguments.append(
         DeclareLaunchArgument(
-            "description_package",
-            default_value="ur_description",
-            description="Description package with robot URDF/XACRO files. Usually the argument "
-            "is not set, it enables use of a custom description.",
+            "joint_limit_params_file",
+            default_value=PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "joint_limits.yaml",
+                ]
+            ),
+            description="Config file containing the joint limits (e.g. velocities, positions) of the robot.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "kinematics_params_file",
+            default_value=PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "default_kinematics.yaml",
+                ]
+            ),
+            description="The calibration configuration of the actual robot used.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "physical_params_file",
+            default_value=PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "physical_parameters.yaml",
+                ]
+            ),
+            description="Config file containing the physical parameters (e.g. masses, inertia) of the robot.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "visual_params_file",
+            default_value=PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "visual_parameters.yaml",
+                ]
+            ),
+            description="Config file containing the visual parameters (e.g. meshes) of the robot.",
         )
     )
     declared_arguments.append(
