@@ -29,7 +29,7 @@
 
 import rclpy
 from builtin_interfaces.msg import Duration
-from control_msgs.action import JointTrajectory
+from control_msgs.action import FollowJointTrajectory
 
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -100,7 +100,7 @@ class Robot:
         self.jtc_action_client = waitForAction(
             self.node,
             "/passthrough_trajectory_controller/forward_joint_trajectory",
-            JointTrajectory,
+            FollowJointTrajectory,
         )
         time.sleep(2)
 
@@ -131,7 +131,7 @@ class Robot:
 
         # Sending trajectory goal
         goal_response = self.call_action(
-            self.jtc_action_client, JointTrajectory.Goal(trajectory=joint_trajectory)
+            self.jtc_action_client, FollowJointTrajectory.Goal(trajectory=joint_trajectory)
         )
         if goal_response.accepted is False:
             raise Exception("trajectory was not accepted")
@@ -219,7 +219,7 @@ class Robot:
             self.jtc_action_client = waitForAction(
                 self.node,
                 "/passthrough_trajectory_controller/forward_joint_trajectory",
-                JointTrajectory,
+                FollowJointTrajectory,
             )
             time.sleep(2)
 
