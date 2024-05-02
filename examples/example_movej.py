@@ -97,6 +97,12 @@ class Robot:
             srv_name: waitForService(self.node, srv_name, srv_type)
             for (srv_name, srv_type) in service_interfaces.items()
         }
+        self.jtc_action_client = waitForAction(
+            self.node,
+            "/passthrough_trajectory_controller/forward_joint_trajectory",
+            JointTrajectory,
+        )
+        time.sleep(2)
 
     def set_io(self, pin, value):
         """Test to set an IO."""
@@ -233,7 +239,6 @@ if __name__ == "__main__":
     rclpy.init()
     node = Node("robot_driver_test")
     robot = Robot(node)
-    robot.load_passthrough_controller()
 
     # The following list are arbitrary joint positions, change according to your own needs
     waypts = [

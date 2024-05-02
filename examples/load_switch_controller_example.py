@@ -234,14 +234,3 @@ if __name__ == "__main__":
     node = Node("robot_driver_test")
     robot = Robot(node)
     robot.load_passthrough_controller()
-
-    # The following list are arbitrary joint positions, change according to your own needs
-    waypts = [
-        [-1, -2.5998, -1.004, -2.676, -0.992, -1.5406],
-        [-0.1, -2.6998, -1.104, -2.676, -0.992, -1.5406],
-        [-1, -2.5998, -1.004, -2.676, -0.992, -1.5406],
-    ]
-    time_vec = [Duration(sec=4, nanosec=0), Duration(sec=8, nanosec=0), Duration(sec=12, nanosec=0)]
-
-    # Execute trajectory on robot, make sure that the robot is booted and the control script is running
-    robot.send_trajectory(waypts, time_vec)

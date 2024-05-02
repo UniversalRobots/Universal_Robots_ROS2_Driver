@@ -95,6 +95,10 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   async_thread_shutdown_ = false;
   system_interface_initialized_ = 0.0;
   passthrough_trajectory_executing_ = false;
+  passthrough_trajectory_transfer_state_ = 0.0;
+  trajectory_joint_positions_.clear();
+  trajectory_joint_velocities_.clear();
+  trajectory_joint_accelerations_.clear();
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -312,6 +316,9 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "passthrough_controller", "passthrough_trajectory_cancel", &passthrough_trajectory_cancel_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_dimensions", &passthrough_trajectory_dimensions_));
 
   for (size_t i = 0; i < 6; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -913,6 +920,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
                                                   StoppingInterface::STOP_PASSTHROUGH) != stop_modes_.end()) {
     passthrough_trajectory_controller_running_ = false;
+    passthrough_trajectory_cancel_ = 1;
+    trajectory_joint_positions_.clear();
+    trajectory_joint_accelerations_.clear();
+    trajectory_joint_velocities_.clear();
     std::cout << "---------------------Stopped passthrough controller---------------" << std::endl;
   }
 
@@ -946,55 +957,60 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 {
   static double last_time = 0.0;
-  if (passthrough_trajectory_transfer_state_ == 1.0) {
+  if (passthrough_trajectory_transfer_state_ == 1.0 && passthrough_point_written_ == 0.0) {
     trajectory_joint_positions_.push_back(passthrough_trajectory_positions_);
+
     trajectory_times_.push_back(passthrough_trajectory_time_from_start_ - last_time);
     last_time = passthrough_trajectory_time_from_start_;
     passthrough_point_written_ = 1.0;
+    if (passthrough_trajectory_dimensions_ == 2.0 || passthrough_trajectory_dimensions_ == 4.0) {
+      trajectory_joint_velocities_.push_back(passthrough_trajectory_velocities_);
+    }
+    if (passthrough_trajectory_dimensions_ == 3.0 || passthrough_trajectory_dimensions_ == 4.0) {
+      trajectory_joint_accelerations_.push_back(passthrough_trajectory_accelerations_);
+    }
   } else if (passthrough_trajectory_transfer_state_ == 2.0) {
+    std::cout << " Passing through " + std::to_string(trajectory_joint_positions_.size()) + " Points to the robot."
+              << std::endl;
+
     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
                                               trajectory_joint_positions_.size());
-    for (int i = 0; i < trajectory_joint_positions_.size(); i++) {
-      ur_driver_->writeTrajectoryPoint(trajectory_joint_positions_[i], false, trajectory_times_[i]);
+    if (passthrough_trajectory_dimensions_ == 1.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectoryPoint(trajectory_joint_positions_[i], false, trajectory_times_[i]);
+      }
+    } else if (passthrough_trajectory_dimensions_ == 2.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
+                                               trajectory_times_[i]);
+      }
+    } else if (passthrough_trajectory_dimensions_ == 3.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_accelerations_[i],
+                                               trajectory_times_[i]);
+      }
+    } else if (passthrough_trajectory_dimensions_ == 4.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
+                                               trajectory_joint_accelerations_[i], trajectory_times_[i]);
+      }
     }
+    trajectory_joint_positions_.clear();
+    trajectory_joint_accelerations_.clear();
+    trajectory_joint_velocities_.clear();
     passthrough_trajectory_transfer_state_ = 3.0;
   }
-
-  // if (passthrough_trajectory_transfer_state_ == 1.0) {
-  //   if (!passthrough_trajectory_executing_) {
-  //     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
-  //                                               static_cast<int>(passthrough_trajectory_number_of_points_));
-  //     passthrough_trajectory_executing_ = true;
-  //     std::cout << "Received points to passthrough: " << passthrough_trajectory_number_of_points_ << std::endl;
-  //   }
-  //   if (passthrough_trajectory_executing_ && passthrough_point_written_ == 0.0) {
-  //     std::cout << "Writing point to robot with time parameter: " << passthrough_trajectory_time_from_start_
-  //               << std::endl;
-
-  //     bool status = ur_driver_->writeTrajectoryPoint(passthrough_trajectory_positions_, false,
-  //                                                    passthrough_trajectory_time_from_start_ - last_time);
-
-  //     std::cout << "Status of write: " << status << std::endl;
-  //     if (!status) {
-  //       std::cout << "Write failed, cancelling trajectory" << std::endl;
-  //       passthrough_trajectory_cancel_ = 1.0;
-  //       std::cout << "----------------------------Cancelling trajectory in hardware interface------------------"
-  //                 << std::endl;
-  //       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
-  //     } else {
-  //       last_time = passthrough_trajectory_time_from_start_;
-  //       passthrough_point_written_ = 1.0;
-  //     }
-  //   }
-  // } else {
-  //   passthrough_trajectory_executing_ = false;
-  // }
 }
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
 {
   std::cout << "-------------------Triggered trajectory callback!--------------------------" << std::endl;
-  passthrough_trajectory_transfer_state_ = 4.0;
+  if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS) {
+    passthrough_trajectory_transfer_state_ = 4.0;
+    std::cout << "-------------------Trajectory was successful!--------------------------" << std::endl;
+  } else {
+    passthrough_trajectory_cancel_ = 1.0;
+  }
   std::cout << "Result is: " << int(result) << std::endl;
   passthrough_trajectory_executing_ = false;
   return;

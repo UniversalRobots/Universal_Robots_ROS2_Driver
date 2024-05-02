@@ -163,9 +163,12 @@ def launch_setup():
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
+        "scaled_joint_trajectory_controller",
+    ]
+    controllers_inactive = [
+        "forward_position_controller",
         "passthrough_trajectory_controller",
     ]
-    controllers_inactive = ["forward_position_controller", "scaled_joint_trajectory_controller"]
 
     controller_spawners = [controller_spawner(controllers_active)] + [
         controller_spawner(controllers_inactive, active=False)
@@ -331,7 +334,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "initial_joint_controller",
-            default_value="passthrough_trajectory_controller",
+            default_value="scaled_joint_trajectory_controller",
             description="Initially loaded robot controller.",
         )
     )

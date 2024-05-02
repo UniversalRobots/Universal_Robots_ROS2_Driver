@@ -149,6 +149,9 @@ install(PROGRAMS
   scripts/example_move.py
   scripts/start_ursim.sh
   ../examples/examples.py
+  ../examples/load_switch_controller_example.py
+  ../examples/example_movej.py
+  ../examples/example_spline.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
