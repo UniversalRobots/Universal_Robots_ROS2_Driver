@@ -67,10 +67,11 @@ enum CommandInterfaces
   PASSTHROUGH_POINT_WRITTEN = 1,
   PASSTHROUGH_TRAJECTORY_NUMBER_OF_POINTS = 2,
   PASSTHROUGH_TRAJECTORY_CANCEL = 3,
-  PASSTHROUGH_TRAJECTORY_POSITIONS_ = 4,
-  PASSTHROUGH_TRAJECTORY_VELOCITIES_ = 10,
-  PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ = 16,
-  PASSTHROUGH_TRAJECTORY_TIME_FROM_START = 22
+  PASSTHROUGH_TRAJECTORY_DIMENSIONS = 4,
+  PASSTHROUGH_TRAJECTORY_POSITIONS_ = 5,
+  PASSTHROUGH_TRAJECTORY_VELOCITIES_ = 11,
+  PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ = 17,
+  PASSTHROUGH_TRAJECTORY_TIME_FROM_START = 23
 };
 
 class PassthroughTrajectoryController : public controller_interface::ControllerInterface
@@ -110,12 +111,14 @@ private:
 
   void
   execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle);
+  int check_dimensions(std::shared_ptr<const control_msgs::action::JointTrajectory::Goal> goal);
   trajectory_msgs::msg::JointTrajectory active_joint_traj_;
   uint32_t current_point_;
   bool trajectory_active_;
   uint64_t active_trajectory_elapsed_time_;
   uint64_t max_trajectory_time_;
   double scaling_factor_;
+  std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> current_handle;
 };
 }  // namespace ur_controllers
 #endif  // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_

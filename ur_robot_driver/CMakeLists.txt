@@ -146,6 +146,9 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/tool_communication.py
   ../examples/examples.py
+  ../examples/load_switch_controller_example.py
+  ../examples/example_movej.py
+  ../examples/example_spline.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
