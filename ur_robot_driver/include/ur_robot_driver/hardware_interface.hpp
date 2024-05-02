@@ -198,6 +198,7 @@ protected:
   double passthrough_trajectory_cancel_;
   double passthrough_point_written_;
   double passthrough_trajectory_number_of_points_;
+  double passthrough_trajectory_dimensions_;
   std::array<double, 6> passthrough_trajectory_positions_;
   std::array<double, 6> passthrough_trajectory_velocities_;
   std::array<double, 6> passthrough_trajectory_accelerations_;
@@ -225,6 +226,8 @@ protected:
   double robot_program_running_copy_;
   bool passthrough_trajectory_executing_;
   std::vector<std::array<double, 6>> trajectory_joint_positions_;
+  std::vector<std::array<double, 6>> trajectory_joint_velocities_;
+  std::vector<std::array<double, 6>> trajectory_joint_accelerations_;
   std::vector<double> trajectory_times_;
 
   PausingState pausing_state_;

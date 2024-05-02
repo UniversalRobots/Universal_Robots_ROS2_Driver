@@ -97,6 +97,12 @@ class Robot:
             srv_name: waitForService(self.node, srv_name, srv_type)
             for (srv_name, srv_type) in service_interfaces.items()
         }
+        self.jtc_action_client = waitForAction(
+            self.node,
+            "/passthrough_trajectory_controller/forward_joint_trajectory",
+            JointTrajectory,
+        )
+        time.sleep(2)
 
     def set_io(self, pin, value):
         """Test to set an IO."""
@@ -107,7 +113,7 @@ class Robot:
 
         self.call_service("/io_and_status_controller/set_io", set_io_req)
 
-    def send_trajectory(self, waypts, time_vec):
+    def send_trajectory(self, waypts, time_vec, vels, accels):
         """Send robot trajectory."""
         if len(waypts) != len(time_vec):
             raise Exception("waypoints vector and time vec should be same length")
@@ -118,6 +124,8 @@ class Robot:
         for i in range(len(waypts)):
             point = JointTrajectoryPoint()
             point.positions = waypts[i]
+            point.velocities = vels[i]
+            point.accelerations = accels[i]
             point.time_from_start = time_vec[i]
             joint_trajectory.points.append(point)
 
@@ -233,7 +241,6 @@ if __name__ == "__main__":
     rclpy.init()
     node = Node("robot_driver_test")
     robot = Robot(node)
-    robot.load_passthrough_controller()
 
     # The following list are arbitrary joint positions, change according to your own needs
     waypts = [
@@ -241,7 +248,17 @@ if __name__ == "__main__":
         [-0.1, -2.6998, -1.104, -2.676, -0.992, -1.5406],
         [-1, -2.5998, -1.004, -2.676, -0.992, -1.5406],
     ]
+    vels = [
+        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+    ]
+    accels = [
+        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+    ]
     time_vec = [Duration(sec=4, nanosec=0), Duration(sec=8, nanosec=0), Duration(sec=12, nanosec=0)]
 
     # Execute trajectory on robot, make sure that the robot is booted and the control script is running
-    robot.send_trajectory(waypts, time_vec)
+    robot.send_trajectory(waypts, time_vec, vels, accels)
