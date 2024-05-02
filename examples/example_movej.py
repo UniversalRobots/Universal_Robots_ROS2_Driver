@@ -29,7 +29,8 @@
 
 import rclpy
 from builtin_interfaces.msg import Duration
-from control_msgs.action import JointTrajectory
+from control_msgs.action import FollowJointTrajectory
+from control_msgs.msg import JointTolerance
 
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -100,7 +101,7 @@ class Robot:
         self.jtc_action_client = waitForAction(
             self.node,
             "/passthrough_trajectory_controller/forward_joint_trajectory",
-            JointTrajectory,
+            FollowJointTrajectory,
         )
         time.sleep(2)
 
@@ -127,14 +128,23 @@ class Robot:
             point.time_from_start = time_vec[i]
             joint_trajectory.points.append(point)
 
+        tolerances = [JointTolerance(position=0.001) for i in range(6)]
+        time_tolerance = Duration()
+        time_tolerance.sec = 1
         # Sending trajectory goal
         goal_response = self.call_action(
-            self.jtc_action_client, JointTrajectory.Goal(trajectory=joint_trajectory)
+            self.jtc_action_client,
+            FollowJointTrajectory.Goal(
+                trajectory=joint_trajectory,
+                goal_tolerance=tolerances,
+                goal_time_tolerance=time_tolerance,
+            ),
         )
         if goal_response.accepted is False:
             raise Exception("trajectory was not accepted")
 
         # Verify execution
+
         result = self.get_result(self.jtc_action_client, goal_response)
         return result
 
@@ -217,7 +227,7 @@ class Robot:
             self.jtc_action_client = waitForAction(
                 self.node,
                 "/passthrough_trajectory_controller/forward_joint_trajectory",
-                JointTrajectory,
+                FollowJointTrajectory,
             )
             time.sleep(2)
 
@@ -242,9 +252,9 @@ if __name__ == "__main__":
 
     # The following list are arbitrary joint positions, change according to your own needs
     waypts = [
-        [-1, -2.5998, -1.004, -2.676, -0.992, -1.5406],
-        [-0.1, -2.6998, -1.104, -2.676, -0.992, -1.5406],
-        [-1, -2.5998, -1.004, -2.676, -0.992, -1.5406],
+        [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+        [-3, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+        [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
     ]
     time_vec = [Duration(sec=4, nanosec=0), Duration(sec=8, nanosec=0), Duration(sec=12, nanosec=0)]
 

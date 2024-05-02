@@ -37,10 +37,11 @@ import pytest
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
+from control_msgs.msg import JointTolerance
 from controller_manager_msgs.srv import SwitchController
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from trajectory_msgs.msg import JointTrajectory as JointTrajectory, JointTrajectoryPoint
 from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))
@@ -98,6 +99,11 @@ class RobotDriverTest(unittest.TestCase):
             "/scaled_joint_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
+        self._passthrough_forward_joint_trajectory = ActionInterface(
+            self.node,
+            "/passthrough_trajectory_controller/forward_joint_trajectory",
+            FollowJointTrajectory,
+        )
 
     def setUp(self):
         self._dashboard_interface.start_robot()
@@ -121,6 +127,14 @@ class RobotDriverTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
                 activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["passthrough_trajectory_controller"],
+                activate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
 
@@ -333,3 +347,82 @@ class RobotDriverTest(unittest.TestCase):
     #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
     #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
     #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
+
+    def test_passthrough_trajectory(self):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
+        waypts = [
+            [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+            [-3, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+            [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+        ]
+        time_vec = [
+            Duration(sec=4, nanosec=0),
+            Duration(sec=8, nanosec=0),
+            Duration(sec=12, nanosec=0),
+        ]
+        goal_tolerance = [JointTolerance(position=0.01) for i in range(6)]
+        goal_time_tolerance = Duration(sec=1, nanosec=0)
+        test_trajectory = zip(time_vec, waypts)
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(positions=pos, time_from_start=times)
+                for (times, pos) in test_trajectory
+            ],
+        )
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+        # Test impossible goal tolerance, should fail.
+        goal_tolerance = [JointTolerance(position=0.000000000000000001) for i in range(6)]
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(
+                result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED
+            )
+
+        # Test impossible goal time
+        goal_tolerance = [JointTolerance(position=0.01) for i in range(6)]
+        goal_time_tolerance.sec = 0
+        goal_time_tolerance.nanosec = 1000
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(
+                result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED
+            )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["passthrough_trajectory_controller"],
+                activate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
