@@ -341,7 +341,7 @@ def generate_launch_description():
             default_value=PathJoinSubstitution(
                 [FindPackageShare("ur_description"), "rviz", "view_robot.rviz"]
             ),
-            description="RViz config file to use when launching rviz.",
+            description="RViz config file (absolute path) to use when launching rviz.",
         )
     )
     declared_arguments.append(
@@ -460,7 +460,6 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             name="update_rate_config_file",
-            # default_value=[LaunchConfiguration("ur_type"), "_update_rate.yaml"],
             default_value=[
                 PathJoinSubstitution(
                     [
