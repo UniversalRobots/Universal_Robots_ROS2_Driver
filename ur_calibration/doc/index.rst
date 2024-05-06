@@ -29,57 +29,17 @@ In the launch folder of the ur_calibration package is a helper script:
 For the parameter ``robot_ip`` insert the IP address on which the ROS pc can reach the robot. As
 ``target_filename`` provide an absolute path where the result will be saved to.
 
-Creating a calibration / launch package for all local robots
-------------------------------------------------------------
-
-When dealing with multiple robots in one organization it might make sense to store calibration data
-into a package dedicated to that purpose only. To do so, create a new package (if it doesn't already
-exist)
+With that, you can launch your specific robot with the correct calibration using
 
 .. code-block:: bash
 
-   # Replace your actual colcon_ws folder
-   $ cd <colcon_ws>/src
-   $ ros2 pkg  create <organization_name>_ur_launch --build-type ament_cmake  --dependencies ur_client_library \
-   --description "Package containing calibrations and launch files for our UR robots."
-   # Create a skeleton package
-   $ mkdir -p <organization_name>_ur_launch/etc
-   $ mkdir -p <organization_name>_ur_launch/launch
-   $ echo 'install(DIRECTORY etc launch DESTINATION share/${PROJECT_NAME})' >> <organization_name>_ur_launch/CMakeLists.txt
-   $ colcon build --packages-select <organization_name>_ur_launch
+   $ ros2 launch ur_robot_driver ur_control.launch.py \
+     ur_type:=ur5e \
+     robot_ip:=192.168.56.101 \
+     kinematics_params_file:="${HOME}/my_robot_calibration.yaml"
 
-We can use the new package to store the calibration data in that package. We recommend naming each
-robot individually, e.g. *ex-ur10-1*.
+Adapt the robot model matching to your robot.
 
-.. code-block:: bash
-
-   $ ros2 launch ur_calibration calibration_correction.launch.py \
-   robot_ip:=<robot_ip> \
-   target_filename:="$(ros2 pkg prefix <organization_name>_ur_launch)/share/<organization_name>_ur_launch/etc/ex-ur10-1_calibration.yaml"
-
-To make life easier, we create a launchfile for this particular robot. We base it upon the
-respective launchfile in the driver:
-
-.. code-block:: bash
-
-   # Replace your actual colcon_ws folder
-   $ cd <colcon_ws>/src/<organization_name>_ur_launch/launch
-   $ cp $(ros2 pkg prefix ur_robot_driver)/share/ur_robot_driver/launch/ur_control.launch.py ex-ur10-1.launch.py
-
-Next, modify the parameter section of the new launchfile to match your actual calibration:
-
-.. code-block:: py
-
-   kinematics_params = PathJoinSubstitution(
-           [FindPackageShare("<organization_name>_ur_launch"), "etc", "", "ex-ur10-1_calibration.yaml"]
-       )
-
-Then, anybody cloning this repository can startup the robot simply by launching
-
-.. code-block:: bash
-
-   # Replace your actual colcon_ws folder
-   $ cd <colcon_ws>
-   $ colcon build --packages-select <organization_name>_ur_launch
-   $ ros2 launch <organization_name>_ur_launch ex-ur10-1.launch.py
-   robot_ip:=xxx.yyy.zzz.www ur_type:=ur5e  use_mock_hardware:=false launch_rviz:=true
+Ideally, you would create a package for your custom workcell, as explained in `the custom workcell
+tutorial
+<https://github.com/UniversalRobots/Universal_Robots_ROS2_Tutorials/blob/main/my_robot_cell/doc/start_ur_driver.rst#extract-the-calibration>`_.
