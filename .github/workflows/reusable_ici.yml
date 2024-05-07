@@ -51,3 +51,4 @@ jobs:
           ROS_DISTRO: ${{ inputs.ros_distro }}
           ROS_REPO: ${{ inputs.ros_repo }}
           CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
+          ADDITIONAL_DEBS: docker.io  # Needed for integration tests
