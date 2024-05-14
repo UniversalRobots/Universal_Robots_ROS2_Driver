@@ -1,4 +1,5 @@
 .. _ur_moveit_config:
+
 ================
 ur_moveit_config
 ================
@@ -24,4 +25,3 @@ interaction using
 
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
 robot as explained `here <https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html>`_.
-
