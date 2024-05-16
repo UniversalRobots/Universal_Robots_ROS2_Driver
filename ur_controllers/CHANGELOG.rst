@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use latched publishing for robot_mode and safety_mode
+* Contributors: Felix Exner
+
 2.4.4 (2024-04-04)
 ------------------
 

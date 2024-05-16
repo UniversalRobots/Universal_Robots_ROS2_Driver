@@ -1,3 +1,12 @@
+Forthcoming
+-----------
+* Remove dependency to docker.io (`#985 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/985>`_)
+* Move starting the robot_state_publisher to an own launch file (`#977 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/977>`_)
+  Co-authored-by: Vincenzo Di Pentima <DiPentima@fzi.de>
+* Update installation instructions for source build (`#967 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/967>`_)
+* Fix multi-line strings in DeclareLaunchArgument (`#948 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/948>`_)
+* Contributors: Christoph Fröhlich, Felix Exner (fexner), Matthijs van der Burgh
+
 2.4.4 (2024-04-04)
 ------------------
 * Use ros2 control node from controller_manager and description topic (`#939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/939>`_)
