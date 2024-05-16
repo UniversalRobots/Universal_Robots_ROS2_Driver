@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.4.5 (2024-05-16)
+------------------
 * Remove dependency to docker.io (`#985 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/985>`_)
 * Move starting the robot_state_publisher to an own launch file (`#977 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/977>`_)
   Co-authored-by: Vincenzo Di Pentima <DiPentima@fzi.de>
