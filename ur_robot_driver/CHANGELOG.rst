@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.7 (2024-05-16)
+------------------
 * Remove dependency to docker.io (backport of `#985 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/985>`_)
 * Simplify tests (backport `#849 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/849>`_)
 * Reduce number of controller_spawners to 3 (backport `#919 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/919>`_)

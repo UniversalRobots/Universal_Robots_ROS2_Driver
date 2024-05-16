@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.7 (2024-05-16)
+------------------
 * Fix multi-line strings in DeclareLaunchArgument (`#948 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/948>`_) (`#969 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/969>`_)
   Co-authored-by: Matthijs van der Burgh <matthijs.vander.burgh@live.nl>
 * Contributors: Matthijs van der Burgh
