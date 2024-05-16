@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.12 (2024-05-16)
+-------------------
 * Use latched publishing for robot_mode and safety_mode (`#991 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/991>`_)
 * Contributors: Felix Exner
 

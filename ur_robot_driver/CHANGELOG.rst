@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.2.12 (2024-05-16)
+-------------------
 * Remove dependency to docker.io (backport `#985 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/985>`_)
 * Simplify tests (backport of `#849 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/849>`_)
 * Update installation instructions for source build (backport `#967 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/967>`_)
