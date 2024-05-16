@@ -5,18 +5,16 @@ ur_moveit_config
 ================
 
 This package contains an **example** MoveIt! configuration for Universal Robots arms. Since the
-default description contains only the arm this MoveIt! configuration package also only contains the
+default description contains only the arm, this MoveIt! configuration package also only contains the
 arm without any objects around it.
-
-Since a robotic arm is usually not floating in empty space, but is mounted somewhere, it is also
-recommended to create a robot_description modelling the real-world scenario and to generate a
+In a real-world scenario it is recommended to create a robot_description modelling the robot with its surroundings (e.g. table where it is mounted on, objects in its environment, etc.) and to generate a
 *scenario_moveit_config* package from that description as explained in the :ref:`Custom workcell
 tutorial <custom_workcell_tutorial>`.
 
 Usage
 -----
 
-With a running driver (Real hardware, URSim or mocked hardware), simply start the MoveIt!
+With a running driver (real hardware, URSim or mocked hardware), simply start the MoveIt!
 interaction using
 
 .. code-block::

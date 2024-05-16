@@ -2,7 +2,7 @@ ur_controllers
 ==============
 
 This package contains controllers and hardware interface for ``ros_control`` that are special to the UR
-robot family. Currently this contains
+robot family. Currently this contains:
 
 
 * A **speed_scaling_interface** to read the value of the current speed scaling into controllers.
