@@ -142,18 +142,16 @@ ament_export_dependencies(
 # Install Python execs
 ament_python_install_package(${PROJECT_NAME})
 
-# Install Python executables
+# Install executables
 install(PROGRAMS
   scripts/tool_communication.py
+  scripts/wait_for_robot_description
+  scripts/start_ursim.sh
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(PROGRAMS scripts/wait_dashboard_server.sh
   DESTINATION bin
-)
-
-install(PROGRAMS scripts/start_ursim.sh
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY config launch urdf

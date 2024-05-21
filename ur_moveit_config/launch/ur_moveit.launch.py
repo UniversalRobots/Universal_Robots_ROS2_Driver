@@ -33,8 +33,9 @@ import os
 from pathlib import Path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler
 from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
 from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
@@ -93,38 +94,49 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_entity(declare_arguments())
 
-    ld.add_action(
-        Node(
-            package="moveit_ros_move_group",
-            executable="move_group",
-            output="screen",
-            parameters=[
-                moveit_config.to_dict(),
-                warehouse_ros_config,
-            ],
-        )
+    wait_robot_description = Node(
+        package="ur_robot_driver",
+        executable="wait_for_robot_description",
+        output="screen",
+    )
+    ld.add_action(wait_robot_description)
+
+    move_group_node = Node(
+        package="moveit_ros_move_group",
+        executable="move_group",
+        output="screen",
+        parameters=[
+            moveit_config.to_dict(),
+            warehouse_ros_config,
+        ],
     )
 
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("ur_moveit_config"), "config", "moveit.rviz"]
     )
+    rviz_node = Node(
+        package="rviz2",
+        condition=IfCondition(launch_rviz),
+        executable="rviz2",
+        name="rviz2_moveit",
+        output="log",
+        arguments=["-d", rviz_config_file],
+        parameters=[
+            moveit_config.robot_description,
+            moveit_config.robot_description_semantic,
+            moveit_config.robot_description_kinematics,
+            moveit_config.planning_pipelines,
+            moveit_config.joint_limits,
+            warehouse_ros_config,
+        ],
+    )
+
     ld.add_action(
-        Node(
-            package="rviz2",
-            condition=IfCondition(launch_rviz),
-            executable="rviz2",
-            name="rviz2_moveit",
-            output="log",
-            arguments=["-d", rviz_config_file],
-            parameters=[
-                moveit_config.robot_description,
-                moveit_config.robot_description_semantic,
-                moveit_config.robot_description_kinematics,
-                moveit_config.planning_pipelines,
-                moveit_config.joint_limits,
-                warehouse_ros_config,
-            ],
-        )
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=wait_robot_description, on_exit=[move_group_node, rviz_node]
+            )
+        ),
     )
 
     return ld
