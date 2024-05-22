@@ -414,9 +414,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
-  // Amount of allowed timed out reads before the reverse interface will be dropped
-  const int keep_alive_count = std::stoi(info_.hardware_parameters["keep_alive_count"]);
-
   // Obtain the tf_prefix which is needed for the logging handler so that log messages from different arms are
   // distiguishable in the log
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
@@ -429,7 +426,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
         std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
         servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
-    ur_driver_->setKeepaliveCount(keep_alive_count);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
@@ -438,6 +434,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
     return hardware_interface::CallbackReturn::ERROR;
   }
+  // Timeout before the reverse interface will be dropped by the robot
+  receive_timeout_ = urcl::RobotReceiveTimeout::sec(std::stof(info_.hardware_parameters["robot_receive_timeout"]));
+
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checksum: '%s'.",
               calibration_checksum.c_str());
   // check calibration
@@ -627,10 +626,10 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
     if (position_controller_running_) {
-      ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ);
+      ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
 
     } else if (velocity_controller_running_) {
-      ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ);
+      ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
 
     } else {
       ur_driver_->writeKeepalive();
