@@ -14,11 +14,11 @@ repositories:
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
-    version: master
+    version: iron
   ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers
-    version: master
+    version: iron
   kinematics_interface:
     type: git
     url: https://github.com/ros-controls/kinematics_interface.git

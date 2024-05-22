@@ -7,9 +7,9 @@ on:
 jobs:
   coverage:
     name: coverage build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
-      image: ubuntu:jammy
+      image: ubuntu:noble
     strategy:
       fail-fast: false
     env:
@@ -45,7 +45,7 @@ jobs:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: colcon-logs-${{ matrix.os }}
           path: ros_ws/log

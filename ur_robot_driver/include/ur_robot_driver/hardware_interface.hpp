@@ -96,8 +96,9 @@ public:
 
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
 
+  hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
-  hardware_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) final;
+  hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
 
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) final;
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) final;
@@ -223,7 +224,7 @@ protected:
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::shared_ptr<std::thread> async_thread_;
 
-  bool rtde_comm_has_been_started_ = false;
+  std::atomic_bool rtde_comm_has_been_started_ = false;
 };
 }  // namespace ur_robot_driver
 
