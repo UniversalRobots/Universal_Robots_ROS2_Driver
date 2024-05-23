@@ -39,9 +39,9 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     print(
         "\033[91m"
-        "deprecation warning: "
-        "launch files from the ur_bringup package are deprecated and will be removed from iron "
-        "irwini on. please use the same launch files from the ur_robot_driver package."
+        "Deprecation warning: "
+        "Launch files from the ur_bringup package are deprecated and will be removed from Iron "
+        "Irwini on. Please use the same launch files from the ur_robot_driver package."
         "\033[0m"
     )
     declared_arguments = []
