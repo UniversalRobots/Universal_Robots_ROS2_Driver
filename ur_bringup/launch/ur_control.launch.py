@@ -51,7 +51,6 @@ def launch_setup(context, *args, **kwargs):
     controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
-    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
     tf_prefix = LaunchConfiguration("tf_prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
@@ -72,6 +71,9 @@ def launch_setup(context, *args, **kwargs):
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
+    )
+    kinematics_params = PathJoinSubstitution(
+        [FindPackageShare(description_package), "config", ur_type, "default_kinematics.yaml"]
     )
     physical_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "physical_parameters.yaml"]
@@ -102,7 +104,7 @@ def launch_setup(context, *args, **kwargs):
             joint_limit_params,
             " ",
             "kinematics_params:=",
-            kinematics_params_file,
+            kinematics_params,
             " ",
             "physical_params:=",
             physical_params,
@@ -414,20 +416,6 @@ def generate_launch_description():
             "description_file",
             default_value="ur.urdf.xacro",
             description="URDF/XACRO description file with the robot.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "kinematics_params_file",
-            default_value=PathJoinSubstitution(
-                [
-                    FindPackageShare(LaunchConfiguration("description_package")),
-                    "config",
-                    LaunchConfiguration("ur_type"),
-                    "default_kinematics.yaml",
-                ]
-            ),
-            description="The calibration configuration of the actual robot used.",
         )
     )
     declared_arguments.append(

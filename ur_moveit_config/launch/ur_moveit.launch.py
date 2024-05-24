@@ -172,6 +172,7 @@ def launch_setup(context, *args, **kwargs):
     if change_controllers == "true":
         controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
         controllers_yaml["joint_trajectory_controller"]["default"] = True
+        controllers_yaml["robotiq_gripper_controller"]["default"] = True
 
     moveit_controllers = {
         "moveit_simple_controller_manager": controllers_yaml,
@@ -190,6 +191,8 @@ def launch_setup(context, *args, **kwargs):
         "publish_geometry_updates": True,
         "publish_state_updates": True,
         "publish_transforms_updates": True,
+        "publish_root_description": True,
+        "publish_root_description_semantic": True,
     }
 
     warehouse_ros_config = {

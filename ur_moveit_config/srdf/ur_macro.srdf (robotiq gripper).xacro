@@ -17,7 +17,6 @@
     <group name="gripper">
         <joint name="robotiq_85_left_knuckle_joint"/>
     </group>
-
     <!--GROUP STATES - Purpose - Define a named state for a particular group, in terms of joint values. This is useful to define states like 'folded arms'-->
     <group_state name="${prefix}home" group="${prefix}${name}_manipulator">
       <joint name="${prefix}elbow_joint" value="0" />
@@ -43,7 +42,7 @@
       <joint name="${prefix}wrist_2_joint" value="-1.6" />
       <joint name="${prefix}wrist_3_joint" value="-0.11" />
     </group_state>
-
+   
     <group_state name="open" group="gripper">
         <joint name="robotiq_85_left_knuckle_joint" value="0"/>
     </group_state>
@@ -53,15 +52,17 @@
     <group_state name="mid" group="gripper">
         <joint name="robotiq_85_left_knuckle_joint" value="0.3934"/>
     </group_state>
-   
+
     <!--END EFFECTOR - Purpose - Represent information about an end effector.-->
      <end_effector name="robotiq_gripper" parent_link="flange" group="gripper" parent_group="${prefix}${name}_manipulator"/>
     <!--VIRTUAL JOINT - Purpose - this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
-    <virtual_joint name="virtual_joint" type="fixed" parent_frame="world" child_link="base_link"/>  
-
-   
-    
-    
+    <virtual_joint name="virtual_joint" type="fixed" parent_frame="world" child_link="base_link"/>
+     <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
+    <passive_joint name="robotiq_85_left_inner_knuckle_joint"/>
+    <passive_joint name="robotiq_85_left_finger_tip_joint"/>
+    <passive_joint name="robotiq_85_right_inner_knuckle_joint"/>
+    <passive_joint name="robotiq_85_right_knuckle_joint"/>
+    <passive_joint name="robotiq_85_right_finger_tip_joint"/>
     <!--DISABLE COLLISIONS - By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="${prefix}base_link" link2="${prefix}base_link_inertia" reason="Adjacent" />
     <disable_collisions link1="${prefix}base_link_inertia" link2="${prefix}shoulder_link" reason="Adjacent" />
@@ -75,7 +76,7 @@
     <disable_collisions link1="${prefix}wrist_1_link" link2="${prefix}wrist_3_link" reason="Never" />
     <disable_collisions link1="${prefix}wrist_2_link" link2="${prefix}wrist_3_link" reason="Adjacent" />
 
-    <disable_collisions link1="robotiq_85_base_link" link2="robotiq_85_left_finger_link" reason="Never"/>
+     <disable_collisions link1="robotiq_85_base_link" link2="robotiq_85_left_finger_link" reason="Never"/>
     <disable_collisions link1="robotiq_85_base_link" link2="robotiq_85_left_finger_tip_link" reason="Never"/>
     <disable_collisions link1="robotiq_85_base_link" link2="robotiq_85_left_inner_knuckle_link" reason="Adjacent"/>
     <disable_collisions link1="robotiq_85_base_link" link2="robotiq_85_left_knuckle_link" reason="Adjacent"/>
@@ -128,7 +129,7 @@
     <disable_collisions link1="robotiq_85_right_finger_link" link2="${prefix}wrist_3_link" reason="Never"/>
     <disable_collisions link1="robotiq_85_right_finger_tip_link" link2="robotiq_85_right_inner_knuckle_link" reason="Default"/>
     <disable_collisions link1="robotiq_85_right_finger_tip_link" link2="robotiq_85_right_knuckle_link" reason="Never"/>
-    <disable_collisions link1="robotiq_85_right_finger_tip_link" link2="${prefix}wrist_1_link" reason="Never"/>
+    <disable_collisions link1="robotiq_85_right_finger_tip_link" link2="${prefix}rist_1_link" reason="Never"/>
     <disable_collisions link1="robotiq_85_right_finger_tip_link" link2="${prefix}wrist_2_link" reason="Never"/>
     <disable_collisions link1="robotiq_85_right_finger_tip_link" link2="${prefix}wrist_3_link" reason="Never"/>
     <disable_collisions link1="robotiq_85_right_inner_knuckle_link" link2="robotiq_85_right_knuckle_link" reason="Never"/>

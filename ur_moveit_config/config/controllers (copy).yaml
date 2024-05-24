@@ -1,9 +1,6 @@
-# MoveIt uses this configuration for controller management
-
 controller_names:
   - scaled_joint_trajectory_controller
   - joint_trajectory_controller
-  - robotiq_gripper_controller
 
 
 scaled_joint_trajectory_controller:
@@ -30,12 +27,3 @@ joint_trajectory_controller:
     - wrist_1_joint
     - wrist_2_joint
     - wrist_3_joint
-
-robotiq_gripper_controller:
-  action_ns: gripper_cmd
-  type: GripperCommand
-  default: true
-  parallel: false
-  joints: 
-    - robotiq_85_left_knuckle_joint
-    
