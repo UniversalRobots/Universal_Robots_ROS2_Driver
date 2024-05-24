@@ -2,12 +2,6 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.2.12 (2024-05-16)
--------------------
-* Define default maximum accelerations for MoveIt (backport of `#645 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/645>`_)
-* Fix multi-line strings in DeclareLaunchArgument (`#948 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/948>`_)
-* Contributors: Robert Wilbrandt, Matthijs van der Burgh
-
 2.2.11 (2024-04-08)
 -------------------
 * Add UR30 support (`#930 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/930>`_)

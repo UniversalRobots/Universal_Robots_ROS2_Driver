@@ -1,14 +1,3 @@
-2.2.12 (2024-05-16)
--------------------
-* Remove dependency to docker.io (backport `#985 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/985>`_)
-* Simplify tests (backport of `#849 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/849>`_)
-* Update installation instructions for source build (backport `#967 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/967>`_)
-* Move installation instructions to subpage (backport `#870 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/870>`_)
-* Reduce number of controller_spawners to 3 (`#928 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/928>`_)
-* Fix multi-line strings in DeclareLaunchArgument (backport `#948 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/948>`_)
-* "use_fake_hardware" for UR20 (`#950 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/950>`_)
-* Contributors: Vincenzo Di Pentima, Felix Exner, Robert Wilbrandt, Matthijs van der Burgh
-
 2.2.11 (2024-04-08)
 -------------------
 * Add UR30 support (`#930 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/930>`_)
