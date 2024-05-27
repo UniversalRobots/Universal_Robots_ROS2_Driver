@@ -29,6 +29,7 @@
 #
 # Author: Felix Exner
 import os
+import yaml
 
 from pathlib import Path
 
@@ -45,6 +46,19 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 from moveit_configs_utils import MoveItConfigsBuilder
+
+from ament_index_python.packages import get_package_share_directory
+
+
+def load_yaml(package_name, file_path):
+    package_path = get_package_share_directory(package_name)
+    absolute_file_path = os.path.join(package_path, file_path)
+
+    try:
+        with open(absolute_file_path) as file:
+            return yaml.safe_load(file)
+    except OSError:  # parent of IOError, OSError *and* WindowsError where available
+        return None
 
 
 def declare_arguments():
@@ -71,6 +85,9 @@ def declare_arguments():
                 default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite"),
                 description="Path where the warehouse database should be stored",
             ),
+            DeclareLaunchArgument(
+                "launch_servo", default_value="true", description="Launch Servo?"
+            ),
         ]
     )
 
@@ -79,6 +96,7 @@ def generate_launch_description():
     launch_rviz = LaunchConfiguration("launch_rviz")
     ur_type = LaunchConfiguration("ur_type")
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
+    launch_servo = LaunchConfiguration("launch_servo")
 
     moveit_config = (
         MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config")
@@ -111,6 +129,19 @@ def generate_launch_description():
         ],
     )
 
+    servo_yaml = load_yaml("ur_moveit_config", "config/ur_servo.yaml")
+    servo_params = {"moveit_servo": servo_yaml}
+    servo_node = Node(
+        package="moveit_servo",
+        condition=IfCondition(launch_servo),
+        executable="servo_node",
+        parameters=[
+            moveit_config.to_dict(),
+            servo_params,
+        ],
+        output="screen",
+    )
+
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("ur_moveit_config"), "config", "moveit.rviz"]
     )
@@ -134,7 +165,8 @@ def generate_launch_description():
     ld.add_action(
         RegisterEventHandler(
             OnProcessExit(
-                target_action=wait_robot_description, on_exit=[move_group_node, rviz_node]
+                target_action=wait_robot_description,
+                on_exit=[move_group_node, rviz_node, servo_node],
             )
         ),
     )
