@@ -53,6 +53,7 @@
 
 // UR stuff
 #include "ur_client_library/ur/ur_driver.h"
+#include "ur_client_library/ur/robot_receive_timeout.h"
 #include "ur_robot_driver/dashboard_client_ros.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 
@@ -225,6 +226,8 @@ protected:
   std::shared_ptr<std::thread> async_thread_;
 
   std::atomic_bool rtde_comm_has_been_started_ = false;
+
+  urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
 };
 }  // namespace ur_robot_driver
 
