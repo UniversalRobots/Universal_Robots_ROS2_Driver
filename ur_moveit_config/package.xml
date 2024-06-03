@@ -7,7 +7,6 @@
      An example package with MoveIt2 configurations for UR robots.
   </description>
   <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
 
   <license>Apache2.0</license>
 
@@ -20,12 +19,15 @@
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>moveit_kinematics</exec_depend>
   <exec_depend>moveit_planners</exec_depend>
+  <exec_depend>moveit_ros_visualization</exec_depend>
+  <exec_depend>moveit_servo</exec_depend>
   <exec_depend>moveit_simple_controller_manager</exec_depend>
-  <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>moveit_configs_utils</exec_depend>
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>ur_description</exec_depend>
-
+  <exec_depend>warehouse_ros_sqlite</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  
 
   <export>
     <build_type>ament_cmake</build_type>
