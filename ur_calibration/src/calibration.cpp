@@ -153,7 +153,7 @@ void Calibration::correctAxis(const size_t link_index)
           .toRotationMatrix() *
       Eigen::AngleAxisd(robot_parameters_.segments_[link_index].alpha_, Eigen::Vector3d::UnitX()).toRotationMatrix();
 
-  // Correct next joint
+  // Correct next joint's d parameter
   chain_[2 * link_index + 2](2, 3) -= distance_correction;
 }
 
