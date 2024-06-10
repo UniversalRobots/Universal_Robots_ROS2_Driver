@@ -86,7 +86,10 @@ def declare_arguments():
                 description="Path where the warehouse database should be stored",
             ),
             DeclareLaunchArgument(
-                "launch_servo", default_value="true", description="Launch Servo?"
+                "launch_servo", default_value="false", description="Launch Servo?"
+            ),
+            DeclareLaunchArgument(
+                "use_sim_time", default_value="false", description="Using or not time from simulation"
             ),
         ]
     )
@@ -97,6 +100,7 @@ def generate_launch_description():
     ur_type = LaunchConfiguration("ur_type")
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
     launch_servo = LaunchConfiguration("launch_servo")
+    use_sim_time = LaunchConfiguration("use_sim_time")
 
     moveit_config = (
         MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config")
@@ -126,6 +130,7 @@ def generate_launch_description():
         parameters=[
             moveit_config.to_dict(),
             warehouse_ros_config,
+            {'use_sim_time': use_sim_time},
         ],
     )
 
