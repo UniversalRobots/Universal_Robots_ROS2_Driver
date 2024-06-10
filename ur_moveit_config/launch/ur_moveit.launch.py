@@ -89,7 +89,9 @@ def declare_arguments():
                 "launch_servo", default_value="false", description="Launch Servo?"
             ),
             DeclareLaunchArgument(
-                "use_sim_time", default_value="false", description="Using or not time from simulation"
+                "use_sim_time",
+                default_value="false",
+                description="Using or not time from simulation",
             ),
         ]
     )
@@ -130,7 +132,7 @@ def generate_launch_description():
         parameters=[
             moveit_config.to_dict(),
             warehouse_ros_config,
-            {'use_sim_time': use_sim_time},
+            {"use_sim_time": use_sim_time},
         ],
     )
 
