@@ -4,6 +4,15 @@ Installation of the ur_robot_driver
 You can either install this driver from binary packages as shown above or build it from source. We
 recommend a binary package installation unless you want to join development and submit changes.
 
+.. note::
+
+   Controlling the robot using ROS raises the requirement for strict cycle times. To achieve this,
+   we strongly recommend to use a lowlatency or even ``PREEMPT_RT``-patched kernel. See
+   :ref:`real time setup` for details on setting this up.
+
+   For the same reason we encourage users to use a direct network connection between the ROS pc and
+   the robot controller without a switch.
+
 Install from binary packages
 ----------------------------
 
