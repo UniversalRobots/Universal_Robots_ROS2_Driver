@@ -1,0 +1,16 @@
+pose_broadcaster:
+  sensor_name: {
+    type: string,
+    default_value: "tcp_pose",
+    description: "State interface used to encode the pose."
+  }
+  parent_frame_id: {
+    type: string,
+    default_value: "base",
+    description: "Parent frame id of the published transform."
+  }
+  child_frame_id: {
+    type: string,
+    default_value: "tool0_controller",
+    description: "Child frame id of the published transform."
+  }
