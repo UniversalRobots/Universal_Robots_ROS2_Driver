@@ -282,8 +282,7 @@ def _ursim_action():
                     "start_ursim.sh",
                 ]
             ),
-            " ",
-            "-m ",
+            "-m",
             ur_type,
         ],
         name="start_ursim",
