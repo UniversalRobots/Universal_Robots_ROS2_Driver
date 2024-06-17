@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.4.6 (2024-06-17)
+------------------
 * Remove tf_prefix from ur_control.launch.py (`#1020 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1020>`_)
 * Make moveit_config compatible to moveit_configs_builder (`#998 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/998>`_)
 * Remove extra spaces from start_ursim statement in tests (`#1010 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/1010>`_)
