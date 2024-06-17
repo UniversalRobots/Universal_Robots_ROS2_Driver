@@ -116,7 +116,7 @@ repos:
         stages: [commit]
         entry: ament_copyright
         language: system
-        args: ['--exclude', 'ur_robot_driver/doc/conf.py']
+        args: ['--exclude', 'ur_robot_driver/doc/conf.py', 'ur_calibration/doc/conf.py']
 
   # Docs - RestructuredText hooks
   - repo: https://github.com/PyCQA/doc8
