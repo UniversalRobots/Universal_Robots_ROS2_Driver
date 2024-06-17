@@ -2,6 +2,12 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Simplify launch file for ur_bringup pkg (`#1004 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1004>`_)
+* Add calibration file to launch arguments (`#1001 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1001>`_)
+* Contributors: Vincenzo Di Pentima
+
 2.2.12 (2024-05-16)
 -------------------
 
