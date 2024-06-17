@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.13 (2024-06-17)
+-------------------
 * Add servo node config to disable advertising /get_planning_scene (backport of `#990 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/990>`_)
 * Contributors: Ruddick Lawrence
 
