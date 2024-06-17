@@ -1,3 +1,10 @@
+Forthcoming
+-----------
+* Use robot_receive_timeout instead of keepalive_count (`#1009 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1009>`_)
+* Remove extra spaces from start_ursim statement in tests (backport of `#1010 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1010>`_)
+* Add calibration file to launch arguments (`#1001 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1001>`_)
+* Contributors: Vincenzo Di Pentima, Felix Exner
+
 2.2.12 (2024-05-16)
 -------------------
 * Remove dependency to docker.io (backport `#985 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/985>`_)

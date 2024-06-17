@@ -2,6 +2,11 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add servo node config to disable advertising /get_planning_scene (backport of `#990 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/990>`_)
+* Contributors: Ruddick Lawrence
+
 2.2.12 (2024-05-16)
 -------------------
 * Define default maximum accelerations for MoveIt (backport of `#645 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/645>`_)

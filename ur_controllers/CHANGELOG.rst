@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* this simple fix should fix the goal time violated issue (backport of `#882 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/882>`_)
+* Contributors: Lennart Nachtigall
+
 2.2.12 (2024-05-16)
 -------------------
 * Use latched publishing for robot_mode and safety_mode (`#991 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/991>`_)
