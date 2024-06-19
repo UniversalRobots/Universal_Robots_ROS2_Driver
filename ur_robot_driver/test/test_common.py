@@ -307,23 +307,26 @@ def generate_driver_test_description(
 ):
     ur_type = LaunchConfiguration("ur_type")
 
+    launch_arguments = {
+        "robot_ip": "192.168.56.101",
+        "ur_type": ur_type,
+        "launch_rviz": "false",
+        "controller_spawner_timeout": str(controller_spawner_timeout),
+        "initial_joint_controller": "scaled_joint_trajectory_controller",
+        "headless_mode": "true",
+        "launch_dashboard_client": "false",
+        "start_joint_controller": "false",
+    }
+    if tf_prefix:
+        launch_arguments["tf_prefix"] = tf_prefix
+
     robot_driver = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
                 [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
             )
         ),
-        launch_arguments={
-            "robot_ip": "192.168.56.101",
-            "ur_type": ur_type,
-            "launch_rviz": "false",
-            "controller_spawner_timeout": str(controller_spawner_timeout),
-            "initial_joint_controller": "scaled_joint_trajectory_controller",
-            "headless_mode": "true",
-            "launch_dashboard_client": "false",
-            "start_joint_controller": "false",
-            "tf_prefix": tf_prefix,
-        }.items(),
+        launch_arguments=launch_arguments.items(),
     )
     wait_dashboard_server = ExecuteProcess(
         cmd=[

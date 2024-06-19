@@ -68,6 +68,8 @@ def launch_setup():
         parameters=[
             LaunchConfiguration("update_rate_config_file"),
             ParameterFile(controllers_file, allow_substs=True),
+            # We use the tf_prefix as substitution in there, so that's why we keep it as an
+            # argument for this launchfile
         ],
         output="screen",
     )
@@ -278,6 +280,15 @@ def generate_launch_description():
             description="Launchfile (absolute path) providing the description. "
             "The launchfile has to start a robot_state_publisher node that "
             "publishes the description topic.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tf_prefix",
+            default_value="",
+            description="tf_prefix of the joint names, useful for "
+            "multi-robot setup. If changed, also joint names in the controllers' configuration "
+            "have to be updated.",
         )
     )
     declared_arguments.append(
