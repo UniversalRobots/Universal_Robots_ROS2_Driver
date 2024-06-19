@@ -2,6 +2,9 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.4.6 (2024-06-17)
 ------------------
 * Fix calibration (`#1017 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1017>`_)
