@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+* Add sleep between controller stopper's controller queries (backport of `#1038 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1038>`_)
+* Contributors: Felix Exner
+
 2.3.8 (2024-06-17)
 ------------------
 * Remove extra spaces from start_ursim statement in tests ( backport of `#1010 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1010>`_)
