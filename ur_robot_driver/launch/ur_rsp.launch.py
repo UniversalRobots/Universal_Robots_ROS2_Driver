@@ -1,4 +1,4 @@
-# Copyright (c) 2021 PickNik, Inc.
+# Copyright (c) 2024 FZI Forschungszentrum Informatik
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -27,199 +27,172 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Author: Denis Stogl
+# Author: Felix Exner
 
 from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.substitutions import FindPackageShare
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import (
+    Command,
+    FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
 )
-from launch.launch_description_sources import AnyLaunchDescriptionSource
-
-
-def launch_setup():
-    # Initialize Arguments
-    ur_type = LaunchConfiguration("ur_type")
-    robot_ip = LaunchConfiguration("robot_ip")
-    # General arguments
-    controllers_file = LaunchConfiguration("controllers_file")
-    description_launchfile = LaunchConfiguration("description_launchfile")
-    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    controller_spawner_timeout = LaunchConfiguration("controller_spawner_timeout")
-    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
-    activate_joint_controller = LaunchConfiguration("activate_joint_controller")
-    launch_rviz = LaunchConfiguration("launch_rviz")
-    rviz_config_file = LaunchConfiguration("rviz_config_file")
-    headless_mode = LaunchConfiguration("headless_mode")
-    launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
-    use_tool_communication = LaunchConfiguration("use_tool_communication")
-    tool_device_name = LaunchConfiguration("tool_device_name")
-    tool_tcp_port = LaunchConfiguration("tool_tcp_port")
-
-    control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[
-            LaunchConfiguration("update_rate_config_file"),
-            ParameterFile(controllers_file, allow_substs=True),
-        ],
-        output="screen",
-    )
-
-    dashboard_client_node = Node(
-        package="ur_robot_driver",
-        condition=IfCondition(launch_dashboard_client) and UnlessCondition(use_mock_hardware),
-        executable="dashboard_client",
-        name="dashboard_client",
-        output="screen",
-        emulate_tty=True,
-        parameters=[{"robot_ip": robot_ip}],
-    )
-
-    tool_communication_node = Node(
-        package="ur_robot_driver",
-        condition=IfCondition(use_tool_communication),
-        executable="tool_communication.py",
-        name="ur_tool_comm",
-        output="screen",
-        parameters=[
-            {
-                "robot_ip": robot_ip,
-                "tcp_port": tool_tcp_port,
-                "device_name": tool_device_name,
-            }
-        ],
-    )
-
-    urscript_interface = Node(
-        package="ur_robot_driver",
-        executable="urscript_interface",
-        parameters=[{"robot_ip": robot_ip}],
-        output="screen",
-        condition=UnlessCondition(use_mock_hardware),
-    )
-
-    controller_stopper_node = Node(
-        package="ur_robot_driver",
-        executable="controller_stopper_node",
-        name="controller_stopper",
-        output="screen",
-        emulate_tty=True,
-        condition=UnlessCondition(use_mock_hardware),
-        parameters=[
-            {"headless_mode": headless_mode},
-            {"joint_controller_active": activate_joint_controller},
-            {
-                "consistent_controllers": [
-                    "io_and_status_controller",
-                    "force_torque_sensor_broadcaster",
-                    "joint_state_broadcaster",
-                    "speed_scaling_state_broadcaster",
-                ]
-            },
-        ],
-    )
-
-    rviz_node = Node(
-        package="rviz2",
-        condition=IfCondition(launch_rviz),
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
-    )
-
-    # Spawn controllers
-    def controller_spawner(controllers, active=True):
-        inactive_flags = ["--inactive"] if not active else []
-        return Node(
-            package="controller_manager",
-            executable="spawner",
-            arguments=[
-                "--controller-manager",
-                "/controller_manager",
-                "--controller-manager-timeout",
-                controller_spawner_timeout,
-            ]
-            + inactive_flags
-            + controllers,
-        )
-
-    controllers_active = [
-        "joint_state_broadcaster",
-        "io_and_status_controller",
-        "speed_scaling_state_broadcaster",
-        "force_torque_sensor_broadcaster",
-    ]
-    controllers_inactive = ["forward_position_controller"]
-
-    controller_spawners = [controller_spawner(controllers_active)] + [
-        controller_spawner(controllers_inactive, active=False)
-    ]
-
-    # There may be other controllers of the joints, but this is the initially-started one
-    initial_joint_controller_spawner_started = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            initial_joint_controller,
-            "-c",
-            "/controller_manager",
-            "--controller-manager-timeout",
-            controller_spawner_timeout,
-        ],
-        condition=IfCondition(activate_joint_controller),
-    )
-    initial_joint_controller_spawner_stopped = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            initial_joint_controller,
-            "-c",
-            "/controller_manager",
-            "--controller-manager-timeout",
-            controller_spawner_timeout,
-            "--inactive",
-        ],
-        condition=UnlessCondition(activate_joint_controller),
-    )
-
-    rsp = IncludeLaunchDescription(
-        AnyLaunchDescriptionSource(description_launchfile),
-        launch_arguments={
-            "robot_ip": robot_ip,
-            "ur_type": ur_type,
-        }.items(),
-    )
-
-    nodes_to_start = [
-        control_node,
-        dashboard_client_node,
-        tool_communication_node,
-        controller_stopper_node,
-        urscript_interface,
-        rsp,
-        rviz_node,
-        initial_joint_controller_spawner_stopped,
-        initial_joint_controller_spawner_started,
-    ] + controller_spawners
-
-    return nodes_to_start
 
 
 def generate_launch_description():
+    ur_type = LaunchConfiguration("ur_type")
+    robot_ip = LaunchConfiguration("robot_ip")
+    safety_limits = LaunchConfiguration("safety_limits")
+    safety_pos_margin = LaunchConfiguration("safety_pos_margin")
+    safety_k_position = LaunchConfiguration("safety_k_position")
+    # General arguments
+    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
+    physical_params_file = LaunchConfiguration("physical_params_file")
+    visual_params_file = LaunchConfiguration("visual_params_file")
+    joint_limit_params_file = LaunchConfiguration("joint_limit_params_file")
+    description_file = LaunchConfiguration("description_file")
+    tf_prefix = LaunchConfiguration("tf_prefix")
+    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
+    headless_mode = LaunchConfiguration("headless_mode")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
+    tool_parity = LaunchConfiguration("tool_parity")
+    tool_baud_rate = LaunchConfiguration("tool_baud_rate")
+    tool_stop_bits = LaunchConfiguration("tool_stop_bits")
+    tool_rx_idle_chars = LaunchConfiguration("tool_rx_idle_chars")
+    tool_tx_idle_chars = LaunchConfiguration("tool_tx_idle_chars")
+    tool_device_name = LaunchConfiguration("tool_device_name")
+    tool_tcp_port = LaunchConfiguration("tool_tcp_port")
+    tool_voltage = LaunchConfiguration("tool_voltage")
+    reverse_ip = LaunchConfiguration("reverse_ip")
+    script_command_port = LaunchConfiguration("script_command_port")
+    reverse_port = LaunchConfiguration("reverse_port")
+    script_sender_port = LaunchConfiguration("script_sender_port")
+    trajectory_port = LaunchConfiguration("trajectory_port")
+
+    script_filename = PathJoinSubstitution(
+        [
+            FindPackageShare("ur_client_library"),
+            "resources",
+            "external_control.urscript",
+        ]
+    )
+    input_recipe_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
+    )
+    output_recipe_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_robot_driver"), "resources", "rtde_output_recipe.txt"]
+    )
+
+    robot_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            description_file,
+            " ",
+            "robot_ip:=",
+            robot_ip,
+            " ",
+            "joint_limit_params:=",
+            joint_limit_params_file,
+            " ",
+            "kinematics_params:=",
+            kinematics_params_file,
+            " ",
+            "physical_params:=",
+            physical_params_file,
+            " ",
+            "visual_params:=",
+            visual_params_file,
+            " ",
+            "safety_limits:=",
+            safety_limits,
+            " ",
+            "safety_pos_margin:=",
+            safety_pos_margin,
+            " ",
+            "safety_k_position:=",
+            safety_k_position,
+            " ",
+            "name:=",
+            ur_type,
+            " ",
+            "script_filename:=",
+            script_filename,
+            " ",
+            "input_recipe_filename:=",
+            input_recipe_filename,
+            " ",
+            "output_recipe_filename:=",
+            output_recipe_filename,
+            " ",
+            "tf_prefix:=",
+            tf_prefix,
+            " ",
+            "use_mock_hardware:=",
+            use_mock_hardware,
+            " ",
+            "mock_sensor_commands:=",
+            mock_sensor_commands,
+            " ",
+            "headless_mode:=",
+            headless_mode,
+            " ",
+            "use_tool_communication:=",
+            use_tool_communication,
+            " ",
+            "tool_parity:=",
+            tool_parity,
+            " ",
+            "tool_baud_rate:=",
+            tool_baud_rate,
+            " ",
+            "tool_stop_bits:=",
+            tool_stop_bits,
+            " ",
+            "tool_rx_idle_chars:=",
+            tool_rx_idle_chars,
+            " ",
+            "tool_tx_idle_chars:=",
+            tool_tx_idle_chars,
+            " ",
+            "tool_device_name:=",
+            tool_device_name,
+            " ",
+            "tool_tcp_port:=",
+            tool_tcp_port,
+            " ",
+            "tool_voltage:=",
+            tool_voltage,
+            " ",
+            "reverse_ip:=",
+            reverse_ip,
+            " ",
+            "script_command_port:=",
+            script_command_port,
+            " ",
+            "reverse_port:=",
+            reverse_port,
+            " ",
+            "script_sender_port:=",
+            script_sender_port,
+            " ",
+            "trajectory_port:=",
+            trajectory_port,
+            " ",
+        ]
+    )
+    robot_description = {"robot_description": robot_description_content}
+
     declared_arguments = []
     # UR specific arguments
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
-            description="Type/series of used UR robot.",
+            description="Typo/series of used UR robot.",
             choices=[
                 "ur3",
                 "ur3e",
@@ -259,25 +232,69 @@ def generate_launch_description():
             description="k-position factor in the safety controller.",
         )
     )
-    # General arguments
     declared_arguments.append(
         DeclareLaunchArgument(
-            "controllers_file",
+            "joint_limit_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "config", "ur_controllers.yaml"]
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "joint_limits.yaml",
+                ]
             ),
-            description="YAML file with the controllers configuration.",
+            description="Config file containing the joint limits (e.g. velocities, positions) of the robot.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "description_launchfile",
+            "kinematics_params_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_rsp.launch.py"]
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "default_kinematics.yaml",
+                ]
             ),
-            description="Launchfile (absolute path) providing the description. "
-            "The launchfile has to start a robot_state_publisher node that "
-            "publishes the description topic.",
+            description="The calibration configuration of the actual robot used.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "physical_params_file",
+            default_value=PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "physical_parameters.yaml",
+                ]
+            ),
+            description="Config file containing the physical parameters (e.g. masses, inertia) of the robot.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "visual_params_file",
+            default_value=PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_description"),
+                    "config",
+                    ur_type,
+                    "visual_parameters.yaml",
+                ]
+            ),
+            description="Config file containing the visual parameters (e.g. meshes) of the robot.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "description_file",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "urdf", "ur.urdf.xacro"]
+            ),
+            description="URDF/XACRO description file with the robot.",
         )
     )
     declared_arguments.append(
@@ -313,13 +330,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "controller_spawner_timeout",
-            default_value="10",
-            description="Timeout used when spawning controllers.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "initial_joint_controller",
             default_value="scaled_joint_trajectory_controller",
             description="Initially loaded robot controller.",
@@ -334,15 +344,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "rviz_config_file",
-            default_value=PathJoinSubstitution(
-                [FindPackageShare("ur_description"), "rviz", "view_robot.rviz"]
-            ),
-            description="RViz config file (absolute path) to use when launching rviz.",
-        )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -457,20 +458,15 @@ def generate_launch_description():
             description="Port that will be opened for trajectory control.",
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            name="update_rate_config_file",
-            default_value=[
-                PathJoinSubstitution(
-                    [
-                        FindPackageShare("ur_robot_driver"),
-                        "config",
-                    ]
-                ),
-                "/",
-                LaunchConfiguration("ur_type"),
-                "_update_rate.yaml",
-            ],
-        )
+
+    return LaunchDescription(
+        declared_arguments
+        + [
+            Node(
+                package="robot_state_publisher",
+                executable="robot_state_publisher",
+                output="both",
+                parameters=[robot_description],
+            ),
+        ]
     )
-    return LaunchDescription(declared_arguments + launch_setup())

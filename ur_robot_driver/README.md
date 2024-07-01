@@ -5,7 +5,7 @@ repository and requires other packages from that repository. Also, see the [main
 README](../README.md) for information on how to install and startup this driver.
 
 ## ROS-API
-The ROS API is documented in a [standalone document](doc/ROS_INTERFACE.md).
+The ROS API is documented in a [standalone document](doc/ROS_INTERFACE.rst).
 
 ## Technical details
 The following image shows a very coarse overview of the driver's architecture.
@@ -41,7 +41,7 @@ The robot won't accept script code from a remote source unless the robot is put 
 *remote_control-mode*. However, if put into *remote_control-mode*, the program containing the
 **External Control** program node can't be started from the panel.
 For this purpose, please use the **dashboard** services to load, start and stop the main program
-running on the robot. See the [ROS-API documentation](doc/ROS_INTERFACE.md) for details on the
+running on the robot. See the [ROS-API documentation](doc/ROS_INTERFACE.rst) for details on the
 dashboard services.
 
 For using the **tool communication interface** on e-Series robots, a `socat` script is prepared to
@@ -75,12 +75,12 @@ The **remote control mode** is needed for many aspects of this driver such as
 
 ### Headless mode
 Inside this driver, there's the **headless** mode, which can be either enabled or not. When the
-[headless mode](./doc/ROS_INTERFACE.md#headless_mode-default-false) is activated, required script
+[headless mode](./doc/ROS_INTERFACE.rst#headless_mode-default-false) is activated, required script
 code for external control will be sent to the robot directly when the driver starts. As soon as
 other script code is sent to the robot either by sending it directly through this driver or by
 pressing any motion-related button on the teach pendant, the script will be overwritten by this
 action and has to be restarted by using the
-[resend_robot_program](./doc/ROS_INTERFACE.md#resend_robot_program-std_srvstrigger) service. If this
+[resend_robot_program](./doc/ROS_INTERFACE.rst#resend_robot_program-std_srvstrigger) service. If this
 is necessary, you will see the output `Connection to robot dropped, waiting for new connection.`
 from the driver. Note that pressing "play" on the TP won't start the external control again, but
 whatever program is currently loaded on the controller. This mode doesn't require the "External

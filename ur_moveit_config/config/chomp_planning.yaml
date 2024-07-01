@@ -1,5 +1,6 @@
 planning_plugins:
-  - ompl_interface/OMPLPlanner
+  - chomp_interface/CHOMPPlanner
+enable_failure_recovery: true
 # The order of the elements in the adapter corresponds to the order they are processed by the motion planning pipeline.
 request_adapters:
   - default_planning_request_adapters/ResolveConstraintFrames
@@ -10,3 +11,5 @@ response_adapters:
   - default_planning_response_adapters/AddTimeOptimalParameterization
   - default_planning_response_adapters/ValidateSolution
   - default_planning_response_adapters/DisplayMotionPath
+
+ridge_factor: 0.01

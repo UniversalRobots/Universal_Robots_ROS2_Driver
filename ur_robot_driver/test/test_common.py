@@ -244,7 +244,7 @@ class IoStatusInterface(
         "resend_robot_program": Trigger,
         "start_tool_contact": Trigger,
         "end_tool_contact": Trigger,
-        "get_version": GetVersion,
+        "get_robot_software_version": GetVersion,
     },
 ):
     pass
@@ -278,8 +278,7 @@ def _ursim_action():
                     "start_ursim.sh",
                 ]
             ),
-            " ",
-            "-m ",
+            "-m",
             ur_type,
         ],
         name="start_ursim",
