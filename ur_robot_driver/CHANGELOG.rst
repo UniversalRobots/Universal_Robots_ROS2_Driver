@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.2.14 (2024-07-01)
+-------------------
 * Add sleep between controller stopper's controller queries (backport of `#1038 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1038>`_)
 * Contributors: Felix Exner
 
