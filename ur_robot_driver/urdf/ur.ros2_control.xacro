@@ -224,13 +224,13 @@
         <command_interface name="zero_ftsensor_async_success"/>
       </gpio>
 
-      <gpio name="${tf_prefix}get_version">
+      <gpio name="${tf_prefix}get_robot_software_version">
         <command_interface name="get_version_cmd"/>
         <command_interface name="get_version_async_success"/>
-        <command_interface name="get_version_major"/>
-        <command_interface name="get_version_minor"/>
-        <command_interface name="get_version_bugfix"/>
-        <command_interface name="get_version_build"/>
+        <state_interface name="get_version_major"/>
+        <state_interface name="get_version_minor"/>
+        <state_interface name="get_version_bugfix"/>
+        <state_interface name="get_version_build"/>
       </gpio>
 
       <gpio name="${tf_prefix}system_interface">

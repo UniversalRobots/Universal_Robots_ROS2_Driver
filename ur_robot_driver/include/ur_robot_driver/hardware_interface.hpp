@@ -191,12 +191,12 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   bool async_thread_shutdown_;
-  double get_version_async_success_;
-  double get_version_cmd_;
-  double get_version_major_;
-  double get_version_minor_;
-  double get_version_bugfix_;
-  double get_version_build_;
+  double get_robot_software_version_async_success_;
+  double get_robot_software_version_cmd_;
+  double get_robot_software_version_major_;
+  double get_robot_software_version_minor_;
+  double get_robot_software_version_bugfix_;
+  double get_robot_software_version_build_;
 
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
