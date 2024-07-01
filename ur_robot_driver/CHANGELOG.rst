@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+* Add sleep between controller stopper's controller queries (`#1038 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1038>`_)
+* Contributors: Felix Exner (fexner)
+
 2.4.7 (2024-06-19)
 ------------------
 * Fix launching without a tf_prefix specified (`#1029 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1029>`_)
