@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+* Add sleep between controller stopper's controller queries (backport of `#1038 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1038>`_)
+* Contributors: Felix Exner
+
 2.2.13 (2024-06-17)
 -------------------
 * Use robot_receive_timeout instead of keepalive_count (`#1009 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1009>`_)
