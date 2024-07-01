@@ -97,13 +97,9 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_cmd");
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
-  // Get version service
-  config.names.emplace_back(tf_prefix + "get_version/get_version_cmd");
-  config.names.emplace_back(tf_prefix + "get_version/get_version_async_success");
-  config.names.emplace_back(tf_prefix + "get_version/get_version_major");
-  config.names.emplace_back(tf_prefix + "get_version/get_version_minor");
-  config.names.emplace_back(tf_prefix + "get_version/get_version_bugfix");
-  config.names.emplace_back(tf_prefix + "get_version/get_version_build");
+  // Robot software version service
+  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_cmd");
+  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_async_success");
 
   return config;
 }
@@ -165,6 +161,12 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
 
   // program running
   config.names.emplace_back(tf_prefix + "gpio/program_running");
+
+  // Get version service
+  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_major");
+  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_minor");
+  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_bugfix");
+  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_build");
 
   return config;
 }
@@ -321,8 +323,9 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
         "~/zero_ftsensor",
         std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
 
-    get_version_srv_ = get_node()->create_service<ur_msgs::srv::GetVersion>(
-        "~/get_version", std::bind(&GPIOController::getVersion, this, std::placeholders::_1, std::placeholders::_2));
+    get_robot_software_version_srv_ = get_node()->create_service<ur_msgs::srv::GetRobotSoftwareVersion>(
+        "~/get_robot_software_version",
+        std::bind(&GPIOController::getRobotSoftwareVersion, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -531,8 +534,8 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
   return true;
 }
 
-bool GPIOController::getVersion(ur_msgs::srv::GetVersion::Request::SharedPtr /*req*/,
-                                ur_msgs::srv::GetVersion::Response::SharedPtr resp)
+bool GPIOController::getRobotSoftwareVersion(ur_msgs::srv::GetRobotSoftwareVersion::Request::SharedPtr /*req*/,
+                                             ur_msgs::srv::GetRobotSoftwareVersion::Response::SharedPtr resp)
 {
   // reset success flag
   command_interfaces_[CommandInterfaces::GET_VERSION_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
@@ -545,10 +548,10 @@ bool GPIOController::getVersion(ur_msgs::srv::GetVersion::Request::SharedPtr /*r
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify software version of robot.");
   }
 
-  resp->major = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_MAJOR].get_value());
-  resp->minor = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_MINOR].get_value());
-  resp->bugfix = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_BUGFIX].get_value());
-  resp->build = static_cast<uint32_t>(command_interfaces_[CommandInterfaces::GET_VERSION_BUILD].get_value());
+  resp->major = static_cast<uint32_t>(state_interfaces_[StateInterfaces::GET_VERSION_MAJOR].get_value());
+  resp->minor = static_cast<uint32_t>(state_interfaces_[StateInterfaces::GET_VERSION_MINOR].get_value());
+  resp->bugfix = static_cast<uint32_t>(state_interfaces_[StateInterfaces::GET_VERSION_BUGFIX].get_value());
+  resp->build = static_cast<uint32_t>(state_interfaces_[StateInterfaces::GET_VERSION_BUILD].get_value());
 
   return true;
 }

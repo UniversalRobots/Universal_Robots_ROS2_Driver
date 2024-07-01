@@ -231,6 +231,18 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
 
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
+
   return state_interfaces;
 }
 
@@ -298,23 +310,12 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_cmd", &get_version_cmd_));
-
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "get_version", "get_version_async_success", &get_version_async_success_));
+      tf_prefix + "get_robot_software_version", "get_version_cmd", &get_robot_software_version_cmd_));
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_major", &get_version_major_));
-
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_minor", &get_version_minor_));
-
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_bugfix", &get_version_bugfix_));
-
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "get_version", "get_version_build", &get_version_build_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "get_robot_software_version",
+                                                                       "get_version_async_success",
+                                                                       &get_robot_software_version_async_success_));
 
   return command_interfaces;
 }
@@ -621,7 +622,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
-      get_version_cmd_ = NO_NEW_CMD_;
+      get_robot_software_version_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -747,14 +748,14 @@ void URPositionHardwareInterface::checkAsyncIO()
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
   }
 
-  if (!std::isnan(get_version_cmd_) && ur_driver_ != nullptr) {
+  if (!std::isnan(get_robot_software_version_cmd_) && ur_driver_ != nullptr) {
     urcl::VersionInformation version_info = ur_driver_->getVersion();
-    get_version_cmd_ = NO_NEW_CMD_;
-    get_version_major_ = version_info.major;
-    get_version_minor_ = version_info.minor;
-    get_version_bugfix_ = version_info.bugfix;
-    get_version_build_ = version_info.build;
-    get_version_async_success_ = 1.0;
+    get_robot_software_version_cmd_ = NO_NEW_CMD_;
+    get_robot_software_version_major_ = version_info.major;
+    get_robot_software_version_minor_ = version_info.minor;
+    get_robot_software_version_bugfix_ = version_info.bugfix;
+    get_robot_software_version_build_ = version_info.build;
+    get_robot_software_version_async_success_ = 1.0;
   }
 }
 
