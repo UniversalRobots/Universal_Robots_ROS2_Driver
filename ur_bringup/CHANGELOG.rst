@@ -2,6 +2,9 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.2.13 (2024-06-17)
 -------------------
 * Simplify launch file for ur_bringup pkg (`#1004 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1004>`_)
