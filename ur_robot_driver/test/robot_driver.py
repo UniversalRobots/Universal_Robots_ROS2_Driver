@@ -250,7 +250,7 @@ class RobotDriverTest(unittest.TestCase):
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
     def test_tool_contact(self, tf_prefix):
-        if self._io_status_controller_interface.get_version().major < 5:
+        if self._io_status_controller_interface.get_robot_software_version().major < 5:
             start_result = self._io_status_controller_interface.start_tool_contact()
             self.assertEqual(start_result.success, False)
 
