@@ -178,11 +178,8 @@ Using MoveIt
 
 `MoveIt! <https://moveit.ros.org>`_ support is built-in into this driver already.
 
-Real robot / URSim
-^^^^^^^^^^^^^^^^^^
-
 To test the driver with the example MoveIt-setup, first start the driver as described
-`above <#start-hardware-simulator-or-mockup>`_.
+`above <#start-hardware-simulator-or-mockup>`_ and then start the MoveIt! nodes using
 
 .. code-block::
 
@@ -191,17 +188,7 @@ To test the driver with the example MoveIt-setup, first start the driver as desc
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
 robot as explained `here <https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html>`_.
 
-Mock hardware
-^^^^^^^^^^^^^
-
-Currently, the ``scaled_joint_trajectory_controller`` does not work with ros2_control mock_hardware. There is an
-`upstream Merge-Request <https://github.com/ros-controls/ros2_control/pull/822>`_ pending to fix that. Until this is merged and released, you'll have to fallback to the ``joint_trajectory_controller`` by passing ``initial_controller:=joint_trajectory_controller`` to the driver's startup. Also, you'll have to tell MoveIt! that you're using mock_hardware as it then has to map to the other controller:
-
-.. code-block::
-
-   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_mock_hardware:=true launch_rviz:=false initial_joint_controller:=joint_trajectory_controller
-   # and in another shell
-   ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true use_mock_hardware:=true
+For more details, please see :ref:`ur_moveit_config`.
 
 Robot frames
 ------------

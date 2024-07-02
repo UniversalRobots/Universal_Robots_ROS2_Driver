@@ -10,7 +10,6 @@ This chapter explains how to install the ``ur_robot_driver``
    :caption: Contents:
 
    installation
-   real_time
    robot_setup
    install_urcap_cb3
    install_urcap_e_series
