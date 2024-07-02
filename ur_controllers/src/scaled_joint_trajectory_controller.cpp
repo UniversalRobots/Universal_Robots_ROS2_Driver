@@ -76,6 +76,7 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_activat
 controller_interface::return_type ScaledJointTrajectoryController::update(const rclcpp::Time& time,
                                                                           const rclcpp::Duration& period)
 {
+  // std::cout << state_interfaces_.back().get_name() << " = " << state_interfaces_.back().get_value() << std::endl;
   if (state_interfaces_.back().get_name() == scaled_params_.speed_scaling_interface_name) {
     scaling_factor_ = state_interfaces_.back().get_value();
   } else {

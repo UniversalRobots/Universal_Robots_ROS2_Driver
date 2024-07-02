@@ -77,7 +77,8 @@ enum StoppingInterface
 {
   NONE,
   STOP_POSITION,
-  STOP_VELOCITY
+  STOP_VELOCITY,
+  STOP_PASSTHROUGH
 };
 
 /*!
@@ -135,6 +136,8 @@ protected:
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
+  void check_passthrough_trajectory_controller();
+  void trajectory_done_callback(urcl::control::TrajectoryResult result);
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -191,6 +194,16 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   bool async_thread_shutdown_;
+  double passthrough_trajectory_transfer_state_;
+  double passthrough_trajectory_cancel_;
+  double passthrough_trajectory_dimensions_;
+  double passthrough_trajectory_controller_running_;
+  // TODO(URJala): The size of these arrays should be dependent on the number of joints on the physical robot.
+  urcl::vector6d_t passthrough_trajectory_positions_;
+  urcl::vector6d_t passthrough_trajectory_velocities_;
+  urcl::vector6d_t passthrough_trajectory_accelerations_;
+  double passthrough_trajectory_time_from_start_;
+  double number_of_joints_;
 
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
@@ -212,6 +225,10 @@ protected:
   bool robot_program_running_;
   bool non_blocking_read_;
   double robot_program_running_copy_;
+  std::vector<std::array<double, 6>> trajectory_joint_positions_;
+  std::vector<std::array<double, 6>> trajectory_joint_velocities_;
+  std::vector<std::array<double, 6>> trajectory_joint_accelerations_;
+  std::vector<double> trajectory_times_;
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
@@ -227,6 +244,7 @@ protected:
 
   std::atomic_bool rtde_comm_has_been_started_ = false;
 
+  const std::string PASSTHROUGH_TRAJECTORY_CONTROLLER = "passthrough_controller/passthrough_trajectory_positions_";
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
 };
 }  // namespace ur_robot_driver

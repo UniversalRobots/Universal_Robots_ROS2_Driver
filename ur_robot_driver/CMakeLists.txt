@@ -145,6 +145,10 @@ ament_python_install_package(${PROJECT_NAME})
 # Install executables
 install(PROGRAMS
   scripts/tool_communication.py
+  ../examples/examples.py
+  ../examples/load_switch_controller_example.py
+  ../examples/example_movej.py
+  ../examples/example_spline.py
   scripts/wait_for_robot_description
   scripts/start_ursim.sh
   DESTINATION lib/${PROJECT_NAME}
