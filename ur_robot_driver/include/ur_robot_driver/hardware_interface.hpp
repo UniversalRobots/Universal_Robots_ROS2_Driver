@@ -244,11 +244,8 @@ protected:
 
   std::atomic_bool rtde_comm_has_been_started_ = false;
 
-<<<<<<< forward_controller
   const std::string PASSTHROUGH_TRAJECTORY_CONTROLLER = "passthrough_controller/passthrough_trajectory_positions_";
-=======
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
->>>>>>> main
 };
 }  // namespace ur_robot_driver
 
