@@ -93,6 +93,11 @@ def declare_arguments():
                 default_value="false",
                 description="Using or not time from simulation",
             ),
+            DeclareLaunchArgument(
+                "publish_robot_description_semantic",
+                default_value="true",
+                description="MoveGroup publishes robot description semantic",
+            ),
         ]
     )
 
@@ -103,6 +108,7 @@ def generate_launch_description():
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
     launch_servo = LaunchConfiguration("launch_servo")
     use_sim_time = LaunchConfiguration("use_sim_time")
+    publish_robot_description_semantic = LaunchConfiguration("publish_robot_description_semantic")
 
     moveit_config = (
         MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config")
@@ -132,7 +138,10 @@ def generate_launch_description():
         parameters=[
             moveit_config.to_dict(),
             warehouse_ros_config,
-            {"use_sim_time": use_sim_time},
+            {
+                "use_sim_time": use_sim_time,
+                "publish_robot_description_semantic": publish_robot_description_semantic,
+            },
         ],
     )
 
