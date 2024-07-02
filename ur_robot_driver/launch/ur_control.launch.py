@@ -68,6 +68,8 @@ def launch_setup():
         parameters=[
             LaunchConfiguration("update_rate_config_file"),
             ParameterFile(controllers_file, allow_substs=True),
+            # We use the tf_prefix as substitution in there, so that's why we keep it as an
+            # argument for this launchfile
         ],
         output="screen",
     )
