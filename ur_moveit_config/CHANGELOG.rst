@@ -2,6 +2,19 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.8 (2024-07-01)
+------------------
+* moveit_congig: Also install srdf folder (`#1033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1033>`_)
+* Contributors: Felix Exner (fexner)
+
+2.4.7 (2024-06-19)
+------------------
+
+2.4.6 (2024-06-17)
+------------------
+* Make moveit_config compatible to moveit_configs_builder (`#998 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/998>`_)
+* Contributors: Felix Exner (fexner), Vincenzo Di Pentima, Ruddick Lawrence
+
 2.4.5 (2024-05-16)
 ------------------
 * Fix multi-line strings in DeclareLaunchArgument (`#948 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/948>`_)

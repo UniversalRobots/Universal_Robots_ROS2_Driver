@@ -42,6 +42,8 @@
 #include <string>
 #include <vector>
 
+#include <rclcpp/utilities.hpp>
+
 #include "ur_robot_driver/controller_stopper.hpp"
 
 ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool stop_controllers_on_startup)
@@ -89,6 +91,7 @@ ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool s
           }
         }
       }
+      rclcpp::sleep_for(std::chrono::milliseconds(100));
     }
     auto request_switch_controller = std::make_shared<controller_manager_msgs::srv::SwitchController::Request>();
     request_switch_controller->strictness = request_switch_controller->STRICT;
