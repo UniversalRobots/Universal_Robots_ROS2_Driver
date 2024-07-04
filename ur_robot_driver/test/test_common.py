@@ -242,8 +242,6 @@ class IoStatusInterface(
     initial_services={"set_io": SetIO},
     services={
         "resend_robot_program": Trigger,
-        "start_tool_contact": Trigger,
-        "end_tool_contact": Trigger,
         "get_robot_software_version": GetRobotSoftwareVersion,
     },
 ):
