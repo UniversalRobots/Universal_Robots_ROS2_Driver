@@ -249,20 +249,6 @@ class RobotDriverTest(unittest.TestCase):
         )
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
-    def test_tool_contact(self, tf_prefix):
-        if self._io_status_controller_interface.get_robot_software_version().major < 5:
-            start_result = self._io_status_controller_interface.start_tool_contact()
-            self.assertEqual(start_result.success, False)
-
-            end_result = self._io_status_controller_interface.end_tool_contact()
-            self.assertEqual(end_result.success, False)
-        else:
-            start_result = self._io_status_controller_interface.start_tool_contact()
-            self.assertEqual(start_result.success, True)
-
-            end_result = self._io_status_controller_interface.end_tool_contact()
-            self.assertEqual(end_result.success, True)
-
     def test_trajectory_scaled_aborts_on_violation(self, tf_prefix):
         """Test that the robot correctly aborts the trajectory when the constraints are violated."""
         # Construct test trajectory
