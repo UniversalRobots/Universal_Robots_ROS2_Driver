@@ -35,12 +35,24 @@ import unittest
 import launch_testing
 import pytest
 import rclpy
+import std_msgs
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from controller_manager_msgs.srv import SwitchController
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from geometry_msgs.msg import (
+    Pose,
+    PoseStamped,
+    Quaternion,
+    Point,
+    WrenchStamped,
+    TwistStamped,
+    Wrench,
+    Twist,
+    Vector3,
+)
 from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))
@@ -49,6 +61,7 @@ from test_common import (  # noqa: E402
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
+    ForceModeInterface,
     generate_driver_test_description,
 )
 
@@ -92,7 +105,6 @@ class RobotDriverTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
-
         self._scaled_follow_joint_trajectory = ActionInterface(
             self.node,
             "/scaled_joint_trajectory_controller/follow_joint_trajectory",
@@ -100,13 +112,115 @@ class RobotDriverTest(unittest.TestCase):
         )
 
     def setUp(self):
-        self._dashboard_interface.start_robot()
+        # self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
     #
     # Test functions
     #
+    def test_force_mode_controller(self, tf_prefix):
+        # Activate force mode and trajectory controller, to make sure the robot can be moved.
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                    "scaled_joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self._force_mode_controller_interface = ForceModeInterface(self.node)
+
+        # Move the robot away from any singularities created in other tests.
+        # Construct test trajectory
+        test_trajectory = [
+            (Duration(sec=10, nanosec=0), [-1.5 for j in ROBOT_JOINTS]),
+        ]
+
+        trajectory = JointTrajectory(
+            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+            points=[
+                JointTrajectoryPoint(positions=test_pos, time_from_start=test_time)
+                for (test_time, test_pos) in test_trajectory
+            ],
+        )
+
+        # Sending trajectory goal
+        logging.info("Sending simple goal")
+        goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
+        self.assertTrue(goal_handle.accepted)
+
+        # Verify execution
+        result = self._scaled_follow_joint_trajectory.get_result(
+            goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+        )
+        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+        # Finished moving
+
+        # Create task frame for force mode
+        point = Point(x=0.8, y=0.8, z=0.8)
+        orientation = Quaternion(x=0.0, y=0.2, z=0.5, w=0.3)
+        task_frame_pose = Pose()
+        task_frame_pose.position = point
+        task_frame_pose.orientation = orientation
+        header = std_msgs.msg.Header(seq=1, frame_id="world")
+        header.stamp.sec = int(time.time()) + 1
+        header.stamp.nanosec = 0
+        frame_stamp = PoseStamped()
+        frame_stamp.header = header
+        frame_stamp.pose = task_frame_pose
+
+        # Create compliance vector (which axes should be force controlled)
+        compliance = [False, False, True, False, False, True]
+
+        # Create Wrench message for force mode
+        wrench_vec = Wrench()
+        wrench_vec.force = Vector3(x=1.0, y=2.0, z=3.0)
+        wrench_vec.torque = wrench_vec.force
+        wrench_stamp = WrenchStamped()
+        wrench_stamp.header = header
+        wrench_stamp.wrench = wrench_vec
+
+        # Specify interpretation of task frame (no transform)
+        type_spec = 2
+
+        # Specify max speeds and deviations of force mode
+        limits = Twist()
+        limits.linear = Vector3(x=1.1, y=1.1, z=1.1)
+        limits.angular = limits.linear
+        limits_stamp = TwistStamped()
+        limits_stamp.header = header
+        limits_stamp.twist = limits
+
+        # specify damping and gain scaling
+        damping_factor = 0.8
+        gain_scale = 0.8
+
+        # Send request to controller
+        res = self._force_mode_controller_interface.start_force_mode(
+            task_frame=frame_stamp,
+            selection_vector_x=compliance[0],
+            selection_vector_y=compliance[1],
+            selection_vector_z=compliance[2],
+            selection_vector_rx=compliance[3],
+            selection_vector_ry=compliance[4],
+            selection_vector_rz=compliance[5],
+            wrench=wrench_stamp,
+            type=type_spec,
+            limits=limits_stamp,
+            damping_factor=damping_factor,
+            gain_scaling=gain_scale,
+        )
+        self.assertEqual(res.success, True)
+
+        # Deactivate controller to stop force mode
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["force_mode_controller"],
+            ).ok
+        )
 
     def test_start_scaled_jtc_controller(self):
         self.assertTrue(

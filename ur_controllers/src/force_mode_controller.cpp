@@ -61,6 +61,7 @@ controller_interface::InterfaceConfiguration ForceModeController::command_interf
   const std::string tf_prefix = params_.tf_prefix;
   RCLCPP_DEBUG(get_node()->get_logger(), "Configure UR force_mode controller with tf_prefix: %s", tf_prefix.c_str());
 
+  // Get all the command interfaces needed for force mode from the hardware interface
   config.names.emplace_back(tf_prefix + "force_mode/task_frame_x");
   config.names.emplace_back(tf_prefix + "force_mode/task_frame_y");
   config.names.emplace_back(tf_prefix + "force_mode/task_frame_z");
@@ -100,7 +101,7 @@ controller_interface::InterfaceConfiguration ur_controllers::ForceModeController
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
   const std::string tf_prefix = params_.tf_prefix;
-
+  // Get the state interface indicating whether the hardware interface has been initialized
   config.names.emplace_back(tf_prefix + "system_interface/initialized");
 
   return config;
@@ -120,7 +121,7 @@ ur_controllers::ForceModeController::on_configure(const rclcpp_lifecycle::State&
   const auto logger = get_node()->get_logger();
 
   if (!param_listener_) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
+    RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during configuration");
     return controller_interface::CallbackReturn::ERROR;
   }
 
@@ -146,9 +147,10 @@ ur_controllers::ForceModeController::on_activate(const rclcpp_lifecycle::State& 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 
+  // Create the service server that will be used to start force mode
   try {
     set_force_mode_srv_ = get_node()->create_service<ur_msgs::srv::SetForceMode>(
-        "~/set_force_mode",
+        "~/start_force_mode",
         std::bind(&ForceModeController::setForceMode, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
@@ -159,6 +161,7 @@ ur_controllers::ForceModeController::on_activate(const rclcpp_lifecycle::State& 
 controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  // Stop force mode if this controller is deactivated.
   disableForceMode();
   try {
     set_force_mode_srv_.reset();
@@ -195,6 +198,7 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
                  req->task_frame.header.frame_id.c_str(), ex.what());
   }
 
+  /* The selection vector dictates which axes the robot should be compliant along and around */
   command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_X].set_value(req->selection_vector_x);
   command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Y].set_value(req->selection_vector_y);
   command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Z].set_value(req->selection_vector_z);
@@ -202,17 +206,33 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RY].set_value(req->selection_vector_ry);
   command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RZ].set_value(req->selection_vector_rz);
 
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(req->wrench.force.x);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(req->wrench.force.y);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(req->wrench.force.z);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(req->wrench.torque.x);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(req->wrench.torque.y);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(req->wrench.torque.z);
+  /* The wrench parameters dictate the amount of force/torque the robot will apply to its environment. The robot will
+   * move along/around compliant axes to match the specified force/torque. Has no effect for non-compliant axes. */
+  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(req->wrench.wrench.force.x);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(req->wrench.wrench.force.y);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(req->wrench.wrench.force.z);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(req->wrench.wrench.torque.x);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(req->wrench.wrench.torque.y);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(req->wrench.wrench.torque.z);
 
-  for (size_t i = 0; i < 6; i++) {
-    command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X + i].set_value(req->limits[i]);
-  }
+  /* The limits specifies the maximum allowed speed along/around compliant axes. For non-compliant axes this value is
+   * the maximum allowed deviation between actual tcp position and the one that has been programmed. */
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X].set_value(req->limits.twist.linear.x);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Y].set_value(req->limits.twist.linear.y);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Z].set_value(req->limits.twist.linear.z);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RX].set_value(req->limits.twist.angular.x);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RY].set_value(req->limits.twist.angular.y);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RZ].set_value(req->limits.twist.angular.z);
+
+  /* The type decides how the robot interprets the force frame (the one defined in task_frame). See ur_script manual for
+   * explanation, under force_mode. */
   command_interfaces_[CommandInterfaces::FORCE_MODE_TYPE].set_value(unsigned(req->type));
+
+  /* The damping factor decides how fast the robot decelarates if no force is present. 0 means no deceleration, 1 means
+   * quick deceleration*/
+  command_interfaces_[CommandInterfaces::FORCE_MODE_DAMPING].set_value(req->damping_factor);
+  /*The gain scaling factor scales the force mode gain. A value larger than 1 may make force mode unstable. */
+  command_interfaces_[CommandInterfaces::FORCE_MODE_GAIN_SCALING].set_value(req->gain_scaling);
 
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be set.");
   const auto maximum_retries = params_.check_io_successful_retries;
@@ -225,6 +245,7 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
       resp->success = false;
     }
   }
+
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value());
 
   if (resp->success) {
@@ -239,6 +260,7 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 
 bool ForceModeController::disableForceMode()
 {
+  command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1);
 
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be disabled.");

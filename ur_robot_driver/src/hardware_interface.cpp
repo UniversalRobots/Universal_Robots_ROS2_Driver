@@ -768,13 +768,27 @@ void URPositionHardwareInterface::checkAsyncIO()
   }
   if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
       !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
-      ur_driver_ != nullptr) {
+      !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
     urcl::vector6uint32_t force_mode_selection_vector;
     for (size_t i = 0; i < 6; i++) {
       force_mode_selection_vector[i] = force_mode_selection_vector_[i];
     }
-    force_mode_async_success_ = ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector,
-                                                           force_mode_wrench_, force_mode_type_, force_mode_limits_);
+    /* Check version of robot to ensure that the correct startForceMode is called. */
+    if (ur_driver_->getVersion().major < 5) {
+      force_mode_async_success_ =
+          ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector, force_mode_wrench_,
+                                     force_mode_type_, force_mode_limits_, force_mode_damping_);
+      if (force_mode_gain_scaling_ != 0.5) {
+        RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"), "Force mode gain scaling cannot be used on CB3 "
+                                                                       "robots. Starting force mode, but disregarding "
+                                                                       "gain scaling.");
+      }
+    } else {
+      force_mode_async_success_ = ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector,
+                                                             force_mode_wrench_, force_mode_type_, force_mode_limits_,
+                                                             force_mode_damping_, force_mode_gain_scaling_);
+    }
+
     for (size_t i = 0; i < 6; i++) {
       force_mode_task_frame_[i] = NO_NEW_CMD_;
       force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
@@ -782,9 +796,11 @@ void URPositionHardwareInterface::checkAsyncIO()
       force_mode_limits_[i] = NO_NEW_CMD_;
     }
     force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+    force_mode_damping_ = NO_NEW_CMD_;
+    force_mode_gain_scaling_ = NO_NEW_CMD_;
   }
 
-  if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr) {
+  if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
     force_mode_async_success_ = ur_driver_->endForceMode();
     force_mode_disable_cmd_ = NO_NEW_CMD_;
   }
