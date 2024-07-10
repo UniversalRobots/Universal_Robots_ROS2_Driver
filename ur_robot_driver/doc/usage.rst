@@ -53,7 +53,8 @@ The most relevant arguments are the following:
 
   Note: *joint_state_broadcaster*\ , *speed_scaling_state_broadcaster*\ , *force_torque_sensor_broadcaster*\ , and *io_and_status_controller* will always start.
 
-  *HINT* : list all loaded controllers using ``ros2 control list_controllers`` command.
+  *HINT* : list all loaded controllers using ``ros2 control list_controllers`` command. For this,
+  the package ``ros2controlcli`` must be installed (``sudo apt-get install ros-${ROS_DISTRO}-ros2controlcli``).
 
 **NOTE**\ : The package can simulate hardware with the ros2_control ``MockSystem``. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see `ros2_control documentation <https://ros-controls.github.io/control.ros.org/>`_ for more details.
 
@@ -139,7 +140,7 @@ Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10`
 2. Sending commands to controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before running any commands, first check the controllers' state using ``ros2 control list_controllers``.
+Before running any commands, first check the controllers' state using ``ros2 control list_controllers`` (Remember to install the ``ros2controlcli`` package as mentioned above).
 
 
 * Send some goal to the Joint Trajectory Controller by using a demo node from `ros2_control_demos <https://github.com/ros-controls/ros2_control_demos>`_ package by starting  the following command in another terminal:
