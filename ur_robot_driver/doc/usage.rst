@@ -206,7 +206,7 @@ Custom URScript commands
 ------------------------
 
 The driver's package contains a ``urscript_interface`` node that allows sending URScript snippets
-directly to the robot when the robot is in headless/Remote control mode.
+directly to the robot when the robot is in remote control mode.
 
 It gets started in the driver's launchfiles by default. To use it, simply
 publish a message to its interface:
