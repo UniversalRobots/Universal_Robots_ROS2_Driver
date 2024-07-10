@@ -1,9 +1,10 @@
-.. role:: raw-html-m2r(raw)
-   :format: html
-
-
 Usage
 =====
+
+Prepare the robot
+-----------------
+
+If you want to use a real robot with this driver, you need to prepare it, first.
 
 Launch files
 ------------
