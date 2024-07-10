@@ -149,6 +149,8 @@ install(PROGRAMS
   scripts/tool_communication.py
   scripts/wait_for_robot_description
   scripts/start_ursim.sh
+  examples/examples.py
+  examples/force_mode.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -48,9 +48,7 @@ from geometry_msgs.msg import (
     Quaternion,
     Point,
     WrenchStamped,
-    TwistStamped,
     Wrench,
-    Twist,
     Vector3,
 )
 from ur_msgs.msg import IOStates
@@ -186,15 +184,10 @@ class RobotDriverTest(unittest.TestCase):
         type_spec = 2
 
         # Specify max speeds and deviations of force mode
-        limits = Twist()
-        limits.linear = Vector3(x=1.1, y=1.1, z=1.1)
-        limits.angular = limits.linear
-        limits_stamp = TwistStamped()
-        limits_stamp.header = header
-        limits_stamp.twist = limits
+        limits = [1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0]
 
         # specify damping and gain scaling
-        damping_factor = 0.8
+        damping_factor = 0.1
         gain_scale = 0.8
 
         # Send request to controller
@@ -208,7 +201,7 @@ class RobotDriverTest(unittest.TestCase):
             selection_vector_rz=compliance[5],
             wrench=wrench_stamp,
             type=type_spec,
-            limits=limits_stamp,
+            limits=limits,
             damping_factor=damping_factor,
             gain_scaling=gain_scale,
         )

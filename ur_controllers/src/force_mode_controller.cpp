@@ -217,12 +217,12 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 
   /* The limits specifies the maximum allowed speed along/around compliant axes. For non-compliant axes this value is
    * the maximum allowed deviation between actual tcp position and the one that has been programmed. */
-  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X].set_value(req->limits.twist.linear.x);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Y].set_value(req->limits.twist.linear.y);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Z].set_value(req->limits.twist.linear.z);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RX].set_value(req->limits.twist.angular.x);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RY].set_value(req->limits.twist.angular.y);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RZ].set_value(req->limits.twist.angular.z);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X].set_value(req->limits[0]);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Y].set_value(req->limits[1]);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Z].set_value(req->limits[2]);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RX].set_value(req->limits[3]);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RY].set_value(req->limits[4]);
+  command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RZ].set_value(req->limits[5]);
 
   /* The type decides how the robot interprets the force frame (the one defined in task_frame). See ur_script manual for
    * explanation, under force_mode. */
