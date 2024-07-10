@@ -165,6 +165,28 @@ Before running any commands, first check the controllers' state using ``ros2 con
 
   After a few seconds the robot should move(or jump when using emulation).
 
+In case you want to write your own ROS node to move the robot, there is an example python node included that you can use as a start.
+
+
+.. code-block:: console
+
+   $ ros2 run ur_robot_driver example_move.py
+   [INFO] [1720623611.547903428] [jtc_client]: Waiting for action server on scaled_joint_trajectory_controller/follow_joint_trajectory
+   [INFO] [1720623611.548368095] [jtc_client]: Executing trajectory traj0
+   [INFO] [1720623620.530203889] [jtc_client]: Done with result: SUCCESSFUL
+   [INFO] [1720623622.530668700] [jtc_client]: Executing trajectory traj1
+   [INFO] [1720623630.582108072] [jtc_client]: Done with result: SUCCESSFUL
+   [INFO] [1720623632.582576444] [jtc_client]: Done with all trajectories
+   [INFO] [1720623632.582957452] [jtc_client]: Done
+
+
+.. warning::
+
+   This is a very basic node that doesn't have the same safety checks as the test nodes above. Look
+   at the code and make sure that the robot is able to perform the motions safely before running
+   this on a real robot!
+
+
 3. Using only robot description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
