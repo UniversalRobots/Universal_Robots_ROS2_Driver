@@ -52,7 +52,7 @@ This section describes installation and launching of the URCap program from the 
 For using the *ur_robot_driver* with a real robot you need to install the
 **externalcontrol urcap**. The latest release can be downloaded from `its own repository <https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases>`_.
 
-**Note**: For installing this URCap a minimal PolyScope version of 3.7 or 5.1 (in case of e-Series) is
+**Note**: For installing this URCap a minimal PolyScope version of 3.14.3 or 5.9.4 (in case of e-Series) is
 necessary.
 
 For installing the necessary URCap and creating a program, please see the individual tutorials on
