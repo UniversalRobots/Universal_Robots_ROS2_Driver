@@ -44,6 +44,7 @@
 
 #include "ur_client_library/exceptions.h"
 #include "ur_client_library/ur/tool_communication.h"
+#include "ur_client_library/ur/version_information.h"
 
 #include "rclcpp/rclcpp.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -310,13 +311,6 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "get_robot_software_version", "get_version_cmd", &get_robot_software_version_cmd_));
-
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "get_robot_software_version",
-                                                                       "get_version_async_success",
-                                                                       &get_robot_software_version_async_success_));
-
   return command_interfaces;
 }
 
@@ -473,6 +467,13 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                         "README.md] for details.");
   }
 
+  // Export version information to state interfaces
+  urcl::VersionInformation version_info = ur_driver_->getVersion();
+  get_robot_software_version_major_ = version_info.major;
+  get_robot_software_version_minor_ = version_info.minor;
+  get_robot_software_version_build_ = version_info.build;
+  get_robot_software_version_bugfix_ = version_info.bugfix;
+
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
@@ -622,7 +623,6 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
-      get_robot_software_version_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -746,16 +746,6 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
-  }
-
-  if (!std::isnan(get_robot_software_version_cmd_) && ur_driver_ != nullptr) {
-    urcl::VersionInformation version_info = ur_driver_->getVersion();
-    get_robot_software_version_cmd_ = NO_NEW_CMD_;
-    get_robot_software_version_major_ = version_info.major;
-    get_robot_software_version_minor_ = version_info.minor;
-    get_robot_software_version_bugfix_ = version_info.bugfix;
-    get_robot_software_version_build_ = version_info.build;
-    get_robot_software_version_async_success_ = 1.0;
   }
 }
 

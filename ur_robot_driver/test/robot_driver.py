@@ -49,6 +49,7 @@ from test_common import (  # noqa: E402
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
+    ConfigurationInterface,
     generate_driver_test_description,
 )
 
@@ -92,6 +93,7 @@ class RobotDriverTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
 
         self._scaled_follow_joint_trajectory = ActionInterface(
             self.node,

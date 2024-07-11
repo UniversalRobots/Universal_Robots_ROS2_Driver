@@ -57,7 +57,6 @@
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "gpio_controller_parameters.hpp"
-#include "ur_msgs/srv/get_robot_software_version.hpp"
 
 namespace ur_controllers
 {
@@ -80,8 +79,6 @@ enum CommandInterfaces
   ZERO_FTSENSOR_ASYNC_SUCCESS = 32,
   HAND_BACK_CONTROL_CMD = 33,
   HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
-  GET_VERSION_CMD = 35,
-  GET_VERSION_ASYNC_SUCCESS = 36
 };
 
 enum StateInterfaces
@@ -103,10 +100,6 @@ enum StateInterfaces
   SAFETY_STATUS_BITS = 58,
   INITIALIZED_FLAG = 69,
   PROGRAM_RUNNING = 70,
-  GET_VERSION_MAJOR = 71,
-  GET_VERSION_MINOR = 72,
-  GET_VERSION_BUGFIX = 73,
-  GET_VERSION_BUILD = 74
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -143,9 +136,6 @@ private:
 
   bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
 
-  bool getRobotSoftwareVersion(ur_msgs::srv::GetRobotSoftwareVersion::Request::SharedPtr req,
-                               ur_msgs::srv::GetRobotSoftwareVersion::Response::SharedPtr resp);
-
   void publishIO();
 
   void publishToolData();
@@ -173,7 +163,6 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
-  rclcpp::Service<ur_msgs::srv::GetRobotSoftwareVersion>::SharedPtr get_robot_software_version_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
