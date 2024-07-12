@@ -93,6 +93,8 @@ receive no more updates and may be lacking features.
 
 Please see the [requirements for the Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library#requirements), as this driver is build on top of Universal_Robots_Client_Library.
 
+**Note**: A fundamental requirement for the driver is using Linux. Currently, there is no support for any other OS.
+
 ## Getting Started
 
 For getting started, you'll basically need three steps:
