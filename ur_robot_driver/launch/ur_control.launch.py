@@ -37,7 +37,9 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import (
+    AndSubstitution,
     LaunchConfiguration,
+    NotSubstitution,
     PathJoinSubstitution,
 )
 from launch.launch_description_sources import AnyLaunchDescriptionSource
@@ -76,7 +78,9 @@ def launch_setup():
 
     dashboard_client_node = Node(
         package="ur_robot_driver",
-        condition=IfCondition(launch_dashboard_client) and UnlessCondition(use_mock_hardware),
+        condition=IfCondition(
+            AndSubstitution(launch_dashboard_client, NotSubstitution(use_mock_hardware))
+        ),
         executable="dashboard_client",
         name="dashboard_client",
         output="screen",
