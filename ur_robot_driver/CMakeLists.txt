@@ -172,6 +172,10 @@ if(BUILD_TESTING)
       TIMEOUT
         180
     )
+    add_launch_test(test/example_move.py
+      TIMEOUT
+        180
+    )
     add_launch_test(test/robot_driver.py
       TIMEOUT
         800

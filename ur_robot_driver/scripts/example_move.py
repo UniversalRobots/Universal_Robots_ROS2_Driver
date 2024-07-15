@@ -141,8 +141,8 @@ class JTCClient(rclpy.node.Node):
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().info("Goal rejected :(")
-            return
+            self.get_logger().error("Goal rejected :(")
+            raise RuntimeError("Goal rejected :(")
 
         self.get_logger().debug("Goal accepted :)")
 
@@ -155,6 +155,8 @@ class JTCClient(rclpy.node.Node):
         if result.error_code == FollowJointTrajectory.Result.SUCCESSFUL:
             time.sleep(2)
             self.execute_next_trajectory()
+        else:
+            raise RuntimeError("Executing trajectory failed")
 
     @staticmethod
     def error_code_to_str(error_code):
