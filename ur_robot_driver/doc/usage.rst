@@ -142,7 +142,7 @@ Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10`
 Before running any commands, first check the controllers' state using ``ros2 control list_controllers``.
 
 
-* Send some goal to the Joint Trajectory Controller by using a demo node from `ros2_control_demos <https://github.com/ros-controls/ros2_control_demos>`_ package by starting  the following command in another terminal:
+* Send some goal to the Joint Trajectory Controller by using a demo node from `ros2_controllers_test_nodes <https://github.com/ros-controls/ros2_controllers/blob/master/ros2_controllers_test_nodes/ros2_controllers_test_nodes/publisher_joint_trajectory_controller.py>`_ package by starting  the following command in another terminal:
 
   .. code-block::
 
@@ -206,7 +206,9 @@ Custom URScript commands
 ------------------------
 
 The driver's package contains a ``urscript_interface`` node that allows sending URScript snippets
-directly to the robot. It gets started in the driver's launchfiles by default. To use it, simply
+directly to the robot when the robot is in remote control mode.
+
+It gets started in the driver's launchfiles by default. To use it, simply
 publish a message to its interface:
 
 .. code-block:: bash
@@ -221,6 +223,7 @@ restarted again. Depending whether you use headless mode or not, you'll have to 
 external_control program again.
 
 .. note::
+  On E-series robots or newer the robot needs to be in remote control mode in order to execute custom URScript commands.
   Currently, there is no feedback on the code's correctness. If the code sent to the
   robot is incorrect, it will silently not get executed. Make sure that you send valid URScript code!
 
