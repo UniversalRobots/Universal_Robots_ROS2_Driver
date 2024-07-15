@@ -155,7 +155,6 @@ def launch_setup():
             ]
             + inactive_flags
             + controllers,
-            # ros_arguments=['--log-level', 'debug']
         )
 
     controllers_active = [
@@ -186,7 +185,6 @@ def launch_setup():
             controller_spawner_timeout,
         ],
         condition=IfCondition(activate_joint_controller),
-        # ros_arguments=['--log-level', 'debug']
     )
     initial_joint_controller_spawner_stopped = Node(
         package="controller_manager",
@@ -200,7 +198,6 @@ def launch_setup():
             "--inactive",
         ],
         condition=UnlessCondition(activate_joint_controller),
-        # ros_arguments=['--log-level', 'debug']
     )
 
     rsp = IncludeLaunchDescription(

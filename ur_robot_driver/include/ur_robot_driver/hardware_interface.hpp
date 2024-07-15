@@ -194,11 +194,12 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   bool async_thread_shutdown_;
+
+  // Passthrough trajectory controller interface values
   double passthrough_trajectory_transfer_state_;
   double passthrough_trajectory_cancel_;
   double passthrough_trajectory_dimensions_;
   double passthrough_trajectory_controller_running_;
-  // TODO(URJala): The size of these arrays should be dependent on the number of joints on the physical robot.
   urcl::vector6d_t passthrough_trajectory_positions_;
   urcl::vector6d_t passthrough_trajectory_velocities_;
   urcl::vector6d_t passthrough_trajectory_accelerations_;
@@ -225,6 +226,9 @@ protected:
   bool robot_program_running_;
   bool non_blocking_read_;
   double robot_program_running_copy_;
+
+  /* Vectors used to store the trajectory received from the passthrough trajectory controller. The whole trajectory is
+   * received before it is sent to the robot. */
   std::vector<std::array<double, 6>> trajectory_joint_positions_;
   std::vector<std::array<double, 6>> trajectory_joint_velocities_;
   std::vector<std::array<double, 6>> trajectory_joint_accelerations_;
