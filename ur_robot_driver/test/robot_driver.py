@@ -41,7 +41,7 @@ from control_msgs.msg import JointTolerance
 from controller_manager_msgs.srv import SwitchController
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from trajectory_msgs.msg import JointTrajectory as JointTrajectory, JointTrajectoryPoint
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))

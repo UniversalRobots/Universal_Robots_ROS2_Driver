@@ -88,7 +88,6 @@ ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool s
           auto it = std::find(consistent_controllers_.begin(), consistent_controllers_.end(), controller.name);
           if (it == consistent_controllers_.end()) {
             stopped_controllers_.push_back(controller.name);
-            std::cout << "Stopping controller with name: " << controller.name << std::endl;
           }
         }
       }

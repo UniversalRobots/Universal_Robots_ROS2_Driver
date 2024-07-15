@@ -147,10 +147,9 @@ install(PROGRAMS
   scripts/tool_communication.py
   scripts/wait_for_robot_description
   scripts/start_ursim.sh
-  ../examples/examples.py
-  ../examples/load_switch_controller_example.py
-  ../examples/example_movej.py
-  ../examples/example_spline.py
+  ../examples/robot_class.py
+  ../examples/scaled_joint_example.py
+  ../examples/passthrough_example.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

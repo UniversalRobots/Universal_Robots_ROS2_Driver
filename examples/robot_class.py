@@ -42,7 +42,9 @@ from controller_manager_msgs.srv import (
     SwitchController,
     ListControllers,
 )
-import time
+from std_srvs.srv import Trigger
+from enum import Enum
+from collections import namedtuple
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
@@ -56,6 +58,30 @@ ROBOT_JOINTS = [
     "wrist_2_joint",
     "wrist_3_joint",
 ]
+Action_tuple = namedtuple("Actions", ["name", "action_type"])
+
+
+class Actions(Enum):
+    PASSTHROUGH_TRAJECTORY = Action_tuple(
+        "/passthrough_trajectory_controller/forward_joint_trajectory", FollowJointTrajectory
+    )
+    FOLLOW_TRAJECTORY = Action_tuple(
+        "/scaled_joint_trajectory_controller/follow_joint_trajectory", FollowJointTrajectory
+    )
+
+
+Service_tuple = namedtuple("Services", ["name", "service_type"])
+
+
+class Services(Enum):
+    Set_IO = Service_tuple("/io_and_status_controller/set_io", SetIO)
+    Load_Controller = Service_tuple("/controller_manager/load_controller", LoadController)
+    Unload_Controller = Service_tuple("/controller_manager/unload_controller", UnloadController)
+    Configure_Controller = Service_tuple(
+        "/controller_manager/configure_controller", ConfigureController
+    )
+    Switch_Controller = Service_tuple("/controller_manager/switch_controller", SwitchController)
+    List_Controllers = Service_tuple("/controller_manager/list_controllers", ListControllers)
 
 
 # Helper functions
@@ -85,18 +111,26 @@ class Robot:
         self.init_robot()
 
     def init_robot(self):
-        service_interfaces = {
-            "/io_and_status_controller/set_io": SetIO,
-            "/controller_manager/load_controller": LoadController,
-            "/controller_manager/unload_controller": UnloadController,
-            "/controller_manager/configure_controller": ConfigureController,
-            "/controller_manager/switch_controller": SwitchController,
-            "/controller_manager/list_controllers": ListControllers,
-        }
+
         self.service_clients = {
-            srv_name: waitForService(self.node, srv_name, srv_type)
-            for (srv_name, srv_type) in service_interfaces.items()
+            service.name: waitForService(self.node, service.value.name, service.value.service_type)
+            for (service) in Services
         }
+
+        self.action_clients = {
+            action.name: waitForAction(self.node, action.value.name, action.value.action_type)
+            for (action) in Actions
+        }
+
+    def add_service(self, dict_key: str, service_tuple: Service_tuple):
+        self.service_clients.update(
+            {dict_key: waitForService(self.node, service_tuple.name, service_tuple.service_type)}
+        )
+
+    def add_action(self, dict_key: str, action_tuple: Action_tuple):
+        self.action_clients.update(
+            {dict_key: waitForAction(self.node, action_tuple.name, action_tuple.action_type)}
+        )
 
     def set_io(self, pin, value):
         """Test to set an IO."""
@@ -105,9 +139,9 @@ class Robot:
         set_io_req.pin = pin
         set_io_req.state = value
 
-        self.call_service("/io_and_status_controller/set_io", set_io_req)
+        self.call_service(Services.Set_IO.name, set_io_req)
 
-    def send_trajectory(self, waypts, time_vec):
+    def follow_trajectory(self, waypts, time_vec):
         """Send robot trajectory."""
         if len(waypts) != len(time_vec):
             raise Exception("waypoints vector and time vec should be same length")
@@ -123,13 +157,51 @@ class Robot:
 
         # Sending trajectory goal
         goal_response = self.call_action(
-            self.jtc_action_client, FollowJointTrajectory.Goal(trajectory=joint_trajectory)
+            self.action_clients[Actions.FOLLOW_TRAJECTORY.name],
+            FollowJointTrajectory.Goal(trajectory=joint_trajectory),
         )
         if goal_response.accepted is False:
             raise Exception("trajectory was not accepted")
 
         # Verify execution
-        result = self.get_result(self.jtc_action_client, goal_response)
+        result = self.get_result(self.action_clients[Actions.FOLLOW_TRAJECTORY.name], goal_response)
+        return result
+
+    def passthrough_trajectory(
+        self,
+        waypts: list[float],
+        time_vec: list[float],
+        vels: list[float] = [],
+        accels: list[float] = [],
+        goal_time_tolerance=Duration(sec=1),
+    ):
+        """Send trajectory through the passthrough controller."""
+        if len(waypts) != len(time_vec):
+            raise Exception("waypoints vector and time vec should be same length.")
+        trajectory = JTmsg()
+        trajectory.joint_names = ROBOT_JOINTS
+        for i in range(len(waypts)):
+            point = JointTrajectoryPoint()
+            point.positions = waypts[i]
+            point.time_from_start = time_vec[i]
+            if len(vels) != 0:
+                point.velocities = vels[i]
+            if len(accels) != 0:
+                point.accelerations = accels[i]
+            trajectory.points.append(point)
+        goal_response = self.call_action(
+            self.action_clients[Actions.PASSTHROUGH_TRAJECTORY.name],
+            FollowJointTrajectory.Goal(
+                trajectory=trajectory, goal_time_tolerance=goal_time_tolerance
+            ),
+        )
+        if goal_response.accepted is False:
+            raise Exception("trajectory was not accepted")
+
+        # Verify execution
+        result = self.get_result(
+            self.action_clients[Actions.PASSTHROUGH_TRAJECTORY.name], goal_response
+        )
         return result
 
     def call_service(self, srv_name, request):
@@ -157,83 +229,58 @@ class Robot:
         else:
             raise Exception(f"Exception while calling action: {future_res.exception()}")
 
-    def load_passthrough_controller(self):
-        list_request = ListControllers.Request()
-        list_response = robot.call_service("/controller_manager/list_controllers", list_request)
+    def load_controller(self, controller_name: str):
+        list_response = self.call_service(Services.List_Controllers.name, ListControllers.Request())
         names = []
         # Find loaded controllers
         for controller in list_response.controller:
             names.append(controller.name)
         # Check whether the passthrough controller is already loaded
         try:
-            names.index("passthrough_trajectory_controller")
+            names.index(controller_name)
         except ValueError:
             print("Loading controller")
-            load_request = LoadController.Request()
-            load_request.name = "passthrough_trajectory_controller"
-            self.call_service("/controller_manager/load_controller", load_request)
-            configure_request = ConfigureController.Request()
-            configure_request.name = "passthrough_trajectory_controller"
-            self.call_service("/controller_manager/configure_controller", configure_request)
-            list_request = ListControllers.Request()
-            list_response = robot.call_service("/controller_manager/list_controllers", list_request)
+            load_request = LoadController.Request(name=controller_name)
+            self.call_service(Services.Load_Controller.name, load_request)
+            configure_request = ConfigureController.Request(name=controller_name)
+            self.call_service(Services.Configure_Controller.name, configure_request)
+            list_response = robot.call_service(
+                Services.List_Controllers.name, ListControllers.Request()
+            )
             names.clear()
             # Update the list of controller names.
             for controller in list_response.controller:
                 names.append(controller.name)
-        id = names.index("passthrough_trajectory_controller")
-        switch_request = SwitchController.Request()
-        # Check if passthrough controller is inactive, and activate it if it is.
-        if list_response.controller[id].state == "inactive":
-            switch_request.activate_controllers = ["passthrough_trajectory_controller"]
-        # Check that the scaled joint trajectory controller is loaded and active, deactivate if it is.
-        try:
-            id = names.index("scaled_joint_trajectory_controller")
-            if list_response.controller[id].state == "active":
-                switch_request.deactivate_controllers = ["scaled_joint_trajectory_controller"]
-        except ValueError:
-            switch_request.deactivate_controllers = []
+        else:
+            print("Controller already loaded")
         finally:
-            switch_request.strictness = 1  # Best effort switching, will not terminate program if controller is already running
-            switch_request.activate_asap = False
-            switch_request.timeout = Duration(sec=2, nanosec=0)
-            self.call_service("/controller_manager/switch_controller", switch_request)
-        # Try unloading the scaled joint trajectory controller
-        try:
-            names.index("scaled_joint_trajectory_controller")
-            unload_request = UnloadController.Request()
-            unload_request.name = "scaled_joint_trajectory_controller"
-            self.call_service("/controller_manager/unload_controller", unload_request)
-        except ValueError:
-            print("scaled_joint_trajectory_controller not loaded, skipping unload")
-        # Connect to the passthrough controller action
-        finally:
-            self.jtc_action_client = waitForAction(
-                self.node,
-                "/passthrough_trajectory_controller/forward_joint_trajectory",
-                FollowJointTrajectory,
-            )
-            time.sleep(2)
+            print(f"Currently loaded controllers: {names}")
 
-    def switch_controller(self, active, inactive):
+    def switch_controllers(self, active: list[str], inactive: list[str]) -> bool:
         switch_request = SwitchController.Request()
-        # Check if passthrough controller is inactive, and activate it if it is.
-        switch_request.activate_controllers = [active]
-        # Check that the scaled joint trajectory controller is loaded and active, deactivate if it is.
-        switch_request.deactivate_controllers = [inactive]
+        switch_request.activate_controllers = active
+        switch_request.deactivate_controllers = inactive
         switch_request.strictness = (
-            1  # Best effort switching, will not terminate program if controller is already running
-        )
+            SwitchController.Request.BEST_EFFORT
+        )  # Best effort switching, will not terminate program if controller is already running
         switch_request.activate_asap = False
         switch_request.timeout = Duration(sec=2, nanosec=0)
-        self.call_service("/controller_manager/switch_controller", switch_request)
+        return self.call_service(Services.Switch_Controller.name, switch_request)
 
 
 if __name__ == "__main__":
     rclpy.init()
     node = Node("robot_driver_test")
+    for action in Actions:
+        print(action.name)
+        print(action.value.name)
     robot = Robot(node)
-    robot.load_passthrough_controller()
+    robot.switch_controllers(
+        ["passthrough_trajectory_controller"], ["scaled_joint_trajectory_controller"]
+    )
+    robot.add_service(
+        "Zero_sensor", Service_tuple("/io_and_status_controller/zero_ftsensor", Trigger)
+    )
 
     # The following list are arbitrary joint positions, change according to your own needs
     waypts = [
@@ -244,4 +291,4 @@ if __name__ == "__main__":
     time_vec = [Duration(sec=4, nanosec=0), Duration(sec=8, nanosec=0), Duration(sec=12, nanosec=0)]
 
     # Execute trajectory on robot, make sure that the robot is booted and the control script is running
-    robot.send_trajectory(waypts, time_vec)
+    robot.passthrough_trajectory(waypts, time_vec)
