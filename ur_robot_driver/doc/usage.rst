@@ -142,7 +142,7 @@ Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10`
 Before running any commands, first check the controllers' state using ``ros2 control list_controllers``.
 
 
-* Send some goal to the Joint Trajectory Controller by using a demo node from `ros2_control_demos <https://github.com/ros-controls/ros2_control_demos>`_ package by starting  the following command in another terminal:
+* Send some goal to the Joint Trajectory Controller by using a demo node from `ros2_controllers_test_nodes <https://github.com/ros-controls/ros2_controllers/blob/master/ros2_controllers_test_nodes/ros2_controllers_test_nodes/publisher_joint_trajectory_controller.py>`_ package by starting  the following command in another terminal:
 
   .. code-block::
 
