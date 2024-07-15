@@ -206,7 +206,9 @@ Custom URScript commands
 ------------------------
 
 The driver's package contains a ``urscript_interface`` node that allows sending URScript snippets
-directly to the robot. It gets started in the driver's launchfiles by default. To use it, simply
+directly to the robot when the robot is in remote control mode.
+
+It gets started in the driver's launchfiles by default. To use it, simply
 publish a message to its interface:
 
 .. code-block:: bash
@@ -221,6 +223,7 @@ restarted again. Depending whether you use headless mode or not, you'll have to 
 external_control program again.
 
 .. note::
+  On E-series robots or newer the robot needs to be in remote control mode in order to execute custom URScript commands.
   Currently, there is no feedback on the code's correctness. If the code sent to the
   robot is incorrect, it will silently not get executed. Make sure that you send valid URScript code!
 
