@@ -158,12 +158,6 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   // program running
   config.names.emplace_back(tf_prefix + "gpio/program_running");
 
-  // Get version service
-  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_major");
-  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_minor");
-  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_bugfix");
-  config.names.emplace_back(tf_prefix + "get_robot_software_version/get_version_build");
-
   return config;
 }
 

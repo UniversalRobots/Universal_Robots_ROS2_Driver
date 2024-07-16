@@ -110,6 +110,11 @@ class RobotDriverTest(unittest.TestCase):
     # Test functions
     #
 
+    def test_get_robot_software_version(self):
+        self.assertNotEqual(
+            self._configuration_controller_interface.get_robot_software_version().major, 0
+        )
+
     def test_start_scaled_jtc_controller(self):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(

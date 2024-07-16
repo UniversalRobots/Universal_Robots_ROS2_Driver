@@ -41,6 +41,8 @@
 #ifndef UR_CONTROLLERS__UR_CONFIGURATION_CONTROLLER_HPP_
 #define UR_CONTROLLERS__UR_CONFIGURATION_CONTROLLER_HPP_
 
+#include <realtime_tools/realtime_box.h>
+
 #include <memory>
 
 #include <controller_interface/controller_interface.hpp>
@@ -51,12 +53,19 @@
 namespace ur_controllers
 {
 
+// Struct to hold version information
+struct VersionInformation
+{
+  uint32_t major = 0, minor = 0, build = 0, bugfix = 0;
+};
+
+// Enum for indexing into state interfaces.
 enum StateInterfaces
 {
-  ROBOT_VERSION_MAJOR,
-  ROBOT_VERSION_MINOR,
-  ROBOT_VERSION_BUILD,
-  ROBOT_VERSION_BUGFIX
+  ROBOT_VERSION_MAJOR = 0,
+  ROBOT_VERSION_MINOR = 1,
+  ROBOT_VERSION_BUILD = 2,
+  ROBOT_VERSION_BUGFIX = 3,
 };
 
 class URConfigurationController : public controller_interface::ControllerInterface
@@ -77,7 +86,10 @@ public:
   CallbackReturn on_init() override;
 
 private:
+  realtime_tools::RealtimeBox<std::shared_ptr<VersionInformation>> robot_software_version_;
+
   rclcpp::Service<ur_msgs::srv::GetRobotSoftwareVersion>::SharedPtr get_robot_software_version_srv_;
+
   bool getRobotSoftwareVersion(ur_msgs::srv::GetRobotSoftwareVersion::Request::SharedPtr req,
                                ur_msgs::srv::GetRobotSoftwareVersion::Response::SharedPtr resp);
 
