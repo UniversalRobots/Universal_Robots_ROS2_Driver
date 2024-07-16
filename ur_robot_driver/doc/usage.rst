@@ -53,7 +53,8 @@ The most relevant arguments are the following:
 
   Note: *joint_state_broadcaster*\ , *speed_scaling_state_broadcaster*\ , *force_torque_sensor_broadcaster*\ , and *io_and_status_controller* will always start.
 
-  *HINT* : list all loaded controllers using ``ros2 control list_controllers`` command.
+  *HINT* : list all loaded controllers using ``ros2 control list_controllers`` command. For this,
+  the package ``ros2controlcli`` must be installed (``sudo apt-get install ros-${ROS_DISTRO}-ros2controlcli``).
 
 **NOTE**\ : The package can simulate hardware with the ros2_control ``MockSystem``. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see `ros2_control documentation <https://ros-controls.github.io/control.ros.org/>`_ for more details.
 
@@ -139,7 +140,7 @@ Allowed UR - Type strings: ``ur3``\ , ``ur3e``\ , ``ur5``\ , ``ur5e``\ , ``ur10`
 2. Sending commands to controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before running any commands, first check the controllers' state using ``ros2 control list_controllers``.
+Before running any commands, first check the controllers' state using ``ros2 control list_controllers`` (Remember to install the ``ros2controlcli`` package as mentioned above).
 
 
 * Send some goal to the Joint Trajectory Controller by using a demo node from `ros2_controllers_test_nodes <https://github.com/ros-controls/ros2_controllers/blob/master/ros2_controllers_test_nodes/ros2_controllers_test_nodes/publisher_joint_trajectory_controller.py>`_ package by starting  the following command in another terminal:
@@ -163,6 +164,28 @@ Before running any commands, first check the controllers' state using ``ros2 con
      ros2 launch ur_robot_driver test_joint_trajectory_controller.launch.py
 
   After a few seconds the robot should move(or jump when using emulation).
+
+In case you want to write your own ROS node to move the robot, there is an example python node included that you can use as a start.
+
+
+.. code-block:: console
+
+   $ ros2 run ur_robot_driver example_move.py
+   [INFO] [1720623611.547903428] [jtc_client]: Waiting for action server on scaled_joint_trajectory_controller/follow_joint_trajectory
+   [INFO] [1720623611.548368095] [jtc_client]: Executing trajectory traj0
+   [INFO] [1720623620.530203889] [jtc_client]: Done with result: SUCCESSFUL
+   [INFO] [1720623622.530668700] [jtc_client]: Executing trajectory traj1
+   [INFO] [1720623630.582108072] [jtc_client]: Done with result: SUCCESSFUL
+   [INFO] [1720623632.582576444] [jtc_client]: Done with all trajectories
+   [INFO] [1720623632.582957452] [jtc_client]: Done
+
+
+.. warning::
+
+   This is a very basic node that doesn't have the same safety checks as the test nodes above. Look
+   at the code and make sure that the robot is able to perform the motions safely before running
+   this on a real robot!
+
 
 3. Using only robot description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
