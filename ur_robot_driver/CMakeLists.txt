@@ -146,6 +146,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/tool_communication.py
   scripts/wait_for_robot_description
+  scripts/example_move.py
   scripts/start_ursim.sh
   DESTINATION lib/${PROJECT_NAME}
 )
@@ -172,6 +173,10 @@ if(BUILD_TESTING)
         180
     )
     add_launch_test(test/dashboard_client.py
+      TIMEOUT
+        180
+    )
+    add_launch_test(test/example_move.py
       TIMEOUT
         180
     )
