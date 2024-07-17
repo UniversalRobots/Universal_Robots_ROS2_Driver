@@ -314,7 +314,7 @@ def generate_driver_test_description(
         "controller_spawner_timeout": str(controller_spawner_timeout),
         "initial_joint_controller": "scaled_joint_trajectory_controller",
         "headless_mode": "true",
-        "launch_dashboard_client": "false",
+        "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
     if tf_prefix:
