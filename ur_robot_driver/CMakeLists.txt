@@ -180,6 +180,10 @@ if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake)
 
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
+    add_launch_test(test/launch_args.py
+      TIMEOUT
+        180
+    )
     add_launch_test(test/dashboard_client.py
       TIMEOUT
         180
