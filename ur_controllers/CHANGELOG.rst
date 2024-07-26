@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.2.15 (2024-07-26)
+-------------------
+* Updated scaled JTC to latest upstream updates (`#1067 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1067>`_)
+* Contributors: Felix Exner (fexner)
+
 2.2.14 (2024-07-01)
 -------------------
 
