@@ -94,13 +94,12 @@ controller_interface::return_type URConfigurationController::update(const rclcpp
 controller_interface::CallbackReturn
 URConfigurationController::on_activate(const rclcpp_lifecycle::State& /* previous_state */)
 {
-  VersionInformation temp;
-  temp.major = static_cast<uint32_t>(state_interfaces_[StateInterfaces::ROBOT_VERSION_MAJOR].get_value());
-  temp.minor = static_cast<uint32_t>(state_interfaces_[StateInterfaces::ROBOT_VERSION_MINOR].get_value());
-  temp.bugfix = static_cast<uint32_t>(state_interfaces_[StateInterfaces::ROBOT_VERSION_BUGFIX].get_value());
-  temp.build = static_cast<uint32_t>(state_interfaces_[StateInterfaces::ROBOT_VERSION_BUILD].get_value());
-
-  robot_software_version_.set(std::make_shared<VersionInformation>(temp));
+  robot_software_version_.set([this](const std::shared_ptr<VersionInformation> ptr) {
+    ptr->major = state_interfaces_[StateInterfaces::ROBOT_VERSION_MAJOR].get_value();
+    ptr->minor = state_interfaces_[StateInterfaces::ROBOT_VERSION_MINOR].get_value();
+    ptr->build = state_interfaces_[StateInterfaces::ROBOT_VERSION_BUILD].get_value();
+    ptr->bugfix = state_interfaces_[StateInterfaces::ROBOT_VERSION_BUGFIX].get_value();
+  });
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -115,13 +114,12 @@ bool URConfigurationController::getRobotSoftwareVersion(
     ur_msgs::srv::GetRobotSoftwareVersion::Response::SharedPtr resp)
 {
   std::shared_ptr<VersionInformation> temp;
-  robot_software_version_.get(temp);
-  resp->major = temp->major;
-  resp->minor = temp->minor;
-  resp->bugfix = temp->bugfix;
-  resp->build = temp->build;
-
-  return true;
+  return robot_software_version_.tryGet([resp](const std::shared_ptr<VersionInformation> ptr) {
+    resp->major = ptr->major;
+    resp->minor = ptr->minor;
+    resp->build = ptr->build;
+    resp->bugfix = ptr->bugfix;
+  });
 }
 }  // namespace ur_controllers
 
