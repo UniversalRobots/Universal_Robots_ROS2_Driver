@@ -52,7 +52,7 @@ from ur_dashboard_msgs.srv import (
     IsProgramRunning,
     Load,
 )
-from ur_msgs.srv import SetIO
+from ur_msgs.srv import SetIO, SetForceMode
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
@@ -241,6 +241,15 @@ class IoStatusInterface(
     namespace="/io_and_status_controller",
     initial_services={"set_io": SetIO},
     services={"resend_robot_program": Trigger},
+):
+    pass
+
+
+class ForceModeInterface(
+    _ServiceInterface,
+    namespace="/force_mode_controller",
+    initial_services={},
+    services={"start_force_mode": SetForceMode},
 ):
     pass
 
