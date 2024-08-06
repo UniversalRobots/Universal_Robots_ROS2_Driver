@@ -1,0 +1,6 @@
+ur_configuration_controller:
+   tf_prefix: {
+    type: string,
+    default_value: "",
+    description: "URDF prefix of the corresponding arm"
+   }
