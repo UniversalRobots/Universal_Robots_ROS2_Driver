@@ -162,8 +162,12 @@ def launch_setup():
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
+        "scaled_joint_trajectory_controller",
     ]
-    controllers_inactive = ["forward_position_controller"]
+    controllers_inactive = [
+        "forward_position_controller",
+        "passthrough_trajectory_controller",
+    ]
 
     controller_spawners = [controller_spawner(controllers_active)] + [
         controller_spawner(controllers_inactive, active=False)

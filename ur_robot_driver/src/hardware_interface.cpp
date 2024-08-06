@@ -85,6 +85,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   start_modes_ = {};
   position_controller_running_ = false;
   velocity_controller_running_ = false;
+  passthrough_trajectory_controller_running_ = false;
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
@@ -93,6 +94,12 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   initialized_ = false;
   async_thread_shutdown_ = false;
   system_interface_initialized_ = 0.0;
+  passthrough_trajectory_transfer_state_ = 0.0;
+  passthrough_trajectory_cancel_ = 0.0;
+  trajectory_joint_positions_.clear();
+  trajectory_joint_velocities_.clear();
+  trajectory_joint_accelerations_.clear();
+  number_of_joints_ = info_.joints.size();
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -143,7 +150,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -231,6 +237,12 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
 
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "passthrough_controller", "number_of_joints", &number_of_joints_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "passthrough_controller", "running",
+                                                                   &passthrough_trajectory_controller_running_));
+
   return state_interfaces;
 }
 
@@ -297,6 +309,38 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
+                                                                       "passthrough_trajectory_transfer_state",
+                                                                       &passthrough_trajectory_transfer_state_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_cancel", &passthrough_trajectory_cancel_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_dimensions", &passthrough_trajectory_dimensions_));
+
+  for (size_t i = 0; i < 6; ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "passthrough_controller", "passthrough_trajectory_positions_" + std::to_string(i),
+        &passthrough_trajectory_positions_[i]));
+  }
+
+  for (size_t i = 0; i < 6; ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "passthrough_controller", "passthrough_trajectory_velocities_" + std::to_string(i),
+        &passthrough_trajectory_velocities_[i]));
+  }
+
+  for (size_t i = 0; i < 6; ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "passthrough_controller", "passthrough_trajectory_accelerations_" + std::to_string(i),
+        &passthrough_trajectory_accelerations_[i]));
+  }
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
+                                                                       "passthrough_trajectory_time_from_start",
+                                                                       &passthrough_trajectory_time_from_start_));
 
   return command_interfaces;
 }
@@ -458,6 +502,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
+  ur_driver_->registerTrajectoryDoneCallback(
+      std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -516,6 +563,9 @@ void URPositionHardwareInterface::asyncThread()
     if (initialized_) {
       //        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initialized in async thread");
       checkAsyncIO();
+      if (passthrough_trajectory_controller_running_) {
+        check_passthrough_trajectory_controller();
+      }
     }
     std::this_thread::sleep_for(std::chrono::nanoseconds(20000000));
   }
@@ -631,6 +681,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
 
+    } else if (passthrough_trajectory_controller_running_) {
+      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP);
     } else {
       ur_driver_->writeKeepalive();
     }
@@ -798,10 +850,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
-
   start_modes_.clear();
   stop_modes_.clear();
-
+  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   // Starting interfaces
   // add start interface per joint in tmp var for later check
   for (const auto& key : start_interfaces) {
@@ -811,6 +862,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       }
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
+      }
+      if (key == tf_prefix + PASSTHROUGH_TRAJECTORY_CONTROLLER + std::to_string(i)) {
+        start_modes_.push_back(PASSTHROUGH_TRAJECTORY_CONTROLLER);
       }
     }
   }
@@ -833,6 +887,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       }
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
+      }
+      if (key == PASSTHROUGH_TRAJECTORY_CONTROLLER + std::to_string(i)) {
+        stop_modes_.push_back(StoppingInterface::STOP_PASSTHROUGH);
       }
     }
   }
@@ -859,19 +916,33 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
              std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_VELOCITY) != stop_modes_.end()) {
     velocity_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
+                                                  StoppingInterface::STOP_PASSTHROUGH) != stop_modes_.end()) {
+    passthrough_trajectory_controller_running_ = 0.0;
+    passthrough_trajectory_cancel_ = 1.0;
+    trajectory_joint_positions_.clear();
+    trajectory_joint_accelerations_.clear();
+    trajectory_joint_velocities_.clear();
   }
 
   if (start_modes_.size() != 0 &&
       std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
     velocity_controller_running_ = false;
+    passthrough_trajectory_controller_running_ = 0.0;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
 
   } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
                                                    hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
     position_controller_running_ = false;
+    passthrough_trajectory_controller_running_ = 0.0;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
+  } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
+                                                   PASSTHROUGH_TRAJECTORY_CONTROLLER) != start_modes_.end()) {
+    velocity_controller_running_ = false;
+    position_controller_running_ = false;
+    passthrough_trajectory_controller_running_ = 1.0;
   }
 
   start_modes_.clear();
@@ -879,6 +950,70 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 
   return ret_val;
 }
+
+void URPositionHardwareInterface::check_passthrough_trajectory_controller()
+{
+  static double last_time = 0.0;
+  /* See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
+   */
+  if (passthrough_trajectory_transfer_state_ == 2.0) {
+    trajectory_joint_positions_.push_back(passthrough_trajectory_positions_);
+
+    trajectory_times_.push_back(passthrough_trajectory_time_from_start_ - last_time);
+    last_time = passthrough_trajectory_time_from_start_;
+
+    if (passthrough_trajectory_dimensions_ == 2.0 || passthrough_trajectory_dimensions_ == 4.0) {
+      trajectory_joint_velocities_.push_back(passthrough_trajectory_velocities_);
+    }
+    if (passthrough_trajectory_dimensions_ == 3.0 || passthrough_trajectory_dimensions_ == 4.0) {
+      trajectory_joint_accelerations_.push_back(passthrough_trajectory_accelerations_);
+    }
+    passthrough_trajectory_transfer_state_ = 1.0;
+    /* When all points have been read, write them to the robot driver.*/
+  } else if (passthrough_trajectory_transfer_state_ == 3.0) {
+    /* Tell robot driver how many points are in the trajectory. */
+    ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
+                                              trajectory_joint_positions_.size());
+    /* Write the appropriate type of point according to the dimensions of the trajectory. See
+     * passthrough_trajectory_controller.hpp - check_dimensions() for an explanation of the values. */
+    if (passthrough_trajectory_dimensions_ == 1.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], urcl::vector6d_t{ 0, 0, 0, 0, 0, 0 },
+                                               trajectory_times_[i]);
+      }
+    } else if (passthrough_trajectory_dimensions_ == 2.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
+                                               trajectory_times_[i]);
+      }
+    } else if (passthrough_trajectory_dimensions_ == 3.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_accelerations_[i],
+                                               trajectory_times_[i]);
+      }
+    } else if (passthrough_trajectory_dimensions_ == 4.0) {
+      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
+                                               trajectory_joint_accelerations_[i], trajectory_times_[i]);
+      }
+    }
+    trajectory_joint_positions_.clear();
+    trajectory_joint_accelerations_.clear();
+    trajectory_joint_velocities_.clear();
+    passthrough_trajectory_transfer_state_ = 4.0;
+  }
+}
+
+void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
+{
+  if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS) {
+    passthrough_trajectory_transfer_state_ = 5.0;
+  } else {
+    passthrough_trajectory_cancel_ = 1.0;
+  }
+  return;
+}
+
 }  // namespace ur_robot_driver
 
 #include "pluginlib/class_list_macros.hpp"
