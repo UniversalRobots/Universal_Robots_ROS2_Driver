@@ -125,6 +125,7 @@ def launch_setup():
                 "consistent_controllers": [
                     "io_and_status_controller",
                     "force_torque_sensor_broadcaster",
+                    "tcp_pose_broadcaster",
                     "joint_state_broadcaster",
                     "speed_scaling_state_broadcaster",
                 ]
@@ -162,6 +163,7 @@ def launch_setup():
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
+        "tcp_pose_broadcaster",
     ]
     controllers_inactive = ["forward_position_controller"]
 
