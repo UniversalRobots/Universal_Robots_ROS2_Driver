@@ -38,7 +38,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    velocity_goals = PathJoinSubstitution(
+    velocity_config = PathJoinSubstitution(
         [FindPackageShare("ur_robot_driver"), "config", "test_velocity_goal_publishers_config.yaml"]
     )
 
@@ -48,7 +48,7 @@ def generate_launch_description():
                 package="ros2_controllers_test_nodes",
                 executable="publisher_forward_position_controller",
                 name="publisher_forward_velocity_controller",
-                parameters=[velocity_goals],
+                parameters=[velocity_config],
                 output="screen",
             )
         ]
