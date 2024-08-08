@@ -191,6 +191,10 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   bool async_thread_shutdown_;
+  double start_tool_contact_cmd_;
+  double start_tool_contact_async_success_;
+  double end_tool_contact_cmd_;
+  double end_tool_contact_async_success_;
 
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
