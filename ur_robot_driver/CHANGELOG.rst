@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.4.9 (2024-08-09)
+------------------
 * Added dynamics tag when using mock_components/GenericSystem (`#1075 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1075>`_)
 * Updated the UR family photo on the readme (`#1064 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1064>`_)
 * Fix passing launch_dashboard_client launch argument (`#1057 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1057>`_)
