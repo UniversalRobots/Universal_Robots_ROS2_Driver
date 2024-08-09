@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added Jazzy migration notes for moveit_config (`#1058 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1058>`_)
+* Add ur_moveit.launch.py arguments to control whether the move_group node publishes robot semantic description (`#1036 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1036>`_)
+* Contributors: Felix Exner (fexner), Vincenzo Di Pentima, Haavard Pedersen Brandal
+
 2.4.8 (2024-07-01)
 ------------------
 * moveit_congig: Also install srdf folder (`#1033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1033>`_)
