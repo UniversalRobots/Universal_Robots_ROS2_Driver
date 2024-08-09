@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.3.10 (2024-08-09)
+-------------------
 * Fix passing launch_dashobard_client launch argument (backport of `#1057 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1057>`_)
 * Updated the UR family photo on the readme (backport of `#1064 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1064>`_)
 * Contributors: Felix Exner, Rune Søe-Knudsen
