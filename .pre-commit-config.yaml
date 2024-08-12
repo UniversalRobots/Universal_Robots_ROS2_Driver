@@ -51,7 +51,7 @@ repos:
       args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D401,D404"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.0
+    rev: 7.1.1
     hooks:
     - id: flake8
       args: ["--ignore=E501,W503"]
