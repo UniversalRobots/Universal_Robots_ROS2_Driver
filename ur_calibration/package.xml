@@ -5,10 +5,11 @@
   <description>Package for extracting the factory calibration from a UR robot and change it such that it can be used by ur_description to gain a correct URDF</description>
 
   <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
+  <maintainer email="dipentima@fzi.de">Vincenzo Di Pentima</maintainer>
 
   <license>BSD-3-Clause</license>
 
+  <author email="wilbrandt@fzi.de">Robert Wilbrandt</author>
   <author email="lovro.ivanov@gmail.com">Lovro Ivanov</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
