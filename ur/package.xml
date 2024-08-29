@@ -6,7 +6,6 @@
   <description>Metapackage for universal robots</description>
   <maintainer email="exner@fzi.de">Felix Exner</maintainer>
   <maintainer email="dipentima@fzi.de">Vincenzo Di Pentima</maintainer>
-  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
   <license>BSD-3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
