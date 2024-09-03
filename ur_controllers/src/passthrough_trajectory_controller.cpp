@@ -87,7 +87,6 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::st
     }
   }
   conf.names.emplace_back(passthrough_params_.speed_scaling_interface_name);
-  conf.names.emplace_back(tf_prefix + "passthrough_controller/number_of_joints");
   conf.names.emplace_back(tf_prefix + "passthrough_controller/running");
 
   return conf;
@@ -102,9 +101,7 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
 
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_transfer_state");
 
-  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_cancel");
-
-  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_dimensions");
+  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_abort");
 
   for (size_t i = 0; i < 6; ++i) {
     config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_positions_" +
@@ -145,6 +142,85 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
 controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& time,
                                                                           const rclcpp::Duration& /* period */)
 {
+  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() != 0.0) {
+    /* Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
+     * pendant. */
+    if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0) {
+      RCLCPP_INFO(get_node()->get_logger(), "Trajectory cancelled from hardware interface, aborting action.");
+      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      active_goal_->abort(result);
+      end_goal();
+      return controller_interface::return_type::OK;
+    }
+    /* Check if the goal has been cancelled by the ROS user. */
+    if (active_goal_->is_canceling()) {
+      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      active_goal_->canceled(result);
+      end_goal();
+      return controller_interface::return_type::OK;
+    }
+    // Write a new point to the command interface, if the previous point has been read by the hardware interface.
+    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 1.0) {
+      if (current_point_ < active_joint_traj_.points.size()) {
+        // Write the time_from_start parameter.
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
+            active_joint_traj_.points[current_point_].time_from_start.sec +
+            (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
+        // Write the positions for each joint of the robot
+        for (int i = 0; i < 6; i++) {
+          command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
+              active_joint_traj_.points[current_point_].positions[i]);
+          // Optionally, also write velocities and accelerations for each joint.
+          if (active_joint_traj_.points[current_point_].velocities.size() > 0) {
+            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_ + i].set_value(
+                active_joint_traj_.points[current_point_].velocities[i]);
+          } else {
+            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_].set_value(NO_VAL);
+          }
+
+          if (active_joint_traj_.points[current_point_].accelerations.size() > 0) {
+            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(
+                active_joint_traj_.points[current_point_].accelerations[i]);
+          } else {
+            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(NO_VAL);
+          }
+        }
+        // Tell hardware interface that this point is ready to be read.
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(2.0);
+        current_point_++;
+
+        // Check if all points have been written to the hardware interface.
+      } else if (current_point_ == active_joint_traj_.points.size()) {
+        RCLCPP_INFO(get_node()->get_logger(), "All points sent to the hardware interface, trajectory will now "
+                                              "execute!");
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(3.0);
+      }
+      // When the trajectory is finished, report the goal as successful to the client.
+    } else if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 5.0) {
+      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      // Check if the actual position complies with the tolerances given.
+      if (!check_goal_tolerance()) {
+        result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
+        result->error_string = "Robot not within tolerances at end of trajectory.";
+        active_goal_->abort(result);
+        RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal tolerances not met.");
+        // Check if the goal time tolerance was complied with.
+      } else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_.seconds())) {
+        result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
+        result->error_string = "Goal not reached within time tolerance";
+        active_goal_->abort(result);
+        RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal time tolerance not met.");
+      } else {
+        result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
+        active_goal_->succeed(result);
+        RCLCPP_INFO(get_node()->get_logger(), "Trajectory executed successfully!");
+      }
+      end_goal();
+    }
+  }
   static bool firstpass = true;
   if (firstpass) {
     now_ns = time.nanoseconds();
@@ -190,71 +266,102 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
     return rclcpp_action::GoalResponse::REJECT;
   }
 
-  // Check dimensions of the trajectory
-  if (check_dimensions(goal) == 0) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Trajectory rejected, dimensions of trajectory are incorrect.");
+  // Check that all parts of the trajectory are valid.
+  if (!check_positions(goal)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Trajectory rejected");
     return rclcpp_action::GoalResponse::REJECT;
-  } else {
-    command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_DIMENSIONS].set_value(
-        static_cast<double>(check_dimensions(goal)));
+  }
+  if (!check_velocities(goal)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Trajectory rejected");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
+  if (!check_accelerations(goal)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Trajectory rejected");
+    return rclcpp_action::GoalResponse::REJECT;
   }
 
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
-int PassthroughTrajectoryController::check_dimensions(
+bool PassthroughTrajectoryController::check_positions(
     std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
 {
   for (uint32_t i = 0; i < goal->trajectory.points.size(); i++) {
-    std::string msg;
     if (goal->trajectory.points[i].positions.size() != number_of_joints_) {
+      std::string msg;
       msg = "Can't accept new trajectory. All trajectory points must have positions for all joints of the robot. (" +
             std::to_string(number_of_joints_) + " joint positions per point)";
       RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
       msg = "Point nr " + std::to_string(i + 1) +
             " has: " + std::to_string(goal->trajectory.points[i].positions.size()) + " positions.";
       RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
-      return 0;
+      return false;
     }
-    if ((goal->trajectory.points[i].velocities.size() != 0 &&
-         goal->trajectory.points[i].velocities.size() != number_of_joints_) ||
-        goal->trajectory.points[i].velocities.size() != goal->trajectory.points[0].velocities.size()) {
-      msg = "Can't accept new trajectory. All trajectory points must have velocities for all joints of the robot. (" +
+  }
+  return true;
+}
+
+bool PassthroughTrajectoryController::check_velocities(
+    std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
+{
+  for (uint32_t i = 0; i < goal->trajectory.points.size(); i++) {
+    if (goal->trajectory.points[i].velocities.size() != number_of_joints_ &&
+        goal->trajectory.points[i].velocities.size() != 0) {
+      std::string msg;
+      msg = "Can't accept new trajectory. All trajectory points must either not have velocities or have them for all "
+            "joints of the robot. (" +
             std::to_string(number_of_joints_) + " joint velocities per point)";
       RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
       msg = "Point nr " + std::to_string(i + 1) +
             " has: " + std::to_string(goal->trajectory.points[i].velocities.size()) + " velocities.";
       RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
-      return 0;
+      return false;
     }
-    if ((goal->trajectory.points[i].accelerations.size() != 0 &&
-         goal->trajectory.points[i].accelerations.size() != number_of_joints_) ||
-        goal->trajectory.points[i].accelerations.size() != goal->trajectory.points[0].accelerations.size()) {
-      msg = "Can't accept new trajectory. All trajectory points must have accelerations for all joints of the robot. "
+    if (goal->trajectory.points[i].velocities.size() != goal->trajectory.points[0].velocities.size()) {
+      std::string msg;
+      msg = "Can't accept new trajectory. All trajectory points must have velocities for all joints of the robot. "
+            "(" +
+            std::to_string(number_of_joints_) + " joint velocities per point)";
+      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      msg = "Point nr " + std::to_string(i) + " has: " + std::to_string(goal->trajectory.points[i].velocities.size()) +
+            " velocities.";
+      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      return false;
+    }
+  }
+  return true;
+}
+
+bool PassthroughTrajectoryController::check_accelerations(
+    std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
+{
+  for (uint32_t i = 0; i < goal->trajectory.points.size(); i++) {
+    if (goal->trajectory.points[i].accelerations.size() != 0 &&
+        goal->trajectory.points[i].accelerations.size() != number_of_joints_) {
+      std::string msg;
+      msg = "Can't accept new trajectory. All trajectory points must either not have accelerations or have them for "
+            "all joints of the robot. (" +
+            std::to_string(number_of_joints_) + " joint accelerations per point)";
+      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      msg = "Point nr " + std::to_string(i) +
+            " has: " + std::to_string(goal->trajectory.points[i].accelerations.size()) + " accelerations.";
+      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      return false;
+    }
+    if (goal->trajectory.points[i].accelerations.size() != goal->trajectory.points[0].accelerations.size()) {
+      std::string msg;
+      msg = "Can't accept new trajectory. All trajectory points must have accelerations for all joints of the "
+            "robot. "
             "(" +
             std::to_string(number_of_joints_) + " joint accelerations per point)";
       RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
-      msg = "Point nr " + std::to_string(i + 1) +
+      msg = "Point nr " + std::to_string(i) +
             " has: " + std::to_string(goal->trajectory.points[i].accelerations.size()) + " accelerations.";
       RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
-      return 0;
+      return false;
     }
   }
-  if (goal->trajectory.points[0].velocities.size() == 6 && goal->trajectory.points[0].accelerations.size() == 0) {
-    /*If there are only positions and velocities defined */
-    return 2;
-  } else if (goal->trajectory.points[0].velocities.size() == 0 &&
-             goal->trajectory.points[0].accelerations.size() == 6) {
-    /*If there are only positions and accelerations defined */
-    return 3;
-  } else if (goal->trajectory.points[0].velocities.size() == 6 &&
-             goal->trajectory.points[0].accelerations.size() == 6) {
-    /*If there are both positions, velocities and accelerations defined */
-    return 4;
-  } else {
-    /*If there are only positions defined */
-    return 1;
-  }
+  return true;
 }
 
 // Called when the action is cancelled by the action client.
@@ -275,7 +382,7 @@ void PassthroughTrajectoryController::goal_accepted_callback(
   active_trajectory_elapsed_time_ = 0;
   current_point_ = 0;
 
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_CANCEL].set_value(0.0);
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ABORT].set_value(0.0);
 
   active_joint_traj_ = goal_handle->get_goal()->trajectory;
   goal_tolerance_ = goal_handle->get_goal()->goal_tolerance;
@@ -288,95 +395,6 @@ void PassthroughTrajectoryController::goal_accepted_callback(
 
   command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(1.0);
 
-  /* Start the executing thread of the action server, this will run until the trajectory is finished or cancelled. */
-  std::thread{ std::bind(&PassthroughTrajectoryController::execute, this, std::placeholders::_1), goal_handle }
-      .detach();
-  return;
-}
-
-void PassthroughTrajectoryController::execute(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
-{
-  /* While loop should execute 200 times pr second. Can be made slower if needed, but it will affect how fast the points
-   * of the trajectory are transferred to the hardware interface. */
-  rclcpp::Rate loop_rate(200);
-  while (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() != 0.0) {
-    /* Check if the trajectory has been cancelled from the hardware interface. E.g. the robot was stopped on the teach
-     * pendant. */
-    if (command_interfaces_[PASSTHROUGH_TRAJECTORY_CANCEL].get_value() == 1.0) {
-      RCLCPP_INFO(get_node()->get_logger(), "Trajectory cancelled from hardware interface, aborting action.");
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
-      goal_handle->abort(result);
-      end_goal();
-      return;
-    }
-    /* Check if the goal has been cancelled by the ROS user. */
-    if (goal_handle->is_canceling()) {
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
-      goal_handle->canceled(result);
-      end_goal();
-      return;
-    }
-    // Write a new point to the command interface, if the previous point has been read by the hardware interface.
-    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 1.0) {
-      if (current_point_ < active_joint_traj_.points.size()) {
-        // Write the time_from_start parameter.
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
-            active_joint_traj_.points[current_point_].time_from_start.sec +
-            (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
-        // Write the positions for each joint of the robot
-        for (int i = 0; i < 6; i++) {
-          command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
-              active_joint_traj_.points[current_point_].positions[i]);
-          // Optionally, also write velocities and accelerations for each joint.
-          if (active_joint_traj_.points[current_point_].velocities.size() > 0) {
-            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_ + i].set_value(
-                active_joint_traj_.points[current_point_].velocities[i]);
-          }
-
-          if (active_joint_traj_.points[current_point_].accelerations.size() > 0) {
-            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(
-                active_joint_traj_.points[current_point_].accelerations[i]);
-          }
-        }
-        // Tell hardware interface that this point is ready to be read.
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(2.0);
-        current_point_++;
-
-        // Check if all points have been written to the hardware interface.
-      } else if (current_point_ == active_joint_traj_.points.size()) {
-        RCLCPP_INFO(get_node()->get_logger(), "All points sent to the hardware interface, trajectory will now "
-                                              "execute!");
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(3.0);
-      }
-      // When the trajectory is finished, report the goal as successful to the client.
-    } else if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 5.0) {
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
-      // Check if the actual position complies with the tolerances given.
-      if (!check_goal_tolerance()) {
-        result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
-        result->error_string = "Robot not within tolerances at end of trajectory.";
-        goal_handle->abort(result);
-        RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal tolerances not met.");
-        // Check if the goal time tolerance was complied with.
-      } else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_.seconds())) {
-        result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
-        result->error_string = "Goal not reached within time tolerance";
-        goal_handle->abort(result);
-        RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal time tolerance not met.");
-      } else {
-        result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
-        goal_handle->succeed(result);
-        RCLCPP_INFO(get_node()->get_logger(), "Trajectory executed successfully!");
-      }
-      end_goal();
-      return;
-    }
-    loop_rate.sleep();
-  }
   return;
 }
 

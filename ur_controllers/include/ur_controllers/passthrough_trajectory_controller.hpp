@@ -71,21 +71,17 @@ enum CommandInterfaces
   point to the hardware interface.
   2.0: The hardware interface will read the point written from the controller. The state will switch between 1.0
   and 2.0 until all points have been read by the hardware interface.
-  3.0: The hardware interface has read all the points, and will now write all the points to the robot driver.
-  4.0: The robot is moving through the trajectory.
-  5.0: The robot finished executing the trajectory. */
+  3.0: The hardware interface has read all the points, and will now write all the points to the physical robot
+  controller. 4.0: The robot is moving through the trajectory. 5.0: The robot finished executing the trajectory. */
   PASSTHROUGH_TRAJECTORY_TRANSFER_STATE = 0,
-  /* The PASSTHROUGH_TRAJECTORY_CANCEL value is used to indicate whether the trajectory has been cancelled from the
+  /* The PASSTHROUGH_TRAJECTORY_ABORT value is used to indicate whether the trajectory has been cancelled from the
    * hardware interface.*/
-  PASSTHROUGH_TRAJECTORY_CANCEL = 1,
-  /* The PASSTHROUGH_TRAJECTORY_DIMENSIONS is used to indicate what combination of joint positions, velocities and
-   * accelerations the trajectory consists of, see check_dimensions() for a description of what the values mean. */
-  PASSTHROUGH_TRAJECTORY_DIMENSIONS = 2,
+  PASSTHROUGH_TRAJECTORY_ABORT = 1,
   /* Arrays to hold the values of a point. */
-  PASSTHROUGH_TRAJECTORY_POSITIONS_ = 3,
-  PASSTHROUGH_TRAJECTORY_VELOCITIES_ = 9,
-  PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ = 15,
-  PASSTHROUGH_TRAJECTORY_TIME_FROM_START = 21
+  PASSTHROUGH_TRAJECTORY_POSITIONS_ = 2,
+  PASSTHROUGH_TRAJECTORY_VELOCITIES_ = 8,
+  PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ = 14,
+  PASSTHROUGH_TRAJECTORY_TIME_FROM_START = 20
 };
 
 enum StateInterfaces
@@ -93,8 +89,7 @@ enum StateInterfaces
   /* State interface 0 - 17 are joint state interfaces*/
 
   SPEED_SCALING_FACTOR = 18,
-  NUMBER_OF_JOINTS = 19,
-  CONTROLLER_RUNNING = 20
+  CONTROLLER_RUNNING = 19
 };
 
 class PassthroughTrajectoryController : public controller_interface::ControllerInterface
@@ -138,26 +133,15 @@ private:
   void goal_accepted_callback(
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
 
-  void execute(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
-
   std::vector<std::string> joint_names_;
   std::vector<std::string> state_interface_types_;
 
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_position_state_interface_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
 
-  /*
-  If there are values in the velocities and accelerations vectors, they should have as many elements as there are
-  joints, and all be the same size.
-  The return value indicates what combination of joint positions, velocities and accelerations is present;
-  0: The trajectory is invalid, and will be rejected.
-  1: Only positions are defined for the trajectory.
-  2: Positions and velocities are defined for the trajectory.
-  3: Positions and accelerations are defined for the trajectory.
-  4: Both positions, velocities and accelerations are defined for the trajectory.
-  */
-  int check_dimensions(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  bool check_positions(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  bool check_velocities(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  bool check_accelerations(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
 
   trajectory_msgs::msg::JointTrajectory active_joint_traj_;
   std::vector<control_msgs::msg::JointTolerance> path_tolerance_;
@@ -174,6 +158,7 @@ private:
   double scaling_factor_;
   uint32_t number_of_joints_;
   std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> active_goal_;
+  static constexpr double NO_VAL = std::numeric_limits<double>::quiet_NaN();
 };
 }  // namespace ur_controllers
 #endif  // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_
