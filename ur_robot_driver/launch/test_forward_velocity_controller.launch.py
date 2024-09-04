@@ -38,12 +38,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-<<<<<<< HEAD
-
-    velocity_goals = PathJoinSubstitution(
-=======
     velocity_config = PathJoinSubstitution(
->>>>>>> b422d49 (Fix for forward_velocity_controller test (#1076))
         [FindPackageShare("ur_robot_driver"), "config", "test_velocity_goal_publishers_config.yaml"]
     )
 
