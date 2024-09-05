@@ -319,7 +319,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "publish_robot_description_semantic",
-            default_value="False",
+            default_value="True",
             description="Whether to publish the SRDF description on topic /robot_description_semantic."
         )
     )
