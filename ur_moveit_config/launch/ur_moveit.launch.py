@@ -144,7 +144,9 @@ def launch_setup(context, *args, **kwargs):
     )
     robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
-    publish_robot_description_semantic = {"publish_robot_description_semantic": _publish_robot_description_semantic}
+    publish_robot_description_semantic = {
+        "publish_robot_description_semantic": _publish_robot_description_semantic
+    }
 
     robot_description_kinematics = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "config", "kinematics.yaml"]
@@ -320,7 +322,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "publish_robot_description_semantic",
             default_value="True",
-            description="Whether to publish the SRDF description on topic /robot_description_semantic."
+            description="Whether to publish the SRDF description on topic /robot_description_semantic.",
         )
     )
     declared_arguments.append(
