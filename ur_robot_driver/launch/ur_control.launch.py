@@ -158,7 +158,7 @@ def launch_setup(context):
                 controller_spawner_timeout,
             ]
             + inactive_flags
-            + [controllers],
+            + controllers,
             condition=condition,
         )
 
@@ -174,26 +174,11 @@ def launch_setup(context):
         "forward_velocity_controller",
         "forward_position_controller",
     ]
-    controllers_active_init = PythonExpression(
-        [
-            "'",
-            " ".join(controllers_active_default),
-            "' + ' ' +'",
-            initial_joint_controller,
-            "'",
-        ]
-    )
-    controllers_inactive_init = PythonExpression(
-        [
-            "' '.join([c for c in ",
-            str(controllers_inactive_default),
-            "if c != '",
-            initial_joint_controller,
-            "'])",
-        ]
-    )
-    print(controllers_active_init.perform(context))
-    print(controllers_inactive_init.perform(context))
+    controllers_active_init = [*controllers_active_default, initial_joint_controller]
+    controllers_inactive_init = [
+        PythonExpression(["'", c, "' if '", c, "' != '", initial_joint_controller, "' else ''"])
+        for c in controllers_inactive_default
+    ]
 
     controller_spawners = [
         controller_spawner(
@@ -205,11 +190,11 @@ def launch_setup(context):
             active=False,
         ),
         controller_spawner(
-            " ".join(controllers_active_default),
+            controllers_active_default,
             condition=UnlessCondition(activate_joint_controller),
         ),
         controller_spawner(
-            " ".join(controllers_inactive_default),
+            controllers_inactive_default,
             condition=UnlessCondition(activate_joint_controller),
             active=False,
         ),
