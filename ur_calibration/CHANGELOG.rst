@@ -2,6 +2,11 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update maintainers team (`#1088 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1088>`_)
+* Contributors: Vincenzo Di Pentima
+
 2.4.9 (2024-08-09)
 ------------------
 
