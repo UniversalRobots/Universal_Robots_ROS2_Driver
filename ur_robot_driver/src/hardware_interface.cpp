@@ -512,6 +512,7 @@ void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::Dat
 
 void URPositionHardwareInterface::asyncThread()
 {
+  async_thread_shutdown_ = false;
   while (!async_thread_shutdown_) {
     if (initialized_) {
       //        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initialized in async thread");

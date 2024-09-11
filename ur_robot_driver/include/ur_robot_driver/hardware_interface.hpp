@@ -190,7 +190,7 @@ protected:
   bool first_pass_;
   bool initialized_;
   double system_interface_initialized_;
-  bool async_thread_shutdown_;
+  std::atomic_bool async_thread_shutdown_;
 
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
