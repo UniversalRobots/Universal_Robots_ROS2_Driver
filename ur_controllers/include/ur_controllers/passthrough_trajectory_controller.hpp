@@ -46,6 +46,9 @@
 #include <string>
 #include <vector>
 
+#include <functional>
+#include <realtime_tools/realtime_box_best_effort.h>
+
 #include "controller_interface/controller_interface.hpp"
 #include "rclcpp_action/server.hpp"
 #include "rclcpp_action/create_server.hpp"
@@ -72,7 +75,9 @@ enum CommandInterfaces
   2.0: The hardware interface will read the point written from the controller. The state will switch between 1.0
   and 2.0 until all points have been read by the hardware interface.
   3.0: The hardware interface has read all the points, and will now write all the points to the physical robot
-  controller. 4.0: The robot is moving through the trajectory. 5.0: The robot finished executing the trajectory. */
+  controller.
+  4.0: The robot is moving through the trajectory.
+  5.0: The robot finished executing the trajectory. */
   PASSTHROUGH_TRAJECTORY_TRANSFER_STATE = 0,
   /* The PASSTHROUGH_TRAJECTORY_ABORT value is used to indicate whether the trajectory has been cancelled from the
    * hardware interface.*/
@@ -90,6 +95,15 @@ enum StateInterfaces
 
   SPEED_SCALING_FACTOR = 18,
   CONTROLLER_RUNNING = 19
+};
+
+// Struct to hold data that has to be transferred between realtime thread and non-realtime threads
+struct AsyncInfo
+{
+  double transfer_state = 0;
+  double abort = 0;
+  double controller_running = 0;
+  bool info_updated = false;
 };
 
 class PassthroughTrajectoryController : public controller_interface::ControllerInterface
@@ -147,6 +161,9 @@ private:
   std::vector<control_msgs::msg::JointTolerance> path_tolerance_;
   std::vector<control_msgs::msg::JointTolerance> goal_tolerance_;
   rclcpp::Duration goal_time_tolerance_ = rclcpp::Duration::from_nanoseconds(0);
+
+  realtime_tools::RealtimeBoxBestEffort<AsyncInfo> info_from_realtime_;
+  realtime_tools::RealtimeBoxBestEffort<AsyncInfo> info_to_realtime_;
 
   uint32_t current_point_;
   bool trajectory_active_;

@@ -142,6 +142,14 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
 controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& time,
                                                                           const rclcpp::Duration& /* period */)
 {
+  AsyncInfo temp = info_to_realtime_.get();
+  if (temp.info_updated) {
+    command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(temp.transfer_state);
+    command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].set_value(temp.abort);
+    temp.info_updated = false;
+    info_to_realtime_.set(temp);
+  }
+
   if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() != 0.0) {
     /* Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
      * pendant. */
@@ -233,7 +241,9 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
   /* Keep track of how long the trajectory has been executing, if it takes too long, send a warning. */
   if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 4.0) {
     scaling_factor_ = state_interfaces_[StateInterfaces::SPEED_SCALING_FACTOR].get_value();
+
     active_trajectory_elapsed_time_ += static_cast<double>(scaling_factor_ * (period_ns / pow(10, 9)));
+
     if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_.seconds()) &&
         trajectory_active_) {
       RCLCPP_WARN(get_node()->get_logger(), "Trajectory should be finished by now. You may want to cancel this goal, "
@@ -241,9 +251,13 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       trajectory_active_ = false;
     }
   }
+  AsyncInfo info = { command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value(),
+                     command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value(),
+                     state_interfaces_[StateInterfaces::CONTROLLER_RUNNING].get_value(), true };
 
+  info_from_realtime_.set(info);
   return controller_interface::return_type::OK;
-}
+}  // namespace ur_controllers
 
 rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callback(
     const rclcpp_action::GoalUUID& /*uuid*/,
@@ -256,12 +270,12 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
     return rclcpp_action::GoalResponse::REJECT;
   }
 
-  if (state_interfaces_[StateInterfaces::CONTROLLER_RUNNING].get_value() != 1.0) {
+  if (info_from_realtime_.get().controller_running != 1.0) {
     RCLCPP_ERROR(get_node()->get_logger(), "Trajectory rejected, controller not running in hardware interface.");
     return rclcpp_action::GoalResponse::REJECT;
   }
 
-  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() != 0.0) {
+  if (info_from_realtime_.get().transfer_state != 0.0) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new trajectory. A trajectory is already executing.");
     return rclcpp_action::GoalResponse::REJECT;
   }
@@ -382,8 +396,6 @@ void PassthroughTrajectoryController::goal_accepted_callback(
   active_trajectory_elapsed_time_ = 0;
   current_point_ = 0;
 
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ABORT].set_value(0.0);
-
   active_joint_traj_ = goal_handle->get_goal()->trajectory;
   goal_tolerance_ = goal_handle->get_goal()->goal_tolerance;
   path_tolerance_ = goal_handle->get_goal()->path_tolerance;
@@ -393,7 +405,9 @@ void PassthroughTrajectoryController::goal_accepted_callback(
   max_trajectory_time_ = active_joint_traj_.points.back().time_from_start.sec +
                          (active_joint_traj_.points.back().time_from_start.nanosec / pow(10, 9));
 
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(1.0);
+  // Communicate to update() method, that the action has been triggered.
+  AsyncInfo temp = { 1.0, 0.0, 0.0, true };
+  info_to_realtime_.set(temp);
 
   return;
 }
