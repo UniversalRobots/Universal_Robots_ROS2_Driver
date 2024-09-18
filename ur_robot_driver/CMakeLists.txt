@@ -148,9 +148,6 @@ install(PROGRAMS
   scripts/wait_for_robot_description
   scripts/example_move.py
   scripts/start_ursim.sh
-  ../examples/robot_class.py
-  ../examples/scaled_joint_example.py
-  ../examples/passthrough_example.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
