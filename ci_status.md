@@ -90,12 +90,28 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
       <a href='https://build.ros2.org/job/Ibin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=uJ64_ur_moveit_config'></a>
       <a href='https://build.ros2.org/job/Ibin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=uJ64_ur_robot_driver'></a>
     </td>
+<<<<<<< HEAD
     <td>
       <a href='https://build.ros2.org/job/Rbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/badge/icon?subject=uJ64_ur_calibration'></a><br/>
       <a href='https://build.ros2.org/job/Rbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/badge/icon?subject=uJ64_ur_controllers'></a>
       <a href='https://build.ros2.org/job/Rbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/badge/icon?subject=uJ64_ur_dashboard_msgs'></a>
       <a href='https://build.ros2.org/job/Rbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=uJ64_ur_moveit_config'></a>
       <a href='https://build.ros2.org/job/Rbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=uJ64_ur_robot_driver'></a>
+=======
+    <td> <!-- jazzy -->
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_robot_driver'></a>
+    </td>
+    <td> <!-- rolling -->
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_robot_driver'></a>
+>>>>>>> 0b2e196 (Fix ci_status package reference for Jazzy (#1102))
     </td>
   </tr>
 </table>
