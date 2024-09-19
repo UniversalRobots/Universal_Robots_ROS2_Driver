@@ -5,8 +5,8 @@ repositories:
     version: master
   Universal_Robots_ROS2_Description:
     type: git
-    url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git
-    version: rolling
+    url: https://github.com/fmauch/Universal_Robots_ROS2_Description.git
+    version: pose_broadcaster
   ur_msgs:
     type: git
     url: https://github.com/ros-industrial/ur_msgs.git
@@ -17,8 +17,8 @@ repositories:
     version: master
   ros2_controllers:
     type: git
-    url: https://github.com/ros-controls/ros2_controllers
-    version: master
+    url: https://github.com/RobertWilbrandt/ros2_controllers
+    version: pose_broadcaster
   kinematics_interface:
     type: git
     url: https://github.com/ros-controls/kinematics_interface.git
