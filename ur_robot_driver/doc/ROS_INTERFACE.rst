@@ -119,6 +119,8 @@ use_tool_communication (Required)
 
 Should the tool's RS485 interface be forwarded to the ROS machine? This is only available on e-Series models. Setting this parameter to TRUE requires multiple other parameters to be set as well.
 
+.. _dashboard_client:
+
 dashboard_client
 ^^^^^^^^^^^^^^^^
 
