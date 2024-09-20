@@ -1,10 +1,15 @@
+.. role:: raw-html-m2r(raw)
+   :format: html
+
 Usage
 =====
 
 Prepare the robot
 -----------------
 
-If you want to use a real robot with this driver, you need to prepare it, first.
+If you want to use a real robot with this driver, you need to prepare it, first. Make sure that you
+complete all steps from the :ref:`setup instructions<robot_setup>`, installed the External
+Control URCap and created a program as explained :ref:`here<install-urcap-e-series>`.
 
 Launch files
 ------------
@@ -59,25 +64,18 @@ The most relevant arguments are the following:
 
 **NOTE**\ : The package can simulate hardware with the ros2_control ``MockSystem``. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see `ros2_control documentation <https://ros-controls.github.io/control.ros.org/>`_ for more details.
 
-Modes of operation
-------------------
+.. todo::
+   Write something about controllers
+
+Simulation
+----------
 
 As mentioned in the last section the driver has two basic modes of operation: Using mock hardware or
-using real hardware(Or the URSim simulator, which is equivalent from the driver's perspective).
+using real hardware (Or the URSim simulator, which is equivalent from the driver's perspective).
 Additionally, the robot can be simulated using
 `Gazebo <https://github.com/UniversalRobots/Universal_Robots_ROS2_Gazebo_Simulation>`_ or
 `ignition <https://github.com/UniversalRobots/Universal_Robots_ROS2_Ignition_Simulation>`_ but that's
 outside of this driver's scope.
-
-.. list-table::
-   :header-rows: 1
-
-   * - mode
-     - available controllers
-   * - mock_hardware
-     - :raw-html-m2r:`<ul><li>joint_trajectory_controller</li><li>forward_velocity_controller</li><li>forward_position_controller</li></ul>`
-   * - real hardware / URSim
-     - :raw-html-m2r:`<ul><li>joint_trajectory_controller</li><li>scaled_joint_trajectory_controller </li><li>forward_velocity_controller</li><li>forward_position_controller</li></ul>`
 
 
 Usage with official UR simulator
@@ -221,10 +219,13 @@ While most tf frames come from the URDF and are published from the ``robot_state
 are a couple of things to know:
 
 - The ``base`` frame is the robot's base as the robot controller sees it.
-- The ``tool0_controller`` is the tool frame as published from the robot controller. If there is no
-  additional tool configured on the Teach pendant (TP), this should be equivalent to ``tool0`` given that
-  the URDF uses the specific robot's :ref:`calibration <calibration_extraction>`. If a tool is
-  configured on the TP, then the additional transformation will show in ``base`` -> ``tool0``.
+- The ``tool0`` is the tool frame as calculated using forward kinematics. If there is no additional
+  tool configured on the Teach pendant (TP) and the URDF uses the specific robot's
+  :ref:`calibration <calibration_extraction>` the lookup from ``base`` -> ``tool0`` should be the
+  same as the tcp pose shown on the TP when the feature "Base" is selected.
+
+
+.. _script_command_interface:
 
 Custom URScript commands
 ------------------------
@@ -242,7 +243,7 @@ publish a message to its interface:
 
 Be aware, that running a program on this interface (meaning publishing script code to that interface) stops any running program on the robot.
 Thus, the motion-interpreting program that is started by the driver gets stopped and has to be
-restarted again. Depending whether you use headless mode or not, you'll have to call the
+restarted again. Depending whether you use :ref:`headless_mode` or not, you'll have to call the
 ``resend_program`` service or press the ``play`` button on the teach panel to start the
 external_control program again.
 
