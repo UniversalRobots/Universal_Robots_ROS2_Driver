@@ -1,3 +1,5 @@
+.. _ur_robot_driver_startup:
+
 Startup the driver
 ==================
 
@@ -67,6 +69,8 @@ Depending on the :ref:`robot control mode<operation_modes>` do the following:
 
 * When the driver is started with ``headless_mode:=true`` nothing is needed. The driver is running
   already.
+
+.. _continuation_after_interruptions:
 
 Continuation after interruptions
 --------------------------------

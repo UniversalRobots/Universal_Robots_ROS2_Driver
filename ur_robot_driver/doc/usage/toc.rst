@@ -56,3 +56,63 @@ are a couple of things to know:
   tool configured on the Teach pendant (TP) and the URDF uses the specific robot's
   :ref:`calibration <calibration_extraction>` the lookup from ``base`` -> ``tool0`` should be the
   same as the tcp pose shown on the TP when the feature "Base" is selected.
+
+Troubleshooting
+---------------
+
+This section will cover some previously raised issues.
+
+I started everything, but I cannot control the robot
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The driver is started, but trajectory execution doesn't work. Instead, the driver logs
+
+.. code-block::
+
+   Can't accept new action goals. Controller is not running.
+
+
+The ``External Control`` program node from the URCap is not running on the robot. Make sure to
+create a program containing this node on the robot and start it using the "Play" button
+|play_button|. Inside the ROS terminal you should see the output ``Robot connected to reverse
+interface. Ready to receive control commands.``
+
+.. note::
+
+   When interacting with the teach pendant, or sending other primary programs to the robot, the
+   program will be stopped. On the ROS terminal you will see an output ``Connection to reverse interface dropped.``. Please see the section :ref:`continuation_after_interruptions` for details on how to continue.
+
+In general, make sure you're starting up the robot as explained :ref:`here<ur_robot_driver_startup>`.
+
+When starting the program on the TP, I get an error "The connection to the remote PC could not be established"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Make sure, the IP address setup is correct, as described in the setup guides
+(:ref:`CB3 robots<install-urcap-cb3>`, :ref:`e-Series robots<install-urcap-e-series>`)
+
+.. note::
+
+   This error can also show up, when the ROS driver is not running.
+
+When starting the driver, it crashes with "Variable 'speed_slider_mask' is currently controlled by another RTDE client"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Probably, there is a fieldbus enabled on the robot. Currently, this driver cannot be used together
+with an enabled fieldbus. Disable any fieldbus to workaround this error. `ROS 1 driver issue
+#204 <https://github.com/UniversalRobots/Universal_Robots_ROS_Driver/issues/204>`_ contains a guide
+how to do
+this.
+
+I sent raw script code to the robot but it is not executed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On the e-Series the robot has to be in :ref:`remote control mode <operation_modes>` to accept script code from an external source. This has to be switched from the Teach-Pendant.
+
+Using the dashboard doesn't work
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On the e-Series the robot has to be in :ref:`remote control mode <operation_modes>` to accept certain calls on the dashboard server. See :ref:`Available dashboard commands <dashboard_client>` for details.
+
+.. |play_button| image:: ../resources/play_button.svg
+                 :height: 20px
+                 :width: 20px
