@@ -4,59 +4,101 @@ Startup the driver
 Prepare the robot
 -----------------
 
-If you want to use a real robot with this driver, you need to prepare it, first. Make sure that you
-complete all steps from the :ref:`setup instructions<robot_setup>`, installed the External
-Control URCap and created a program as explained :ref:`here<install-urcap-e-series>`.
+If you want to use a real robot (Or a URSim simulator) with this driver, you need to prepare it,
+first. Make sure that you complete all steps from the :ref:`setup instructions<robot_setup>`,
+installed the External Control URCap and created a program as explained
+:ref:`here<install-urcap-e-series>`.
 
 Launch files
 ------------
 
-For starting the driver there are two main launch files in the ``ur_robot_driver`` package.
+For starting the driver it is recommended to start the ``ur_control.launch.py`` launchfile from the
+``ur_robot_driver`` package. It starts the driver, a set of controllers and a couple of helper
+nodes for UR robots. The only required arguments are the ``ur_type`` and ``robot_ip`` parameters.
+
+.. code-block:: console
+
+   $ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
+
+Other important arguments are:
 
 
-* ``ur_control.launch.py`` - starts ros2_control node including hardware interface, joint state broadcaster and a controller. This launch file also starts ``dashboard_client`` if real robot is used.
-* ``ur_dashboard_client.launch.py`` - start the dashboard client for UR robots.
+* ``use_mock_hardware`` (default: *false* ) - Use simple hardware emulator from ros2_control. Useful for testing launch files, descriptions, etc.
+* ``headless_mode`` (default: *false*) - Start driver in :ref:`headless_mode`.
+* ``launch_rviz`` (default: *true*) - Start RViz together with the driver.
+* ``initial_joint_controller`` (default: *scaled_joint_trajectory_controller*) - Use this if you
+  want to start the robot with another controller.
+
+  .. note::
+     When the driver is started, you can list all loaded controllers using the ``ros2 control
+     list_controllers`` command. For this, the package ``ros2controlcli`` must be installed (``sudo
+     apt-get install ros-${ROS_DISTRO}-ros2controlcli``).
+
+
+For all other arguments, please see
+
+
+.. code-block:: console
+
+   $ ros2 launch ur_robot_driver ur_control.launch.py --show-args
 
 Also, there are predefined launch files for all supported types of UR robots.
 
-The arguments for launch files can be listed using ``ros2 launch ur_robot_driver <launch_file_name>.launch.py --show-args``.
-The most relevant arguments are the following:
+Finish startup on the robot
+---------------------------
+
+Unless :ref:`headless_mode` is used, you will now have to start the *External Control* program on
+the robot that you have created earlier.
+
+Depending on the :ref:`robot control mode<operation_modes>` do the following:
+
+* In local control mode, load the program on the robot and press the "Play" button |play_button| on the teach pendant.
+* In remote control mode load and start the program using the following dashboard calls:
+
+  .. code-block:: console
+
+     $ ros2 service call /dashboard_client/load_program ur_dashboard_msgs/srv/Load "filename: my_robot_program.urp"``
+     $ ros2 service call /dashboard_client/play std_srvs/srv/Trigger {}
+
+* When the driver is started with ``headless_mode:=true`` nothing is needed. The driver is running
+  already.
+
+Continuation after interruptions
+--------------------------------
+
+Whenever the *External Control* program gets interrupted, it has to be unpaused / restarted.
+
+If that happens, you will see the output ``Connection to reverse interface dropped.``
+
+This can happen, e,g, when
+
+* The running program is actively stopped.
+* The robot goes into a protective stop / EM stop. (The program will be paused, then)
+* The communication is stopped, since the external source did not receive a command in time.
+* There was another script sent for execution e.g.
+
+  * Script code was sent to the robot via its primary interface
+  * Robot motion is performed using the Teach pendant
+
+Depending on the operation mode, perform one of the following steps:
+
+* In local control mode, simply press the "Play" button |play_button| on the teach pendant.
+* In remote control mode start the program using the following dashboard call:
+
+  .. code-block:: console
+
+     $ ros2 service call /dashboard_client/play std_srvs/srv/Trigger {}
+
+* When the driver is started with ``headless_mode:=true`` perform the following service call:
+
+  .. code-block:: console
+
+     $ ros2 service call /io_and_status_controller/resend_robot_program std_srvs/srv/Trigger {}
 
 
-* ``ur_type`` (\ *mandatory* ) - a type of used UR robot (\ *ur3*\ , *ur3e*\ , *ur5*\ , *ur5e*\ , *ur10*\ , *ur10e*\ , or *ur16e*\ , *ur20*\ , *ur30*\ ).
-* ``robot_ip`` (\ *mandatory* ) - IP address by which the root can be reached.
-* ``use_mock_hardware`` (default: *false* ) - use simple hardware emulator from ros2_control.
-  Useful for testing launch files, descriptions, etc. See explanation below.
-* ``initial_positions`` (default: dictionary with all joint values set to 0) - Allows passing a dictionary to set the initial joint values for the mock hardware from `ros2_control <http://control.ros.org/>`_.  It can also be set from a yaml file with the ``load_yaml`` commands as follows:
-
-  .. code-block::
-
-     <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)}" / >
-
-  In this example, the **initial_positions_file** is a xacro argument that contains the absolute path to a yaml file. An example of the initial positions yaml file is as follows:
-
-  .. code-block::
-
-     elbow_joint: 1.158
-     shoulder_lift_joint: -0.953
-     shoulder_pan_joint: 1.906
-     wrist_1_joint: -1.912
-     wrist_2_joint: -1.765
-     wrist_3_joint: 0.0
-
-* ``mock_sensor_commands`` (default: *false* ) - enables setting sensor values for the hardware emulators.
-  Useful for offline testing of controllers.
-
-* ``robot_controller`` (default: *joint_trajectory_controller* ) - controller for robot joints to be started.
-  Available controllers:
 
 
-  * joint_trajectory_controller
-  * scaled_joint_trajectory_controller
 
-  Note: *joint_state_broadcaster*\ , *speed_scaling_state_broadcaster*\ , *force_torque_sensor_broadcaster*\ , and *io_and_status_controller* will always start.
-
-  *HINT* : list all loaded controllers using ``ros2 control list_controllers`` command. For this,
-  the package ``ros2controlcli`` must be installed (``sudo apt-get install ros-${ROS_DISTRO}-ros2controlcli``).
-
-**NOTE**\ : The package can simulate hardware with the ros2_control ``MockSystem``. This emulator enables an environment for testing of "piping" of hardware and controllers, as well as testing robot's descriptions. For more details see `ros2_control documentation <https://ros-controls.github.io/control.ros.org/>`_ for more details.
+.. |play_button| image:: ../resources/play_button.svg
+                 :height: 20px
+                 :width: 20px
