@@ -8,6 +8,7 @@ Additionally, the robot can be simulated using
 `ignition <https://github.com/UniversalRobots/Universal_Robots_ROS2_Ignition_Simulation>`_ but that's
 outside of this driver's scope.
 
+.. _usage_with_official_ur_simulator:
 
 Usage with official UR simulator
 --------------------------------
