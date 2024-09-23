@@ -4,8 +4,8 @@ Simulation
 As mentioned in the last section the driver has two basic modes of operation: Using mock hardware or
 using real hardware (Or the URSim simulator, which is equivalent from the driver's perspective).
 Additionally, the robot can be simulated using
-`Gazebo <https://github.com/UniversalRobots/Universal_Robots_ROS2_Gazebo_Simulation>`_ or
-`ignition <https://github.com/UniversalRobots/Universal_Robots_ROS2_Ignition_Simulation>`_ but that's
+`Gazebo Classic <https://github.com/UniversalRobots/Universal_Robots_ROS2_Gazebo_Simulation>`_ or
+`GZ Sim <https://github.com/UniversalRobots/Universal_Robots_ROS2_Ignition_Simulation>`_ but that's
 outside of this driver's scope.
 
 .. _usage_with_official_ur_simulator:
@@ -34,3 +34,12 @@ You can view the polyscope GUI by opening `<http://192.168.56.101:6080/vnc.html>
 When we now move the robot in Polyscope, the robot's RViz visualization should move accordingly.
 
 For details on the Docker image, please see the more detailed guide :ref:`here <ursim_docker>`.
+
+Mock hardware
+-------------
+
+The package can simulate hardware with the ros2_control ``MockSystem``. This emulator enables an
+environment for testing of "piping" of hardware and controllers, as well as testing robot's
+descriptions. For more details see `ros2_control documentation
+<https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/mock_components_userdoc.html>`_
+for more details.
