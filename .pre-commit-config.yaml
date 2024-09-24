@@ -120,11 +120,7 @@ repos:
 
   # Docs - RestructuredText hooks
   - repo: https://github.com/PyCQA/doc8
-<<<<<<< HEAD
-    rev: 0.9.0a1
-=======
     rev: v1.1.2
->>>>>>> 6188912 (Auto-update pre-commit hooks (#1094))
     hooks:
       - id: doc8
         args: ['--max-line-length=100', '--ignore=D001']
