@@ -265,7 +265,7 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
 {
   RCLCPP_INFO(get_node()->get_logger(), "Received new trajectory.");
   // Precondition: Running controller
-  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new trajectories. Controller is not running.");
     return rclcpp_action::GoalResponse::REJECT;
   }
