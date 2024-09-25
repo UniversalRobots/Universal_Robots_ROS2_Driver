@@ -66,7 +66,7 @@ PassthroughTrajectoryController::on_configure(const rclcpp_lifecycle::State& pre
 void PassthroughTrajectoryController::start_action_server(void)
 {
   send_trajectory_action_server_ = rclcpp_action::create_server<control_msgs::action::FollowJointTrajectory>(
-      get_node(), std::string(get_node()->get_name()) + "/forward_joint_trajectory",
+      get_node(), std::string(get_node()->get_name()) + "/follow_joint_trajectory",
       std::bind(&PassthroughTrajectoryController::goal_received_callback, this, std::placeholders::_1,
                 std::placeholders::_2),
       std::bind(&PassthroughTrajectoryController::goal_cancelled_callback, this, std::placeholders::_1),
