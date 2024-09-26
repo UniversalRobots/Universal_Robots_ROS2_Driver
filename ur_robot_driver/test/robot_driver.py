@@ -101,7 +101,7 @@ class RobotDriverTest(unittest.TestCase):
         )
         self._passthrough_forward_joint_trajectory = ActionInterface(
             self.node,
-            "/passthrough_trajectory_controller/forward_joint_trajectory",
+            "/passthrough_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
 
