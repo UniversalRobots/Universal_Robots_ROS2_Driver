@@ -155,7 +155,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     /* Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
      * pendant. */
     if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0) {
-      RCLCPP_INFO(get_node()->get_logger(), "Trajectory cancelled from hardware interface, aborting action.");
+      RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted hardware, aborting action.");
       std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
           std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
       active_goal_->abort(result);
@@ -381,7 +381,7 @@ rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_ca
     const std::shared_ptr<
         rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> /* goal_handle */)
 {
-  RCLCPP_INFO(get_node()->get_logger(), "Cancelling active trajectory because cancel callback received.");
+  RCLCPP_INFO(get_node()->get_logger(), "Cancelling active trajectory requested.");
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
