@@ -150,7 +150,8 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     info_to_realtime_.set(temp);
   }
 
-  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() != 0.0) {
+  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() !=
+      TRANSFER_STATE_IDLE) {
     /* Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
      * pendant. */
     if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0) {
@@ -170,7 +171,8 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       return controller_interface::return_type::OK;
     }
     // Write a new point to the command interface, if the previous point has been read by the hardware interface.
-    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 1.0) {
+    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() ==
+        TRANSFER_STATE_WAITING_FOR_POINT) {
       if (current_point_ < active_joint_traj_.points.size()) {
         // Write the time_from_start parameter.
         command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
@@ -196,17 +198,19 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
           }
         }
         // Tell hardware interface that this point is ready to be read.
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(2.0);
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
+            TRANSFER_STATE_TRANSFERRING);
         current_point_++;
 
         // Check if all points have been written to the hardware interface.
       } else if (current_point_ == active_joint_traj_.points.size()) {
         RCLCPP_INFO(get_node()->get_logger(), "All points sent to the hardware interface, trajectory will now "
                                               "execute!");
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(3.0);
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(TRANSFER_STATE_DONE);
       }
       // When the trajectory is finished, report the goal as successful to the client.
-    } else if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 5.0) {
+    } else if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() ==
+               TRANSFER_STATE_DONE) {
       std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
           std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
       // Check if the actual position complies with the tolerances given.
@@ -239,7 +243,8 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     period_ns = now_ns - last_time_ns;
   }
   /* Keep track of how long the trajectory has been executing, if it takes too long, send a warning. */
-  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() == 4.0) {
+  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() ==
+      TRANSFER_STATE_IN_MOTION) {
     scaling_factor_ = state_interfaces_[StateInterfaces::SPEED_SCALING_FACTOR].get_value();
 
     active_trajectory_elapsed_time_ += static_cast<double>(scaling_factor_ * (period_ns / pow(10, 9)));

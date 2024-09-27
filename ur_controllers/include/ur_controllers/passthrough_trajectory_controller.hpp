@@ -42,12 +42,14 @@
 #define UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_
 
 #include <stdint.h>
+
+#include <realtime_tools/realtime_box_best_effort.h>
+
+#include <functional>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <functional>
-#include <realtime_tools/realtime_box_best_effort.h>
 
 #include "controller_interface/controller_interface.hpp"
 #include "rclcpp_action/server.hpp"
@@ -66,6 +68,14 @@
 
 namespace ur_controllers
 {
+
+const double TRANSFER_STATE_IDLE = 0.0;
+const double TRANSFER_STATE_WAITING_FOR_POINT = 1.0;
+const double TRANSFER_STATE_TRANSFERRING = 2.0;
+const double TRANSFER_STATE_TRANSFER_DONE = 3.0;
+const double TRANSFER_STATE_IN_MOTION = 4.0;
+const double TRANSFER_STATE_DONE = 5.0;
+
 enum CommandInterfaces
 {
   /* The PASSTHROUGH_TRAJECTORY_TRANSFER_STATE value is used to keep track of which stage the transfer is in.
