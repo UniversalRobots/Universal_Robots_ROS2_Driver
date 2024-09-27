@@ -104,7 +104,6 @@ enum StateInterfaces
   /* State interface 0 - 17 are joint state interfaces*/
 
   SPEED_SCALING_FACTOR = 18,
-  CONTROLLER_RUNNING = 19
 };
 
 // Struct to hold data that has to be transferred between realtime thread and non-realtime threads

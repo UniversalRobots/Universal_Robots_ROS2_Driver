@@ -87,7 +87,6 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::st
     }
   }
   conf.names.emplace_back(passthrough_params_.speed_scaling_interface_name);
-  conf.names.emplace_back(tf_prefix + "passthrough_controller/running");
 
   return conf;
 }
@@ -142,13 +141,13 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
 controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& /*time*/,
                                                                           const rclcpp::Duration& period)
 {
-  AsyncInfo temp = info_to_realtime_.get();
-  if (temp.info_updated) {
-    command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(temp.transfer_state);
-    command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].set_value(temp.abort);
-    temp.info_updated = false;
-    info_to_realtime_.set(temp);
-  }
+  // AsyncInfo temp = info_to_realtime_.get();
+  // if (temp.info_updated) {
+  // command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(temp.transfer_state);
+  // command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].set_value(temp.abort);
+  // temp.info_updated = false;
+  // info_to_realtime_.set(temp);
+  //}
 
   if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() !=
       TRANSFER_STATE_IDLE) {
@@ -250,8 +249,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     }
   }
   AsyncInfo info = { command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value(),
-                     command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value(),
-                     state_interfaces_[StateInterfaces::CONTROLLER_RUNNING].get_value(), true };
+                     command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value(), true, true };
 
   info_from_realtime_.set(info);
   return controller_interface::return_type::OK;
