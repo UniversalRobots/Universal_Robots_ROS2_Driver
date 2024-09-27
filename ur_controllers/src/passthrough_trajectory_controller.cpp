@@ -268,11 +268,6 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
     return rclcpp_action::GoalResponse::REJECT;
   }
 
-  if (info_from_realtime_.get().controller_running != 1.0) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Trajectory rejected, controller not running in hardware interface.");
-    return rclcpp_action::GoalResponse::REJECT;
-  }
-
   if (info_from_realtime_.get().transfer_state != 0.0) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new trajectory. A trajectory is already executing.");
     return rclcpp_action::GoalResponse::REJECT;
