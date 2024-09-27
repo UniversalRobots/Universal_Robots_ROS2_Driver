@@ -177,9 +177,6 @@ private:
 
   uint32_t current_point_;
   bool trajectory_active_;
-  uint64_t period_ns;
-  uint64_t last_time_ns;
-  uint64_t now_ns;
   double active_trajectory_elapsed_time_;
   double max_trajectory_time_;
   double scaling_factor_;

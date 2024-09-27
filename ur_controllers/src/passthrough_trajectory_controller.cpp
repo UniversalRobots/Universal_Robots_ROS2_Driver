@@ -139,8 +139,8 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
   return ControllerInterface::on_activate(state);
 }
 
-controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& time,
-                                                                          const rclcpp::Duration& /* period */)
+controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& /*time*/,
+                                                                          const rclcpp::Duration& period)
 {
   AsyncInfo temp = info_to_realtime_.get();
   if (temp.info_updated) {
@@ -233,21 +233,14 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       end_goal();
     }
   }
-  static bool firstpass = true;
-  if (firstpass) {
-    now_ns = time.nanoseconds();
-    firstpass = false;
-  } else {
-    last_time_ns = now_ns;
-    now_ns = time.nanoseconds();
-    period_ns = now_ns - last_time_ns;
-  }
+
   /* Keep track of how long the trajectory has been executing, if it takes too long, send a warning. */
   if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() ==
       TRANSFER_STATE_IN_MOTION) {
     scaling_factor_ = state_interfaces_[StateInterfaces::SPEED_SCALING_FACTOR].get_value();
 
-    active_trajectory_elapsed_time_ += static_cast<double>(scaling_factor_ * (period_ns / pow(10, 9)));
+    active_trajectory_elapsed_time_ +=
+        static_cast<double>(scaling_factor_ * (static_cast<double>(period.nanoseconds()) / pow(10, 9)));
 
     if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_.seconds()) &&
         trajectory_active_) {
