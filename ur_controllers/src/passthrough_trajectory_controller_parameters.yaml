@@ -9,3 +9,22 @@ passthrough_trajectory_controller:
       default_value: "",
       description: "Urdf prefix of the corresponding arm"
     }
+    joints: {
+      type: string_array,
+      default_value: [],
+      description: "Joint names to claim and listen to",
+      read_only: true,
+      validation: {
+        unique<>: null,
+      }
+    }
+    state_interfaces: {
+      type: string_array,
+      default_value: [],
+      description: "State interfaces provided by the hardware for all joints.",
+      read_only: true,
+      validation: {
+        unique<>: null,
+        subset_of<>: [["position", "velocity", "acceleration",]],
+      }
+    }

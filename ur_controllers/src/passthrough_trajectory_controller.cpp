@@ -49,8 +49,8 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
   passthrough_param_listener_ = std::make_shared<passthrough_trajectory_controller::ParamListener>(get_node());
   passthrough_params_ = passthrough_param_listener_->get_params();
   current_point_ = 0;
-  joint_names_ = auto_declare<std::vector<std::string>>("joints", joint_names_);
-  state_interface_types_ = auto_declare("state_interfaces", state_interface_types_);
+  joint_names_ = passthrough_params_.joints;
+  state_interface_types_ = passthrough_params_.state_interfaces;
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
