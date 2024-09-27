@@ -255,7 +255,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
 
   info_from_realtime_.set(info);
   return controller_interface::return_type::OK;
-}  // namespace ur_controllers
+}
 
 rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callback(
     const rclcpp_action::GoalUUID& /*uuid*/,
