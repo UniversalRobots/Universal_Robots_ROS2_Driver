@@ -236,9 +236,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "passthrough_controller", "running",
-                                                                   &passthrough_trajectory_controller_running_));
-
   return state_interfaces;
 }
 
@@ -911,7 +908,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
                                                   StoppingInterface::STOP_PASSTHROUGH) != stop_modes_.end()) {
-    passthrough_trajectory_controller_running_ = 0.0;
+    passthrough_trajectory_controller_running_ = false;
     passthrough_trajectory_abort_ = 1.0;
     trajectory_joint_positions_.clear();
     trajectory_joint_accelerations_.clear();
@@ -921,21 +918,21 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (start_modes_.size() != 0 &&
       std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
     velocity_controller_running_ = false;
-    passthrough_trajectory_controller_running_ = 0.0;
+    passthrough_trajectory_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
 
   } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
                                                    hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
     position_controller_running_ = false;
-    passthrough_trajectory_controller_running_ = 0.0;
+    passthrough_trajectory_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
   } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
                                                    PASSTHROUGH_TRAJECTORY_CONTROLLER) != start_modes_.end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
-    passthrough_trajectory_controller_running_ = 1.0;
+    passthrough_trajectory_controller_running_ = true;
   }
 
   start_modes_.clear();
