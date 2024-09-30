@@ -339,10 +339,10 @@ bool PassthroughTrajectoryController::check_positions(
       std::string msg;
       msg = "Can't accept new trajectory. All trajectory points must have positions for all joints of the robot. (" +
             std::to_string(number_of_joints_) + " joint positions per point)";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       msg = "Point nr " + std::to_string(i + 1) +
             " has: " + std::to_string(goal->trajectory.points[i].positions.size()) + " positions.";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       return false;
     }
   }
@@ -359,10 +359,10 @@ bool PassthroughTrajectoryController::check_velocities(
       msg = "Can't accept new trajectory. All trajectory points must either not have velocities or have them for all "
             "joints of the robot. (" +
             std::to_string(number_of_joints_) + " joint velocities per point)";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       msg = "Point nr " + std::to_string(i + 1) +
             " has: " + std::to_string(goal->trajectory.points[i].velocities.size()) + " velocities.";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       return false;
     }
     if (goal->trajectory.points[i].velocities.size() != goal->trajectory.points[0].velocities.size()) {
@@ -370,10 +370,10 @@ bool PassthroughTrajectoryController::check_velocities(
       msg = "Can't accept new trajectory. All trajectory points must have velocities for all joints of the robot. "
             "(" +
             std::to_string(number_of_joints_) + " joint velocities per point)";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       msg = "Point nr " + std::to_string(i) + " has: " + std::to_string(goal->trajectory.points[i].velocities.size()) +
             " velocities.";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       return false;
     }
   }
@@ -390,10 +390,10 @@ bool PassthroughTrajectoryController::check_accelerations(
       msg = "Can't accept new trajectory. All trajectory points must either not have accelerations or have them for "
             "all joints of the robot. (" +
             std::to_string(number_of_joints_) + " joint accelerations per point)";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       msg = "Point nr " + std::to_string(i) +
             " has: " + std::to_string(goal->trajectory.points[i].accelerations.size()) + " accelerations.";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       return false;
     }
     if (goal->trajectory.points[i].accelerations.size() != goal->trajectory.points[0].accelerations.size()) {
@@ -402,10 +402,10 @@ bool PassthroughTrajectoryController::check_accelerations(
             "robot. "
             "(" +
             std::to_string(number_of_joints_) + " joint accelerations per point)";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       msg = "Point nr " + std::to_string(i) +
             " has: " + std::to_string(goal->trajectory.points[i].accelerations.size()) + " accelerations.";
-      RCLCPP_ERROR(get_node()->get_logger(), msg.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "%s", msg.c_str());
       return false;
     }
   }
