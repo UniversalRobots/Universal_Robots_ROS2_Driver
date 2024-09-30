@@ -41,6 +41,7 @@ from rclpy.action import ActionClient
 from builtin_interfaces.msg import Duration
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from control_msgs.action import FollowJointTrajectory
+from control_msgs.msg import JointTolerance
 
 TRAJECTORIES = {
     "traj0": [
@@ -134,6 +135,7 @@ class JTCClient(rclpy.node.Node):
         goal.trajectory = self.goals[traj_name]
 
         goal.goal_time_tolerance = Duration(sec=0, nanosec=1000)
+        goal.goal_tolerance = [JointTolerance(position=0.01, name=self.joints[i]) for i in range(6)]
 
         self._send_goal_future = self._action_client.send_goal_async(goal)
         self._send_goal_future.add_done_callback(self.goal_response_callback)

@@ -38,12 +38,14 @@
  */
 //----------------------------------------------------------------------
 
+#include <algorithm>
 #include <cmath>
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp/logging.hpp>
+#include <builtin_interfaces/msg/duration.hpp>
+#include <lifecycle_msgs/msg/state.hpp>
+
 #include "ur_controllers/passthrough_trajectory_controller.hpp"
-#include "builtin_interfaces/msg/duration.hpp"
-#include "lifecycle_msgs/msg/state.hpp"
 
 namespace ur_controllers
 {
@@ -61,6 +63,7 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
   joint_names_ = passthrough_params_.joints;
   state_interface_types_ = passthrough_params_.state_interfaces;
   scaling_factor_ = 1.0;
+  clock_ = get_node()->get_clock();
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -69,6 +72,15 @@ PassthroughTrajectoryController::on_configure(const rclcpp_lifecycle::State& pre
 {
   start_action_server();
   trajectory_active_ = false;
+
+  joint_state_interface_names_.clear();
+
+  joint_state_interface_names_.reserve(joint_names_.size() * state_interface_types_.size());
+  for (const auto& joint_name : joint_names_) {
+    for (const auto& interface_type : state_interface_types_) {
+      joint_state_interface_names_.emplace_back(joint_name + "/" + interface_type);
+    }
+  }
 
   return ControllerInterface::on_configure(previous_state);
 }
@@ -137,22 +149,16 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
   joint_position_state_interface_.clear();
   joint_velocity_state_interface_.clear();
 
-  auto find_joint = [&](auto& first, auto& last) {
-    return std::find_if(first, last, [&](auto& interface) {
-      return std::find(joint_names_.begin(), joint_names_.end(), interface.get_name()) != joint_names_.end();
-    });
-  };
+  for (auto& interface_name : joint_state_interface_names_) {
+    auto interface_it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(),
+                                     [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (interface_it != state_interfaces_.end()) {
+      if (interface_it->get_interface_name() == "position") {
+        joint_position_state_interface_.emplace_back(*interface_it);
 
-  auto first = state_interfaces_.begin();
-  auto last = state_interfaces_.end();
-
-  auto interface_it = find_joint(first, last);
-  while (interface_it != state_interfaces_.end()) {
-    if (interface_it->get_interface_name() == "position") {
-      joint_position_state_interface_.emplace_back(*interface_it);
-
-    } else if (interface_it->get_interface_name() == "velocity") {
-      joint_position_state_interface_.emplace_back(*interface_it);
+      } else if (interface_it->get_interface_name() == "velocity") {
+        joint_position_state_interface_.emplace_back(*interface_it);
+      }
     }
   }
 
@@ -198,6 +204,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
       max_trajectory_time_ =
           rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
+      // TODO(fexner): Merge goal tolerances with default tolerances
       goal_tolerance_ = active_goal->gh_->get_goal()->goal_tolerance;
       path_tolerance_ = active_goal->gh_->get_goal()->path_tolerance;
       goal_time_tolerance_ = active_goal->gh_->get_goal()->goal_time_tolerance;
@@ -253,6 +260,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
         result->error_string = "Robot not within tolerances at end of trajectory.";
         active_goal->setAborted(result);
+        end_goal();
         RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal tolerances not met.");
         // Check if the goal time tolerance was complied with.
       } else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_)) {
@@ -281,7 +289,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       // active_trajectory_elapsed_time_.seconds(), scaling_factor_, period.seconds());
 
       if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_) && trajectory_active_) {
-        RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *clk, 1000,
+        RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *clock_, 1000,
                              "Trajectory should be finished by now. You may want to cancel this goal, if it is not.");
       }
     }
@@ -429,6 +437,8 @@ void PassthroughTrajectoryController::goal_accepted_callback(
                                                    << goal_handle->get_goal()->trajectory.points.size() << " points.");
   current_index_ = 0;
 
+  // TODO(fexner): Make sure the trajectory is correctly ordered!
+
   // Action handling will be done from the timer callback to avoid those things in the realtime
   // thread. First, we delete the existing (if any) timer by resetting the pointer and then create a new
   // one.
@@ -445,9 +455,15 @@ void PassthroughTrajectoryController::goal_accepted_callback(
 
 bool PassthroughTrajectoryController::check_goal_tolerance()
 {
-  for (uint32_t i = 0; i < goal_tolerance_.size(); i++) {
-    if (std::abs(joint_position_state_interface_[i].get().get_value() - active_joint_traj_.points.back().positions[i]) >
-        goal_tolerance_[i].position) {
+  for (size_t i = 0; i < active_joint_traj_.joint_names.size(); ++i) {
+    const std::string joint_name = active_joint_traj_.joint_names[i];
+    auto joint_tolerance_it = std::find_if(goal_tolerance_.begin(), goal_tolerance_.end(),
+                                           [&](auto entry) { return entry.name == joint_name; });
+    auto position_state_it =
+        std::find_if(joint_position_state_interface_.begin(), joint_position_state_interface_.end(),
+                     [&](auto entry) { return entry.get().get_name() == joint_name + "/" + "position"; });
+    if (std::abs(position_state_it->get().get_value() - active_joint_traj_.points.back().positions[i]) >
+        joint_tolerance_it->position) {
       return false;
     }
   }

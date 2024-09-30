@@ -43,29 +43,28 @@
 
 #include <stdint.h>
 
+#include <realtime_tools/realtime_buffer.h>
+#include <realtime_tools/realtime_server_goal_handle.h>
+
 #include <functional>
 #include <limits>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "controller_interface/controller_interface.hpp"
-#include "rclcpp_action/server.hpp"
-#include "rclcpp_action/create_server.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp_action/server_goal_handle.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp/duration.hpp"
+#include <controller_interface/controller_interface.hpp>
+#include <rclcpp_action/server.hpp>
+#include <rclcpp_action/create_server.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/server_goal_handle.hpp>
+#include <rclcpp/time.hpp>
+#include <rclcpp/duration.hpp>
+#include <rclcpp/clock.hpp>
 
-#include "trajectory_msgs/msg/joint_trajectory.hpp"
-#include "trajectory_msgs/msg/joint_trajectory_point.hpp"
-#include "control_msgs/action/follow_joint_trajectory.hpp"
-#include "control_msgs/action/joint_trajectory.hpp"
+#include <trajectory_msgs/msg/joint_trajectory.hpp>
+#include <control_msgs/action/follow_joint_trajectory.hpp>
 
 #include "passthrough_trajectory_controller_parameters.hpp"
-
-#include "realtime_tools/realtime_buffer.h"
-#include "realtime_tools/realtime_server_goal_handle.h"
 
 namespace ur_controllers
 {
@@ -171,6 +170,7 @@ private:
   std::vector<std::string> joint_names_;
   std::vector<std::string> state_interface_types_;
 
+  std::vector<std::string> joint_state_interface_names_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_position_state_interface_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
 
@@ -192,6 +192,8 @@ private:
   static constexpr double NO_VAL = std::numeric_limits<double>::quiet_NaN();
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_;
+
+  rclcpp::Clock::SharedPtr clock_;
 };
 }  // namespace ur_controllers
 #endif  // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_

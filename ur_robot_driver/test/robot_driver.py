@@ -56,9 +56,9 @@ from test_common import (  # noqa: E402
 TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 ROBOT_JOINTS = [
-    "elbow_joint",
-    "shoulder_lift_joint",
     "shoulder_pan_joint",
+    "shoulder_lift_joint",
+    "elbow_joint",
     "wrist_1_joint",
     "wrist_2_joint",
     "wrist_3_joint",
@@ -348,7 +348,7 @@ class RobotDriverTest(unittest.TestCase):
     #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
     #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
 
-    def test_passthrough_trajectory(self):
+    def test_passthrough_trajectory(self, tf_prefix):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
@@ -366,7 +366,10 @@ class RobotDriverTest(unittest.TestCase):
             Duration(sec=8, nanosec=0),
             Duration(sec=12, nanosec=0),
         ]
-        goal_tolerance = [JointTolerance(position=0.01) for i in range(6)]
+        goal_tolerance = [
+            JointTolerance(position=0.01, name=tf_prefix + ROBOT_JOINTS[i])
+            for i in range(len(ROBOT_JOINTS))
+        ]
         goal_time_tolerance = Duration(sec=1, nanosec=0)
         test_trajectory = zip(time_vec, waypts)
         trajectory = JointTrajectory(
@@ -374,6 +377,7 @@ class RobotDriverTest(unittest.TestCase):
                 JointTrajectoryPoint(positions=pos, time_from_start=times)
                 for (times, pos) in test_trajectory
             ],
+            joint_names=[tf_prefix + ROBOT_JOINTS[i] for i in range(len(ROBOT_JOINTS))],
         )
         goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
             trajectory=trajectory,
@@ -387,7 +391,10 @@ class RobotDriverTest(unittest.TestCase):
             )
             self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
         # Test impossible goal tolerance, should fail.
-        goal_tolerance = [JointTolerance(position=0.000000000000000001) for i in range(6)]
+        goal_tolerance = [
+            JointTolerance(position=0.000000000000000001, name=ROBOT_JOINTS[i])
+            for i in range(len(ROBOT_JOINTS))
+        ]
         goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
             trajectory=trajectory,
             goal_time_tolerance=goal_time_tolerance,
