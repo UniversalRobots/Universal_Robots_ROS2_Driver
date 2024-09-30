@@ -120,10 +120,9 @@ passthrough_trajectory_controller:
     state_interfaces:
       - position
       - velocity
-      - effort
     constraints:
       stopped_velocity_tolerance: 0.2
-      goal_time: 0.0
+      goal_time: 0.5
       $(var tf_prefix)shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
       $(var tf_prefix)shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
       $(var tf_prefix)elbow_joint: { trajectory: 0.2, goal: 0.1 }

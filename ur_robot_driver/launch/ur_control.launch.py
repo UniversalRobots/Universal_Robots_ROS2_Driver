@@ -165,7 +165,6 @@ def launch_setup():
     ]
     controllers_inactive = [
         "forward_position_controller",
-        "passthrough_trajectory_controller",
     ]
 
     controller_spawners = [controller_spawner(controllers_active)] + [

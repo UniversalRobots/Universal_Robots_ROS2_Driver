@@ -39,18 +39,28 @@
 //----------------------------------------------------------------------
 
 #include <cmath>
+#include <controller_interface/controller_interface.hpp>
+#include <rclcpp/logging.hpp>
 #include "ur_controllers/passthrough_trajectory_controller.hpp"
+#include "builtin_interfaces/msg/duration.hpp"
 #include "lifecycle_msgs/msg/state.hpp"
 
 namespace ur_controllers
 {
+
+double duration_to_double(const builtin_interfaces::msg::Duration& duration)
+{
+  return duration.sec + (duration.nanosec / 1000000000);
+}
+
 controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
 {
   passthrough_param_listener_ = std::make_shared<passthrough_trajectory_controller::ParamListener>(get_node());
   passthrough_params_ = passthrough_param_listener_->get_params();
-  current_point_ = 0;
+  current_index_ = 0;
   joint_names_ = passthrough_params_.joints;
   state_interface_types_ = passthrough_params_.state_interfaces;
+  scaling_factor_ = 1.0;
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -127,12 +137,33 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
   joint_position_state_interface_.clear();
   joint_velocity_state_interface_.clear();
 
-  for (uint32_t i = 0; i < state_interface_types_.size() * joint_names_.size(); i++) {
-    if (state_interfaces_[i].get_interface_name() == "position") {
-      joint_position_state_interface_.emplace_back(state_interfaces_[i]);
-    } else if (state_interfaces_[i].get_interface_name() == "velocity") {
-      joint_velocity_state_interface_.emplace_back(state_interfaces_[i]);
+  auto find_joint = [&](auto& first, auto& last) {
+    return std::find_if(first, last, [&](auto& interface) {
+      return std::find(joint_names_.begin(), joint_names_.end(), interface.get_name()) != joint_names_.end();
+    });
+  };
+
+  auto first = state_interfaces_.begin();
+  auto last = state_interfaces_.end();
+
+  auto interface_it = find_joint(first, last);
+  while (interface_it != state_interfaces_.end()) {
+    if (interface_it->get_interface_name() == "position") {
+      joint_position_state_interface_.emplace_back(*interface_it);
+
+    } else if (interface_it->get_interface_name() == "velocity") {
+      joint_position_state_interface_.emplace_back(*interface_it);
     }
+  }
+
+  auto it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(), [&](auto& interface) {
+    return (interface.get_name() == passthrough_params_.speed_scaling_interface_name);
+  });
+  if (it != state_interfaces_.end()) {
+    scaling_state_interface_ = *it;
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Did not find speed scaling interface in state interfaces.");
+    return controller_interface::CallbackReturn::ERROR;
   }
 
   return ControllerInterface::on_activate(state);
@@ -141,57 +172,62 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
 controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& /*time*/,
                                                                           const rclcpp::Duration& period)
 {
-  // AsyncInfo temp = info_to_realtime_.get();
-  // if (temp.info_updated) {
-  // command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(temp.transfer_state);
-  // command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].set_value(temp.abort);
-  // temp.info_updated = false;
-  // info_to_realtime_.set(temp);
-  //}
+  const auto active_goal = *rt_active_goal_.readFromRT();
 
-  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() !=
-      TRANSFER_STATE_IDLE) {
-    /* Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
-     * pendant. */
-    if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0) {
-      RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted hardware, aborting action.");
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
-      active_goal_->abort(result);
-      end_goal();
-      return controller_interface::return_type::OK;
+  const auto current_transfer_state =
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value();
+
+  if (active_goal && trajectory_active_) {
+    if (current_transfer_state != TRANSFER_STATE_IDLE) {
+      // Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
+      // pendant.
+      if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0) {
+        RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted hardware, aborting action.");
+        std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
+            std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+        active_goal->setAborted(result);
+        end_goal();
+        return controller_interface::return_type::OK;
+      }
     }
-    /* Check if the goal has been cancelled by the ROS user. */
-    if (active_goal_->is_canceling()) {
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
-      active_goal_->canceled(result);
-      end_goal();
-      return controller_interface::return_type::OK;
+
+    active_joint_traj_ = active_goal->gh_->get_goal()->trajectory;
+
+    if (current_index_ == 0 && current_transfer_state == TRANSFER_STATE_IDLE) {
+      active_trajectory_elapsed_time_ = rclcpp::Duration(0, 0);
+      rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
+      max_trajectory_time_ =
+          rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
+      goal_tolerance_ = active_goal->gh_->get_goal()->goal_tolerance;
+      path_tolerance_ = active_goal->gh_->get_goal()->path_tolerance;
+      goal_time_tolerance_ = active_goal->gh_->get_goal()->goal_time_tolerance;
+
+      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
+          TRANSFER_STATE_WAITING_FOR_POINT);
     }
+
     // Write a new point to the command interface, if the previous point has been read by the hardware interface.
-    if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() ==
-        TRANSFER_STATE_WAITING_FOR_POINT) {
-      if (current_point_ < active_joint_traj_.points.size()) {
+    if (current_transfer_state == TRANSFER_STATE_WAITING_FOR_POINT) {
+      if (current_index_ < active_joint_traj_.points.size()) {
         // Write the time_from_start parameter.
         command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
-            active_joint_traj_.points[current_point_].time_from_start.sec +
-            (active_joint_traj_.points[current_point_].time_from_start.nanosec / 1000000000));
+            duration_to_double(active_joint_traj_.points[current_index_].time_from_start));
+
         // Write the positions for each joint of the robot
-        for (int i = 0; i < 6; i++) {
+        for (size_t i = 0; i < joint_names_.size(); i++) {
           command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
-              active_joint_traj_.points[current_point_].positions[i]);
+              active_joint_traj_.points[current_index_].positions[i]);
           // Optionally, also write velocities and accelerations for each joint.
-          if (active_joint_traj_.points[current_point_].velocities.size() > 0) {
+          if (active_joint_traj_.points[current_index_].velocities.size() > 0) {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_ + i].set_value(
-                active_joint_traj_.points[current_point_].velocities[i]);
+                active_joint_traj_.points[current_index_].velocities[i]);
           } else {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_].set_value(NO_VAL);
           }
 
-          if (active_joint_traj_.points[current_point_].accelerations.size() > 0) {
+          if (active_joint_traj_.points[current_index_].accelerations.size() > 0) {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(
-                active_joint_traj_.points[current_point_].accelerations[i]);
+                active_joint_traj_.points[current_index_].accelerations[i]);
           } else {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(NO_VAL);
           }
@@ -199,59 +235,58 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
         // Tell hardware interface that this point is ready to be read.
         command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
             TRANSFER_STATE_TRANSFERRING);
-        current_point_++;
-
+        current_index_++;
         // Check if all points have been written to the hardware interface.
-      } else if (current_point_ == active_joint_traj_.points.size()) {
-        RCLCPP_INFO(get_node()->get_logger(), "All points sent to the hardware interface, trajectory will now "
-                                              "execute!");
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(TRANSFER_STATE_DONE);
+      } else if (current_index_ == active_joint_traj_.points.size()) {
+        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
+            TRANSFER_STATE_TRANSFER_DONE);
+      } else {
+        RCLCPP_ERROR(get_node()->get_logger(), "Hardware waiting for trajectory point while none is present!");
       }
+
       // When the trajectory is finished, report the goal as successful to the client.
-    } else if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() ==
-               TRANSFER_STATE_DONE) {
+    } else if (current_transfer_state == TRANSFER_STATE_DONE) {
       std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
           std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
       // Check if the actual position complies with the tolerances given.
       if (!check_goal_tolerance()) {
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
         result->error_string = "Robot not within tolerances at end of trajectory.";
-        active_goal_->abort(result);
+        active_goal->setAborted(result);
         RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal tolerances not met.");
         // Check if the goal time tolerance was complied with.
-      } else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_.seconds())) {
+      } else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_)) {
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
         result->error_string = "Goal not reached within time tolerance";
-        active_goal_->abort(result);
-        RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal time tolerance not met.");
+        active_goal->setAborted(result);
+        end_goal();
+        RCLCPP_ERROR(get_node()->get_logger(),
+                     "Trajectory failed, goal time tolerance not met. Missed goal time by %f seconds.",
+                     (active_trajectory_elapsed_time_ - max_trajectory_time_ - goal_time_tolerance_).seconds());
       } else {
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
-        active_goal_->succeed(result);
+        active_goal->setSucceeded(result);
+        end_goal();
         RCLCPP_INFO(get_node()->get_logger(), "Trajectory executed successfully!");
       }
-      end_goal();
+    } else if (current_transfer_state == TRANSFER_STATE_IN_MOTION) {
+      // Keep track of how long the trajectory has been executing, if it takes too long, send a warning.
+      if (scaling_state_interface_.has_value()) {
+        scaling_factor_ = scaling_state_interface_->get().get_value();
+      }
+
+      active_trajectory_elapsed_time_ += period * scaling_factor_;
+
+      // RCLCPP_INFO(get_node()->get_logger(), "Elapsed trajectory time: %f. Scaling factor: %f, period: %f",
+      // active_trajectory_elapsed_time_.seconds(), scaling_factor_, period.seconds());
+
+      if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_) && trajectory_active_) {
+        RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *clk, 1000,
+                             "Trajectory should be finished by now. You may want to cancel this goal, if it is not.");
+      }
     }
   }
 
-  /* Keep track of how long the trajectory has been executing, if it takes too long, send a warning. */
-  if (command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value() ==
-      TRANSFER_STATE_IN_MOTION) {
-    scaling_factor_ = state_interfaces_[StateInterfaces::SPEED_SCALING_FACTOR].get_value();
-
-    active_trajectory_elapsed_time_ +=
-        static_cast<double>(scaling_factor_ * (static_cast<double>(period.nanoseconds()) / pow(10, 9)));
-
-    if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_.seconds()) &&
-        trajectory_active_) {
-      RCLCPP_WARN(get_node()->get_logger(), "Trajectory should be finished by now. You may want to cancel this goal, "
-                                            "if it is not.");
-      trajectory_active_ = false;
-    }
-  }
-  AsyncInfo info = { command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value(),
-                     command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value(), true, true };
-
-  info_from_realtime_.set(info);
   return controller_interface::return_type::OK;
 }
 
@@ -266,7 +301,7 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
     return rclcpp_action::GoalResponse::REJECT;
   }
 
-  if (info_from_realtime_.get().transfer_state != 0.0) {
+  if (trajectory_active_) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new trajectory. A trajectory is already executing.");
     return rclcpp_action::GoalResponse::REJECT;
   }
@@ -369,37 +404,42 @@ bool PassthroughTrajectoryController::check_accelerations(
   return true;
 }
 
-// Called when the action is cancelled by the action client.
 rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_callback(
-    const std::shared_ptr<
-        rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> /* goal_handle */)
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
 {
-  RCLCPP_INFO(get_node()->get_logger(), "Cancelling active trajectory requested.");
+  // Check that cancel request refers to currently active goal (if any)
+  const auto active_goal = *rt_active_goal_.readFromNonRT();
+  if (active_goal && active_goal->gh_ == goal_handle) {
+    RCLCPP_INFO(get_node()->get_logger(), "Cancelling active trajectory requested.");
+
+    // Mark the current goal as canceled
+    auto result = std::make_shared<FollowJTrajAction::Result>();
+    active_goal->setCanceled(result);
+    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+    trajectory_active_ = false;
+  }
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 // Action goal was accepted, initialise values for a new trajectory.
 void PassthroughTrajectoryController::goal_accepted_callback(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
 {
-  RCLCPP_INFO(get_node()->get_logger(), "Accepted new trajectory.");
+  RCLCPP_INFO_STREAM(get_node()->get_logger(), "Accepted new trajectory with "
+                                                   << goal_handle->get_goal()->trajectory.points.size() << " points.");
+  current_index_ = 0;
+
+  // Action handling will be done from the timer callback to avoid those things in the realtime
+  // thread. First, we delete the existing (if any) timer by resetting the pointer and then create a new
+  // one.
+  RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
+  rt_goal->preallocated_feedback_->joint_names = joint_names_;
+  rt_goal->execute();
+  rt_active_goal_.writeFromNonRT(rt_goal);
+  goal_handle_timer_.reset();
+  goal_handle_timer_ = get_node()->create_wall_timer(action_monitor_period_.to_chrono<std::chrono::nanoseconds>(),
+                                                     std::bind(&RealtimeGoalHandle::runNonRealtime, rt_goal));
   trajectory_active_ = true;
-  active_trajectory_elapsed_time_ = 0;
-  current_point_ = 0;
-
-  active_joint_traj_ = goal_handle->get_goal()->trajectory;
-  goal_tolerance_ = goal_handle->get_goal()->goal_tolerance;
-  path_tolerance_ = goal_handle->get_goal()->path_tolerance;
-  goal_time_tolerance_ = goal_handle->get_goal()->goal_time_tolerance;
-  active_goal_ = goal_handle;
-
-  max_trajectory_time_ = active_joint_traj_.points.back().time_from_start.sec +
-                         (active_joint_traj_.points.back().time_from_start.nanosec / pow(10, 9));
-
-  // Communicate to update() method, that the action has been triggered.
-  AsyncInfo temp = { 1.0, 0.0, 0.0, true };
-  info_to_realtime_.set(temp);
-
   return;
 }
 
@@ -417,11 +457,7 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
 void PassthroughTrajectoryController::end_goal()
 {
   trajectory_active_ = false;
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(0.0);
-  active_goal_ = NULL;
-  current_point_ = 0;
-  goal_tolerance_.clear();
-  path_tolerance_.clear();
+  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(TRANSFER_STATE_IDLE);
 }
 }  // namespace ur_controllers
 

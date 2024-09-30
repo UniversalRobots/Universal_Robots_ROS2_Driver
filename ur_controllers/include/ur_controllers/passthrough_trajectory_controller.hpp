@@ -43,8 +43,6 @@
 
 #include <stdint.h>
 
-#include <realtime_tools/realtime_box_best_effort.h>
-
 #include <functional>
 #include <limits>
 #include <memory>
@@ -66,6 +64,9 @@
 
 #include "passthrough_trajectory_controller_parameters.hpp"
 
+#include "realtime_tools/realtime_buffer.h"
+#include "realtime_tools/realtime_server_goal_handle.h"
+
 namespace ur_controllers
 {
 
@@ -75,6 +76,7 @@ const double TRANSFER_STATE_TRANSFERRING = 2.0;
 const double TRANSFER_STATE_TRANSFER_DONE = 3.0;
 const double TRANSFER_STATE_IN_MOTION = 4.0;
 const double TRANSFER_STATE_DONE = 5.0;
+using namespace std::chrono_literals;  // NOLINT
 
 enum CommandInterfaces
 {
@@ -134,6 +136,16 @@ public:
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
 private:
+  using FollowJTrajAction = control_msgs::action::FollowJointTrajectory;
+  using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<FollowJTrajAction>;
+  using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
+  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
+
+  RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
+  rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
+
+  rclcpp::Duration action_monitor_period_ = rclcpp::Duration(50ms);
+
   /* Start an action server with an action called: /passthrough_trajectory_controller/forward_joint_trajectory. */
   void start_action_server(void);
 
@@ -154,7 +166,7 @@ private:
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
 
   void goal_accepted_callback(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
+      std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
 
   std::vector<std::string> joint_names_;
   std::vector<std::string> state_interface_types_;
@@ -171,17 +183,15 @@ private:
   std::vector<control_msgs::msg::JointTolerance> goal_tolerance_;
   rclcpp::Duration goal_time_tolerance_ = rclcpp::Duration::from_nanoseconds(0);
 
-  realtime_tools::RealtimeBoxBestEffort<AsyncInfo> info_from_realtime_;
-  realtime_tools::RealtimeBoxBestEffort<AsyncInfo> info_to_realtime_;
-
-  uint32_t current_point_;
-  bool trajectory_active_;
-  double active_trajectory_elapsed_time_;
-  double max_trajectory_time_;
+  std::atomic<size_t> current_index_;
+  std::atomic<bool> trajectory_active_;
+  rclcpp::Duration active_trajectory_elapsed_time_ = rclcpp::Duration::from_nanoseconds(0);
+  rclcpp::Duration max_trajectory_time_ = rclcpp::Duration::from_nanoseconds(0);
   double scaling_factor_;
   uint32_t number_of_joints_;
-  std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> active_goal_;
   static constexpr double NO_VAL = std::numeric_limits<double>::quiet_NaN();
+
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_;
 };
 }  // namespace ur_controllers
 #endif  // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_

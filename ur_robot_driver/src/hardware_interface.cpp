@@ -994,6 +994,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     trajectory_joint_velocities_.clear();
     trajectory_times_.clear();
     last_time = 0.0;
+    passthrough_trajectory_abort_ = 0.0;
     passthrough_trajectory_transfer_state_ = 4.0;
   }
 }
