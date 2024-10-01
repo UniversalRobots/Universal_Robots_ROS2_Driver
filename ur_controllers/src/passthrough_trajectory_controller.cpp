@@ -262,15 +262,20 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
         active_goal->setAborted(result);
         end_goal();
         RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal tolerances not met.");
-        // Check if the goal time tolerance was complied with.
-      } else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_)) {
-        result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
-        result->error_string = "Goal not reached within time tolerance";
-        active_goal->setAborted(result);
-        end_goal();
-        RCLCPP_ERROR(get_node()->get_logger(),
-                     "Trajectory failed, goal time tolerance not met. Missed goal time by %f seconds.",
-                     (active_trajectory_elapsed_time_ - max_trajectory_time_ - goal_time_tolerance_).seconds());
+        // TODO(fexner): Goal time check currently disabled due to
+        // https://github.com/ros-controls/ros2_control/issues/1769
+        //} else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_)) {
+        //// Check if the goal time tolerance was complied with.
+        // result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
+        // result->error_string =
+        // "Goal not reached within time tolerance. Missed goal time by " +
+        // std::to_string((active_trajectory_elapsed_time_ - max_trajectory_time_ - goal_time_tolerance_).seconds()) +
+        // " seconds.";
+        // active_goal->setAborted(result);
+        // end_goal();
+        // RCLCPP_ERROR(get_node()->get_logger(),
+        // "Trajectory failed, goal time tolerance not met. Missed goal time by %f seconds.",
+        // (active_trajectory_elapsed_time_ - max_trajectory_time_ - goal_time_tolerance_).seconds());
       } else {
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
         active_goal->setSucceeded(result);
