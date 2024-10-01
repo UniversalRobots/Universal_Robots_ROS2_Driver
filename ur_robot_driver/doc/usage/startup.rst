@@ -6,7 +6,7 @@ Startup the driver
 Prepare the robot
 -----------------
 
-If you want to use a real robot (Or a URSim simulator) with this driver, you need to prepare it,
+If you want to use a real robot, or a URSim simulator, with this driver, you need to prepare it,
 first. Make sure that you complete all steps from the :ref:`setup instructions<robot_setup>`,
 installed the External Control URCap and created a program as explained
 :ref:`here<install-urcap-e-series>`.
@@ -54,13 +54,13 @@ Also, there are predefined launch files for all supported types of UR robots.
 Finish startup on the robot
 ---------------------------
 
-Unless :ref:`headless_mode` is used, you will now have to start the *External Control* program on
+Unless :ref:`headless_mode` is used, you will now have to start the *External Control URCap* program on
 the robot that you have created earlier.
 
 Depending on the :ref:`robot control mode<operation_modes>` do the following:
 
-* In local control mode, load the program on the robot and press the "Play" button |play_button| on the teach pendant.
-* In remote control mode load and start the program using the following dashboard calls:
+* In _local control mode_, load the program on the robot and press the "Play" button |play_button| on the teach pendant.
+* In _remote control mode_ load and start the program using the following dashboard calls:
 
   .. code-block:: console
 
@@ -75,7 +75,7 @@ Depending on the :ref:`robot control mode<operation_modes>` do the following:
 Continuation after interruptions
 --------------------------------
 
-Whenever the *External Control* program gets interrupted, it has to be unpaused / restarted.
+Whenever the *External Control URCap* program gets interrupted, it has to be unpaused / restarted.
 
 If that happens, you will see the output ``Connection to reverse interface dropped.``
 
@@ -91,8 +91,8 @@ This can happen, e,g, when
 
 Depending on the operation mode, perform one of the following steps:
 
-* In local control mode, simply press the "Play" button |play_button| on the teach pendant.
-* In remote control mode start the program using the following dashboard call:
+* In _local control mode_, simply press the "Play" button |play_button| on the teach pendant.
+* In _remote control mode_ start the program using the following dashboard call:
 
   .. code-block:: console
 

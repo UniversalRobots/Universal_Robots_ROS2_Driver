@@ -8,7 +8,7 @@ robot family. Currently this contains:
 * A **speed_scaling_state_broadcaster** that publishes the current execution speed as reported by
   the robot to a topic interface. Values are floating points between 0 and 1.
 * A **scaled_joint_trajectory_controller** that is similar to the *joint_trajectory_controller*\ ,
-  but it uses the speed scaling reported by the robot to reduce progress in the trajectory.
+  but it uses the speed scaling reported to align progress of the trajectory between the robot and controller.
 * A **io_and_status_controller** that allows setting I/O ports, controlling some UR-specific
   functionality and publishes status information about the robot.
 

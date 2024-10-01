@@ -3,16 +3,16 @@
 Move the robot
 ==============
 
-Before running any commands, first check the controllers' state using ``ros2 control list_controllers`` (Remember to install the ``ros2controlcli`` package).
+First check the controllers' state using ``ros2 control list_controllers``, before running any commands. (Remember to install the ``ros2controlcli`` package).
 
 
-* Send some goal to the Joint Trajectory Controller by using a demo node from `ros2_controllers_test_nodes <https://github.com/ros-controls/ros2_controllers/blob/master/ros2_controllers_test_nodes/ros2_controllers_test_nodes/publisher_joint_trajectory_controller.py>`_ package by starting  the following command in another terminal:
+* Send goals to the Joint Trajectory Controller by using a demo node from `ros2_controllers_test_nodes <https://github.com/ros-controls/ros2_controllers/blob/master/ros2_controllers_test_nodes/ros2_controllers_test_nodes/publisher_joint_trajectory_controller.py>`_ package by starting  the following command in another terminal:
 
   .. code-block:: console
 
      $ ros2 launch ur_robot_driver test_scaled_joint_trajectory_controller.launch.py
 
-  After a few seconds the robot should move.
+  The robot should move, after a few seconds.
 
 * To test another controller, simply define it using ``initial_joint_controller`` argument, for example when using mock hardware:
 

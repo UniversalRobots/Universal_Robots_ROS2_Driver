@@ -37,7 +37,7 @@ Path to the file containing the recipe used for requesting RTDE outputs.
 reverse_port (Required)
 -----------------------
 
-Port that will be opened to communicate between the driver and the robot controller.
+Port that will be used by to communicate between the robot controller and the driver. This port needs to be free and will be opened on the host running the driver.
 
 robot_ip (Required)
 -------------------
@@ -52,7 +52,8 @@ Path to the urscript code that will be sent to the robot.
 script_sender_port (Required)
 -----------------------------
 
-The driver will offer an interface to receive the program's URScript on this port.
+Network port which the driver provides the URScript program that needs to run on the robot. This number needs to be configured for the [External Control URCap](https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap).
+This port needs to be free and will be opened on the host running the driver.
 
 servoj_gain (Required)
 ----------------------
@@ -77,32 +78,45 @@ tool_baud_rate (Required)
 
 Baud rate used for tool communication. Will be set as soon as the UR-Program on the robot is started. See UR documentation for valid baud rates.  Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``.  Then, this parameter is required.
 
+This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
+
 tool_parity (Required)
 ----------------------
 
 Parity used for tool communication. Will be set as soon as the UR-Program on the robot is started. Can be 0 (None), 1 (odd) and 2 (even).  Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``.  Then, this parameter is required.
+
+This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
 
 tool_rx_idle_chars (Required)
 -----------------------------
 
 Number of idle chars for the RX unit used for tool communication. Will be set as soon as the UR-Program on the robot is started. Valid values: min=1.0, max=40.0  Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``.  Then, this parameter is required.
 
+This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
+
 tool_stop_bits (Required)
 -------------------------
 
 Number of stop bits used for tool communication. Will be set as soon as the UR-Program on the robot is started. Can be 1 or 2.  Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``.  Then, this parameter is required.
+
+This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
 
 tool_tx_idle_chars (Required)
 -----------------------------
 
 Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the robot is started. Valid values: min=0.0, max=40.0  Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``.  Then, this parameter is required.
 
+This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
+
 tool_voltage (Required)
 -----------------------
 
 Tool voltage that will be set as soon as the UR-Program on the robot is started. Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``. Then, this parameter is required.
 
+This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
+
 use_tool_communication (Required)
 ---------------------------------
 
 Should the tool's RS485 interface be forwarded to the ROS machine? This is only available on e-Series models. Setting this parameter to ``true`` requires multiple other parameters to be set as well.
+For more info please see :ref:`tool communication setup guide <setup-tool-communication>`.

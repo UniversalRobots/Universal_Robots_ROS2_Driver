@@ -1,8 +1,8 @@
 Simulation
 ==========
 
-As mentioned in the last section the driver has two basic modes of operation: Using mock hardware or
-using real hardware (Or the URSim simulator, which is equivalent from the driver's perspective).
+Apart from being used with a real robot, the ROS driver can be used with ros2_control's mock hardware or the URSim simulator (which is equivalent from the driver's perspective).
+
 Additionally, the robot can be simulated using
 `Gazebo Classic <https://github.com/UniversalRobots/Universal_Robots_ROS2_Gazebo_Simulation>`_ or
 `GZ Sim <https://github.com/UniversalRobots/Universal_Robots_ROS2_Ignition_Simulation>`_ but that's

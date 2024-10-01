@@ -21,10 +21,10 @@ Be aware, that running a program on this interface (meaning publishing script co
 Thus, the motion-interpreting program that is started by the driver gets stopped and has to be
 restarted again. Depending whether you use :ref:`headless_mode` or not, you'll have to call the
 ``resend_program`` service or press the ``play`` button on the teach panel to start the
-external_control program again.
+external control URCap program again.
 
 .. note::
-  On E-series robots or newer the robot needs to be in remote control mode in order to execute custom URScript commands.
+  On E-series robots or newer the robot needs to be in _remote control mode_ in order to execute custom URScript commands.
   Currently, there is no feedback on the code's correctness. If the code sent to the
   robot is incorrect, it will silently not get executed. Make sure that you send valid URScript code!
 

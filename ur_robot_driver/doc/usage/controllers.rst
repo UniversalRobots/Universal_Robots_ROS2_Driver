@@ -83,14 +83,10 @@ Type: :ref:`ur_controllers/ScaledJointTrajectoryController <scaled_jtc>`
 Scaled version of the
 `joint_trajectory_controller
 <https://control.ros.org/master/doc/ros2_controllers/joint_trajectory_controller/doc/userdoc.html>`_.
-It uses the robot's speed scaling information and can also be paused when pausing the *External
-Control* program. See it's linked documentation for details.
+It uses the robot's speed scaling information and thereby the safety compliance features, like pause on safeguard stop. In addition, it also makes it possible to adjust execution speed using the speed slider on the teach pendant or set the program in pause and restart it again.
+See it's linked documentation for details.
 
 .. note::
-
-   It is planned to replace this controller with ros2_control's joint_trajectory_controller once
-   that has received the capability of being scaled, as well.
-
 io_and_status_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
