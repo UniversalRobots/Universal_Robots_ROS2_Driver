@@ -243,11 +243,13 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.r", &tcp_orientation_rpy_[0]));
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.p", &tcp_orientation_rpy_[1]));
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_orientation_rpy_[2]));
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
 
   return state_interfaces;
 }
@@ -802,8 +804,7 @@ void URPositionHardwareInterface::extractToolPose()
   } else {
     tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
   }
-  auto rot_mat = tf2::Matrix3x3(tcp_rotation_quat_);
-  rot_mat.getRPY(tcp_orientation_rpy_[0], tcp_orientation_rpy_[1], tcp_orientation_rpy_[2]);
+  tcp_rotation_buffer.set(tcp_rotation_quat_);
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
