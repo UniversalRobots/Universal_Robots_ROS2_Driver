@@ -86,7 +86,6 @@ Scaled version of the
 It uses the robot's speed scaling information and thereby the safety compliance features, like pause on safeguard stop. In addition, it also makes it possible to adjust execution speed using the speed slider on the teach pendant or set the program in pause and restart it again.
 See it's linked documentation for details.
 
-.. note::
 io_and_status_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

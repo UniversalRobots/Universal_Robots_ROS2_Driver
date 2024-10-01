@@ -85,7 +85,7 @@ interface. Ready to receive control commands.``
 In general, make sure you're starting up the robot as explained :ref:`here<ur_robot_driver_startup>`.
 
 When starting the program on the teach pendant, I get an error "The connection to the remote PC could not be established"
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Make sure, the IP address setup is correct, as described in the setup guides
 (:ref:`CB3 robots<install-urcap-cb3>`, :ref:`e-Series robots<install-urcap-e-series>`)
