@@ -1,7 +1,7 @@
 ur_controllers
 ==============
 
-This package contains controllers and hardware interface for ``ros_control`` that are special to the UR
+This package contains controllers and hardware interface for ``ros2_controllers`` that are special to the UR
 robot family. Currently this contains:
 
 
@@ -15,10 +15,10 @@ robot family. Currently this contains:
 About this package
 ------------------
 
-This package contains controllers not being available in the default ``ros_control`` set. They are
-created to support more features offered by the UR robot family. Any of these controllers are
+This package contains controllers not being available in the default ``ros2_controllers`` set. They are
+created to support more features offered by the UR robot family. Some of these controllers are
 example implementations for certain features and are intended to be generalized and merged
-into the default ``ros_control`` controller set at some future point.
+into the default ``ros2_controllers`` controller set at some future point.
 
 Controller description
 ----------------------
