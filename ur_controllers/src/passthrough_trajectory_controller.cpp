@@ -100,15 +100,10 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::st
 {
   controller_interface::InterfaceConfiguration conf;
   conf.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  const std::string tf_prefix = passthrough_params_.tf_prefix;
 
-  conf.names.reserve(joint_names_.size() * state_interface_types_.size());
-  for (const auto& joint_name : joint_names_) {
-    for (const auto& interface_type : state_interface_types_) {
-      conf.names.emplace_back(joint_name + "/" + interface_type);
-    }
-  }
-  conf.names.emplace_back(passthrough_params_.speed_scaling_interface_name);
+  std::copy(joint_state_interface_names_.cbegin(), joint_state_interface_names_.cend(), std::back_inserter(conf.names));
+
+  conf.names.push_back(passthrough_params_.speed_scaling_interface_name);
 
   return conf;
 }
@@ -216,7 +211,9 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     // Write a new point to the command interface, if the previous point has been read by the hardware interface.
     if (current_transfer_state == TRANSFER_STATE_WAITING_FOR_POINT) {
       if (current_index_ < active_joint_traj_.points.size()) {
-        // Write the time_from_start parameter.
+        // TODO(fexner): Make sure that we are writing to the correct interface. Joints could be
+        // ordered differently inside the trajectory!
+        //  Write the time_from_start parameter.
         command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
             duration_to_double(active_joint_traj_.points[current_index_].time_from_start));
 
