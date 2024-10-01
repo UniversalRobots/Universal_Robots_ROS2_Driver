@@ -28,7 +28,7 @@ jobs:
       # Create pull request
       - name: Create pull-request
         id: cpr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           branch: update-ci/pre-commit-autoupdate
           delete-branch: true
