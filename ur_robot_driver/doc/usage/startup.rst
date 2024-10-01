@@ -59,8 +59,8 @@ the robot that you have created earlier.
 
 Depending on the :ref:`robot control mode<operation_modes>` do the following:
 
-* In _local control mode_, load the program on the robot and press the "Play" button |play_button| on the teach pendant.
-* In _remote control mode_ load and start the program using the following dashboard calls:
+* In *local control mode*, load the program on the robot and press the "Play" button |play_button| on the teach pendant.
+* In *remote control mode* load and start the program using the following dashboard calls:
 
   .. code-block:: console
 
@@ -91,8 +91,8 @@ This can happen, e,g, when
 
 Depending on the operation mode, perform one of the following steps:
 
-* In _local control mode_, simply press the "Play" button |play_button| on the teach pendant.
-* In _remote control mode_ start the program using the following dashboard call:
+* In *local control mode*, simply press the "Play" button |play_button| on the teach pendant.
+* In *remote control mode* start the program using the following dashboard call:
 
   .. code-block:: console
 

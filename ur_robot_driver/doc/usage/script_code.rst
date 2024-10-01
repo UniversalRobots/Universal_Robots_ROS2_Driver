@@ -24,7 +24,7 @@ restarted again. Depending whether you use :ref:`headless_mode` or not, you'll h
 external control URCap program again.
 
 .. note::
-  On E-series robots or newer the robot needs to be in _remote control mode_ in order to execute custom URScript commands.
+  On E-series robots or newer the robot needs to be in *remote control mode* in order to execute custom URScript commands.
   Currently, there is no feedback on the code's correctness. If the code sent to the
   robot is incorrect, it will silently not get executed. Make sure that you send valid URScript code!
 
