@@ -280,7 +280,10 @@ class RobotDriverTest(unittest.TestCase):
                 Duration(sec=6, nanosec=50000000),
                 [-1.0 for j in ROBOT_JOINTS],
             ),  # physically unfeasible
-            (Duration(sec=8, nanosec=0), [-1.5 for j in ROBOT_JOINTS]),  # physically unfeasible
+            (
+                Duration(sec=8, nanosec=0),
+                [-1.5 for j in ROBOT_JOINTS],
+            ),  # physically unfeasible
         ]
 
         trajectory = JointTrajectory(
@@ -392,7 +395,7 @@ class RobotDriverTest(unittest.TestCase):
             self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
         # Test impossible goal tolerance, should fail.
         goal_tolerance = [
-            JointTolerance(position=0.000000000000000001, name=ROBOT_JOINTS[i])
+            JointTolerance(position=0.000000001, name=tf_prefix + ROBOT_JOINTS[i])
             for i in range(len(ROBOT_JOINTS))
         ]
         goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
@@ -410,9 +413,11 @@ class RobotDriverTest(unittest.TestCase):
             )
 
         # Test impossible goal time
-        goal_tolerance = [JointTolerance(position=0.01) for i in range(6)]
+        goal_tolerance = [
+            JointTolerance(position=0.01, name=tf_prefix + ROBOT_JOINTS[i]) for i in range(6)
+        ]
         goal_time_tolerance.sec = 0
-        goal_time_tolerance.nanosec = 1000
+        goal_time_tolerance.nanosec = 10
         goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
             trajectory=trajectory,
             goal_time_tolerance=goal_time_tolerance,

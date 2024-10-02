@@ -180,9 +180,10 @@ private:
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_acceleration_state_interface_;
 
-  bool check_positions(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
-  bool check_velocities(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
-  bool check_accelerations(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  bool check_goal_tolerances(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  bool check_goal_positions(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  bool check_goal_velocities(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  bool check_goal_accelerations(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
 
   trajectory_msgs::msg::JointTrajectory active_joint_traj_;
   // std::vector<control_msgs::msg::JointTolerance> path_tolerance_;

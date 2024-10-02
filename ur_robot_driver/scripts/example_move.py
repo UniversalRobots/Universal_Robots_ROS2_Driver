@@ -134,7 +134,7 @@ class JTCClient(rclpy.node.Node):
         goal = FollowJointTrajectory.Goal()
         goal.trajectory = self.goals[traj_name]
 
-        goal.goal_time_tolerance = Duration(sec=0, nanosec=1000)
+        goal.goal_time_tolerance = Duration(sec=0, nanosec=500000000)
         goal.goal_tolerance = [JointTolerance(position=0.01, name=self.joints[i]) for i in range(6)]
 
         self._send_goal_future = self._action_client.send_goal_async(goal)
@@ -158,7 +158,7 @@ class JTCClient(rclpy.node.Node):
             time.sleep(2)
             self.execute_next_trajectory()
         else:
-            raise RuntimeError("Executing trajectory failed")
+            raise RuntimeError("Executing trajectory failed. " + result.error_string)
 
     @staticmethod
     def error_code_to_str(error_code):
@@ -182,6 +182,8 @@ def main(args=None):
     jtc_client = JTCClient()
     try:
         rclpy.spin(jtc_client)
+    except RuntimeError as err:
+        jtc_client.get_logger().error(str(err))
     except SystemExit:
         rclpy.logging.get_logger("jtc_client").info("Done")
 
