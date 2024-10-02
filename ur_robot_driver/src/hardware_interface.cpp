@@ -933,6 +933,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     velocity_controller_running_ = false;
     position_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
+    passthrough_trajectory_abort_ = 0.0;
   }
 
   start_modes_.clear();
@@ -947,6 +948,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   /* See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
    */
   if (passthrough_trajectory_transfer_state_ == 2.0) {
+    passthrough_trajectory_abort_ = 0.0;
     trajectory_joint_positions_.push_back(passthrough_trajectory_positions_);
 
     trajectory_times_.push_back(passthrough_trajectory_time_from_start_ - last_time);

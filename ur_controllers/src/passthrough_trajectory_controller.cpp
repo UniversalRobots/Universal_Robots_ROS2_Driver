@@ -190,7 +190,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     if (current_transfer_state != TRANSFER_STATE_IDLE) {
       // Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
       // pendant.
-      if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0) {
+      if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0 && current_index_ > 0) {
         RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted hardware, aborting action.");
         std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
             std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
@@ -278,7 +278,8 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
         active_goal->setSucceeded(result);
         end_goal();
-        RCLCPP_INFO(get_node()->get_logger(), "Trajectory executed successfully!");
+        RCLCPP_INFO(get_node()->get_logger(), "Trajectory executed successfully in %f seconds!",
+                    active_trajectory_elapsed_time_.seconds());
       }
     } else if (current_transfer_state == TRANSFER_STATE_IN_MOTION) {
       // Keep track of how long the trajectory has been executing, if it takes too long, send a warning.
