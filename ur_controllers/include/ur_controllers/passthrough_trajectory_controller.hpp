@@ -50,6 +50,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <controller_interface/controller_interface.hpp>
@@ -142,6 +143,7 @@ private:
 
   RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
+  realtime_tools::RealtimeBuffer<std::unordered_map<std::string, size_t>> joint_trajectory_mapping_;
 
   rclcpp::Duration action_monitor_period_ = rclcpp::Duration(50ms);
 
@@ -151,6 +153,9 @@ private:
   void end_goal();
 
   bool check_goal_tolerance();
+
+  // Get a mapping between the trajectory's joint order and the internal one
+  std::unordered_map<std::string, size_t> create_joint_mapping(const std::vector<std::string>& joint_names) const;
 
   std::shared_ptr<passthrough_trajectory_controller::ParamListener> passthrough_param_listener_;
   passthrough_trajectory_controller::Params passthrough_params_;
@@ -167,28 +172,29 @@ private:
   void goal_accepted_callback(
       std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
 
-  std::vector<std::string> joint_names_;
+  realtime_tools::RealtimeBuffer<std::vector<std::string>> joint_names_;
   std::vector<std::string> state_interface_types_;
 
   std::vector<std::string> joint_state_interface_names_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_position_state_interface_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
+  std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_acceleration_state_interface_;
 
   bool check_positions(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
   bool check_velocities(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
   bool check_accelerations(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
 
   trajectory_msgs::msg::JointTrajectory active_joint_traj_;
-  std::vector<control_msgs::msg::JointTolerance> path_tolerance_;
-  std::vector<control_msgs::msg::JointTolerance> goal_tolerance_;
-  rclcpp::Duration goal_time_tolerance_ = rclcpp::Duration::from_nanoseconds(0);
+  // std::vector<control_msgs::msg::JointTolerance> path_tolerance_;
+  realtime_tools::RealtimeBuffer<std::vector<control_msgs::msg::JointTolerance>> goal_tolerance_;
+  realtime_tools::RealtimeBuffer<rclcpp::Duration> goal_time_tolerance_{ rclcpp::Duration(0, 0) };
 
   std::atomic<size_t> current_index_;
   std::atomic<bool> trajectory_active_;
   rclcpp::Duration active_trajectory_elapsed_time_ = rclcpp::Duration::from_nanoseconds(0);
   rclcpp::Duration max_trajectory_time_ = rclcpp::Duration::from_nanoseconds(0);
   double scaling_factor_;
-  uint32_t number_of_joints_;
+  std::atomic<size_t> number_of_joints_;
   static constexpr double NO_VAL = std::numeric_limits<double>::quiet_NaN();
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_;

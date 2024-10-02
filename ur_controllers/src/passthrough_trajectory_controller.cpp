@@ -52,7 +52,7 @@ namespace ur_controllers
 
 double duration_to_double(const builtin_interfaces::msg::Duration& duration)
 {
-  return duration.sec + (duration.nanosec / 1000000000);
+  return duration.sec + (duration.nanosec / 1000000000.0);
 }
 
 controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
@@ -60,7 +60,9 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
   passthrough_param_listener_ = std::make_shared<passthrough_trajectory_controller::ParamListener>(get_node());
   passthrough_params_ = passthrough_param_listener_->get_params();
   current_index_ = 0;
-  joint_names_ = passthrough_params_.joints;
+  auto joint_names = passthrough_params_.joints;
+  joint_names_.writeFromNonRT(joint_names);
+  number_of_joints_ = joint_names.size();
   state_interface_types_ = passthrough_params_.state_interfaces;
   scaling_factor_ = 1.0;
   clock_ = get_node()->get_clock();
@@ -75,8 +77,10 @@ PassthroughTrajectoryController::on_configure(const rclcpp_lifecycle::State& pre
 
   joint_state_interface_names_.clear();
 
-  joint_state_interface_names_.reserve(joint_names_.size() * state_interface_types_.size());
-  for (const auto& joint_name : joint_names_) {
+  joint_state_interface_names_.reserve(number_of_joints_ * state_interface_types_.size());
+
+  auto joint_names_internal = joint_names_.readFromRT();
+  for (const auto& joint_name : *joint_names_internal) {
     for (const auto& interface_type : state_interface_types_) {
       joint_state_interface_names_.emplace_back(joint_name + "/" + interface_type);
     }
@@ -119,15 +123,15 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
 
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_abort");
 
-  for (size_t i = 0; i < 6; ++i) {
+  for (size_t i = 0; i < number_of_joints_; ++i) {
     config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_positions_" +
                               std::to_string(i));
   }
-  for (size_t i = 0; i < 6; ++i) {
+  for (size_t i = 0; i < number_of_joints_; ++i) {
     config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_velocities_" +
                               std::to_string(i));
   }
-  for (size_t i = 0; i < 6; ++i) {
+  for (size_t i = 0; i < number_of_joints_; ++i) {
     config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_accelerations_" +
                               std::to_string(i));
   }
@@ -139,10 +143,10 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
 
 controller_interface::CallbackReturn PassthroughTrajectoryController::on_activate(const rclcpp_lifecycle::State& state)
 {
-  number_of_joints_ = joint_names_.size();
   // clear out vectors in case of restart
   joint_position_state_interface_.clear();
   joint_velocity_state_interface_.clear();
+  joint_acceleration_state_interface_.clear();
 
   for (auto& interface_name : joint_state_interface_names_) {
     auto interface_it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(),
@@ -152,8 +156,10 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
         joint_position_state_interface_.emplace_back(*interface_it);
 
       } else if (interface_it->get_interface_name() == "velocity") {
-        joint_position_state_interface_.emplace_back(*interface_it);
+        joint_velocity_state_interface_.emplace_back(*interface_it);
       }
+    } else if (interface_it->get_interface_name() == "acceleration") {
+      joint_acceleration_state_interface_.emplace_back(*interface_it);
     }
   }
 
@@ -199,39 +205,36 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
       max_trajectory_time_ =
           rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
-      // TODO(fexner): Merge goal tolerances with default tolerances
-      goal_tolerance_ = active_goal->gh_->get_goal()->goal_tolerance;
-      path_tolerance_ = active_goal->gh_->get_goal()->path_tolerance;
-      goal_time_tolerance_ = active_goal->gh_->get_goal()->goal_time_tolerance;
-
       command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
           TRANSFER_STATE_WAITING_FOR_POINT);
     }
+    auto active_goal_time_tol = goal_time_tolerance_.readFromRT();
+    auto joint_mapping = joint_trajectory_mapping_.readFromRT();
 
     // Write a new point to the command interface, if the previous point has been read by the hardware interface.
     if (current_transfer_state == TRANSFER_STATE_WAITING_FOR_POINT) {
       if (current_index_ < active_joint_traj_.points.size()) {
-        // TODO(fexner): Make sure that we are writing to the correct interface. Joints could be
-        // ordered differently inside the trajectory!
         //  Write the time_from_start parameter.
         command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
             duration_to_double(active_joint_traj_.points[current_index_].time_from_start));
 
         // Write the positions for each joint of the robot
-        for (size_t i = 0; i < joint_names_.size(); i++) {
+        auto joint_names_internal = joint_names_.readFromRT();
+        for (size_t i = 0; i < number_of_joints_; i++) {
           command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
-              active_joint_traj_.points[current_index_].positions[i]);
+              active_joint_traj_.points[current_index_].positions[joint_mapping->at(joint_names_internal->at(i))]);
           // Optionally, also write velocities and accelerations for each joint.
           if (active_joint_traj_.points[current_index_].velocities.size() > 0) {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_ + i].set_value(
-                active_joint_traj_.points[current_index_].velocities[i]);
+                active_joint_traj_.points[current_index_].velocities[joint_mapping->at(joint_names_internal->at(i))]);
           } else {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_].set_value(NO_VAL);
           }
 
           if (active_joint_traj_.points[current_index_].accelerations.size() > 0) {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(
-                active_joint_traj_.points[current_index_].accelerations[i]);
+                active_joint_traj_.points[current_index_]
+                    .accelerations[joint_mapping->at(joint_names_internal->at(i))]);
           } else {
             command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(NO_VAL);
           }
@@ -259,20 +262,16 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
         active_goal->setAborted(result);
         end_goal();
         RCLCPP_ERROR(get_node()->get_logger(), "Trajectory failed, goal tolerances not met.");
-        // TODO(fexner): Goal time check currently disabled due to
-        // https://github.com/ros-controls/ros2_control/issues/1769
-        //} else if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_)) {
-        //// Check if the goal time tolerance was complied with.
-        // result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
-        // result->error_string =
-        // "Goal not reached within time tolerance. Missed goal time by " +
-        // std::to_string((active_trajectory_elapsed_time_ - max_trajectory_time_ - goal_time_tolerance_).seconds()) +
-        // " seconds.";
-        // active_goal->setAborted(result);
-        // end_goal();
-        // RCLCPP_ERROR(get_node()->get_logger(),
-        // "Trajectory failed, goal time tolerance not met. Missed goal time by %f seconds.",
-        // (active_trajectory_elapsed_time_ - max_trajectory_time_ - goal_time_tolerance_).seconds());
+      } else if (active_goal_time_tol->nanoseconds() > 0 &&
+                 active_trajectory_elapsed_time_ > (max_trajectory_time_ + *active_goal_time_tol)) {
+        // Check if the goal time tolerance was complied with.
+        result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
+        result->error_string =
+            "Goal not reached within time tolerance. Missed goal time by " +
+            std::to_string((active_trajectory_elapsed_time_ - max_trajectory_time_ - *active_goal_time_tol).seconds()) +
+            " seconds.";
+        active_goal->setAborted(result);
+        end_goal();
       } else {
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
         active_goal->setSucceeded(result);
@@ -290,7 +289,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       // RCLCPP_INFO(get_node()->get_logger(), "Elapsed trajectory time: %f. Scaling factor: %f, period: %f",
       // active_trajectory_elapsed_time_.seconds(), scaling_factor_, period.seconds());
 
-      if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + goal_time_tolerance_) && trajectory_active_) {
+      if (active_trajectory_elapsed_time_ > (max_trajectory_time_ + *active_goal_time_tol) && trajectory_active_) {
         RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *clock_, 1000,
                              "Trajectory should be finished by now. You may want to cancel this goal, if it is not.");
       }
@@ -329,6 +328,10 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
     RCLCPP_ERROR(get_node()->get_logger(), "Trajectory rejected");
     return rclcpp_action::GoalResponse::REJECT;
   }
+
+  // TODO(fexner): Validate goal
+  // - Do the tolerances contain correct joint names?
+  // - Do the tolerances contain correct values?
 
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
@@ -439,13 +442,29 @@ void PassthroughTrajectoryController::goal_accepted_callback(
                                                    << goal_handle->get_goal()->trajectory.points.size() << " points.");
   current_index_ = 0;
 
-  // TODO(fexner): Make sure the trajectory is correctly ordered!
+  // TODO(fexner): Merge goal tolerances with default tolerances
+
+  joint_trajectory_mapping_.writeFromNonRT(create_joint_mapping(goal_handle->get_goal()->trajectory.joint_names));
+
+  // sort goal tolerances to match internal joint order
+  std::vector<control_msgs::msg::JointTolerance> goal_tolerances;
+  auto joint_names_internal = joint_names_.readFromRT();
+  for (auto& joint_name : *joint_names_internal) {
+    auto found_it =
+        std::find_if(goal_handle->get_goal()->goal_tolerance.begin(), goal_handle->get_goal()->goal_tolerance.end(),
+                     [&joint_name](auto& tol) { return tol.name == joint_name; });
+    if (found_it != goal_handle->get_goal()->goal_tolerance.end()) {
+      goal_tolerances.push_back(*found_it);
+    }
+  }
+  goal_tolerance_.writeFromNonRT(goal_tolerances);
+  goal_time_tolerance_.writeFromNonRT(goal_handle->get_goal()->goal_time_tolerance);
 
   // Action handling will be done from the timer callback to avoid those things in the realtime
   // thread. First, we delete the existing (if any) timer by resetting the pointer and then create a new
   // one.
+  //
   RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
-  rt_goal->preallocated_feedback_->joint_names = joint_names_;
   rt_goal->execute();
   rt_active_goal_.writeFromNonRT(rt_goal);
   goal_handle_timer_.reset();
@@ -457,18 +476,40 @@ void PassthroughTrajectoryController::goal_accepted_callback(
 
 bool PassthroughTrajectoryController::check_goal_tolerance()
 {
-  for (size_t i = 0; i < active_joint_traj_.joint_names.size(); ++i) {
-    const std::string joint_name = active_joint_traj_.joint_names[i];
-    auto joint_tolerance_it = std::find_if(goal_tolerance_.begin(), goal_tolerance_.end(),
-                                           [&](auto entry) { return entry.name == joint_name; });
-    auto position_state_it =
-        std::find_if(joint_position_state_interface_.begin(), joint_position_state_interface_.end(),
-                     [&](auto entry) { return entry.get().get_name() == joint_name + "/" + "position"; });
-    if (std::abs(position_state_it->get().get_value() - active_joint_traj_.points.back().positions[i]) >
-        joint_tolerance_it->position) {
+  auto goal_tolerance = goal_tolerance_.readFromRT();
+  auto joint_mapping = joint_trajectory_mapping_.readFromRT();
+  auto joint_names_internal = joint_names_.readFromRT();
+  for (size_t i = 0; i < number_of_joints_; ++i) {
+    const std::string joint_name = joint_names_internal->at(i);
+    const auto& joint_tol = goal_tolerance->at(i);
+    const auto& setpoint = active_joint_traj_.points.back().positions[joint_mapping->at(joint_name)];
+    const double joint_pos = joint_position_state_interface_[i].get().get_value();
+    if (std::abs(joint_pos - setpoint) > joint_tol.position) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f",
+                   joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos);
       return false;
     }
+
+    if (!active_joint_traj_.points.back().velocities.empty()) {
+      const double joint_vel = joint_velocity_state_interface_[i].get().get_value();
+      const auto& expected_vel = active_joint_traj_.points.back().velocities[joint_mapping->at(joint_name)];
+      if (std::abs(joint_vel - expected_vel) > joint_tol.velocity) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f",
+                     joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos);
+        return false;
+      }
+    }
+    if (!active_joint_traj_.points.back().accelerations.empty()) {
+      const double joint_vel = joint_acceleration_state_interface_[i].get().get_value();
+      const auto& expected_vel = active_joint_traj_.points.back().accelerations[joint_mapping->at(joint_name)];
+      if (std::abs(joint_vel - expected_vel) > joint_tol.acceleration) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f",
+                     joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos);
+        return false;
+      }
+    }
   }
+
   return true;
 }
 
@@ -476,6 +517,20 @@ void PassthroughTrajectoryController::end_goal()
 {
   trajectory_active_ = false;
   command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(TRANSFER_STATE_IDLE);
+}
+
+std::unordered_map<std::string, size_t>
+PassthroughTrajectoryController::create_joint_mapping(const std::vector<std::string>& joint_names) const
+{
+  std::unordered_map<std::string, size_t> joint_mapping;
+  auto joint_names_internal = joint_names_.readFromNonRT();
+  for (auto& joint_name : *joint_names_internal) {
+    auto found_it = std::find(joint_names.begin(), joint_names.end(), joint_name);
+    if (found_it != joint_names.end()) {
+      joint_mapping.insert({ joint_name, found_it - joint_names.begin() });
+    }
+  }
+  return joint_mapping;
 }
 }  // namespace ur_controllers
 
