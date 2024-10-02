@@ -120,15 +120,6 @@ passthrough_trajectory_controller:
     state_interfaces:
       - position
       - velocity
-    constraints:
-      stopped_velocity_tolerance: 0.2
-      goal_time: 0.5
-      $(var tf_prefix)shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)elbow_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
     speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
 
 forward_velocity_controller:
