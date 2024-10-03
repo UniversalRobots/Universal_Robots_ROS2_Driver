@@ -207,6 +207,21 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
   return ControllerInterface::on_activate(state);
 }
 
+controller_interface::CallbackReturn PassthroughTrajectoryController::on_deactivate(const rclcpp_lifecycle::State&)
+{
+  abort_command_interface_->get().set_value(1.0);
+  if (trajectory_active_) {
+    const auto active_goal = *rt_active_goal_.readFromRT();
+    std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
+        std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    result->set__error_string("Aborting current goal, since the controller is being deactivated.");
+    active_goal->setAborted(result);
+    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+    end_goal();
+  }
+  return CallbackReturn::SUCCESS;
+}
+
 controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& /*time*/,
                                                                           const rclcpp::Duration& period)
 {
