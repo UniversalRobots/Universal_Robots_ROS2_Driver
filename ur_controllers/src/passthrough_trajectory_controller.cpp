@@ -182,6 +182,30 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
     }
   }
 
+  const std::string tf_prefix = passthrough_params_.tf_prefix;
+  {
+    const std::string interface_name = tf_prefix + "passthrough_controller/passthrough_trajectory_transfer_state";
+    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != command_interfaces_.end()) {
+      transfer_command_interface_ = *it;
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+  {
+    const std::string interface_name = tf_prefix + "passthrough_controller/passthrough_trajectory_time_from_start";
+    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != command_interfaces_.end()) {
+      time_from_start_command_interface_ = *it;
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+
   return ControllerInterface::on_activate(state);
 }
 
@@ -190,8 +214,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
 {
   const auto active_goal = *rt_active_goal_.readFromRT();
 
-  const auto current_transfer_state =
-      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].get_value();
+  const auto current_transfer_state = transfer_command_interface_->get().get_value();
 
   if (active_goal && trajectory_active_) {
     if (current_transfer_state != TRANSFER_STATE_IDLE) {
@@ -214,8 +237,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
       max_trajectory_time_ =
           rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
-      command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
-          TRANSFER_STATE_WAITING_FOR_POINT);
+      transfer_command_interface_->get().set_value(TRANSFER_STATE_WAITING_FOR_POINT);
     }
     auto active_goal_time_tol = goal_time_tolerance_.readFromRT();
     auto joint_mapping = joint_trajectory_mapping_.readFromRT();
@@ -224,7 +246,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     if (current_transfer_state == TRANSFER_STATE_WAITING_FOR_POINT) {
       if (current_index_ < active_joint_traj_.points.size()) {
         //  Write the time_from_start parameter.
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TIME_FROM_START].set_value(
+        time_from_start_command_interface_->get().set_value(
             duration_to_double(active_joint_traj_.points[current_index_].time_from_start));
 
         // Write the positions for each joint of the robot
@@ -251,13 +273,11 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
           }
         }
         // Tell hardware interface that this point is ready to be read.
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
-            TRANSFER_STATE_TRANSFERRING);
+        transfer_command_interface_->get().set_value(TRANSFER_STATE_TRANSFERRING);
         current_index_++;
         // Check if all points have been written to the hardware interface.
       } else if (current_index_ == active_joint_traj_.points.size()) {
-        command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(
-            TRANSFER_STATE_TRANSFER_DONE);
+        transfer_command_interface_->get().set_value(TRANSFER_STATE_TRANSFER_DONE);
       } else {
         RCLCPP_ERROR(get_node()->get_logger(), "Hardware waiting for trajectory point while none is present!");
       }
@@ -562,7 +582,7 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
 void PassthroughTrajectoryController::end_goal()
 {
   trajectory_active_ = false;
-  command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_TRANSFER_STATE].set_value(TRANSFER_STATE_IDLE);
+  transfer_command_interface_->get().set_value(TRANSFER_STATE_IDLE);
 }
 
 std::unordered_map<std::string, size_t>

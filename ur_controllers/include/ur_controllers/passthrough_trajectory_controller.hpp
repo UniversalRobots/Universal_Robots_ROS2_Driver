@@ -90,15 +90,6 @@ const double TRANSFER_STATE_DONE = 5.0;
 
 using namespace std::chrono_literals;  // NOLINT
 
-enum CommandInterfaces
-{
-  // The PASSTHROUGH_TRAJECTORY_TRANSFER_STATE value is used to keep track of which stage the transfer is in.
-  PASSTHROUGH_TRAJECTORY_TRANSFER_STATE = 18,
-  // The PASSTHROUGH_TRAJECTORY_ABORT value is used to indicate whether the trajectory has been cancelled from the
-  // hardware interface./
-  PASSTHROUGH_TRAJECTORY_TIME_FROM_START = 19
-};
-
 class PassthroughTrajectoryController : public controller_interface::ControllerInterface
 {
 public:
@@ -182,6 +173,8 @@ private:
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> abort_state_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> transfer_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> time_from_start_command_interface_;
 
   rclcpp::Clock::SharedPtr clock_;
 };
