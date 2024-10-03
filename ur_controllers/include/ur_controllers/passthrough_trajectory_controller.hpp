@@ -70,51 +70,33 @@
 namespace ur_controllers
 {
 
+/*
+ * 0.0: No trajectory to forward, the controller is idling and ready to receive a new trajectory.
+ * 1.0: The controller has received and accepted a new trajecotry. When the state is 1.0, the controller will write a
+ * point to the hardware interface.
+ * 2.0: The hardware interface will read the point written from the controller. The state will switch between 1.0
+ * and 2.0 until all points have been read by the hardware interface.
+ * 3.0: The hardware interface has read all the points, and will now write all the points to the physical robot
+ * controller.
+ * 4.0: The robot is moving through the trajectory.
+ * 5.0: The robot finished executing the trajectory.
+ */
 const double TRANSFER_STATE_IDLE = 0.0;
 const double TRANSFER_STATE_WAITING_FOR_POINT = 1.0;
 const double TRANSFER_STATE_TRANSFERRING = 2.0;
 const double TRANSFER_STATE_TRANSFER_DONE = 3.0;
 const double TRANSFER_STATE_IN_MOTION = 4.0;
 const double TRANSFER_STATE_DONE = 5.0;
+
 using namespace std::chrono_literals;  // NOLINT
 
 enum CommandInterfaces
 {
-  /* The PASSTHROUGH_TRAJECTORY_TRANSFER_STATE value is used to keep track of which stage the transfer is in.
-  0.0: No trajectory to forward, the controller is idling and ready to receive a new trajectory.
-  1.0: The controller has received and accepted a new trajecotry. When the state is 1.0, the controller will write a
-  point to the hardware interface.
-  2.0: The hardware interface will read the point written from the controller. The state will switch between 1.0
-  and 2.0 until all points have been read by the hardware interface.
-  3.0: The hardware interface has read all the points, and will now write all the points to the physical robot
-  controller.
-  4.0: The robot is moving through the trajectory.
-  5.0: The robot finished executing the trajectory. */
-  PASSTHROUGH_TRAJECTORY_TRANSFER_STATE = 0,
-  /* The PASSTHROUGH_TRAJECTORY_ABORT value is used to indicate whether the trajectory has been cancelled from the
-   * hardware interface.*/
-  PASSTHROUGH_TRAJECTORY_ABORT = 1,
-  /* Arrays to hold the values of a point. */
-  PASSTHROUGH_TRAJECTORY_POSITIONS_ = 2,
-  PASSTHROUGH_TRAJECTORY_VELOCITIES_ = 8,
-  PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ = 14,
-  PASSTHROUGH_TRAJECTORY_TIME_FROM_START = 20
-};
-
-enum StateInterfaces
-{
-  /* State interface 0 - 17 are joint state interfaces*/
-
-  SPEED_SCALING_FACTOR = 18,
-};
-
-// Struct to hold data that has to be transferred between realtime thread and non-realtime threads
-struct AsyncInfo
-{
-  double transfer_state = 0;
-  double abort = 0;
-  double controller_running = 0;
-  bool info_updated = false;
+  // The PASSTHROUGH_TRAJECTORY_TRANSFER_STATE value is used to keep track of which stage the transfer is in.
+  PASSTHROUGH_TRAJECTORY_TRANSFER_STATE = 18,
+  // The PASSTHROUGH_TRAJECTORY_ABORT value is used to indicate whether the trajectory has been cancelled from the
+  // hardware interface./
+  PASSTHROUGH_TRAJECTORY_TIME_FROM_START = 19
 };
 
 class PassthroughTrajectoryController : public controller_interface::ControllerInterface
@@ -199,6 +181,7 @@ private:
   static constexpr double NO_VAL = std::numeric_limits<double>::quiet_NaN();
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> abort_state_interface_;
 
   rclcpp::Clock::SharedPtr clock_;
 };

@@ -227,6 +227,14 @@
       <gpio name="${tf_prefix}system_interface">
         <state_interface name="initialized"/>
       </gpio>
+
+      <gpio name="${tf_prefix}passthrough_controller">
+        <command_interface name="passthrough_trajectory_transfer_state"/>
+        <command_interface name="passthrough_trajectory_time_from_start"/>
+        <state_interface name="passthrough_trajectory_abort"/>
+      </gpio>
+
+
     </ros2_control>
   </xacro:macro>
 </robot>

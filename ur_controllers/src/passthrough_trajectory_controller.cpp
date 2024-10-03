@@ -111,6 +111,9 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::st
 
   conf.names.push_back(passthrough_params_.speed_scaling_interface_name);
 
+  const std::string tf_prefix = passthrough_params_.tf_prefix;
+  conf.names.push_back(tf_prefix + "passthrough_controller/passthrough_trajectory_abort");
+
   return conf;
 }
 
@@ -121,23 +124,14 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
 
   const std::string tf_prefix = passthrough_params_.tf_prefix;
 
+  auto joint_names = passthrough_params_.joints;
+  for (auto& joint_name : joint_names) {
+    config.names.emplace_back(joint_name + "/passthrough_position");
+    config.names.emplace_back(joint_name + "/passthrough_velocity");
+    config.names.emplace_back(joint_name + "/passthrough_acceleration");
+  }
+
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_transfer_state");
-
-  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_abort");
-
-  for (size_t i = 0; i < number_of_joints_; ++i) {
-    config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_positions_" +
-                              std::to_string(i));
-  }
-  for (size_t i = 0; i < number_of_joints_; ++i) {
-    config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_velocities_" +
-                              std::to_string(i));
-  }
-  for (size_t i = 0; i < number_of_joints_; ++i) {
-    config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_accelerations_" +
-                              std::to_string(i));
-  }
-
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_time_from_start");
 
   return config;
@@ -175,6 +169,19 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
     return controller_interface::CallbackReturn::ERROR;
   }
 
+  {
+    const std::string interface_name = passthrough_params_.tf_prefix + "passthrough_controller/"
+                                                                       "passthrough_trajectory_abort";
+    auto it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != state_interfaces_.end()) {
+      abort_state_interface_ = *it;
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in state interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+
   return ControllerInterface::on_activate(state);
 }
 
@@ -190,8 +197,8 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     if (current_transfer_state != TRANSFER_STATE_IDLE) {
       // Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
       // pendant.
-      if (command_interfaces_[PASSTHROUGH_TRAJECTORY_ABORT].get_value() == 1.0 && current_index_ > 0) {
-        RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted hardware, aborting action.");
+      if (abort_state_interface_->get().get_value() == 1.0 && current_index_ > 0) {
+        RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted by hardware, aborting action.");
         std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
             std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
         active_goal->setAborted(result);
@@ -222,23 +229,25 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
 
         // Write the positions for each joint of the robot
         auto joint_names_internal = joint_names_.readFromRT();
+        // We've added the joint interfaces matching the order of the joint names so we can safely access
+        // them by the index.
         for (size_t i = 0; i < number_of_joints_; i++) {
-          command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_POSITIONS_ + i].set_value(
+          command_interfaces_[i * 3].set_value(
               active_joint_traj_.points[current_index_].positions[joint_mapping->at(joint_names_internal->at(i))]);
           // Optionally, also write velocities and accelerations for each joint.
           if (active_joint_traj_.points[current_index_].velocities.size() > 0) {
-            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_ + i].set_value(
+            command_interfaces_[i * 3 + 1].set_value(
                 active_joint_traj_.points[current_index_].velocities[joint_mapping->at(joint_names_internal->at(i))]);
+            if (active_joint_traj_.points[current_index_].accelerations.size() > 0) {
+              command_interfaces_[i * 3 + 2].set_value(
+                  active_joint_traj_.points[current_index_]
+                      .accelerations[joint_mapping->at(joint_names_internal->at(i))]);
+            } else {
+              command_interfaces_[i * 3 + 2].set_value(NO_VAL);
+            }
           } else {
-            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_VELOCITIES_].set_value(NO_VAL);
-          }
-
-          if (active_joint_traj_.points[current_index_].accelerations.size() > 0) {
-            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(
-                active_joint_traj_.points[current_index_]
-                    .accelerations[joint_mapping->at(joint_names_internal->at(i))]);
-          } else {
-            command_interfaces_[CommandInterfaces::PASSTHROUGH_TRAJECTORY_ACCELERATIONS_ + i].set_value(NO_VAL);
+            command_interfaces_[i * 3 + 1].set_value(NO_VAL);
+            command_interfaces_[i * 3 + 2].set_value(NO_VAL);
           }
         }
         // Tell hardware interface that this point is ready to be read.

@@ -45,7 +45,7 @@
 #include "ur_client_library/exceptions.h"
 #include "ur_client_library/ur/tool_communication.h"
 
-#include "rclcpp/rclcpp.hpp"
+#include <rclcpp/logging.hpp>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ur_robot_driver/hardware_interface.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
@@ -101,9 +101,9 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   trajectory_joint_accelerations_.clear();
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    if (joint.command_interfaces.size() != 2) {
+    if (joint.command_interfaces.size() != 5) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
-                   "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
+                   "Joint '%s' has %zu command interfaces found. 5 expected.", joint.name.c_str(),
                    joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
@@ -236,6 +236,9 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
 
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_abort", &passthrough_trajectory_abort_));
+
   return state_interfaces;
 }
 
@@ -248,6 +251,15 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "passthrough_position",
+                                                                         &passthrough_trajectory_positions_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "passthrough_velocity",
+                                                                         &passthrough_trajectory_velocities_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, "passthrough_acceleration", &passthrough_trajectory_accelerations_[i]));
   }
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
@@ -283,6 +295,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
       hardware_interface::CommandInterface(tf_prefix + "payload", "cog.z", &payload_center_of_gravity_[2]));
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_abort", &passthrough_trajectory_abort_));
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -306,27 +320,6 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
                                                                        "passthrough_trajectory_transfer_state",
                                                                        &passthrough_trajectory_transfer_state_));
-
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "passthrough_controller", "passthrough_trajectory_abort", &passthrough_trajectory_abort_));
-
-  for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        tf_prefix + "passthrough_controller", "passthrough_trajectory_positions_" + std::to_string(i),
-        &passthrough_trajectory_positions_[i]));
-  }
-
-  for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        tf_prefix + "passthrough_controller", "passthrough_trajectory_velocities_" + std::to_string(i),
-        &passthrough_trajectory_velocities_[i]));
-  }
-
-  for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        tf_prefix + "passthrough_controller", "passthrough_trajectory_accelerations_" + std::to_string(i),
-        &passthrough_trajectory_accelerations_[i]));
-  }
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
                                                                        "passthrough_trajectory_time_from_start",
@@ -853,19 +846,10 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
       }
-      if (key == tf_prefix + PASSTHROUGH_TRAJECTORY_CONTROLLER + std::to_string(i)) {
+      if (key == info_.joints[i].name + "/" + PASSTHROUGH_TRAJECTORY_CONTROLLER + "_position") {
         start_modes_.push_back(PASSTHROUGH_TRAJECTORY_CONTROLLER);
       }
     }
-  }
-  // set new mode to all interfaces at the same time
-  if (start_modes_.size() != 0 && start_modes_.size() != 6) {
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  // all start interfaces must be the same - can't mix position and velocity control
-  if (start_modes_.size() != 0 && !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin())) {
-    ret_val = hardware_interface::return_type::ERROR;
   }
 
   // Stopping interfaces
@@ -878,14 +862,61 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
       }
-      if (key == PASSTHROUGH_TRAJECTORY_CONTROLLER + std::to_string(i)) {
+      if (key == info_.joints[i].name + "/" + PASSTHROUGH_TRAJECTORY_CONTROLLER + "_position") {
         stop_modes_.push_back(StoppingInterface::STOP_PASSTHROUGH);
       }
     }
   }
+
+  // set new mode to all interfaces at the same time
+  if (start_modes_.size() != 0 && start_modes_.size() != 6) {
+    RCLCPP_ERROR(get_logger(), "Either none or all joint interfaces must be started at once.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  if (position_controller_running_ &&
+      std::none_of(stop_modes_.begin(), stop_modes_.end(),
+                   [](auto item) { return item == StoppingInterface::STOP_POSITION; }) &&
+      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
+        return (item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_TRAJECTORY_CONTROLLER);
+      })) {
+    RCLCPP_ERROR(get_logger(), "Start of velocity or passthrough interface requested while there is the position "
+                               "interface running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  if (velocity_controller_running_ &&
+      std::none_of(stop_modes_.begin(), stop_modes_.end(),
+                   [](auto item) { return item == StoppingInterface::STOP_VELOCITY; }) &&
+      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
+        return (item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_TRAJECTORY_CONTROLLER);
+      })) {
+    RCLCPP_ERROR(get_logger(), "Start of position or passthrough interface requested while there is the velocity "
+                               "interface running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  if (passthrough_trajectory_controller_running_ &&
+      std::none_of(stop_modes_.begin(), stop_modes_.end(),
+                   [](auto item) { return item == StoppingInterface::STOP_PASSTHROUGH; }) &&
+      std::any_of(start_modes_.begin(), start_modes_.end(), [](auto& item) {
+        return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
+      })) {
+    RCLCPP_ERROR(get_logger(), "Start of position or velocity interface requested while there is the passthrough "
+                               "interface running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // all start interfaces must be the same - can't mix position and velocity control
+  if (start_modes_.size() != 0 && !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin())) {
+    RCLCPP_ERROR(get_logger(), "Can't mix different control domains for joint control.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
   // stop all interfaces at the same time
   if (stop_modes_.size() != 0 &&
       (stop_modes_.size() != 6 || !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin()))) {
+    RCLCPP_ERROR(get_logger(), "Either none or all joint interfaces must be stopped at once.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
