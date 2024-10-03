@@ -111,9 +111,6 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::st
 
   conf.names.push_back(passthrough_params_.speed_scaling_interface_name);
 
-  const std::string tf_prefix = passthrough_params_.tf_prefix;
-  conf.names.push_back(tf_prefix + "passthrough_controller/passthrough_trajectory_abort");
-
   return conf;
 }
 
@@ -131,6 +128,7 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
     config.names.emplace_back(joint_name + "/passthrough_acceleration");
   }
 
+  config.names.push_back(tf_prefix + "passthrough_controller/passthrough_trajectory_abort");
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_transfer_state");
   config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_time_from_start");
 
@@ -172,12 +170,12 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
   {
     const std::string interface_name = passthrough_params_.tf_prefix + "passthrough_controller/"
                                                                        "passthrough_trajectory_abort";
-    auto it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(),
+    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
-    if (it != state_interfaces_.end()) {
-      abort_state_interface_ = *it;
+    if (it != command_interfaces_.end()) {
+      abort_command_interface_ = *it;
     } else {
-      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in state interfaces.", interface_name.c_str());
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
       return controller_interface::CallbackReturn::ERROR;
     }
   }
@@ -220,7 +218,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     if (current_transfer_state != TRANSFER_STATE_IDLE) {
       // Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
       // pendant.
-      if (abort_state_interface_->get().get_value() == 1.0 && current_index_ > 0) {
+      if (abort_command_interface_->get().get_value() == 1.0 && current_index_ > 0) {
         RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted by hardware, aborting action.");
         std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
             std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
@@ -326,6 +324,14 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
                              "Trajectory should be finished by now. You may want to cancel this goal, if it is not.");
       }
     }
+  } else if (current_transfer_state != TRANSFER_STATE_IDLE && current_transfer_state != TRANSFER_STATE_DONE) {
+    // No goal is active, but we are not in IDLE, either. We have been canceled.
+    abort_command_interface_->get().set_value(1.0);
+
+  } else if (current_transfer_state == TRANSFER_STATE_DONE) {
+    // We have been informed about the finished trajectory. Let's reset things.
+    transfer_command_interface_->get().set_value(TRANSFER_STATE_IDLE);
+    abort_command_interface_->get().set_value(0.0);
   }
 
   return controller_interface::return_type::OK;

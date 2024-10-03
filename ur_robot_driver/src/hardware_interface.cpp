@@ -236,9 +236,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "passthrough_controller", "passthrough_trajectory_abort", &passthrough_trajectory_abort_));
-
   return state_interfaces;
 }
 
@@ -295,8 +292,6 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
       hardware_interface::CommandInterface(tf_prefix + "payload", "cog.z", &payload_center_of_gravity_[2]));
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "passthrough_controller", "passthrough_trajectory_abort", &passthrough_trajectory_abort_));
 
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -324,6 +319,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "passthrough_controller",
                                                                        "passthrough_trajectory_time_from_start",
                                                                        &passthrough_trajectory_time_from_start_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "passthrough_controller", "passthrough_trajectory_abort", &passthrough_trajectory_abort_));
 
   return command_interfaces;
 }
@@ -976,9 +973,12 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 {
   static double last_time = 0.0;
-  /* See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
-   */
-  if (passthrough_trajectory_transfer_state_ == 2.0) {
+  // See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
+
+  // We should abort and are not in state IDLE
+  if (passthrough_trajectory_abort_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
+    ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+  } else if (passthrough_trajectory_transfer_state_ == 2.0) {
     passthrough_trajectory_abort_ = 0.0;
     trajectory_joint_positions_.push_back(passthrough_trajectory_positions_);
 
@@ -1031,11 +1031,12 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
 {
-  if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS) {
-    passthrough_trajectory_transfer_state_ = 5.0;
-  } else {
+  if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE) {
     passthrough_trajectory_abort_ = 1.0;
+  } else {
+    passthrough_trajectory_abort_ = 0.0;
   }
+  passthrough_trajectory_transfer_state_ = 5.0;
   return;
 }
 
