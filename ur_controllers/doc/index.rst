@@ -204,9 +204,11 @@ The trajectory passthrough controller uses the following parameters:
 Interfaces
 """"""""""
 
-In order to use this, the hardware has to export a command interface for passthrough. It always has
+In order to use this, the hardware has to export a command interface for passthrough operations for each joint. It always has
 to export position, velocity and acceleration interfaces in order to be able to project the full
-JointTrajectory definition:
+JointTrajectory definition. This is why there are separate fields used, as for passthrough mode
+accelerations might be relevant also for robots that don't support commanding accelerations
+directly to their joints.
 
 .. code:: xml
 
@@ -230,7 +232,7 @@ Additionally, the following interfaces are necessary to handle the control flow:
    <gpio name="${tf_prefix}passthrough_controller">
      <command_interface name="passthrough_trajectory_transfer_state"/>
      <command_interface name="passthrough_trajectory_time_from_start"/>
-     <state_interface name="passthrough_trajectory_abort"/>
+     <command_interface name="passthrough_trajectory_abort"/>
    </gpio>
 
 Implementation details / dataflow
@@ -245,5 +247,5 @@ Implementation details / dataflow
 * If execution takes longer than anticipated, a warning will be printed.
 * If execution finished taking longer than expected (plus the goal time tolerance), the action will fail.
 * When the hardware reports that execution has been aborted (The ``passthrough_trajectory_abort``
-  state interface), the action will be aborted.
+  command interface), the action will be aborted.
 * When the action is preempted, execution on the hardware is preempted.
