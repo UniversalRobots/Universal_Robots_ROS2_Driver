@@ -42,7 +42,6 @@ from launch.substitutions import (
     LaunchConfiguration,
     NotSubstitution,
     PathJoinSubstitution,
-    PythonExpression,
 )
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterFile
@@ -146,7 +145,7 @@ def launch_setup(context):
     )
 
     # Spawn controllers
-    def controller_spawner(controllers, condition, active=True):
+    def controller_spawner(controllers, active=True):
         inactive_flags = ["--inactive"] if not active else []
         return Node(
             package="controller_manager",
@@ -158,61 +157,28 @@ def launch_setup(context):
                 controller_spawner_timeout,
             ]
             + inactive_flags
-            + [controllers],
-            condition=condition,
+            + controllers,
         )
 
-    controllers_active_default = [
+    controllers_active = [
         "joint_state_broadcaster",
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
     ]
-    controllers_inactive_default = [
+    controllers_inactive = [
         "scaled_joint_trajectory_controller",
         "joint_trajectory_controller",
         "forward_velocity_controller",
         "forward_position_controller",
     ]
-    controllers_active_init = PythonExpression(
-        [
-            "'",
-            " ".join(controllers_active_default),
-            "' + ' ' +'",
-            initial_joint_controller,
-            "'",
-        ]
-    )
-    controllers_inactive_init = PythonExpression(
-        [
-            "' '.join([c for c in ",
-            str(controllers_inactive_default),
-            "if c != '",
-            initial_joint_controller,
-            "'])",
-        ]
-    )
-    print(controllers_active_init.perform(context))
-    print(controllers_inactive_init.perform(context))
+    if activate_joint_controller.perform(context) == "true":
+        controllers_active.append(initial_joint_controller.perform(context))
+        controllers_inactive.remove(initial_joint_controller.perform(context))
 
     controller_spawners = [
-        controller_spawner(
-            controllers_active_init, condition=IfCondition(activate_joint_controller)
-        ),
-        controller_spawner(
-            controllers_inactive_init,
-            condition=IfCondition(activate_joint_controller),
-            active=False,
-        ),
-        controller_spawner(
-            " ".join(controllers_active_default),
-            condition=UnlessCondition(activate_joint_controller),
-        ),
-        controller_spawner(
-            " ".join(controllers_inactive_default),
-            condition=UnlessCondition(activate_joint_controller),
-            active=False,
-        ),
+        controller_spawner(controllers_active),
+        controller_spawner(controllers_inactive, active=False),
     ]
 
     rsp = IncludeLaunchDescription(
