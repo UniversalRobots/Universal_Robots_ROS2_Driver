@@ -2,6 +2,9 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.10 (2024-09-11)
+-------------------
+
 2.4.9 (2024-08-09)
 ------------------
 * Added Jazzy migration notes for moveit_config (`#1058 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1058>`_)
