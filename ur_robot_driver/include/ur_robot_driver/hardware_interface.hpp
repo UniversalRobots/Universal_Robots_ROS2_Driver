@@ -192,6 +192,11 @@ protected:
   double system_interface_initialized_;
   bool async_thread_shutdown_;
 
+  // Passthrough trajectory controller interface values
+  urcl::vector6d_t passthrough_trajectory_positions_;
+  urcl::vector6d_t passthrough_trajectory_velocities_;
+  urcl::vector6d_t passthrough_trajectory_accelerations_;
+
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
   double payload_mass_;
