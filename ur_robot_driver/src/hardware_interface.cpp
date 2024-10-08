@@ -44,6 +44,7 @@
 
 #include "ur_client_library/exceptions.h"
 #include "ur_client_library/ur/tool_communication.h"
+#include "ur_client_library/ur/version_information.h"
 
 #include "rclcpp/rclcpp.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -230,6 +231,18 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
 
   return state_interfaces;
 }
@@ -453,6 +466,13 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                         "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
                         "README.md] for details.");
   }
+
+  // Export version information to state interfaces
+  urcl::VersionInformation version_info = ur_driver_->getVersion();
+  get_robot_software_version_major_ = version_info.major;
+  get_robot_software_version_minor_ = version_info.minor;
+  get_robot_software_version_build_ = version_info.build;
+  get_robot_software_version_bugfix_ = version_info.bugfix;
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
