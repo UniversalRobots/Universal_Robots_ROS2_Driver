@@ -114,6 +114,7 @@
 
         <command_interface name="standard_analog_output_cmd_0"/>
         <command_interface name="standard_analog_output_cmd_1"/>
+        <command_interface name="analog_output_domain_cmd"/>
 
         <command_interface name="tool_voltage_cmd"/>
 
