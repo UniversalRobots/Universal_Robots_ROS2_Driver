@@ -97,6 +97,8 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_cmd");
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
+  config.names.emplace_back(tf_prefix + "gpio/analog_output_domain_cmd");
+
   return config;
 }
 
@@ -293,6 +295,9 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     program_state_pub_ = get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched);
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
         "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+    set_analog_output_srv_ = get_node()->create_service<ur_msgs::srv::SetAnalogOutput>(
+        "~/set_analog_output",
+        std::bind(&GPIOController::setAnalogOutput, this, std::placeholders::_1, std::placeholders::_2));
 
     set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
         "~/set_speed_slider",
@@ -357,7 +362,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->pin].set_value(static_cast<double>(req->state));
 
-    RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%1.0f'.", req->pin, req->state);
+    RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%f'.", req->pin, req->state);
 
     if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
       RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
@@ -383,6 +388,46 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     resp->success = false;
     return false;
   }
+}
+
+bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::SharedPtr req,
+                                     ur_msgs::srv::SetAnalogOutput::Response::SharedPtr resp)
+{
+  std::string domain_string = "UNKNOWN";
+  switch (req->data.domain) {
+    case ur_msgs::msg::Analog::CURRENT:
+      domain_string = "CURRENT";
+      break;
+    case ur_msgs::msg::Analog::VOLTAGE:
+      domain_string = "VOLTAGE";
+      break;
+    default:
+      RCLCPP_ERROR(get_node()->get_logger(), "Domain must be either 0 (CURRENT) or 1 (VOLTAGE)");
+      resp->success = false;
+      return false;
+  }
+
+  if (req->data.pin < 0 || req->data.pin > 1) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Invalid pin selected. Only pins 0 and 1 are allowed.");
+    resp->success = false;
+    return false;
+  }
+
+  command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+  command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->data.pin].set_value(
+      static_cast<float>(req->data.state));
+  command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_DOMAIN].set_value(static_cast<double>(req->data.domain));
+
+  RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%f' in domain %s.", req->data.pin,
+              req->data.state, domain_string.c_str());
+
+  if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
+    RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
+                                          "mocked interface)");
+  }
+
+  resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_value());
+  return resp->success;
 }
 
 bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
