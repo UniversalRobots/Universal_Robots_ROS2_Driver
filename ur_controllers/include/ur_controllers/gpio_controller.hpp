@@ -51,6 +51,7 @@
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_msgs/srv/set_io.hpp"
+#include "ur_msgs/srv/set_analog_output.hpp"
 #include "ur_msgs/srv/set_speed_slider_fraction.hpp"
 #include "ur_msgs/srv/set_payload.hpp"
 #include "rclcpp/time.hpp"
@@ -79,6 +80,7 @@ enum CommandInterfaces
   ZERO_FTSENSOR_ASYNC_SUCCESS = 32,
   HAND_BACK_CONTROL_CMD = 33,
   HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
+  ANALOG_OUTPUTS_DOMAIN = 35,
 };
 
 enum StateInterfaces
@@ -122,6 +124,9 @@ public:
 private:
   bool setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp);
 
+  bool setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::SharedPtr req,
+                       ur_msgs::srv::SetAnalogOutput::Response::SharedPtr resp);
+
   bool setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                       ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp);
 
@@ -161,6 +166,7 @@ protected:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr hand_back_control_srv_;
   rclcpp::Service<ur_msgs::srv::SetSpeedSliderFraction>::SharedPtr set_speed_slider_srv_;
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
+  rclcpp::Service<ur_msgs::srv::SetAnalogOutput>::SharedPtr set_analog_output_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
 
