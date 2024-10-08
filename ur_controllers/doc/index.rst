@@ -129,6 +129,8 @@ Advertised services
 * ``~/resend_robot_program [std_srvs/srv/Trigger]``: When :ref:`headless_mode` is used, this
   service can be used to restart the *External Control* program on the robot.
 * ``~/set_io [ur_msgs/srv/SetIO]``: Set an output pin on the robot.
+* ``~/set_analog_output [ur_msgs/srv/SetAnalogOutput]``: Set an analog output on the robot. This
+  also allows specifying the domain.
 * ``~/set_payload [ur_msgs/srv/SetPayload]``: Change the robot's payload on-the-fly.
 * ``~/set_speed_slider [ur_msgs/srv/SetSpeedSliderFraction]``: Set the value of the speed slider.
 * ``~/zero_ftsensor [std_srvs/srv/Trigger]``: Zeroes the reported wrench of the force torque
