@@ -24,12 +24,12 @@ read -r -a ignore_dirs <<<"$IGNORE_DIRS"
 read -r -a ignore_patterns <<<"$IGNORE_PATTERNS"
 
 IGNORE_FILES_ARG=""
-for item in "${!ignore_files[@]}"; do
-  IGNORE_FILES_ARG="$IGNORE_FILES_ARG--exclude=$item"
+for item in "${ignore_files[@]}"; do
+  IGNORE_FILES_ARG="$IGNORE_FILES_ARG --exclude=$item"
 done
 IGNORE_DIRS_ARG=""
-for item in "${!ignore_dirs[@]}"; do
-  IGNORE_DIRS_ARG="$IGNORE_DIRS_ARG--exclude-dir=$item"
+for item in "${ignore_dirs[@]}"; do
+  IGNORE_DIRS_ARG="$IGNORE_DIRS_ARG --exclude-dir=$item"
 done
 
 #Find URLs in code:
@@ -41,7 +41,7 @@ FAILED_LINKS=()
 for item in $urls; do
 #     echo $item
     skip=0
-    for pattern in "${!ignore_patterns[@]}"; do
+    for pattern in "${ignore_patterns[@]}"; do
       [[ "$item" =~ $pattern ]] && skip=1
     done
 
