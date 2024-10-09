@@ -44,6 +44,7 @@
 
 #include "ur_client_library/exceptions.h"
 #include "ur_client_library/ur/tool_communication.h"
+#include "ur_client_library/ur/version_information.h"
 
 #include "rclcpp/rclcpp.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -95,9 +96,9 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   system_interface_initialized_ = 0.0;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    if (joint.command_interfaces.size() != 2) {
+    if (joint.command_interfaces.size() != 5) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
-                   "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
+                   "Joint '%s' has %zu command interfaces found. 5 expected.", joint.name.c_str(),
                    joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
@@ -251,6 +252,18 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
 
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
+
+  state_interfaces.emplace_back(hardware_interface::StateInterface(
+      tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
+
   return state_interfaces;
 }
 
@@ -263,6 +276,15 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "passthrough_position",
+                                                                         &passthrough_trajectory_positions_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "passthrough_velocity",
+                                                                         &passthrough_trajectory_velocities_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, "passthrough_acceleration", &passthrough_trajectory_accelerations_[i]));
   }
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
@@ -308,6 +330,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "gpio", "analog_output_domain_cmd", &analog_output_domain_cmd_));
 
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
@@ -473,6 +497,13 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                         "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
                         "README.md] for details.");
   }
+
+  // Export version information to state interfaces
+  urcl::VersionInformation version_info = ur_driver_->getVersion();
+  get_robot_software_version_major_ = version_info.major;
+  get_robot_software_version_minor_ = version_info.minor;
+  get_robot_software_version_build_ = version_info.build;
+  get_robot_software_version_bugfix_ = version_info.bugfix;
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
@@ -676,6 +707,8 @@ void URPositionHardwareInterface::initAsyncIO()
     standard_analog_output_cmd_[i] = NO_NEW_CMD_;
   }
 
+  analog_output_domain_cmd_ = NO_NEW_CMD_;
+
   tool_voltage_cmd_ = NO_NEW_CMD_;
 
   payload_mass_ = NO_NEW_CMD_;
@@ -705,7 +738,13 @@ void URPositionHardwareInterface::checkAsyncIO()
 
   for (size_t i = 0; i < 2; ++i) {
     if (!std::isnan(standard_analog_output_cmd_[i]) && ur_driver_ != nullptr) {
-      io_async_success_ = ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i]);
+      urcl::AnalogOutputType domain = urcl::AnalogOutputType::SET_ON_TEACH_PENDANT;
+      if (!std::isnan(analog_output_domain_cmd_) && ur_driver_ != nullptr) {
+        domain = static_cast<urcl::AnalogOutputType>(analog_output_domain_cmd_);
+        analog_output_domain_cmd_ = NO_NEW_CMD_;
+      }
+      io_async_success_ =
+          ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i], domain);
       standard_analog_output_cmd_[i] = NO_NEW_CMD_;
     }
   }

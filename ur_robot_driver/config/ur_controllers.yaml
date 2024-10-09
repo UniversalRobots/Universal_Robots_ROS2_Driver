@@ -27,12 +27,19 @@ controller_manager:
     tcp_pose_broadcaster:
       type: pose_broadcaster/PoseBroadcaster
 
+    ur_configuration_controller:
+      type: ur_controllers/URConfigurationController
+
 speed_scaling_state_broadcaster:
   ros__parameters:
     state_publish_rate: 100.0
     tf_prefix: "$(var tf_prefix)"
 
 io_and_status_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+ur_configuration_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
 

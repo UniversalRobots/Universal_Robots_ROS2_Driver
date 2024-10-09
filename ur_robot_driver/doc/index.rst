@@ -12,6 +12,8 @@ ur_robot_driver
 
    overview
    installation/toc
-   usage
+   usage/toc
+   operation_modes
    setup_tool_communication
-   ROS_INTERFACE
+   hardware_interface_parameters
+   dashboard_client
