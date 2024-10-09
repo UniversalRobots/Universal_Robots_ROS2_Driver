@@ -27,9 +27,9 @@ robot as explained `here <https://moveit.picknik.ai/main/doc/tutorials/quickstar
 .. note::
    Usually, MoveIt uses trajectory execution monitoring (TEM). If executing a trajectory takes too long,
    e.g. because the action server died or the robot is blocked, this will lead to an error in
-   trajectory execution. However, with the scaled joint trajectory controller used by this driver,
+   trajectory execution. However, with the scaled joint trajectory controller offered by this driver,
    this doesn't make much sense (as long as TEM is not aware of the scaling), as execution time can
-   be unbounded on purpose. Hence, TEM is disabled in the example moveit configuration:
+   be unbounded on purpose. Hence, TEM is disabled in the example MoveIt configuration:
 
    .. literalinclude:: ../config/moveit_controllers.yaml
       :language: yaml
