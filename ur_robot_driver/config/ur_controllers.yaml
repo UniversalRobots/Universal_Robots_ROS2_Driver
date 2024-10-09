@@ -138,3 +138,5 @@ tcp_pose_broadcaster:
   ros__parameters:
     frame_id: $(var tf_prefix)base
     pose_name: $(var tf_prefix)tcp_pose
+    tf:
+      child_frame_id: $(var tf_prefix)tool0_controller
