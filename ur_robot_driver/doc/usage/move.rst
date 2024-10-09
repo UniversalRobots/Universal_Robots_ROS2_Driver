@@ -67,4 +67,11 @@ To test the driver with the example MoveIt-setup, first start the driver as desc
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
 robot as explained `here <https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html>`_.
 
+.. note::
+   Usually, MoveIt uses trajectory execution monitoring (TEM). If executing a trajectory takes too long,
+   e.g. because the action server died or the robot is blocked, this will lead to an error in
+   trajectory execution. However, with the scaled joint trajectory controller used by this driver,
+   this doesn't make much sense (as long as TEM is not aware of the scaling), as execution time can
+   be unbounded on purpose. Hence, TEM is disabled in the example moveit configuration.
+
 For more details, please see :ref:`ur_moveit_config`.
