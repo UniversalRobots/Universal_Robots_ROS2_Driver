@@ -13,10 +13,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Check URLs
         run: |
-          .github/helpers/check_urls.sh -rI \
-            --exclude-dir=.git \
-            --exclude-dir=build/ \
-            --exclude=package.xml \
-            --exclude-dir=CMakeModules \
-            --exclude-dir=debian \
-            --exclude=ursim_docker.rst \
+          .github/helpers/check_urls.sh \
+            -d ".git build CMakeModules debian" \
+            -f "package.xml ursim_docker.rst" \
+            -p "vnc\.html"
