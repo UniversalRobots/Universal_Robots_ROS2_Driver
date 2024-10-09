@@ -2,6 +2,15 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.10 (2024-09-11)
+-------------------
+* Updated get_state to get_lifecycle_state (`#1087 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1087>`_)
+* Update maintainers team (`#1088 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1088>`_)
+* Contributors: Vincenzo Di Pentima
+
+2.4.9 (2024-08-09)
+------------------
+
 2.4.8 (2024-07-01)
 ------------------
 

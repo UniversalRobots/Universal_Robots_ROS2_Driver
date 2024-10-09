@@ -60,6 +60,7 @@ from test_common import (  # noqa: E402
     DashboardInterface,
     IoStatusInterface,
     ForceModeInterface,
+    ConfigurationInterface,
     generate_driver_test_description,
 )
 
@@ -103,6 +104,8 @@ class RobotDriverTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
+
         self._scaled_follow_joint_trajectory = ActionInterface(
             self.node,
             "/scaled_joint_trajectory_controller/follow_joint_trajectory",
@@ -213,6 +216,11 @@ class RobotDriverTest(unittest.TestCase):
                 strictness=SwitchController.Request.BEST_EFFORT,
                 deactivate_controllers=["force_mode_controller"],
             ).ok
+        )
+
+    def test_get_robot_software_version(self):
+        self.assertNotEqual(
+            self._configuration_controller_interface.get_robot_software_version().major, 0
         )
 
     def test_start_scaled_jtc_controller(self):

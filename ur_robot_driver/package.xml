@@ -2,18 +2,19 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ur_robot_driver</name>
-  <version>2.4.8</version>
+  <version>2.4.10</version>
   <description>The new driver for Universal Robots UR3, UR5 and UR10 robots with CB3 controllers and the e-series.</description>
 
-  <maintainer email="denis@stoglrobotics.de">Denis Stogl</maintainer>
   <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
+  <maintainer email="dipentima@fzi.de">Vincenzo Di Pentima</maintainer>
 
   <license>BSD-3-Clause</license>
 
   <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
 
+  <author email="denis@stoglrobotics.de">Denis Stogl</author>
+  <author email="wilbrandt@fzi.de">Robert Wilbrandt</author>
   <author email="grosse@fzi.de">Marvin Große Besselmann</author>
   <author email="lovro.ivanov@gmail.com">Lovro Ivanov</author>
   <author email="zelenak@picknik.ai">Andy Zelenak</author>

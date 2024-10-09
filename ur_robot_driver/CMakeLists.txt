@@ -148,6 +148,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/tool_communication.py
   scripts/wait_for_robot_description
+  scripts/example_move.py
   scripts/start_ursim.sh
   examples/examples.py
   examples/force_mode.py
@@ -171,7 +172,15 @@ if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake)
 
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
+    add_launch_test(test/launch_args.py
+      TIMEOUT
+        180
+    )
     add_launch_test(test/dashboard_client.py
+      TIMEOUT
+        180
+    )
+    add_launch_test(test/example_move.py
       TIMEOUT
         180
     )

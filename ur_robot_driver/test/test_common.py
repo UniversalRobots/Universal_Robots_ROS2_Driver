@@ -52,7 +52,7 @@ from ur_dashboard_msgs.srv import (
     IsProgramRunning,
     Load,
 )
-from ur_msgs.srv import SetIO, SetForceMode
+from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
@@ -240,7 +240,18 @@ class IoStatusInterface(
     _ServiceInterface,
     namespace="/io_and_status_controller",
     initial_services={"set_io": SetIO},
-    services={"resend_robot_program": Trigger},
+    services={
+        "resend_robot_program": Trigger,
+    },
+):
+    pass
+
+
+class ConfigurationInterface(
+    _ServiceInterface,
+    namespace="/ur_configuration_controller",
+    initial_services={"get_robot_software_version": GetRobotSoftwareVersion},
+    services={},
 ):
     pass
 
@@ -323,7 +334,7 @@ def generate_driver_test_description(
         "controller_spawner_timeout": str(controller_spawner_timeout),
         "initial_joint_controller": "scaled_joint_trajectory_controller",
         "headless_mode": "true",
-        "launch_dashboard_client": "false",
+        "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
     if tf_prefix:

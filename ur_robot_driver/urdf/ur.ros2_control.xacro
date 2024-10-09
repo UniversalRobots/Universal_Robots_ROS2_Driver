@@ -42,6 +42,7 @@
           <plugin>mock_components/GenericSystem</plugin>
           <param name="mock_sensor_commands">${mock_sensor_commands}</param>
           <param name="state_following_offset">0.0</param>
+          <param name="calculate_dynamics">true</param>
         </xacro:if>
         <xacro:unless value="${use_mock_hardware}">
           <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
@@ -113,6 +114,7 @@
 
         <command_interface name="standard_analog_output_cmd_0"/>
         <command_interface name="standard_analog_output_cmd_1"/>
+        <command_interface name="analog_output_domain_cmd"/>
 
         <command_interface name="tool_voltage_cmd"/>
 

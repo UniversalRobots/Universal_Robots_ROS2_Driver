@@ -1,4 +1,5 @@
-# Copyright (c) 2021 PickNik, Inc.
+#!/usr/bin/env python
+# Copyright 2019, FZI Forschungszentrum Informatik
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -26,30 +27,52 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-#
-# Author: Lovro Ivanov
-#
-# Description: After a robot has been loaded, this will execute a series of trajectories.
+import os
+import subprocess
+import sys
+import time
+import unittest
 
-from launch import LaunchDescription
-from launch.substitutions import PathJoinSubstitution
-from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
+import rclpy
+from rclpy.node import Node as ROSNode
+
+sys.path.append(os.path.dirname(__file__))
+from test_common import (  # noqa: E402
+    generate_driver_test_description,
+    DashboardInterface,
+    IoStatusInterface,
+)
 
 
-def generate_launch_description():
-    velocity_config = PathJoinSubstitution(
-        [FindPackageShare("ur_robot_driver"), "config", "test_velocity_goal_publishers_config.yaml"]
-    )
+def generate_test_description():
+    ld = generate_driver_test_description()
+    return ld
 
-    return LaunchDescription(
-        [
-            Node(
-                package="ros2_controllers_test_nodes",
-                executable="publisher_forward_position_controller",
-                name="publisher_forward_velocity_controller",
-                parameters=[velocity_config],
-                output="screen",
-            )
-        ]
-    )
+
+class ExampleMoveTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the ROS context
+        rclpy.init()
+        cls.node = ROSNode("example_move_test")
+        time.sleep(1)
+        cls.init_robot(cls)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Shutdown the ROS context
+        cls.node.destroy_node()
+        rclpy.shutdown()
+
+    def init_robot(self):
+        self._dashboard_interface = DashboardInterface(self.node)
+        self._io_status_controller_interface = IoStatusInterface(self.node)
+
+    def setUp(self):
+        self._dashboard_interface.start_robot()
+        time.sleep(1)
+        self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
+
+    def test_example_move(self):
+        cmd = ["ros2", "run", "ur_robot_driver", "example_move.py"]
+        subprocess.check_output(cmd)
