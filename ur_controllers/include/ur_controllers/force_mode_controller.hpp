@@ -37,6 +37,8 @@
 #pragma once
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <realtime_tools/realtime_buffer.h>
+#include <array>
 #include <memory>
 
 #include <controller_interface/controller_interface.hpp>
@@ -85,6 +87,17 @@ enum StateInterfaces
   INITIALIZED_FLAG = 0u,
 };
 
+struct ForceModeParameters
+{
+  std::array<double, 6> task_frame;
+  std::array<double, 6> selection_vec;
+  std::array<double, 6> limits;
+  geometry_msgs::msg::WrenchStamped wrench;
+  double type;
+  double damping_factor;
+  double gain_scaling;
+};
+
 class ForceModeController : public controller_interface::ControllerInterface
 {
 public:
@@ -102,6 +115,8 @@ public:
 
   CallbackReturn on_init() override;
 
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) override;
+
 private:
   bool setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
                     ur_msgs::srv::SetForceMode::Response::SharedPtr resp);
@@ -113,6 +128,11 @@ private:
 
   std::shared_ptr<force_mode_controller::ParamListener> param_listener_;
   force_mode_controller::Params params_;
+
+  realtime_tools::RealtimeBuffer<ForceModeParameters> force_mode_params_buffer_;
+  std::atomic<bool> force_mode_active_;
+  std::atomic<bool> change_requested_;
+  std::atomic<double> async_state_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   /**
