@@ -301,6 +301,36 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
 
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_x", &force_mode_task_frame_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_y", &force_mode_task_frame_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_z", &force_mode_task_frame_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_rx", &force_mode_task_frame_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_ry", &force_mode_task_frame_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "task_frame_rz", &force_mode_task_frame_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_x", &force_mode_selection_vector_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_y", &force_mode_selection_vector_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_z", &force_mode_selection_vector_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_rx", &force_mode_selection_vector_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_ry", &force_mode_selection_vector_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "selection_vector_rz", &force_mode_selection_vector_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_x", &force_mode_wrench_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_y", &force_mode_wrench_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_z", &force_mode_wrench_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_rx", &force_mode_wrench_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_ry", &force_mode_wrench_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "wrench_rz", &force_mode_wrench_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "type", &force_mode_type_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_x", &force_mode_limits_[0]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_y", &force_mode_limits_[1]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_z", &force_mode_limits_[2]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_rx", &force_mode_limits_[3]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_ry", &force_mode_limits_[4]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "limits_rz", &force_mode_limits_[5]);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "force_mode_async_success", &force_mode_async_success_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "disable_cmd", &force_mode_disable_cmd_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "damping", &force_mode_damping_);
+  command_interfaces.emplace_back(tf_prefix + "force_mode", "gain_scaling", &force_mode_gain_scaling_);
+
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
@@ -634,6 +664,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
+      force_mode_disable_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -693,6 +724,14 @@ void URPositionHardwareInterface::initAsyncIO()
 
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+
+  for (size_t i = 0; i < 6; i++) {
+    force_mode_task_frame_[i] = NO_NEW_CMD_;
+    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_wrench_[i] = NO_NEW_CMD_;
+    force_mode_limits_[i] = NO_NEW_CMD_;
+  }
+  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
@@ -765,6 +804,44 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  }
+  if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
+      !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
+      !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
+    urcl::vector6uint32_t force_mode_selection_vector;
+    for (size_t i = 0; i < 6; i++) {
+      force_mode_selection_vector[i] = force_mode_selection_vector_[i];
+    }
+    /* Check version of robot to ensure that the correct startForceMode is called. */
+    if (ur_driver_->getVersion().major < 5) {
+      force_mode_async_success_ =
+          ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector, force_mode_wrench_,
+                                     force_mode_type_, force_mode_limits_, force_mode_damping_);
+      if (force_mode_gain_scaling_ != 0.5) {
+        RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"), "Force mode gain scaling cannot be used on CB3 "
+                                                                       "robots. Starting force mode, but disregarding "
+                                                                       "gain scaling.");
+      }
+    } else {
+      force_mode_async_success_ = ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector,
+                                                             force_mode_wrench_, force_mode_type_, force_mode_limits_,
+                                                             force_mode_damping_, force_mode_gain_scaling_);
+    }
+
+    for (size_t i = 0; i < 6; i++) {
+      force_mode_task_frame_[i] = NO_NEW_CMD_;
+      force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+      force_mode_wrench_[i] = NO_NEW_CMD_;
+      force_mode_limits_[i] = NO_NEW_CMD_;
+    }
+    force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+    force_mode_damping_ = NO_NEW_CMD_;
+    force_mode_gain_scaling_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
+    force_mode_async_success_ = ur_driver_->endForceMode();
+    force_mode_disable_cmd_ = NO_NEW_CMD_;
   }
 }
 

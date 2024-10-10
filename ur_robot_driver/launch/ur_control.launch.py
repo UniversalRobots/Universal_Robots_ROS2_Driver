@@ -167,6 +167,7 @@ def launch_setup(context):
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
         "ur_configuration_controller",
+        "force_mode_controller",
     ]
     controllers_inactive = [
         "scaled_joint_trajectory_controller",

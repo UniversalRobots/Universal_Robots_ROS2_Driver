@@ -207,6 +207,17 @@ protected:
   double payload_mass_;
   double payload_async_success_;
 
+  // force mode parameters
+  urcl::vector6d_t force_mode_task_frame_;
+  urcl::vector6d_t force_mode_selection_vector_;
+  urcl::vector6d_t force_mode_wrench_;
+  urcl::vector6d_t force_mode_limits_;
+  double force_mode_type_;
+  double force_mode_async_success_;
+  double force_mode_disable_cmd_;
+  double force_mode_damping_;
+  double force_mode_gain_scaling_;
+
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;
   std::array<double, 18> actual_dig_in_bits_copy_;
