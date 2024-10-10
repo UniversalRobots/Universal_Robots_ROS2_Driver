@@ -9,7 +9,10 @@ on:
         default: ''
         required: false
         type: string
-
+      upstream_type:
+        description: 'Binary or semi-binary build'
+        required: true
+        type: string
       upstream_workspace:
         description: 'UPSTREAM_WORKSPACE variable for industrial_ci. Usually path to local .repos file.'
         required: true
@@ -68,3 +71,15 @@ jobs:
           ROS_REPO: ${{ inputs.ros_repo }}
           CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
           ADDITIONAL_DEBS: docker.io netcat-openbsd  # Needed for integration tests
+      - uses: JasonEtco/create-an-issue@v2
+        if: ${{ always() && (steps.ici.outputs.build_target_workspace == '2' || steps.ici.outputs.target_test_results == '1') && github.event_name == 'schedule'}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_TYPE: ${{ inputs.upstream_type }}
+          REF: ${{ inputs.ref_for_scheduled_build }}
+          DISTRO: ${{ inputs.ros_distro }}
+          REPO: ${{ inputs.ros_repo }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          update_existing: true
+          filename: .github/issue_template_failed_ci.md
