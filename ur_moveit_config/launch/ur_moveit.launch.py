@@ -188,6 +188,8 @@ def launch_setup(context, *args, **kwargs):
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
+        # Execution time monitoring can be incompatible with the scaled JTC
+        "trajectory_execution.execution_duration_monitoring": False,
     }
 
     planning_scene_monitor_parameters = {
