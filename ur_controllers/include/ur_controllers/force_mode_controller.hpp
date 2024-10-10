@@ -44,6 +44,7 @@
 #include <controller_interface/controller_interface.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <std_srvs/srv/trigger.hpp>
 #include <ur_msgs/srv/set_force_mode.hpp>
 
 #include "force_mode_controller_parameters.hpp"
@@ -120,8 +121,10 @@ public:
 private:
   bool setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
                     ur_msgs::srv::SetForceMode::Response::SharedPtr resp);
-  bool disableForceMode();
+  bool disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr req,
+                        std_srvs::srv::Trigger::Response::SharedPtr resp);
   rclcpp::Service<ur_msgs::srv::SetForceMode>::SharedPtr set_force_mode_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr disable_force_mode_srv_;
 
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_;

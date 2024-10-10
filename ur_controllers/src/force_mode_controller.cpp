@@ -34,6 +34,7 @@
  */
 //----------------------------------------------------------------------
 
+#include <future>
 #include <limits>
 #include <rclcpp/logging.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -134,6 +135,9 @@ ur_controllers::ForceModeController::on_configure(const rclcpp_lifecycle::State&
     set_force_mode_srv_ = get_node()->create_service<ur_msgs::srv::SetForceMode>(
         "~/start_force_mode",
         std::bind(&ForceModeController::setForceMode, this, std::placeholders::_1, std::placeholders::_2));
+    disable_force_mode_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/stop_force_mode",
+        std::bind(&ForceModeController::disableForceMode, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -154,12 +158,7 @@ controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   // Stop force mode if this controller is deactivated.
-  disableForceMode();
-  try {
-    set_force_mode_srv_.reset();
-  } catch (...) {
-    return LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
+  command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0);
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -167,6 +166,7 @@ controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   set_force_mode_srv_.reset();
+  disable_force_mode_srv_.reset();
   return CallbackReturn::SUCCESS;
 }
 
@@ -227,7 +227,9 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
       command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
       async_state_ = ASYNC_WAITING;
     } else {
-      // TODO(fexner): Disable
+      command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0);
+      command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+      async_state_ = ASYNC_WAITING;
     }
     change_requested_ = false;
   }
@@ -322,18 +324,18 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   return true;
 }
 
-bool ForceModeController::disableForceMode()
+bool ForceModeController::disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
+                                           std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
-  command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-  command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1);
-
+  force_mode_active_ = false;
+  change_requested_ = true;
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be disabled.");
-  while (command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
+  while (async_state_ == ASYNC_WAITING || change_requested_) {
     // Asynchronous wait until the hardware interface has set the force mode
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  bool success = static_cast<bool>(command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value());
-  if (success) {
+  resp->success = async_state_ == 1.0;
+  if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Force mode has been disabled successfully.");
   } else {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not disable force mode.");
