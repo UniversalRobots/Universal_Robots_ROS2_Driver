@@ -11,4 +11,4 @@ repositories:
   ur_msgs:
     type: git
     url: https://github.com/ros-industrial/ur_msgs.git
-    version: humble-devel
+    version: humble
