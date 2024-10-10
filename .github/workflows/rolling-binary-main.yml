@@ -19,5 +19,6 @@ jobs:
     with:
       ros_distro: rolling
       ros_repo: main
+      upstream_type: binary
       upstream_workspace: Universal_Robots_ROS2_Driver-not-released.rolling.repos
       ref_for_scheduled_build: main
