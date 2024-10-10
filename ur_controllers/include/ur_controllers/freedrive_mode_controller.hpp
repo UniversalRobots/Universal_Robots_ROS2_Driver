@@ -33,6 +33,8 @@
  * \date    2023-06-29
  */
 //----------------------------------------------------------------------
+#ifndef UR_CONTROLLERS__FREEDRIVE_MODE_CONTROLLER_HPP_
+#define UR_CONTROLLERS__FREEDRIVE_MODE_CONTROLLER_HPP_
 
 #pragma once
 #include <memory>
@@ -40,8 +42,6 @@
 #include <tf2_ros/transform_listener.h>
 
 #include <controller_interface/controller_interface.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <std_msgs/msg/bool.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 namespace ur_controllers
@@ -63,6 +63,7 @@ public:
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
+  // Change the input for the update function
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
@@ -74,15 +75,33 @@ public:
   CallbackReturn on_init() override;
 
 private:
-  void readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg);
-  bool enableFreedriveMode();
-  bool disableFreedriveMode();
+  //void readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg);
+  //bool enableFreedriveMode();
+  //bool disableFreedriveMode();
 
-  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
+  // Everything related to the RT action server
+  using FollowJTrajAction = control_msgs::action::FollowJointTrajectory;
+  using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<FollowJTrajAction>;
+  using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
+  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
+
+  RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
+  rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
+  realtime_tools::RealtimeBuffer<std::unordered_map<std::string, size_t>> joint_trajectory_mapping_;
+
+  rclcpp::Duration action_monitor_period_ = rclcpp::Duration(50ms);
+
+  // Not sure this is needed anymore, for tf_prefix there are other ways to handle
+  // std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  // std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
   std::shared_ptr<freedrive_mode_controller::ParamListener> param_listener_;
   freedrive_mode_controller::Params params_;
+
+  /* Start an action server with an action called: /freedrive_mode_controller/start_freedrive_mode. */
+  void start_action_server(void);
+
+  void end_goal();
 
   std::atomic<bool> freedrive_mode_enable_;
   std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Bool> freedrive_mode_sub_;
@@ -94,4 +113,5 @@ private:
    */
   bool waitForAsyncCommand(std::function<double(void)> get_value);
 };
-}  // namespace ur_controllers
+} // namespace ur_controllers
+#endif // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_
