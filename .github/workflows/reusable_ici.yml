@@ -71,6 +71,7 @@ jobs:
           ROS_REPO: ${{ inputs.ros_repo }}
           CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
           ADDITIONAL_DEBS: docker.io netcat-openbsd  # Needed for integration tests
+        id: ici
       - uses: JasonEtco/create-an-issue@v2
         #if: ${{ always() && (steps.ici.outputs.build_target_workspace == '2' || steps.ici.outputs.target_test_results == '1') && github.event_name == 'schedule'}}
         if: ${{ always() && (steps.ici.outputs.build_target_workspace == '2' || steps.ici.outputs.target_test_results == '1') }}
