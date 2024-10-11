@@ -15,5 +15,5 @@ jobs:
         run: |
           .github/helpers/check_urls.sh \
             -d ".git build CMakeModules debian" \
-            -f "package.xml ursim_docker.rst" \
+            -f "package.xml ursim_docker.rst architecture_coarse.svg" \
             -p "vnc\.html"
