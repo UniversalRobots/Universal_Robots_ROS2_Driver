@@ -79,6 +79,14 @@ private:
   //bool enableFreedriveMode();
   //bool disableFreedriveMode();
 
+  // State interfaces
+  realtime_tools::RealtimeBuffer<std::vector<std::string>> joint_names_;
+  std::vector<std::string> state_interface_types_;
+
+  std::vector<std::string> joint_state_interface_names_;
+  std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_position_state_interface_;
+  std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
+
   // Everything related to the RT action server
   using FollowJTrajAction = control_msgs::action::FollowJointTrajectory;
   using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<FollowJTrajAction>;
@@ -104,6 +112,7 @@ private:
   void end_goal();
 
   std::atomic<bool> freedrive_mode_enable_;
+  std::atomic<bool> freedrive_active_;
   std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Bool> freedrive_mode_sub_;
 
   static constexpr double ASYNC_WAITING = 2.0;
