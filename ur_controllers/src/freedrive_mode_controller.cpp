@@ -68,7 +68,6 @@ controller_interface::InterfaceConfiguration FreedriveModeController::command_in
   }
 
   config.names.push_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_abort");
-  config.names.emplace_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_transfer_state");
 
   // Get the command interfaces needed for freedrive mode from the hardware interface
   // config.names.emplace_back(tf_prefix + "freedrive_mode/freedrive_mode_async_success");
@@ -94,12 +93,20 @@ controller_interface::InterfaceConfiguration ur_controllers::FreedriveModeContro
 controller_interface::return_type ur_controllers::FreedriveModeController::update(const rclcpp::Time& /*time*/,
                                                                               const rclcpp::Duration& /*period*/)
 {
-  //  Take enable and update it
-  if (freedrive_mode_enable_)
-  {
-    enableFreedriveMode();
-  }
+  const auto active_goal = *rt_active_goal_.readFromRT();
 
+  if (active_goal && trajectory_active_) {
+    // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
+    // pendant.
+    if (abort_command_interface_->get().get_value() == 1.0) {
+      RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted by hardware, aborting action.");
+      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      active_goal->setAborted(result);
+      end_goal();
+      return controller_interface::return_type::OK;
+    }
+  }
   return controller_interface::return_type::OK;
 }
 
@@ -176,20 +183,6 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
       abort_command_interface_ = *it;
-    } else {
-      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
-      return controller_interface::CallbackReturn::ERROR;
-    }
-  }
-
-  // Not sure if I need this one, check it out
-  const std::string tf_prefix = freedrive_params_.tf_prefix;
-  {
-    const std::string interface_name = tf_prefix + "freedrive_mode_controller/freedrive_mode_transfer_state";
-    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
-                           [&](auto& interface) { return (interface.get_name() == interface_name); });
-    if (it != command_interfaces_.end()) {
-      transfer_command_interface_ = *it;
     } else {
       RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
       return controller_interface::CallbackReturn::ERROR;
