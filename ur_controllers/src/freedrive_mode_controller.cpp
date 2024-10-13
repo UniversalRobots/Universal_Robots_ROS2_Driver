@@ -52,8 +52,14 @@ controller_interface::CallbackReturn FreedriveModeController::on_init()
     return CallbackReturn::ERROR;
   }
 
+  auto joint_names = passthrough_params_.joints;
+  joint_names_.writeFromNonRT(joint_names);
+  number_of_joints_ = joint_names.size();
+  state_interface_types_ = passthrough_params_.state_interfaces;
+
   return controller_interface::CallbackReturn::SUCCESS;
 }
+
 controller_interface::InterfaceConfiguration FreedriveModeController::command_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
@@ -81,33 +87,9 @@ controller_interface::InterfaceConfiguration ur_controllers::FreedriveModeContro
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
-  // I'm not sure I need these interfaces
   std::copy(joint_state_interface_names_.cbegin(), joint_state_interface_names_.cend(), std::back_inserter(config.names));
 
-  // This doesn't exist for me, so I will comment it for now
-  //config.names.push_back(freedrive_params_.speed_scaling_interface_name);
-
   return config;
-}
-
-controller_interface::return_type ur_controllers::FreedriveModeController::update(const rclcpp::Time& /*time*/,
-                                                                              const rclcpp::Duration& /*period*/)
-{
-  const auto active_goal = *rt_active_goal_.readFromRT();
-
-  if (active_goal && trajectory_active_) {
-    // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
-    // pendant.
-    if (abort_command_interface_->get().get_value() == 1.0) {
-      RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted by hardware, aborting action.");
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
-      active_goal->setAborted(result);
-      end_goal();
-      return controller_interface::return_type::OK;
-    }
-  }
-  return controller_interface::return_type::OK;
 }
 
 controller_interface::CallbackReturn
@@ -206,6 +188,86 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
     end_goal();
   }
   return CallbackReturn::SUCCESS;
+}
+
+controller_interface::return_type ur_controllers::FreedriveModeController::update(const rclcpp::Time& /*time*/,
+                                                                              const rclcpp::Duration& /*period*/)
+{
+  const auto active_goal = *rt_active_goal_.readFromRT();
+
+  if (active_goal && trajectory_active_) {
+    // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
+    // pendant.
+    if (abort_command_interface_->get().get_value() == 1.0) {
+      RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted by hardware, aborting action.");
+      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
+          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      active_goal->setAborted(result);
+      end_goal();
+      return controller_interface::return_type::OK;
+    }
+  }
+  return controller_interface::return_type::OK;
+}
+
+rclcpp_action::GoalResponse FreedriveModeController::goal_received_callback(
+    const rclcpp_action::GoalUUID& /*uuid*/,
+    std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
+{
+  RCLCPP_INFO(get_node()->get_logger(), "Received new trajectory.");
+  // Precondition: Running controller
+  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't enable freedrive mode. Freedrive mode controller is not running.");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
+
+  if (freedrive_active_) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Freedrive mode is already enabled: ignoring new request.");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
+
+  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
+
+rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_callback(
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
+{
+  // Check that cancel request refers to currently active goal (if any)
+  const auto active_goal = *rt_active_goal_.readFromNonRT();
+  if (active_goal && active_goal->gh_ == goal_handle) {
+    RCLCPP_INFO(get_node()->get_logger(), "Disabling freedrive mode requested.");
+
+    // Mark the current goal as canceled
+    auto result = std::make_shared<FollowJTrajAction::Result>();
+    active_goal->setCanceled(result);
+    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+    freedrive_active_ = false;
+  }
+  return rclcpp_action::CancelResponse::ACCEPT;
+}
+
+void PassthroughTrajectoryController::goal_accepted_callback(
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
+{
+  RCLCPP_INFO_STREAM(get_node()->get_logger(), "Starting freedrive mode.");
+
+  // Action handling will be done from the timer callback to avoid those things in the realtime
+  // thread. First, we delete the existing (if any) timer by resetting the pointer and then create a new
+  // one.
+  //
+  RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
+  rt_goal->execute();
+  rt_active_goal_.writeFromNonRT(rt_goal);
+  goal_handle_timer_.reset();
+  goal_handle_timer_ = get_node()->create_wall_timer(action_monitor_period_.to_chrono<std::chrono::nanoseconds>(),
+                                                     std::bind(&RealtimeGoalHandle::runNonRealtime, rt_goal));
+  freedrive_active_ = true;
+  return;
+}
+
+void FreedriveModeController::end_goal()
+{
+  freedrive_active_ = false;
 }
 
 void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg)
