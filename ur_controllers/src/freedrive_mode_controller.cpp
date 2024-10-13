@@ -76,8 +76,8 @@ controller_interface::InterfaceConfiguration FreedriveModeController::command_in
   config.names.push_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_abort");
 
   // Get the command interfaces needed for freedrive mode from the hardware interface
-  // config.names.emplace_back(tf_prefix + "freedrive_mode/freedrive_mode_async_success");
-  // config.names.emplace_back(tf_prefix + "freedrive_mode/freedrive_mode_cmd");
+  config.names.emplace_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_async_success");
+  config.names.emplace_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_disable_cmd");
 
   return config;
 }
@@ -171,6 +171,32 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
     }
   }
 
+  {
+    const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode_controller/"
+                                                                       "freedrive_async_success";
+    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != command_interfaces_.end()) {
+      async_success_command_interface_ = *it;
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+
+  {
+    const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode_controller/"
+                                                                       "freedrive_mode_disable_cmd";
+    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != command_interfaces_.end()) {
+      disable_command_interface_ = *it;
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+
   return ControllerInterface::on_activate(state);
 }
 
@@ -195,11 +221,11 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 {
   const auto active_goal = *rt_active_goal_.readFromRT();
 
-  if (active_goal && trajectory_active_) {
+  if (active_goal && freedrive_active_) {
     // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
     // pendant.
     if (abort_command_interface_->get().get_value() == 1.0) {
-      RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted by hardware, aborting action.");
+      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting action.");
       std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
           std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
       active_goal->setAborted(result);
@@ -214,7 +240,7 @@ rclcpp_action::GoalResponse FreedriveModeController::goal_received_callback(
     const rclcpp_action::GoalUUID& /*uuid*/,
     std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
 {
-  RCLCPP_INFO(get_node()->get_logger(), "Received new trajectory.");
+  RCLCPP_INFO(get_node()->get_logger(), "Received new request for freedrive mode activation.");
   // Precondition: Running controller
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't enable freedrive mode. Freedrive mode controller is not running.");
@@ -237,6 +263,22 @@ rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_ca
   if (active_goal && active_goal->gh_ == goal_handle) {
     RCLCPP_INFO(get_node()->get_logger(), "Disabling freedrive mode requested.");
 
+    // Setting interfaces to deactivate freedrive mode
+    async_success_command_interface_->get().set_value(ASYNC_WAITING);
+    disable_command_interface_->get().set_value(1.0);
+
+    RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be disabled.");
+    while (async_success_command_interface_->get().get_value() == ASYNC_WAITING) {
+      // Asynchronous wait until the hardware interface has set the freedrive mode
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    bool success = static_cast<bool>(async_success_command_interface_->get().get_value());
+    if (success) {
+      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been disabled successfully.");
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Could not disable freedrive mode.");
+    }
+
     // Mark the current goal as canceled
     auto result = std::make_shared<FollowJTrajAction::Result>();
     active_goal->setCanceled(result);
@@ -251,6 +293,28 @@ void PassthroughTrajectoryController::goal_accepted_callback(
 {
   RCLCPP_INFO_STREAM(get_node()->get_logger(), "Starting freedrive mode.");
 
+  // reset success flag
+  async_success_command_interface_->get().set_value(ASYNC_WAITING);
+
+  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be set.");
+  // const auto maximum_retries = freedrive_params_.check_io_successful_retries;
+  // int retries = 0;
+  while (async_success_command_interface_->get().get_value() == ASYNC_WAITING) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    // retries++;
+
+    // if (retries > maximum_retries) {
+    //   resp->success = false;
+    // }
+  }
+
+  resp->success = static_cast<bool>(async_success_command_interface_->get().get_value());
+
+  if (resp->success) {
+    RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been set successfully.");
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the freedrive mode.");
+  }
   // Action handling will be done from the timer callback to avoid those things in the realtime
   // thread. First, we delete the existing (if any) timer by resetting the pointer and then create a new
   // one.
@@ -317,7 +381,7 @@ bool FreedriveModeController::enableFreedriveMode()
 bool FreedriveModeController::disableFreedriveMode()
 {
   command_interfaces_[CommandInterfaces::FREEDRIVE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-  command_interfaces_[CommandInterfaces::FREEDRIVE_MODE_CMD].set_value(1);
+  command_interfaces_[CommandInterfaces::FREEDRIVE_MODE_DISABLE_CMD].set_value(1);
 
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be disabled.");
   while (command_interfaces_[CommandInterfaces::FREEDRIVE_MODE_ASYNC_SUCCESS].get_value() == ASYNC_WAITING) {
