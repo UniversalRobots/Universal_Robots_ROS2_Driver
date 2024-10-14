@@ -224,6 +224,12 @@
         <command_interface name="zero_ftsensor_async_success"/>
       </gpio>
 
+      <gpio name="${tf_prefix}freedrive_mode_controller">
+        <command_interface name="freedrive_mode_async_success"/>
+        <command_interface name="freedrive_mode_disable_cmd"/>
+        <command_interface name="freedrive_mode_abort"/>
+      </gpio>
+
       <gpio name="${tf_prefix}system_interface">
         <state_interface name="initialized"/>
       </gpio>
