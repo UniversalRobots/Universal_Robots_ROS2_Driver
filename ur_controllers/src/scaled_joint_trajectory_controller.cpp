@@ -50,6 +50,12 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_init()
   // Create the parameter listener and get the parameters
   scaled_param_listener_ = std::make_shared<scaled_joint_trajectory_controller::ParamListener>(get_node());
   scaled_params_ = scaled_param_listener_->get_params();
+  if (!scaled_params_.speed_scaling_interface_name.empty()) {
+    RCLCPP_INFO(get_node()->get_logger(), "Using scaling state from the hardware from interface %s.",
+                scaled_params_.speed_scaling_interface_name.c_str());
+  } else {
+    RCLCPP_INFO(get_node()->get_logger(), "No scaling interface set. This controller will not use speed scaling.");
+  }
 
   return JointTrajectoryController::on_init();
 }
@@ -60,11 +66,7 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
   conf = JointTrajectoryController::state_interface_configuration();
 
   if (!scaled_params_.speed_scaling_interface_name.empty()) {
-    RCLCPP_INFO(get_node()->get_logger(), "Using scaling state from the hardware from interface %s.",
-                scaled_params_.speed_scaling_interface_name.c_str());
     conf.names.push_back(scaled_params_.speed_scaling_interface_name);
-  } else {
-    RCLCPP_INFO(get_node()->get_logger(), "No scaling interface set. This controller will not use speed scaling.");
   }
 
   return conf;
