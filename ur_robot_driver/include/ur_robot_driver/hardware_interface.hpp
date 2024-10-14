@@ -192,6 +192,11 @@ protected:
   double system_interface_initialized_;
   bool async_thread_shutdown_;
 
+  // Freedrive mode controller interface values
+  double freedrive_mode_async_success_;
+  double freedrive_mode_disable_cmd_;
+  double freedrive_mode_abort_;
+
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
   double payload_mass_;
@@ -228,6 +233,9 @@ protected:
   std::atomic_bool rtde_comm_has_been_started_ = false;
 
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
+
+  // Check if name is correct here
+  const std::string FREEDRIVE_MODE_CONTROLLER = "freedrive_mode";
 };
 }  // namespace ur_robot_driver
 
