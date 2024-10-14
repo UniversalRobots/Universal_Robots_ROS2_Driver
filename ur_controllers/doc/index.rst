@@ -212,28 +212,34 @@ directly to their joints.
 
 .. code:: xml
 
-   <joint name="shoulder_pan_joint">
-      <command_interface name="position"/>
-      <command_interface name="velocity"/>
-      <command_interface name="passthrough_position"/>
-      <command_interface name="passthrough_velocity"/>
-      <command_interface name="passthrough_acceleration"/>
-      ...
+   <gpio name="${tf_prefix}trajectory_passthrough">
+     <command_interface name="setpoint_positions_0"/>
+     <command_interface name="setpoint_positions_1"/>
+     <command_interface name="setpoint_positions_2"/>
+     <command_interface name="setpoint_positions_3"/>
+     <command_interface name="setpoint_positions_4"/>
+     <command_interface name="setpoint_positions_5"/>
+     <command_interface name="setpoint_velicities_0"/>
+     <command_interface name="setpoint_velicities_1"/>
+     <command_interface name="setpoint_velicities_2"/>
+     <command_interface name="setpoint_velicities_3"/>
+     <command_interface name="setpoint_velicities_4"/>
+     <command_interface name="setpoint_velicities_5"/>
+     <command_interface name="setpoint_accelerations_0"/>
+     <command_interface name="setpoint_accelerations_1"/>
+     <command_interface name="setpoint_accelerations_2"/>
+     <command_interface name="setpoint_accelerations_3"/>
+     <command_interface name="setpoint_accelerations_4"/>
+     <command_interface name="setpoint_accelerations_5"/>
+     <command_interface name="transfer_state"/>
+     <command_interface name="time_from_start"/>
+     <command_interface name="abort"/>
+   </gpio>
 
 .. note::
 
    The hardware component has to take care that the passthrough command interfaces cannot be
    activated in parallel to the streaming command interfaces.
-
-Additionally, the following interfaces are necessary to handle the control flow:
-
-.. code:: xml
-
-   <gpio name="${tf_prefix}passthrough_controller">
-     <command_interface name="passthrough_trajectory_transfer_state"/>
-     <command_interface name="passthrough_trajectory_time_from_start"/>
-     <command_interface name="passthrough_trajectory_abort"/>
-   </gpio>
 
 Implementation details / dataflow
 """""""""""""""""""""""""""""""""

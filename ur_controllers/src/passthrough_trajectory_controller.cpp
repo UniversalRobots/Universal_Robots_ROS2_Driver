@@ -121,16 +121,15 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
 
   const std::string tf_prefix = passthrough_params_.tf_prefix;
 
-  auto joint_names = passthrough_params_.joints;
-  for (auto& joint_name : joint_names) {
-    config.names.emplace_back(joint_name + "/passthrough_position");
-    config.names.emplace_back(joint_name + "/passthrough_velocity");
-    config.names.emplace_back(joint_name + "/passthrough_acceleration");
+  for (size_t i = 0; i < number_of_joints_; ++i) {
+    config.names.emplace_back(tf_prefix + "trajectory_passthrough/setpoint_positions_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "trajectory_passthrough/setpoint_velocities_" + std::to_string(i));
+    config.names.emplace_back(tf_prefix + "trajectory_passthrough/setpoint_accelerations_" + std::to_string(i));
   }
 
-  config.names.push_back(tf_prefix + "passthrough_controller/passthrough_trajectory_abort");
-  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_transfer_state");
-  config.names.emplace_back(tf_prefix + "passthrough_controller/passthrough_trajectory_time_from_start");
+  config.names.push_back(tf_prefix + "trajectory_passthrough/abort");
+  config.names.emplace_back(tf_prefix + "trajectory_passthrough/transfer_state");
+  config.names.emplace_back(tf_prefix + "trajectory_passthrough/time_from_start");
 
   return config;
 }
@@ -168,8 +167,8 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
   }
 
   {
-    const std::string interface_name = passthrough_params_.tf_prefix + "passthrough_controller/"
-                                                                       "passthrough_trajectory_abort";
+    const std::string interface_name = passthrough_params_.tf_prefix + "trajectory_passthrough/"
+                                                                       "abort";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
@@ -182,7 +181,7 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
 
   const std::string tf_prefix = passthrough_params_.tf_prefix;
   {
-    const std::string interface_name = tf_prefix + "passthrough_controller/passthrough_trajectory_transfer_state";
+    const std::string interface_name = tf_prefix + "trajectory_passthrough/transfer_state";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
@@ -193,7 +192,7 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
     }
   }
   {
-    const std::string interface_name = tf_prefix + "passthrough_controller/passthrough_trajectory_time_from_start";
+    const std::string interface_name = tf_prefix + "trajectory_passthrough/time_from_start";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {

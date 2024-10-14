@@ -249,7 +249,7 @@ protected:
 
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
 
-  const std::string PASSTHROUGH_TRAJECTORY_CONTROLLER = "passthrough";
+  const std::string PASSTHROUGH_GPIO = "trajectory_passthrough";
 };
 }  // namespace ur_robot_driver
 
