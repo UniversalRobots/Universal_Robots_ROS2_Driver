@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.4.12 (2024-10-14)
+-------------------
 * Revert "Add passthrough interfaces for joints (`#1121 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1121>`_)" (`#1151 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1151>`_)
 * Contributors: Felix Exner (fexner)
 
