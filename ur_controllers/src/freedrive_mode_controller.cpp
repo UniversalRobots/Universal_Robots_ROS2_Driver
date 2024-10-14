@@ -268,9 +268,16 @@ rclcpp_action::CancelResponse FreedriveModeController::goal_cancelled_callback(
     disable_command_interface_->get().set_value(1.0);
 
     RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be disabled.");
+    const auto maximum_retries = freedrive_params_.check_io_successful_retries;
+    int retries = 0;
     while (async_success_command_interface_->get().get_value() == ASYNC_WAITING) {
       // Asynchronous wait until the hardware interface has set the freedrive mode
       std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      retries++;
+
+      if (retries > maximum_retries) {
+        resp->success = false;
+      }
     }
     bool success = static_cast<bool>(async_success_command_interface_->get().get_value());
     if (success) {
@@ -297,15 +304,15 @@ void FreedriveModeController::goal_accepted_callback(
   async_success_command_interface_->get().set_value(ASYNC_WAITING);
 
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be set.");
-  // const auto maximum_retries = freedrive_params_.check_io_successful_retries;
-  // int retries = 0;
+  const auto maximum_retries = freedrive_params_.check_io_successful_retries;
+  int retries = 0;
   while (async_success_command_interface_->get().get_value() == ASYNC_WAITING) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    // retries++;
+    retries++;
 
-    // if (retries > maximum_retries) {
-    //   resp->success = false;
-    // }
+    if (retries > maximum_retries) {
+      resp->success = false;
+    }
   }
 
   resp->success = static_cast<bool>(async_success_command_interface_->get().get_value());
