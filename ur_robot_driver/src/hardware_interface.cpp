@@ -96,9 +96,9 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   system_interface_initialized_ = 0.0;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    if (joint.command_interfaces.size() != 5) {
+    if (joint.command_interfaces.size() != 2) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
-                   "Joint '%s' has %zu command interfaces found. 5 expected.", joint.name.c_str(),
+                   "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
                    joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
@@ -256,15 +256,6 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "passthrough_position",
-                                                                         &passthrough_trajectory_positions_[i]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, "passthrough_velocity",
-                                                                         &passthrough_trajectory_velocities_[i]));
-
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, "passthrough_acceleration", &passthrough_trajectory_accelerations_[i]));
   }
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
