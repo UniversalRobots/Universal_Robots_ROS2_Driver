@@ -75,10 +75,6 @@ public:
   CallbackReturn on_init() override;
 
 private:
-  //void readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg);
-  //bool enableFreedriveMode();
-  //bool disableFreedriveMode();
-
   // State interfaces
   realtime_tools::RealtimeBuffer<std::vector<std::string>> joint_names_;
   std::vector<std::string> state_interface_types_;
@@ -121,7 +117,6 @@ private:
 
   void end_goal();
 
-  std::atomic<bool> freedrive_mode_enable_;
   std::atomic<bool> freedrive_active_;
 
   static constexpr double ASYNC_WAITING = 2.0;
