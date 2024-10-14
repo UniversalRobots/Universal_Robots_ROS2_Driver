@@ -37,12 +37,26 @@
 #define UR_CONTROLLERS__FREEDRIVE_MODE_CONTROLLER_HPP_
 
 #pragma once
+
+#include <realtime_tools/realtime_buffer.h>
+#include <realtime_tools/realtime_server_goal_handle.h>
+
 #include <memory>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <string>
+#include <vector>
 
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/server.hpp>
+#include <rclcpp_action/create_server.hpp>
+#include <rclcpp_action/server_goal_handle.hpp>
+#include <rclcpp/time.hpp>
+#include <rclcpp/duration.hpp>
+
+#include <ur_msgs/action/enable_freedrive_mode.hpp>
+#include "freedrive_mode_controller_parameters.hpp"
 
 namespace ur_controllers
 {
@@ -82,6 +96,9 @@ private:
   std::vector<std::string> joint_state_interface_names_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_position_state_interface_;
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> async_success_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> disable_command_interface_;
 
   // Everything related to the RT action server
   using FreedriveModeAction = ur_msgs::action::EnableFreedriveMode;
@@ -109,8 +126,8 @@ private:
   // std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   // std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
-  std::shared_ptr<freedrive_mode_controller::ParamListener> param_listener_;
-  freedrive_mode_controller::Params params_;
+  std::shared_ptr<freedrive_mode_controller::ParamListener> freedrive_param_listener_;
+  freedrive_mode_controller::Params freedrive_params_;
 
   /* Start an action server with an action called: /freedrive_mode_controller/start_freedrive_mode. */
   void start_action_server(void);
