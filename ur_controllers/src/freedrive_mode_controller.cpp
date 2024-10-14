@@ -52,10 +52,10 @@ controller_interface::CallbackReturn FreedriveModeController::on_init()
     return CallbackReturn::ERROR;
   }
 
-  auto joint_names = passthrough_params_.joints;
+  auto joint_names = freedrive_params_.joints;
   joint_names_.writeFromNonRT(joint_names);
   number_of_joints_ = joint_names.size();
-  state_interface_types_ = passthrough_params_.state_interfaces;
+  state_interface_types_ = freedrive_params_.state_interfaces;
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -110,7 +110,7 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
   freedrive_param_listener_->refresh_dynamic_parameters();
 
   // get parameters from the listener in case they were updated
-  freedrive_params_ = /freedrive_param_listener_->get_params();
+  freedrive_params_ = freedrive_param_listener_->get_params();
 
   // Joint interfaces handling
   joint_state_interface_names_.clear();
@@ -173,7 +173,7 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
 
   {
     const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode_controller/"
-                                                                       "freedrive_async_success";
+                                                                       "freedrive_mode_async_success";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
