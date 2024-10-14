@@ -88,16 +88,26 @@ private:
   std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
 
   // Everything related to the RT action server
-  using FollowJTrajAction = control_msgs::action::FollowJointTrajectory;
-  using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<FollowJTrajAction>;
+  using FreedriveModeAction = ur_msgs::action::EnableFreedriveMode;
+  using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<FreedriveModeAction>;
   using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
   using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
 
   RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
   realtime_tools::RealtimeBuffer<std::unordered_map<std::string, size_t>> joint_trajectory_mapping_;
-
   rclcpp::Duration action_monitor_period_ = rclcpp::Duration(50ms);
+
+  rclcpp_action::Server<ur_msgs::action::EnableFreedriveMode>::SharedPtr freedrive_mode_action_server_;
+  rclcpp_action::GoalResponse
+  goal_received_callback(const rclcpp_action::GoalUUID& uuid,
+                         std::shared_ptr<const ur_msgs::action::EnableFreedriveMode::Goal> goal);
+
+  rclcpp_action::CancelResponse goal_cancelled_callback(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle);
+
+  void goal_accepted_callback(
+      std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle);
 
   // Not sure this is needed anymore, for tf_prefix there are other ways to handle
   // std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -113,7 +123,6 @@ private:
 
   std::atomic<bool> freedrive_mode_enable_;
   std::atomic<bool> freedrive_active_;
-  std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Bool> freedrive_mode_sub_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   /**

@@ -128,7 +128,7 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
 
 void FreedriveModeController::start_action_server(void)
 {
-  freedrive_mode_action_server_ = rclcpp_action::create_server<control_msgs::action::FollowJointTrajectory>(
+  freedrive_mode_action_server_ = rclcpp_action::create_server<ur_msgs::action::EnableFreedriveMode>(
       get_node(), std::string(get_node()->get_name()) + "/freedrive_mode",
       std::bind(&FreedriveModeController::goal_received_callback, this, std::placeholders::_1,
                 std::placeholders::_2),
@@ -206,8 +206,8 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
   abort_command_interface_->get().set_value(1.0);
   if (freedrive_active_) {
     const auto active_goal = *rt_active_goal_.readFromRT();
-    std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-        std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    std::shared_ptr<ur_msgs::action::EnableFreedriveMode::Result> result =
+        std::make_shared<ur_msgs::action::EnableFreedriveMode::Result>();
     result->set__error_string("Deactivating freedrive mode, since the controller is being deactivated.");
     active_goal->setAborted(result);
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
@@ -226,8 +226,8 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
     // pendant.
     if (abort_command_interface_->get().get_value() == 1.0) {
       RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting action.");
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      std::shared_ptr<ur_msgs::action::EnableFreedriveMode::Result> result =
+          std::make_shared<ur_msgs::action::EnableFreedriveMode::Result>();
       active_goal->setAborted(result);
       end_goal();
       return controller_interface::return_type::OK;
@@ -238,7 +238,7 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 
 rclcpp_action::GoalResponse FreedriveModeController::goal_received_callback(
     const rclcpp_action::GoalUUID& /*uuid*/,
-    std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
+    std::shared_ptr<const ur_msgs::action::EnableFreedriveMode::Goal> goal)
 {
   RCLCPP_INFO(get_node()->get_logger(), "Received new request for freedrive mode activation.");
   // Precondition: Running controller
@@ -255,8 +255,8 @@ rclcpp_action::GoalResponse FreedriveModeController::goal_received_callback(
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
-rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_callback(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
+rclcpp_action::CancelResponse FreedriveModeController::goal_cancelled_callback(
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle)
 {
   // Check that cancel request refers to currently active goal (if any)
   const auto active_goal = *rt_active_goal_.readFromNonRT();
@@ -280,7 +280,7 @@ rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_ca
     }
 
     // Mark the current goal as canceled
-    auto result = std::make_shared<FollowJTrajAction::Result>();
+    auto result = std::make_shared<FreedriveModeAction::Result>();
     active_goal->setCanceled(result);
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
     freedrive_active_ = false;
@@ -288,8 +288,8 @@ rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_ca
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
-void PassthroughTrajectoryController::goal_accepted_callback(
-    std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
+void FreedriveModeController::goal_accepted_callback(
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle)
 {
   RCLCPP_INFO_STREAM(get_node()->get_logger(), "Starting freedrive mode.");
 
