@@ -87,13 +87,7 @@ public:
   CallbackReturn on_init() override;
 
 private:
-  // State interfaces
-  realtime_tools::RealtimeBuffer<std::vector<std::string>> joint_names_;
-  std::vector<std::string> state_interface_types_;
-
-  std::vector<std::string> joint_state_interface_names_;
-  std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_position_state_interface_;
-  std::vector<std::reference_wrapper<hardware_interface::LoanedStateInterface>> joint_velocity_state_interface_;
+  // Command interfaces
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> async_success_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> disable_command_interface_;

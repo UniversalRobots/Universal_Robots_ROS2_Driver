@@ -52,11 +52,6 @@ controller_interface::CallbackReturn FreedriveModeController::on_init()
     return CallbackReturn::ERROR;
   }
 
-  auto joint_names = freedrive_params_.joints;
-  joint_names_.writeFromNonRT(joint_names);
-  number_of_joints_ = joint_names.size();
-  state_interface_types_ = freedrive_params_.state_interfaces;
-
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -66,12 +61,6 @@ controller_interface::InterfaceConfiguration FreedriveModeController::command_in
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
   const std::string tf_prefix = freedrive_params_.tf_prefix;
-
-  auto joint_names = freedrive_params_.joints;
-  for (auto& joint_name : joint_names) {
-    config.names.emplace_back(joint_name + "/position"); //hardware_interface::HW_IF_POSITION
-    config.names.emplace_back(joint_name + "/velocity"); //hardware_interface::HW_IF_VELOCITY
-  }
 
   config.names.push_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_abort");
 
@@ -85,9 +74,7 @@ controller_interface::InterfaceConfiguration FreedriveModeController::command_in
 controller_interface::InterfaceConfiguration ur_controllers::FreedriveModeController::state_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
-  config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-
-  std::copy(joint_state_interface_names_.cbegin(), joint_state_interface_names_.cend(), std::back_inserter(config.names));
+  config.type = controller_interface::interface_configuration_type::NONE;
 
   return config;
 }
@@ -112,17 +99,6 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
   // get parameters from the listener in case they were updated
   freedrive_params_ = freedrive_param_listener_->get_params();
 
-  // Joint interfaces handling
-  joint_state_interface_names_.clear();
-
-  joint_state_interface_names_.reserve(number_of_joints_ * state_interface_types_.size());
-
-  auto joint_names_internal = joint_names_.readFromRT();
-  for (const auto& joint_name : *joint_names_internal) {
-    for (const auto& interface_type : state_interface_types_) {
-      joint_state_interface_names_.emplace_back(joint_name + "/" + interface_type);
-    }
-  }
   return ControllerInterface::on_configure(previous_state);
 }
 
@@ -140,23 +116,6 @@ void FreedriveModeController::start_action_server(void)
 controller_interface::CallbackReturn
 ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::State& state)
 {
-
-  // clear out vectors in case of restart
-  joint_position_state_interface_.clear();
-  joint_velocity_state_interface_.clear();
-
-  for (auto& interface_name : joint_state_interface_names_) {
-    auto interface_it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(),
-                                     [&](auto& interface) { return (interface.get_name() == interface_name); });
-    if (interface_it != state_interfaces_.end()) {
-      if (interface_it->get_interface_name() == "position") {
-        joint_position_state_interface_.emplace_back(*interface_it);
-
-      } else if (interface_it->get_interface_name() == "velocity") {
-        joint_velocity_state_interface_.emplace_back(*interface_it);
-      }
-    }
-  }
 
   {
     const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode_controller/"
@@ -345,4 +304,3 @@ void FreedriveModeController::end_goal()
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(ur_controllers::FreedriveModeController, controller_interface::ControllerInterface)
-find_package(cartesian_controllers REQUIRED)
