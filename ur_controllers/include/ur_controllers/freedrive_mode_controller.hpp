@@ -42,8 +42,6 @@
 #include <realtime_tools/realtime_server_goal_handle.h>
 
 #include <memory>
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
 #include <string>
 #include <vector>
 
@@ -121,10 +119,6 @@ private:
 
   void goal_accepted_callback(
       std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle);
-
-  // Not sure this is needed anymore, for tf_prefix there are other ways to handle
-  // std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
-  // std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
   std::shared_ptr<freedrive_mode_controller::ParamListener> freedrive_param_listener_;
   freedrive_mode_controller::Params freedrive_params_;

@@ -16,7 +16,6 @@ find_package(rcutils REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(tf2_ros REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
 find_package(generate_parameter_library REQUIRED)
@@ -33,7 +32,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   realtime_tools
   std_msgs
   std_srvs
-  tf2_ros
   ur_dashboard_msgs
   ur_msgs
   generate_parameter_library
