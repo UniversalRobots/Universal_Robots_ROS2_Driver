@@ -68,6 +68,8 @@ enum StateInterfaces
   INITIALIZED_FLAG = 0u,
 };
 
+using namespace std::chrono_literals; // NOLINT
+
 class FreedriveModeController : public controller_interface::ControllerInterface
 {
 public:
@@ -119,7 +121,6 @@ private:
 
   /* Start an action server with an action called: /freedrive_mode_controller/start_freedrive_mode. */
   void start_action_server(void);
-
   void end_goal();
 
   std::atomic<bool> freedrive_active_;

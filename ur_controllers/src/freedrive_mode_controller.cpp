@@ -34,10 +34,12 @@
  * \date    2024-09-16
  */
 //----------------------------------------------------------------------
-
+#include <controller_interface/controller_interface.hpp>
+#include <builtin_interfaces/msg/duration.hpp>
 #include <rclcpp/logging.hpp>
-
+#include <lifecycle_msgs/msg/state.hpp>
 #include <ur_controllers/freedrive_mode_controller.hpp>
+
 namespace ur_controllers
 {
 controller_interface::CallbackReturn FreedriveModeController::on_init()
@@ -167,7 +169,7 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
     const auto active_goal = *rt_active_goal_.readFromRT();
     std::shared_ptr<ur_msgs::action::EnableFreedriveMode::Result> result =
         std::make_shared<ur_msgs::action::EnableFreedriveMode::Result>();
-    result->set__error_string("Deactivating freedrive mode, since the controller is being deactivated.");
+    //result->set__error_string("Deactivating freedrive mode, since the controller is being deactivated.");
     active_goal->setAborted(result);
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
     end_goal();
