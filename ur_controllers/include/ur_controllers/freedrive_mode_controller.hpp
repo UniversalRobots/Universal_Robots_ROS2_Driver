@@ -92,7 +92,6 @@ private:
   // Command interfaces
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> async_success_command_interface_;
-  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> disable_command_interface_;
 
   // Everything related to the RT action server
   using FreedriveModeAction = ur_msgs::action::EnableFreedriveMode;

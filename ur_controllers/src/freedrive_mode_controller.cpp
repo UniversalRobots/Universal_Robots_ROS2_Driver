@@ -64,11 +64,9 @@ controller_interface::InterfaceConfiguration FreedriveModeController::command_in
 
   const std::string tf_prefix = freedrive_params_.tf_prefix;
 
-  config.names.push_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_abort");
-
   // Get the command interfaces needed for freedrive mode from the hardware interface
-  config.names.emplace_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_async_success");
-  config.names.emplace_back(tf_prefix + "freedrive_mode_controller/freedrive_mode_disable_cmd");
+  config.names.emplace_back(tf_prefix + "freedrive_mode/async_success");
+  config.names.emplace_back(tf_prefix + "freedrive_mode/abort");
 
   return config;
 }
@@ -120,8 +118,8 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
 {
 
   {
-    const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode_controller/"
-                                                                       "freedrive_mode_abort";
+    const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode/"
+                                                                       "abort";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
@@ -133,25 +131,12 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
   }
 
   {
-    const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode_controller/"
-                                                                       "freedrive_mode_async_success";
+    const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode/"
+                                                                       "async_success";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
       async_success_command_interface_ = *it;
-    } else {
-      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
-      return controller_interface::CallbackReturn::ERROR;
-    }
-  }
-
-  {
-    const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode_controller/"
-                                                                       "freedrive_mode_disable_cmd";
-    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
-                           [&](auto& interface) { return (interface.get_name() == interface_name); });
-    if (it != command_interfaces_.end()) {
-      disable_command_interface_ = *it;
     } else {
       RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
       return controller_interface::CallbackReturn::ERROR;
@@ -226,7 +211,7 @@ rclcpp_action::CancelResponse FreedriveModeController::goal_cancelled_callback(
 
     // Setting interfaces to deactivate freedrive mode
     async_success_command_interface_->get().set_value(ASYNC_WAITING);
-    disable_command_interface_->get().set_value(1.0);
+    abort_command_interface_->get().set_value(1.0);
 
     RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be disabled.");
     if (!waitForAsyncCommand(

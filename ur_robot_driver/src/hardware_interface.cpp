@@ -301,13 +301,10 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "freedrive_mode_controller", "freedrive_mode_async_success", &freedrive_mode_async_success_));
+      tf_prefix + FREEDRIVE_MODE, "async_success", &freedrive_mode_async_success_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "freedrive_mode_controller", "freedrive_mode_disable_cmd", &freedrive_mode_disable_cmd_));
-
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "freedrive_mode_controller", "freedrive_mode_abort", &freedrive_mode_abort_));
+      tf_prefix + FREEDRIVE_MODE, "abort", &freedrive_mode_abort_));
 
   return command_interfaces;
 }
@@ -826,7 +823,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
       }
-      if (key == tf_prefix + FREEDRIVE_MODE + "/freedrive_mode_async_success") {
+      if (key == tf_prefix + FREEDRIVE_MODE + "/async_success") {
         start_modes_.push_back(FREEDRIVE_MODE);
       }
     }
@@ -842,7 +839,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
         return (item == hardware_interface::HW_IF_VELOCITY || item == FREEDRIVE_MODE);
       })) {
-    RCLCPP_ERROR(get_logger(), "Start of velocity or passthrough interface requested while there is the position "
+    RCLCPP_ERROR(get_logger(), "Start of velocity interface or freedrive mode requested while there is the position "
                                "interface running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
@@ -853,7 +850,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
         return (item == hardware_interface::HW_IF_POSITION || item == FREEDRIVE_MODE);
       })) {
-    RCLCPP_ERROR(get_logger(), "Start of position or passthrough interface requested while there is the velocity "
+    RCLCPP_ERROR(get_logger(), "Start of position interface or freedrive mode requested while there is the velocity "
                                "interface running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
