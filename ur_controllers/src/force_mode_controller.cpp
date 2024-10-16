@@ -240,9 +240,6 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
 bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
                                        ur_msgs::srv::SetForceMode::Response::SharedPtr resp)
 {
-  // reset success flag
-  command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-
   ForceModeParameters force_mode_parameters;
 
   // transform task frame into base
