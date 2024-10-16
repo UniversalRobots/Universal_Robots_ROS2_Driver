@@ -77,7 +77,8 @@ enum StoppingInterface
 {
   NONE,
   STOP_POSITION,
-  STOP_VELOCITY
+  STOP_VELOCITY,
+  STOP_PASSTHROUGH
 };
 
 /*!
@@ -135,6 +136,10 @@ protected:
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
+  void check_passthrough_trajectory_controller();
+  void trajectory_done_callback(urcl::control::TrajectoryResult result);
+  bool has_accelerations(std::vector<std::array<double, 6>> accelerations);
+  bool has_velocities(std::vector<std::array<double, 6>> velocities);
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -197,6 +202,14 @@ protected:
   double get_robot_software_version_bugfix_;
   double get_robot_software_version_build_;
 
+  // Passthrough trajectory controller interface values
+  double passthrough_trajectory_transfer_state_;
+  double passthrough_trajectory_abort_;
+  bool passthrough_trajectory_controller_running_;
+  urcl::vector6d_t passthrough_trajectory_positions_;
+  urcl::vector6d_t passthrough_trajectory_velocities_;
+  urcl::vector6d_t passthrough_trajectory_accelerations_;
+  double passthrough_trajectory_time_from_start_;
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
   double payload_mass_;
@@ -218,6 +231,13 @@ protected:
   bool non_blocking_read_;
   double robot_program_running_copy_;
 
+  /* Vectors used to store the trajectory received from the passthrough trajectory controller. The whole trajectory is
+   * received before it is sent to the robot. */
+  std::vector<std::array<double, 6>> trajectory_joint_positions_;
+  std::vector<std::array<double, 6>> trajectory_joint_velocities_;
+  std::vector<std::array<double, 6>> trajectory_joint_accelerations_;
+  std::vector<double> trajectory_times_;
+
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
 
@@ -233,6 +253,8 @@ protected:
   std::atomic_bool rtde_comm_has_been_started_ = false;
 
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
+
+  const std::string PASSTHROUGH_GPIO = "trajectory_passthrough";
 };
 }  // namespace ur_robot_driver
 

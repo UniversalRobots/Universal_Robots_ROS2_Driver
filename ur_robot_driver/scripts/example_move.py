@@ -39,8 +39,10 @@ import rclpy
 from rclpy.action import ActionClient
 
 from builtin_interfaces.msg import Duration
+from action_msgs.msg import GoalStatus
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from control_msgs.action import FollowJointTrajectory
+from control_msgs.msg import JointTolerance
 
 TRAJECTORIES = {
     "traj0": [
@@ -133,7 +135,10 @@ class JTCClient(rclpy.node.Node):
         goal = FollowJointTrajectory.Goal()
         goal.trajectory = self.goals[traj_name]
 
-        goal.goal_time_tolerance = Duration(sec=0, nanosec=1000)
+        goal.goal_time_tolerance = Duration(sec=0, nanosec=500000000)
+        goal.goal_tolerance = [
+            JointTolerance(position=0.01, velocity=0.01, name=self.joints[i]) for i in range(6)
+        ]
 
         self._send_goal_future = self._action_client.send_goal_async(goal)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
@@ -151,12 +156,17 @@ class JTCClient(rclpy.node.Node):
 
     def get_result_callback(self, future):
         result = future.result().result
-        self.get_logger().info(f"Done with result: {self.error_code_to_str(result.error_code)}")
-        if result.error_code == FollowJointTrajectory.Result.SUCCESSFUL:
+        status = future.result().status
+        self.get_logger().info(f"Done with result: {self.status_to_str(status)}")
+        if status == GoalStatus.STATUS_SUCCEEDED:
             time.sleep(2)
             self.execute_next_trajectory()
         else:
-            raise RuntimeError("Executing trajectory failed")
+            if result.error_code != FollowJointTrajectory.Result.SUCCESSFUL:
+                self.get_logger().error(
+                    f"Done with result: {self.error_code_to_str(result.error_code)}"
+                )
+            raise RuntimeError("Executing trajectory failed. " + result.error_string)
 
     @staticmethod
     def error_code_to_str(error_code):
@@ -173,6 +183,23 @@ class JTCClient(rclpy.node.Node):
         if error_code == FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED:
             return "GOAL_TOLERANCE_VIOLATED"
 
+    @staticmethod
+    def status_to_str(error_code):
+        if error_code == GoalStatus.STATUS_UNKNOWN:
+            return "UNKNOWN"
+        if error_code == GoalStatus.STATUS_ACCEPTED:
+            return "ACCEPTED"
+        if error_code == GoalStatus.STATUS_EXECUTING:
+            return "EXECUTING"
+        if error_code == GoalStatus.STATUS_CANCELING:
+            return "CANCELING"
+        if error_code == GoalStatus.STATUS_SUCCEEDED:
+            return "SUCCEEDED"
+        if error_code == GoalStatus.STATUS_CANCELED:
+            return "CANCELED"
+        if error_code == GoalStatus.STATUS_ABORTED:
+            return "ABORTED"
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -180,6 +207,8 @@ def main(args=None):
     jtc_client = JTCClient()
     try:
         rclpy.spin(jtc_client)
+    except RuntimeError as err:
+        jtc_client.get_logger().error(str(err))
     except SystemExit:
         rclpy.logging.get_logger("jtc_client").info("Done")
 
