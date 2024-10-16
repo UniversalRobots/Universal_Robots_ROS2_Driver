@@ -226,6 +226,7 @@
 
       <gpio name="${tf_prefix}freedrive_mode">
         <command_interface name="async_success"/>
+        <command_interface name="enable"/>
         <command_interface name="abort"/>
       </gpio>
 

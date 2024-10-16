@@ -194,8 +194,10 @@ protected:
   bool async_thread_shutdown_;
 
   // Freedrive mode controller interface values
+  bool freedrive_action_requested_;
   bool freedrive_mode_controller_running_;
   double freedrive_mode_async_success_;
+  double freedrive_mode_enable_;
   double freedrive_mode_abort_;
 
   // payload stuff

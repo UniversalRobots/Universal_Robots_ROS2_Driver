@@ -90,8 +90,9 @@ public:
 
 private:
   // Command interfaces
-  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> async_success_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> enable_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
 
   // Everything related to the RT action server
   using FreedriveModeAction = ur_msgs::action::EnableFreedriveMode;
@@ -123,6 +124,8 @@ private:
   void end_goal();
 
   std::atomic<bool> freedrive_active_;
+  std::atomic<bool> change_requested_;
+  std::atomic<double> async_state_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   /**
