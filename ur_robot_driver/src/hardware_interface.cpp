@@ -301,6 +301,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "gpio", "analog_output_domain_cmd", &analog_output_domain_cmd_));
 
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
@@ -676,6 +678,8 @@ void URPositionHardwareInterface::initAsyncIO()
     standard_analog_output_cmd_[i] = NO_NEW_CMD_;
   }
 
+  analog_output_domain_cmd_ = NO_NEW_CMD_;
+
   tool_voltage_cmd_ = NO_NEW_CMD_;
 
   payload_mass_ = NO_NEW_CMD_;
@@ -705,7 +709,13 @@ void URPositionHardwareInterface::checkAsyncIO()
 
   for (size_t i = 0; i < 2; ++i) {
     if (!std::isnan(standard_analog_output_cmd_[i]) && ur_driver_ != nullptr) {
-      io_async_success_ = ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i]);
+      urcl::AnalogOutputType domain = urcl::AnalogOutputType::SET_ON_TEACH_PENDANT;
+      if (!std::isnan(analog_output_domain_cmd_) && ur_driver_ != nullptr) {
+        domain = static_cast<urcl::AnalogOutputType>(analog_output_domain_cmd_);
+        analog_output_domain_cmd_ = NO_NEW_CMD_;
+      }
+      io_async_success_ =
+          ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i], domain);
       standard_analog_output_cmd_[i] = NO_NEW_CMD_;
     }
   }
