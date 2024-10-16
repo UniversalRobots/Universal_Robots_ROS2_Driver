@@ -746,85 +746,85 @@ void URPositionHardwareInterface::checkAsyncIO()
 
   if (!std::isnan(freedrive_mode_enable_) && ur_driver_ != nullptr) {
     RCLCPP_INFO_STREAM(get_logger(), "Starting freedrive mode.");
-    ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
+    freedrive_mode_async_success_ = ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
     freedrive_mode_enable_ = NO_NEW_CMD_;
     freedrive_action_requested_ = true;
   }
 
   if (!std::isnan(freedrive_mode_abort_) && freedrive_action_requested_ && ur_driver_ != nullptr) {
     RCLCPP_INFO_STREAM(get_logger(), "Stopping freedrive mode.");
-    ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
-    freedrive_mode_abort_ = NO_NEW_CMD_;
-  }
+    freedrive_mode_async_success_ = ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
+  freedrive_mode_abort_ = NO_NEW_CMD_;
+}
 }
 
 void URPositionHardwareInterface::updateNonDoubleValues()
 {
-  for (size_t i = 0; i < 18; ++i) {
-    actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
-    actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
-  }
+for (size_t i = 0; i < 18; ++i) {
+  actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+  actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
+}
 
-  for (size_t i = 0; i < 11; ++i) {
-    safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
-  }
+for (size_t i = 0; i < 11; ++i) {
+  safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
+}
 
-  for (size_t i = 0; i < 4; ++i) {
-    analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
-    robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
-  }
+for (size_t i = 0; i < 4; ++i) {
+  analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
+  robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
+}
 
-  for (size_t i = 0; i < 2; ++i) {
-    tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
-  }
+for (size_t i = 0; i < 2; ++i) {
+  tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
+}
 
-  tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
-  robot_mode_copy_ = static_cast<double>(robot_mode_);
-  safety_mode_copy_ = static_cast<double>(safety_mode_);
-  tool_mode_copy_ = static_cast<double>(tool_mode_);
-  system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
-  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
+tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
+robot_mode_copy_ = static_cast<double>(robot_mode_);
+safety_mode_copy_ = static_cast<double>(safety_mode_);
+tool_mode_copy_ = static_cast<double>(tool_mode_);
+system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 }
 
 void URPositionHardwareInterface::transformForceTorque()
 {
-  // imported from ROS1 driver - hardware_interface.cpp#L867-L876
-  tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
-                      urcl_ft_sensor_measurements_[2]);
-  tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
-                       urcl_ft_sensor_measurements_[5]);
+// imported from ROS1 driver - hardware_interface.cpp#L867-L876
+tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
+                    urcl_ft_sensor_measurements_[2]);
+tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
+                      urcl_ft_sensor_measurements_[5]);
 
-  tf2::Quaternion rotation_quat;
-  tf2::fromMsg(tcp_transform_.transform.rotation, rotation_quat);
-  tcp_force_ = tf2::quatRotate(rotation_quat.inverse(), tcp_force_);
-  tcp_torque_ = tf2::quatRotate(rotation_quat.inverse(), tcp_torque_);
+tf2::Quaternion rotation_quat;
+tf2::fromMsg(tcp_transform_.transform.rotation, rotation_quat);
+tcp_force_ = tf2::quatRotate(rotation_quat.inverse(), tcp_force_);
+tcp_torque_ = tf2::quatRotate(rotation_quat.inverse(), tcp_torque_);
 
-  urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
-                                   tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
+urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
+                                  tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
 }
 
 void URPositionHardwareInterface::extractToolPose()
 {
-  // imported from ROS1 driver hardware_interface.cpp#L911-L928
-  double tcp_angle =
-      std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
+// imported from ROS1 driver hardware_interface.cpp#L911-L928
+double tcp_angle =
+    std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
 
-  tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
-  tf2::Quaternion rotation;
-  if (tcp_angle > 1e-16) {
-    rotation.setRotation(rotation_vec.normalized(), tcp_angle);
-  } else {
-    rotation.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
-  }
-  tcp_transform_.transform.translation.x = urcl_tcp_pose_[0];
-  tcp_transform_.transform.translation.y = urcl_tcp_pose_[1];
-  tcp_transform_.transform.translation.z = urcl_tcp_pose_[2];
+tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
+tf2::Quaternion rotation;
+if (tcp_angle > 1e-16) {
+  rotation.setRotation(rotation_vec.normalized(), tcp_angle);
+} else {
+  rotation.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
+}
+tcp_transform_.transform.translation.x = urcl_tcp_pose_[0];
+tcp_transform_.transform.translation.y = urcl_tcp_pose_[1];
+tcp_transform_.transform.translation.z = urcl_tcp_pose_[2];
 
-  tcp_transform_.transform.rotation = tf2::toMsg(rotation);
+tcp_transform_.transform.rotation = tf2::toMsg(rotation);
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
-    const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
+  const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
