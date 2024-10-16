@@ -16,4 +16,4 @@ jobs:
           .github/helpers/check_urls.sh \
             -d ".git build CMakeModules debian" \
             -f "package.xml ursim_docker.rst architecture_coarse.svg" \
-            -p "vnc\.html"
+            -p "vnc\.html opensource\.org\/licenses\/BSD-3-Clause"
