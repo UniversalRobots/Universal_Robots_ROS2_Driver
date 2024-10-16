@@ -167,13 +167,13 @@ def launch_setup(context):
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
         "ur_configuration_controller",
-        "force_mode_controller",
     ]
     controllers_inactive = [
         "scaled_joint_trajectory_controller",
         "joint_trajectory_controller",
         "forward_velocity_controller",
         "forward_position_controller",
+        "force_mode_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
