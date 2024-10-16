@@ -85,6 +85,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   start_modes_ = {};
   position_controller_running_ = false;
   velocity_controller_running_ = false;
+  freedrive_mode_controller_running_ = false;
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
@@ -93,6 +94,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   initialized_ = false;
   async_thread_shutdown_ = false;
   system_interface_initialized_ = 0.0;
+  freedrive_mode_abort_ = 0.0;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -297,6 +299,15 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "freedrive_mode_controller", "freedrive_mode_async_success", &freedrive_mode_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "freedrive_mode_controller", "freedrive_mode_disable_cmd", &freedrive_mode_disable_cmd_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + "freedrive_mode_controller", "freedrive_mode_abort", &freedrive_mode_abort_));
 
   return command_interfaces;
 }
@@ -631,6 +642,9 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
 
+    } else if (freedrive_mode_controller_running_) {
+      ur_driver_->writeKeepalive();
+
     } else {
       ur_driver_->writeKeepalive();
     }
@@ -801,7 +815,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
 
   start_modes_.clear();
   stop_modes_.clear();
-
+  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   // Starting interfaces
   // add start interface per joint in tmp var for later check
   for (const auto& key : start_interfaces) {
@@ -812,10 +826,46 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
       }
+      if (key == tf_prefix + FREEDRIVE_MODE + "/freedrive_mode_async_success") {
+        start_modes_.push_back(FREEDRIVE_MODE);
+      }
     }
   }
   // set new mode to all interfaces at the same time
   if (start_modes_.size() != 0 && start_modes_.size() != 6) {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  if (position_controller_running_ &&
+      std::none_of(stop_modes_.begin(), stop_modes_.end(),
+                   [](auto item) { return item == StoppingInterface::STOP_POSITION; }) &&
+      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
+        return (item == hardware_interface::HW_IF_VELOCITY || item == FREEDRIVE_MODE);
+      })) {
+    RCLCPP_ERROR(get_logger(), "Start of velocity or passthrough interface requested while there is the position "
+                               "interface running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  if (velocity_controller_running_ &&
+      std::none_of(stop_modes_.begin(), stop_modes_.end(),
+                   [](auto item) { return item == StoppingInterface::STOP_VELOCITY; }) &&
+      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
+        return (item == hardware_interface::HW_IF_POSITION || item == FREEDRIVE_MODE);
+      })) {
+    RCLCPP_ERROR(get_logger(), "Start of position or passthrough interface requested while there is the velocity "
+                               "interface running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  if (freedrive_mode_controller_running_ &&
+      std::none_of(stop_modes_.begin(), stop_modes_.end(),
+                   [](auto item) { return item == StoppingInterface::STOP_FREEDRIVE; }) &&
+      std::any_of(start_modes_.begin(), start_modes_.end(), [](auto& item) {
+        return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
+      })) {
+    RCLCPP_ERROR(get_logger(), "Start of position or velocity interface requested while the freedrive controller "
+                               "is running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
@@ -859,6 +909,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
              std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_VELOCITY) != stop_modes_.end()) {
     velocity_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
+                                                  StoppingInterface::STOP_FREEDRIVE) != stop_modes_.end()) {
+    freedrive_mode_controller_running_ = false;
+    freedrive_mode_abort_ = 1.0;
   }
 
   if (start_modes_.size() != 0 &&
@@ -872,6 +926,12 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     position_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
+  } else if (start_modes_.size() != 0 &&
+             std::find(start_modes_.begin(), start_modes_.end(), FREEDRIVE_MODE) != start_modes_.end()) {
+    velocity_controller_running_ = false;
+    position_controller_running_ = false;
+    freedrive_mode_controller_running_ = true;
+    freedrive_mode_abort_ = 0.0;
   }
 
   start_modes_.clear();

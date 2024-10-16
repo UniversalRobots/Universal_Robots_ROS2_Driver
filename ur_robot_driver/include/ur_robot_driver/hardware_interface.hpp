@@ -77,7 +77,8 @@ enum StoppingInterface
 {
   NONE,
   STOP_POSITION,
-  STOP_VELOCITY
+  STOP_VELOCITY,
+  STOP_FREEDRIVE
 };
 
 /*!
@@ -193,6 +194,7 @@ protected:
   bool async_thread_shutdown_;
 
   // Freedrive mode controller interface values
+  bool freedrive_mode_controller_running_;
   double freedrive_mode_async_success_;
   double freedrive_mode_disable_cmd_;
   double freedrive_mode_abort_;
@@ -235,7 +237,7 @@ protected:
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
 
   // Check if name is correct here
-  const std::string FREEDRIVE_MODE_CONTROLLER = "freedrive_mode";
+  const std::string FREEDRIVE_MODE = "freedrive_mode_controller";
 };
 }  // namespace ur_robot_driver
 
