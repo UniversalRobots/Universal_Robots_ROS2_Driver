@@ -77,7 +77,8 @@ enum StoppingInterface
 {
   NONE,
   STOP_POSITION,
-  STOP_VELOCITY
+  STOP_VELOCITY,
+  STOP_FORCE_MODE,
 };
 
 /*!
@@ -237,6 +238,7 @@ protected:
   std::vector<std::string> start_modes_;
   bool position_controller_running_;
   bool velocity_controller_running_;
+  bool force_mode_controller_running_ = false;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
   std::shared_ptr<std::thread> async_thread_;
@@ -244,6 +246,8 @@ protected:
   std::atomic_bool rtde_comm_has_been_started_ = false;
 
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
+
+  const std::string FORCE_MODE_GPIO = "force_mode";
 };
 }  // namespace ur_robot_driver
 
