@@ -304,6 +304,9 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
       tf_prefix + FREEDRIVE_MODE, "async_success", &freedrive_mode_async_success_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + FREEDRIVE_MODE, "enable", &freedrive_mode_enable_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + FREEDRIVE_MODE, "abort", &freedrive_mode_abort_));
 
   return command_interfaces;
@@ -611,6 +614,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
+      freedrive_mode_abort_ = NO_NEW_CMD_;
+      freedrive_mode_enable_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -639,8 +644,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
 
-    } else if (freedrive_mode_controller_running_) {
-      ur_driver_->writeKeepalive();
+    } else if (freedrive_mode_controller_running_ && freedrive_action_requested_) {
+      ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
     } else {
       ur_driver_->writeKeepalive();
@@ -737,6 +742,19 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  }
+
+  if (!std::isnan(freedrive_mode_enable_) && ur_driver_ != nullptr) {
+    RCLCPP_INFO_STREAM(get_logger(), "Starting freedrive mode.");
+    ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
+    freedrive_mode_enable_ = NO_NEW_CMD_;
+    freedrive_action_requested_ = true;
+  }
+
+  if (!std::isnan(freedrive_mode_abort_) && freedrive_action_requested_ && ur_driver_ != nullptr) {
+    RCLCPP_INFO_STREAM(get_logger(), "Stopping freedrive mode.");
+    ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
+    freedrive_mode_abort_ = NO_NEW_CMD_;
   }
 }
 
@@ -909,6 +927,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
                                                   StoppingInterface::STOP_FREEDRIVE) != stop_modes_.end()) {
     freedrive_mode_controller_running_ = false;
+    freedrive_action_requested_ = false;
     freedrive_mode_abort_ = 1.0;
   }
 
@@ -928,7 +947,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     velocity_controller_running_ = false;
     position_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
-    freedrive_mode_abort_ = 0.0;
+    freedrive_action_requested_ = false;
   }
 
   start_modes_.clear();

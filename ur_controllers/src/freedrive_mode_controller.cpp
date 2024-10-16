@@ -85,7 +85,6 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
 {
 
   start_action_server();
-  freedrive_active_ = false;
 
   const auto logger = get_node()->get_logger();
 
@@ -117,6 +116,9 @@ void FreedriveModeController::start_action_server(void)
 controller_interface::CallbackReturn
 ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::State& state)
 {
+  change_requested_ = false;
+  freedrive_active_ = false;
+  async_state_ = std::numeric_limits<double>::quiet_NaN();
 
   {
     const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode/"
@@ -124,7 +126,6 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
-      abort_command_interface_ = *it;
       async_success_command_interface_ = *it;
     } else {
       RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
@@ -165,14 +166,14 @@ controller_interface::CallbackReturn
 ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::State&)
 {
   abort_command_interface_->get().set_value(1.0);
-  if (freedrive_active_) {
-    const auto active_goal = *rt_active_goal_.readFromRT();
+
+  const auto active_goal = *rt_active_goal_.readFromRT();
+  if (active_goal) {
     std::shared_ptr<ur_msgs::action::EnableFreedriveMode::Result> result =
         std::make_shared<ur_msgs::action::EnableFreedriveMode::Result>();
     //result->set__error_string("Deactivating freedrive mode, since the controller is being deactivated.");
     active_goal->setAborted(result);
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-    end_goal();
   }
   return CallbackReturn::SUCCESS;
 }
@@ -181,18 +182,39 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
                                                                               const rclcpp::Duration& /*period*/)
 {
   const auto active_goal = *rt_active_goal_.readFromRT();
+  async_state_ = async_success_command_interface_->get().get_value();
 
-  if (active_goal && freedrive_active_) {
-    // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
-    // pendant.
-    if (abort_command_interface_->get().get_value() == 1.0) {
-      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting action.");
-      std::shared_ptr<ur_msgs::action::EnableFreedriveMode::Result> result =
-          std::make_shared<ur_msgs::action::EnableFreedriveMode::Result>();
-      active_goal->setAborted(result);
-      end_goal();
-      return controller_interface::return_type::OK;
+  if(change_requested_) {
+    RCLCPP_INFO_STREAM(get_node()->get_logger(), "Change requested: either enabling or disabling freedrive.");
+    //if (active_goal && freedrive_active_) {
+    if (freedrive_active_) {
+      // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
+      // pendant.
+      if (abort_command_interface_->get().get_value() == 1.0) {
+        RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting action.");
+        std::shared_ptr<ur_msgs::action::EnableFreedriveMode::Result> result =
+            std::make_shared<ur_msgs::action::EnableFreedriveMode::Result>();
+        active_goal->setAborted(result);
+        end_goal();
+        return controller_interface::return_type::OK;
+      } else {
+
+        RCLCPP_INFO_STREAM(get_node()->get_logger(), "Change requested: ENABLING freedrive.");
+        // Set command interface to enable
+        enable_command_interface_->get().set_value(1.0);
+        
+        async_success_command_interface_->get().set_value(ASYNC_WAITING);
+        async_state_ = ASYNC_WAITING;
+      }
+
+    } else {
+      RCLCPP_INFO_STREAM(get_node()->get_logger(), "Change requested: DISABLING freedrive.");
+      abort_command_interface_->get().set_value(1.0);
+
+      async_success_command_interface_->get().set_value(ASYNC_WAITING);
+      async_state_ = ASYNC_WAITING;
     }
+    change_requested_ = false;
   }
   return controller_interface::return_type::OK;
 }
@@ -219,22 +241,27 @@ rclcpp_action::GoalResponse FreedriveModeController::goal_received_callback(
 rclcpp_action::CancelResponse FreedriveModeController::goal_cancelled_callback(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle)
 {
+  bool success;
+  
   // Check that cancel request refers to currently active goal (if any)
   const auto active_goal = *rt_active_goal_.readFromNonRT();
   if (active_goal && active_goal->gh_ == goal_handle) {
     RCLCPP_INFO(get_node()->get_logger(), "Disabling freedrive mode requested.");
 
     // Setting interfaces to deactivate freedrive mode
-    async_success_command_interface_->get().set_value(ASYNC_WAITING);
-    abort_command_interface_->get().set_value(1.0);
+    //async_success_command_interface_->get().set_value(ASYNC_WAITING);
+    //abort_command_interface_->get().set_value(1.0);
 
-    RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be disabled.");
-    if (!waitForAsyncCommand(
-            [&]() { return async_success_command_interface_->get().get_value(); })) {
-      RCLCPP_WARN(get_node()->get_logger(), "Could not verify that freedrive mode has been deactivated.");
+    freedrive_active_ = false;
+    change_requested_ = true;
+
+    RCLCPP_INFO(get_node()->get_logger(), "Waiting for the freedrive mode to be disabled.");
+    while (async_state_ == ASYNC_WAITING || change_requested_) {
+      // Asynchronous wait until the hardware interface has set the force mode
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    bool success = static_cast<bool>(async_success_command_interface_->get().get_value());
+    success = async_state_ == 1.0;
     if (success) {
       RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been disabled successfully.");
     } else {
@@ -255,18 +282,27 @@ void FreedriveModeController::goal_accepted_callback(
 {
   RCLCPP_INFO_STREAM(get_node()->get_logger(), "Starting freedrive mode.");
 
-  // reset success flag
-  async_success_command_interface_->get().set_value(ASYNC_WAITING);
+  bool success;
+  freedrive_active_ = true;
+  change_requested_ = true;
 
-  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for freedrive mode to be set.");
-  if (!waitForAsyncCommand(
-          [&]() { return async_success_command_interface_->get().get_value(); })) {
-    RCLCPP_WARN(get_node()->get_logger(), "Could not verify that freedrive mode has been activated.");
+  RCLCPP_INFO_STREAM(get_node()->get_logger(), "Waiting for freedrive mode to be set.");
+  const auto maximum_retries = freedrive_params_.check_io_successful_retries;
+  int retries = 0;
+  while (async_state_ == ASYNC_WAITING || change_requested_) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    retries++;
+
+    if (retries > maximum_retries) {
+      success = false;
+    }
   }
 
-  bool success = static_cast<bool>(async_success_command_interface_->get().get_value());
+  // Check if the change was successful
+  success = async_state_ == 1.0;
+
   if (success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been set successfully.");
+    RCLCPP_INFO_STREAM(get_node()->get_logger(), "Freedrive mode has been set successfully.");
   } else {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not set the freedrive mode.");
   }
@@ -280,7 +316,6 @@ void FreedriveModeController::goal_accepted_callback(
   goal_handle_timer_.reset();
   goal_handle_timer_ = get_node()->create_wall_timer(action_monitor_period_.to_chrono<std::chrono::nanoseconds>(),
                                                      std::bind(&RealtimeGoalHandle::runNonRealtime, rt_goal));
-  freedrive_active_ = true;
   return;
 }
 
