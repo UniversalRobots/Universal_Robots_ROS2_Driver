@@ -572,9 +572,6 @@ void URPositionHardwareInterface::asyncThread()
     if (initialized_) {
       //        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initialized in async thread");
       checkAsyncIO();
-      if (passthrough_trajectory_controller_running_) {
-        check_passthrough_trajectory_controller();
-      }
     }
     std::this_thread::sleep_for(std::chrono::nanoseconds(20000000));
   }
@@ -692,6 +689,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
     } else if (passthrough_trajectory_controller_running_) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP);
+      check_passthrough_trajectory_controller();
     } else {
       ur_driver_->writeKeepalive();
     }
