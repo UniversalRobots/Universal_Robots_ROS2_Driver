@@ -163,7 +163,13 @@ def launch_setup():
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
     ]
-    controllers_inactive = ["forward_position_controller"]
+    controllers_inactive = [
+        "scaled_joint_trajectory_controller",
+        "joint_trajectory_controller",
+        "forward_velocity_controller",
+        "forward_position_controller",
+        "freedrive_mode_controller",
+    ]
 
     controller_spawners = [controller_spawner(controllers_active)] + [
         controller_spawner(controllers_inactive, active=False)
@@ -328,6 +334,13 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "initial_joint_controller",
             default_value="scaled_joint_trajectory_controller",
+            choices=[
+                "scaled_joint_trajectory_controller",
+                "joint_trajectory_controller",
+                "forward_velocity_controller",
+                "forward_position_controller",
+                "freedrive_mode_controller",
+            ],
             description="Initially loaded robot controller.",
         )
     )
