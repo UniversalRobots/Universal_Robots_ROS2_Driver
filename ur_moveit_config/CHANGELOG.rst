@@ -2,6 +2,18 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.12 (2024-10-14)
+-------------------
+
+2.4.11 (2024-10-10)
+-------------------
+* Add note about TEM (`#1136 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1136>`_)
+* [moveit] Add config for trajectory execution and disable execution monitoring by default (`#1132 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1132>`_)
+* Contributors: Felix Exner (fexner), G.A. vd. Hoorn
+
+2.4.10 (2024-09-11)
+-------------------
+
 2.4.9 (2024-08-09)
 ------------------
 * Added Jazzy migration notes for moveit_config (`#1058 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1058>`_)

@@ -23,3 +23,21 @@ interaction using
 
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the
 robot as explained `here <https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html>`_.
+
+.. note::
+   The MoveIt configuration provided here has Trajectory Execution Monitoring (TEM) *disabled*, as the
+   Scaled Joint Trajectory Controller may cause trajectories to be executed at a lower velocity
+   than they were originally planned by MoveIt. MoveIt's TEM however is not aware of this
+   deliberate slow-down due to scaling and will in most cases unnecessarily (and unexpectedly)
+   abort goals.
+
+   Until this incompatibility is resolved, the default value for ``execution_duration_monitoring``
+   is set to ``false``. Users who wish to temporarily (re)enable TEM at runtime (for use with
+   other, non-scaling controllers) can do so using the ROS 2 parameter services supported by
+   MoveIt.
+
+   .. literalinclude:: ../config/moveit_controllers.yaml
+      :language: yaml
+      :start-at: trajectory_execution:
+      :end-at: execution_duration_monitoring
+      :caption: moveit_controllers.yaml

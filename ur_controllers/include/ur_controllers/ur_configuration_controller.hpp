@@ -1,4 +1,4 @@
-// Copyright 2019, FZI Forschungszentrum Informatik
+// Copyright 2024, Universal Robots A/S
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -29,61 +29,77 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Marvin Große Besselmann grosse@fzi.de
- * \date    2021-02-18
+ * \author  Jacob Larsen jala@universal-robots.com
+ * \date    2024-07-11
+ *
+ *
+ *
  *
  */
 //----------------------------------------------------------------------
-#ifndef UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
-#define UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
 
-#include <optional>
+#ifndef UR_CONTROLLERS__UR_CONFIGURATION_CONTROLLER_HPP_
+#define UR_CONTROLLERS__UR_CONFIGURATION_CONTROLLER_HPP_
+
+// TODO(fmauch): Currently, the realtime_box_best_effort doesn't include this
+#include <functional>
+#include <realtime_tools/realtime_box_best_effort.h>  // NOLINT
+
 #include <memory>
-#include "angles/angles.h"
-#include "joint_trajectory_controller/joint_trajectory_controller.hpp"
-#include "joint_trajectory_controller/trajectory.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp/duration.hpp"
-#include "scaled_joint_trajectory_controller_parameters.hpp"
+
+#include <controller_interface/controller_interface.hpp>
+
+#include "ur_msgs/srv/get_robot_software_version.hpp"
+#include "ur_configuration_controller_parameters.hpp"
 
 namespace ur_controllers
 {
-class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
+
+// Struct to hold version information
+struct VersionInformation
+{
+  uint32_t major = 0, minor = 0, build = 0, bugfix = 0;
+};
+
+// Enum for indexing into state interfaces.
+enum StateInterfaces
+{
+  ROBOT_VERSION_MAJOR = 0,
+  ROBOT_VERSION_MINOR = 1,
+  ROBOT_VERSION_BUILD = 2,
+  ROBOT_VERSION_BUGFIX = 3,
+};
+
+class URConfigurationController : public controller_interface::ControllerInterface
 {
 public:
-  ScaledJointTrajectoryController() = default;
-  ~ScaledJointTrajectoryController() override = default;
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& state) override;
-
   controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
+
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
   CallbackReturn on_init() override;
 
-protected:
-  struct TimeData
-  {
-    TimeData() : time(0.0), period(rclcpp::Duration::from_nanoseconds(0.0)), uptime(0.0)
-    {
-    }
-    rclcpp::Time time;
-    rclcpp::Duration period;
-    rclcpp::Time uptime;
+private:
+  realtime_tools::RealtimeBoxBestEffort<std::shared_ptr<VersionInformation>> robot_software_version_{
+    std::make_shared<VersionInformation>()
   };
 
-private:
-  double scaling_factor_{ 1.0 };
-  realtime_tools::RealtimeBuffer<TimeData> time_data_;
+  rclcpp::Service<ur_msgs::srv::GetRobotSoftwareVersion>::SharedPtr get_robot_software_version_srv_;
 
-  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_ =
-      std::nullopt;
+  bool getRobotSoftwareVersion(ur_msgs::srv::GetRobotSoftwareVersion::Request::SharedPtr req,
+                               ur_msgs::srv::GetRobotSoftwareVersion::Response::SharedPtr resp);
 
-  std::shared_ptr<scaled_joint_trajectory_controller::ParamListener> scaled_param_listener_;
-  scaled_joint_trajectory_controller::Params scaled_params_;
+  std::shared_ptr<ur_configuration_controller::ParamListener> param_listener_;
+  ur_configuration_controller::Params params_;
 };
 }  // namespace ur_controllers
 
-#endif  // UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
+#endif  // UR_CONTROLLERS__UR_CONFIGURATION_CONTROLLER_HPP_

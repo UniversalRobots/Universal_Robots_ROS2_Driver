@@ -177,6 +177,7 @@ protected:
   // asynchronous commands
   std::array<double, 18> standard_dig_out_bits_cmd_;
   std::array<double, 2> standard_analog_output_cmd_;
+  double analog_output_domain_cmd_;
   double tool_voltage_cmd_;
   double io_async_success_;
   double target_speed_fraction_cmd_;
@@ -191,6 +192,10 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   std::atomic_bool async_thread_shutdown_;
+  double get_robot_software_version_major_;
+  double get_robot_software_version_minor_;
+  double get_robot_software_version_bugfix_;
+  double get_robot_software_version_build_;
 
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;

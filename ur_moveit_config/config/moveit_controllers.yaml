@@ -1,6 +1,12 @@
 # MoveIt uses this configuration for controller management
 moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
+trajectory_execution:
+  allowed_execution_duration_scaling: 1.2
+  allowed_goal_duration_margin: 0.5
+  allowed_start_tolerance: 0.01
+  execution_duration_monitoring: false # May lead to unexpectedly aborted goals with scaled JTC
+
 moveit_simple_controller_manager:
   controller_names:
     - scaled_joint_trajectory_controller
