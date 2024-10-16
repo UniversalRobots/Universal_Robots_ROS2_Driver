@@ -1,7 +1,7 @@
 # Universal Robots ROS2 Driver
 
 Universal Robots has become a dominant supplier of lightweight, robotic manipulators for industry, as well as for scientific research and education.
-<center><img src="ur_robot_driver/doc/installation/initial_setup_images/family_photo.png" alt="Universal Robot family" style="width: 80%;"/></center>
+<div align="center"><img src="ur_robot_driver/doc/installation/initial_setup_images/family_photo.png" alt="Universal Robot family" style="width: 90%;"/></div>
 
 This is one of the very first ROS2 manipulator drivers. Some of the new features are enabled by ROS2 and include decreased latency, improved security, and more flexibility regarding middleware configuration. The package contains launch files to quickly get started using the driver as a standalone version or in combination with MoveIt2
 
@@ -103,24 +103,24 @@ For getting started, you'll basically need three steps:
    ```bash
    sudo apt-get install ros-rolling-ur
    ```
-   See the [installation instructions](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/installation.html) for more details and source-build instructions.
+   See the [installation instructions](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/installation.html) for more details and source-build instructions.
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
-   robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html)
+   robot](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/robot_setup.html)
    and [create a program for external
-   control](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/install_urcap_e_series.html).
+   control](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/install_urcap_e_series.html).
 
    Please do this step carefully and extract the calibration as explained
-   [here](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html#extract-calibration-information).
+   [here](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/robot_setup.html#extract-calibration-information).
    Otherwise the TCP's pose will not be correct inside the ROS ecosystem.
 
    If no real robot is required, you can [use a simulated
-   robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator)
+   robot](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/simulation.html#usage-with-official-ur-simulator)
    that will behave almost exactly like the real robot.
 
 
 3. **Start the driver**. See the [usage
-   documentation](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for
+   documentation](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/toc.html) for
    details.
 
    ```bash
@@ -129,7 +129,7 @@ For getting started, you'll basically need three steps:
    ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
    ```
 
-4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
+4. Unless started in [headless mode](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/operation_modes.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
 
 
 ## MoveIt! support
@@ -142,9 +142,9 @@ Watch MoveIt in action with the Universal Robots ROS2 driver:
   *The video shows free-space trajectory planning around a modeled collision scene object using the MoveIt2 MotionPlanning widget for Rviz2.*
 
 See the [MoveIt!
-section](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#using-moveit)
+section](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/move.html#using-moveit)
 of the [Usage
-guide](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for details.
+guide](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/toc.html) for details.
 
 ## Expected Changes in the Near Future
 
