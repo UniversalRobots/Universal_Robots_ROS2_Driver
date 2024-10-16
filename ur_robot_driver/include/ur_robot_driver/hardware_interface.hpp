@@ -136,6 +136,8 @@ protected:
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
+  void start_force_mode();
+  void stop_force_mode();
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -206,6 +208,7 @@ protected:
   // force mode parameters
   urcl::vector6d_t force_mode_task_frame_;
   urcl::vector6d_t force_mode_selection_vector_;
+  urcl::vector6uint32_t force_mode_selection_vector_copy_;
   urcl::vector6d_t force_mode_wrench_;
   urcl::vector6d_t force_mode_limits_;
   double force_mode_type_;

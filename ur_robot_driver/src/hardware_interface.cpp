@@ -517,6 +517,14 @@ hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Activating HW interface");
+
+  for (size_t i = 0; i < 6; i++) {
+    force_mode_task_frame_[i] = NO_NEW_CMD_;
+    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_wrench_[i] = NO_NEW_CMD_;
+    force_mode_limits_[i] = NO_NEW_CMD_;
+  }
+  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -686,6 +694,14 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
     } else {
       ur_driver_->writeKeepalive();
+
+      if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
+          !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
+          !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
+        start_force_mode();
+      } else if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
+        stop_force_mode();
+      }
     }
 
     packet_read_ = false;
@@ -715,14 +731,6 @@ void URPositionHardwareInterface::initAsyncIO()
 
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
-
-  for (size_t i = 0; i < 6; i++) {
-    force_mode_task_frame_[i] = NO_NEW_CMD_;
-    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
-    force_mode_wrench_[i] = NO_NEW_CMD_;
-    force_mode_limits_[i] = NO_NEW_CMD_;
-  }
-  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
@@ -795,44 +803,6 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
-  }
-  if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
-      !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
-      !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
-    urcl::vector6uint32_t force_mode_selection_vector;
-    for (size_t i = 0; i < 6; i++) {
-      force_mode_selection_vector[i] = force_mode_selection_vector_[i];
-    }
-    /* Check version of robot to ensure that the correct startForceMode is called. */
-    if (ur_driver_->getVersion().major < 5) {
-      force_mode_async_success_ =
-          ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector, force_mode_wrench_,
-                                     force_mode_type_, force_mode_limits_, force_mode_damping_);
-      if (force_mode_gain_scaling_ != 0.5) {
-        RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"), "Force mode gain scaling cannot be used on CB3 "
-                                                                       "robots. Starting force mode, but disregarding "
-                                                                       "gain scaling.");
-      }
-    } else {
-      force_mode_async_success_ = ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector,
-                                                             force_mode_wrench_, force_mode_type_, force_mode_limits_,
-                                                             force_mode_damping_, force_mode_gain_scaling_);
-    }
-
-    for (size_t i = 0; i < 6; i++) {
-      force_mode_task_frame_[i] = NO_NEW_CMD_;
-      force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
-      force_mode_wrench_[i] = NO_NEW_CMD_;
-      force_mode_limits_[i] = NO_NEW_CMD_;
-    }
-    force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
-    force_mode_damping_ = NO_NEW_CMD_;
-    force_mode_gain_scaling_ = NO_NEW_CMD_;
-  }
-
-  if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
-    force_mode_async_success_ = ur_driver_->endForceMode();
-    force_mode_disable_cmd_ = NO_NEW_CMD_;
   }
 }
 
@@ -1018,6 +988,47 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 
   return ret_val;
 }
+
+void URPositionHardwareInterface::start_force_mode()
+{
+  for (size_t i = 0; i < force_mode_selection_vector_.size(); i++) {
+    force_mode_selection_vector_copy_[i] = force_mode_selection_vector_[i];
+  }
+  /* Check version of robot to ensure that the correct startForceMode is called. */
+  if (ur_driver_->getVersion().major < 5) {
+    force_mode_async_success_ =
+        ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
+                                   force_mode_type_, force_mode_limits_, force_mode_damping_);
+    if (force_mode_gain_scaling_ != 0.5) {
+      RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"), "Force mode gain scaling cannot be used on "
+                                                                     "CB3 "
+                                                                     "robots. Starting force mode, but "
+                                                                     "disregarding "
+                                                                     "gain scaling.");
+    }
+  } else {
+    force_mode_async_success_ =
+        ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
+                                   force_mode_type_, force_mode_limits_, force_mode_damping_, force_mode_gain_scaling_);
+  }
+
+  for (size_t i = 0; i < 6; i++) {
+    force_mode_task_frame_[i] = NO_NEW_CMD_;
+    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_wrench_[i] = NO_NEW_CMD_;
+    force_mode_limits_[i] = NO_NEW_CMD_;
+  }
+  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+  force_mode_damping_ = NO_NEW_CMD_;
+  force_mode_gain_scaling_ = NO_NEW_CMD_;
+}
+
+void URPositionHardwareInterface::stop_force_mode()
+{
+  force_mode_async_success_ = ur_driver_->endForceMode();
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
+}
+
 }  // namespace ur_robot_driver
 
 #include "pluginlib/class_list_macros.hpp"
