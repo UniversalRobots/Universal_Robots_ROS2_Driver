@@ -191,7 +191,7 @@ protected:
   bool first_pass_;
   bool initialized_;
   double system_interface_initialized_;
-  bool async_thread_shutdown_;
+  std::atomic_bool async_thread_shutdown_;
   double get_robot_software_version_major_;
   double get_robot_software_version_minor_;
   double get_robot_software_version_bugfix_;
