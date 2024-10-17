@@ -82,6 +82,9 @@ void UrclLogHandler::log(const char* file, int line, urcl::LogLevel loglevel, co
 void registerUrclLogHandler(const std::string& tf_prefix)
 {
   if (g_registered == false) {
+    if (g_log_handler == nullptr) {
+      g_log_handler = std::make_unique<UrclLogHandler>();
+    }
     g_log_handler->setTFPrefix(tf_prefix);
     // Log level is decided by ROS2 log level
     urcl::setLogLevel(urcl::LogLevel::DEBUG);
