@@ -121,7 +121,6 @@ private:
 
   /* Start an action server with an action called: /freedrive_mode_controller/start_freedrive_mode. */
   void start_action_server(void);
-  void end_goal();
 
   std::atomic<bool> freedrive_active_;
   std::atomic<bool> change_requested_;
