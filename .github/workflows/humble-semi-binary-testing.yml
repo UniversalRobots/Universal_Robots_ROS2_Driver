@@ -14,5 +14,6 @@ jobs:
     with:
       ros_distro: humble
       ros_repo: testing
+      upstream_type: semi-binary
       upstream_workspace: Universal_Robots_ROS2_Driver.humble.repos
       ref_for_scheduled_build: humble

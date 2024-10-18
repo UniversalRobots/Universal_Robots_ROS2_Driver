@@ -19,5 +19,6 @@ jobs:
     with:
       ros_distro: iron
       ros_repo: main
+      upstream_type: semi-binary
       upstream_workspace: Universal_Robots_ROS2_Driver.iron.repos
       ref_for_scheduled_build: iron
