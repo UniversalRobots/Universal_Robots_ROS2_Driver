@@ -29,23 +29,26 @@
 #
 # Author: Denis Stogl
 
-from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterFile
-from launch_ros.substitutions import FindPackageShare
-
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+)
 from launch.conditions import IfCondition, UnlessCondition
+from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.substitutions import (
     AndSubstitution,
     LaunchConfiguration,
     NotSubstitution,
     PathJoinSubstitution,
 )
-from launch.launch_description_sources import AnyLaunchDescriptionSource
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterFile
+from launch_ros.substitutions import FindPackageShare
 
 
-def launch_setup():
+def launch_setup(context):
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
@@ -127,6 +130,7 @@ def launch_setup():
                     "force_torque_sensor_broadcaster",
                     "joint_state_broadcaster",
                     "speed_scaling_state_broadcaster",
+                    "ur_configuration_controller",
                 ]
             },
         ],
@@ -162,39 +166,22 @@ def launch_setup():
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
+        "ur_configuration_controller",
     ]
-    controllers_inactive = ["forward_position_controller"]
-
-    controller_spawners = [controller_spawner(controllers_active)] + [
-        controller_spawner(controllers_inactive, active=False)
+    controllers_inactive = [
+        "scaled_joint_trajectory_controller",
+        "joint_trajectory_controller",
+        "forward_velocity_controller",
+        "forward_position_controller",
     ]
+    if activate_joint_controller.perform(context) == "true":
+        controllers_active.append(initial_joint_controller.perform(context))
+        controllers_inactive.remove(initial_joint_controller.perform(context))
 
-    # There may be other controllers of the joints, but this is the initially-started one
-    initial_joint_controller_spawner_started = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            initial_joint_controller,
-            "-c",
-            "/controller_manager",
-            "--controller-manager-timeout",
-            controller_spawner_timeout,
-        ],
-        condition=IfCondition(activate_joint_controller),
-    )
-    initial_joint_controller_spawner_stopped = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            initial_joint_controller,
-            "-c",
-            "/controller_manager",
-            "--controller-manager-timeout",
-            controller_spawner_timeout,
-            "--inactive",
-        ],
-        condition=UnlessCondition(activate_joint_controller),
-    )
+    controller_spawners = [
+        controller_spawner(controllers_active),
+        controller_spawner(controllers_inactive, active=False),
+    ]
 
     rsp = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(description_launchfile),
@@ -212,8 +199,6 @@ def launch_setup():
         urscript_interface,
         rsp,
         rviz_node,
-        initial_joint_controller_spawner_stopped,
-        initial_joint_controller_spawner_started,
     ] + controller_spawners
 
     return nodes_to_start
@@ -328,6 +313,12 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "initial_joint_controller",
             default_value="scaled_joint_trajectory_controller",
+            choices=[
+                "scaled_joint_trajectory_controller",
+                "joint_trajectory_controller",
+                "forward_velocity_controller",
+                "forward_position_controller",
+            ],
             description="Initially loaded robot controller.",
         )
     )
@@ -479,4 +470,4 @@ def generate_launch_description():
             ],
         )
     )
-    return LaunchDescription(declared_arguments + launch_setup())
+    return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

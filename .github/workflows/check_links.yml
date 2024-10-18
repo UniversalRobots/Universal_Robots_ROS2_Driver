@@ -1,0 +1,19 @@
+name: Check Links
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  check_links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check URLs
+        run: |
+          .github/helpers/check_urls.sh \
+            -d ".git build CMakeModules debian" \
+            -f "package.xml ursim_docker.rst architecture_coarse.svg" \
+            -p "vnc\.html opensource\.org\/licenses\/BSD-3-Clause"

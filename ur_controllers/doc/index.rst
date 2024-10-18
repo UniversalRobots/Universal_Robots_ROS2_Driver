@@ -1,31 +1,32 @@
 ur_controllers
 ==============
 
-This package contains controllers and hardware interface for ``ros_control`` that are special to the UR
+This package contains controllers and hardware interface for ``ros2_controllers`` that are special to the UR
 robot family. Currently this contains:
 
 
-* A **speed_scaling_interface** to read the value of the current speed scaling into controllers.
-* A **scaled_joint_command_interface** that provides access to joint values and commands in
-  combination with the speed scaling value.
-* A **speed_scaling_state_controller** that publishes the current execution speed as reported by
+* A **speed_scaling_state_broadcaster** that publishes the current execution speed as reported by
   the robot to a topic interface. Values are floating points between 0 and 1.
 * A **scaled_joint_trajectory_controller** that is similar to the *joint_trajectory_controller*\ ,
-  but it uses the speed scaling reported by the robot to reduce progress in the trajectory.
+  but it uses the speed scaling reported to align progress of the trajectory between the robot and controller.
+* A **io_and_status_controller** that allows setting I/O ports, controlling some UR-specific
+  functionality and publishes status information about the robot.
 
 About this package
 ------------------
 
-This package contains controllers not being available in the default ``ros_control`` set. They are
-created to support more features offered by the UR robot family. Any of these controllers are
+This package contains controllers not being available in the default ``ros2_controllers`` set. They are
+created to support more features offered by the UR robot family. Some of these controllers are
 example implementations for certain features and are intended to be generalized and merged
-into the default ``ros_control`` controller set at some future point.
+into the default ``ros2_controllers`` controller set at some future point.
 
 Controller description
 ----------------------
 
 This packages offers a couple of specific controllers that will be explained in the following
 sections.
+
+.. _speed_scaling_state_broadcaster:
 
 ur_controllers/SpeedScalingStateBroadcaster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -41,8 +42,10 @@ fields ``speed_scaling`` (which should be equal to the value shown by the speed 
 teach pendant) and ``target_speed_fraction`` (Which is the fraction to which execution gets slowed
 down by the controller).
 
-position_controllers/ScaledJointTrajectoryController and velocity_controllers/ScaledJointTrajectoryController
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _scaled_jtc:
+
+ur_controlers/ScaledJointTrajectoryController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These controllers work similar to the well-known
 `joint_trajectory_controller <https://control.ros.org/master/doc/ros2_controllers/joint_trajectory_controller/doc/userdoc.html>`_.
@@ -97,3 +100,38 @@ Under the hood this is implemented by proceeding the trajectory not by a full ti
 the fraction determined by the current speed scaling. If speed scaling is currently at 50% then
 interpolation of the current control cycle will start half a time step after the beginning of the
 previous control cycle.
+
+.. _io_and_status_controller:
+
+ur_controllers/GPIOController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller allows setting I/O ports, controlling some UR-specific functionality and publishes
+status information about the robot.
+
+Published topics
+""""""""""""""""
+
+* ``~/io_states [ur_msgs/msg/IOStates]``: Status of all I/O ports
+* ``~/robot_mode [ur_dashboard_msgs/msg/RobotMode]``: The current robot mode (e.g. ``POWER_OFF``,
+  ``IDLE``, ``RUNNING``)
+* ``~/robot_program_running [std_msgs/msg/Bool]``: Publishes whether **the External Control
+  program** is running or not. If this is ``false`` no commands can be sent to the robot.
+* ``~/safety_mode [ur_dashboard_msgs/msg/SafetyMode]``: The robot's current safety mode (e.g.
+  ``PROTECTIVE_STOP``, ``ROBOT_EMERGENCY_STOP``, ``NORMAL``)
+* ``~/tool_data [ur_msgs/msg/ToolDataMsg]``: Information about the robot's tool configuration
+
+Advertised services
+"""""""""""""""""""
+
+* ``~/hand_back_control [std_srvs/srv/Trigger]``: Calling this service will make the robot program
+  exit the *External Control* program node and continue with the rest of the program.
+* ``~/resend_robot_program [std_srvs/srv/Trigger]``: When :ref:`headless_mode` is used, this
+  service can be used to restart the *External Control* program on the robot.
+* ``~/set_io [ur_msgs/srv/SetIO]``: Set an output pin on the robot.
+* ``~/set_analog_output [ur_msgs/srv/SetAnalogOutput]``: Set an analog output on the robot. This
+  also allows specifying the domain.
+* ``~/set_payload [ur_msgs/srv/SetPayload]``: Change the robot's payload on-the-fly.
+* ``~/set_speed_slider [ur_msgs/srv/SetSpeedSliderFraction]``: Set the value of the speed slider.
+* ``~/zero_ftsensor [std_srvs/srv/Trigger]``: Zeroes the reported wrench of the force torque
+  sensor.
