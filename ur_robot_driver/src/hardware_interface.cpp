@@ -751,9 +751,11 @@ void URPositionHardwareInterface::checkAsyncIO()
     freedrive_action_requested_ = true;
   }
 
-  if (!std::isnan(freedrive_mode_abort_) && freedrive_action_requested_ && ur_driver_ != nullptr) {
+  if (!std::isnan(freedrive_mode_abort_) && freedrive_mode_abort_ == 1.0 && freedrive_action_requested_ &&
+      ur_driver_ != nullptr) {
     RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
     freedrive_mode_async_success_ = ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
+    freedrive_action_requested_ = false;
     freedrive_mode_abort_ = NO_NEW_CMD_;
 }
 }

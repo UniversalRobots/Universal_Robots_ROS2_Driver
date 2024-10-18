@@ -152,6 +152,7 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
       abort_command_interface_ = *it;
+      abort_command_interface_->get().set_value(0.0);
     } else {
       RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
       return controller_interface::CallbackReturn::ERROR;
@@ -186,7 +187,8 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
     if (freedrive_active_) {
       // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
       // pendant.
-      if (abort_command_interface_->get().get_value() == 1.0) {
+      if (!std::isnan(abort_command_interface_->get().get_value()) &&
+          abort_command_interface_->get().get_value() == 1.0) {
         RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting action.");
         std::shared_ptr<ur_msgs::action::EnableFreedriveMode::Result> result =
             std::make_shared<ur_msgs::action::EnableFreedriveMode::Result>();
