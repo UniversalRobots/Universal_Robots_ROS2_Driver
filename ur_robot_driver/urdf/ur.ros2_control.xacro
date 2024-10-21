@@ -228,6 +228,13 @@
       <gpio name="${tf_prefix}system_interface">
         <state_interface name="initialized"/>
       </gpio>
+
+      <gpio name="${tf_prefix}get_robot_software_version">
+        <state_interface name="get_version_major"/>
+        <state_interface name="get_version_minor"/>
+        <state_interface name="get_version_build"/>
+        <state_interface name="get_version_bugfix"/>
+      </gpio>
     </ros2_control>
   </xacro:macro>
 </robot>
