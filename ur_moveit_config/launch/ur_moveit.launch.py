@@ -38,7 +38,13 @@ from ur_moveit_config.launch_common import load_yaml
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+    OrSubstitution,
+)
 
 
 def launch_setup(context, *args, **kwargs):
@@ -173,7 +179,9 @@ def launch_setup(context, *args, **kwargs):
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ur_moveit_config", "config/controllers.yaml")
     # the scaled_joint_trajectory_controller does not work on fake hardware
-    change_controllers = context.perform_substitution(use_fake_hardware)
+    change_controllers = context.perform_substitution(
+        OrSubstitution(use_fake_hardware, use_sim_time)
+    )
     if change_controllers == "true":
         controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
         controllers_yaml["joint_trajectory_controller"]["default"] = True
@@ -242,6 +250,9 @@ def launch_setup(context, *args, **kwargs):
             robot_description_kinematics,
             robot_description_planning,
             warehouse_ros_config,
+            {
+                "use_sim_time": use_sim_time,
+            },
         ],
     )
 
