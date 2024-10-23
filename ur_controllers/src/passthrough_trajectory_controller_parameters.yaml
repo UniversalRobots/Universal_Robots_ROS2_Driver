@@ -1,0 +1,31 @@
+---
+passthrough_trajectory_controller:
+  speed_scaling_interface_name: {
+    type: string,
+    default_value: "speed_scaling/speed_scaling_factor",
+    description: "Fully qualified name of the speed scaling interface name"
+  }
+  tf_prefix: {
+    type: string,
+    default_value: "",
+    description: "Urdf prefix of the corresponding arm"
+  }
+  joints: {
+    type: string_array,
+    default_value: [],
+    description: "Joint names to claim and listen to",
+    read_only: true,
+    validation: {
+      unique<>: null,
+    }
+  }
+  state_interfaces: {
+    type: string_array,
+    default_value: [],
+    description: "State interfaces provided by the hardware for all joints.",
+    read_only: true,
+    validation: {
+      unique<>: null,
+      subset_of<>: [["position", "velocity", "acceleration"]],
+    }
+  }
