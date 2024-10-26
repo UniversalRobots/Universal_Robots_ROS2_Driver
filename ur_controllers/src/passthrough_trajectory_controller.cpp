@@ -296,8 +296,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
 
       // When the trajectory is finished, report the goal as successful to the client.
     } else if (current_transfer_state == TRANSFER_STATE_DONE) {
-      std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
-          std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      auto result = active_goal->preallocated_result_;
       // Check if the actual position complies with the tolerances given.
       if (!check_goal_tolerance()) {
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::GOAL_TOLERANCE_VIOLATED;
@@ -317,10 +316,12 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
         end_goal();
       } else {
         result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
+        result->error_string = "Trajectory executed successfully in " +
+                               std::to_string(active_trajectory_elapsed_time_.seconds()) +
+                               " (scaled) seconds! The real time needed for execution could be longer.";
         active_goal->setSucceeded(result);
         end_goal();
-        RCLCPP_INFO(get_node()->get_logger(), "Trajectory executed successfully in %f seconds!",
-                    active_trajectory_elapsed_time_.seconds());
+        RCLCPP_INFO(get_node()->get_logger(), "%s", result->error_string.c_str());
       }
     } else if (current_transfer_state == TRANSFER_STATE_IN_MOTION) {
       // Keep track of how long the trajectory has been executing, if it takes too long, send a warning.
