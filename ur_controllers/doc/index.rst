@@ -138,7 +138,7 @@ Advertised services
 
 .. _passthrough_trajectory_controller:
 
-ur_controlers/PassthroughTrajectoryController
+ur_controllers/PassthroughTrajectoryController
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This controller uses a ``control_msgs/FollowJointTrajectory`` action but instead of interpolating
@@ -221,12 +221,12 @@ directly to their joints.
      <command_interface name="setpoint_positions_3"/>
      <command_interface name="setpoint_positions_4"/>
      <command_interface name="setpoint_positions_5"/>
-     <command_interface name="setpoint_velicities_0"/>
-     <command_interface name="setpoint_velicities_1"/>
-     <command_interface name="setpoint_velicities_2"/>
-     <command_interface name="setpoint_velicities_3"/>
-     <command_interface name="setpoint_velicities_4"/>
-     <command_interface name="setpoint_velicities_5"/>
+     <command_interface name="setpoint_velocities_0"/>
+     <command_interface name="setpoint_velocities_1"/>
+     <command_interface name="setpoint_velocities_2"/>
+     <command_interface name="setpoint_velocities_3"/>
+     <command_interface name="setpoint_velocities_4"/>
+     <command_interface name="setpoint_velocities_5"/>
      <command_interface name="setpoint_accelerations_0"/>
      <command_interface name="setpoint_accelerations_1"/>
      <command_interface name="setpoint_accelerations_2"/>
@@ -247,7 +247,7 @@ Implementation details / dataflow
 """""""""""""""""""""""""""""""""
 
 * A trajectory passed to the controller will be sent to the hardware component one by one.
-* The controller will send one setpooint and then wait for the hardware to acknowledge that it can
+* The controller will send one setpoint and then wait for the hardware to acknowledge that it can
   take a new setpoint.
 * This happens until all setpoints have been transferred to the hardware. Then, the controller goes
   into a waiting state where it monitors execution time and waits for the hardware to finish

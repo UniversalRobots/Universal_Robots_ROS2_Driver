@@ -72,7 +72,7 @@ namespace ur_controllers
 
 /*
  * 0.0: No trajectory to forward, the controller is idling and ready to receive a new trajectory.
- * 1.0: The controller has received and accepted a new trajecotry. When the state is 1.0, the controller will write a
+ * 1.0: The controller has received and accepted a new trajectory. When the state is 1.0, the controller will write a
  * point to the hardware interface.
  * 2.0: The hardware interface will read the point written from the controller. The state will switch between 1.0
  * and 2.0 until all points have been read by the hardware interface.
