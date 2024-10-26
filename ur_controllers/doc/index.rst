@@ -139,11 +139,13 @@ Advertised services
 .. _passthrough_trajectory_controller:
 
 ur_controllers/PassthroughTrajectoryController
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This controller uses a ``control_msgs/FollowJointTrajectory`` action but instead of interpolating
 the trajectory on the ROS pc it forwards the complete trajectory to the robot controller for
-interpolation and execution. This way, the realtime requirements for the control PC.
+interpolation and execution. This way, the realtime requirements for the control PC can be
+massively decreased, since the robot always "knows" what to do next. That means that you should be
+able to run a stable driver connection also without a real-time patched kernel.
 
 Interpolation depends on the robot controller's implementation, but in conjunction with the
 ur_robot_driver it defaults to mimicking ros2_control's spline interpolation. So, any trajectory
@@ -164,6 +166,11 @@ controller basically tracks the scaled time instead of the real time.
    When using this controller with the URSim simulator execution times can be slightly larger than
    the expected time depending on the simulation host's resources. This effect will not be present
    when using a real UR arm.
+
+.. note::
+
+   This controller can currently only be used with URSim or a real UR robot. Neither mock hardware
+   nor gazebo support this type of trajectory interfaces at the time being.
 
 Tolerances
 """"""""""
