@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.11 (2024-10-28)
+-------------------
 * Allow setting the analog output domain when setting an analog output (backport of `#1123 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1123>`_)
 * Service to get software version of robot (`#964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/964>`_) (`#1128 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1128>`_)
 * Contributors: mergify[bot], Jacob Larsen, Felix Exner
