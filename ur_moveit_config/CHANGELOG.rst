@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Properly handle use_sim_time (`#1146 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1146>`_)
+* Disable execution_duration_monitoring by default (`#1134 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1134>`_)
+* Contributors: Felix Exner (fexner)
+
 2.3.10 (2024-08-09)
 -------------------
 

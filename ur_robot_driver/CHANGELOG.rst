@@ -1,3 +1,12 @@
+Forthcoming
+-----------
+* Allow setting the analog output domain when setting an analog output (backport of `#1123 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1123>`_)
+* Fix component lifecycle (backport of `#1098 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1098>`_)
+* Service to get software version of robot (`#964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/964>`_) (`#1128 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1128>`_)
+* Assure the description is loaded as string (`#1107 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1107>`_)
+* Fix for forward_velocity_controller test (backport of `#1076 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1076>`_)
+* Contributors: Felix Exner (fexner), mergify[bot], Vincenzo Di Pentima, Jacob Larsen
+
 2.3.10 (2024-08-09)
 -------------------
 * Fix passing launch_dashobard_client launch argument (backport of `#1057 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1057>`_)
