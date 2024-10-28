@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.4.13 (2024-10-28)
+-------------------
 * Fix component lifecycle (`#1098 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1098>`_)
 * Add missing state interfaces for get_robot_software_version (`#1153 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1153>`_)
 * Contributors: Felix Exner (fexner)
