@@ -1,3 +1,12 @@
+Forthcoming
+-----------
+* Allow setting the analog output domain when setting an analog output (backport of `#1123 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1123>`_)
+* Fix component lifecycle (backport of `#1098 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1098>`_)
+* [moveit] Disable execution_duration_monitoring by default (`#1133 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1133>`_)
+* Service to get software version of robot (backport of `#964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/964>`_)
+* Assure the description is loaded as string (backport of `#1107 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1107>`_)
+* Contributors: Felix Exner (fexner), mergify[bot], Jacob Larsen
+
 2.2.15 (2024-07-26)
 -------------------
 * Fix passing launch_dashobard_client launch argument (backport of `#1057 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1057>`_)
