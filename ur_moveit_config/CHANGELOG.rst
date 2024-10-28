@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.16 (2024-10-28)
+-------------------
 * Properly handle use_sim_time (`#1146 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1146>`_) (`#1159 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1159>`_)
 * Disable execution_duration_monitoring by default (`#1133 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1133>`_)
 * Added option to publish SRDF file.
