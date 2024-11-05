@@ -66,6 +66,7 @@ def launch_setup(context):
     use_tool_communication = LaunchConfiguration("use_tool_communication")
     tool_device_name = LaunchConfiguration("tool_device_name")
     tool_tcp_port = LaunchConfiguration("tool_tcp_port")
+    use_controller_stopper = LaunchConfiguration("use_controller_stopper")
 
     control_node = Node(
         package="controller_manager",
@@ -120,7 +121,9 @@ def launch_setup(context):
         name="controller_stopper",
         output="screen",
         emulate_tty=True,
-        condition=UnlessCondition(use_mock_hardware),
+        condition=IfCondition(
+            AndSubstitution(use_controller_stopper, NotSubstitution(use_mock_hardware))
+        ),
         parameters=[
             {"headless_mode": headless_mode},
             {"joint_controller_active": activate_joint_controller},
@@ -468,6 +471,14 @@ def generate_launch_description():
                 LaunchConfiguration("ur_type"),
                 "_update_rate.yaml",
             ],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_controller_stopper",
+            default_value="true",
+            description="Use the controller stopper node to start and stop ROS 2 controllers "
+            "based on the robot's running state topic."
         )
     )
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
