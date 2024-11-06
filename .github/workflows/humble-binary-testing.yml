@@ -7,7 +7,7 @@ on:
 
 
 jobs:
-  binary:
+  humble_binary_testing:
     uses: ./.github/workflows/reusable_ici.yml
     with:
       ros_distro: humble

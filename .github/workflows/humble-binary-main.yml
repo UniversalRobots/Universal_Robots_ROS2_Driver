@@ -6,7 +6,7 @@ on:
     - cron: '03 5 * * *'
 
 jobs:
-  binary:
+  humble_binary_main:
     uses: ./.github/workflows/reusable_ici.yml
     with:
       ros_distro: humble
