@@ -1,8 +1,6 @@
 name: Iron Semi Binary Build Testing
 on:
   workflow_dispatch:
-    branches:
-      - iron
   pull_request:
     branches:
       - iron

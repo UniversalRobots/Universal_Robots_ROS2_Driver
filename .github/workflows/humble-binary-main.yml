@@ -1,12 +1,9 @@
 name: Humble Binary Build Main
 on:
   workflow_dispatch:
-    branches:
-      - humble
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 5 * * *'
-
 
 jobs:
   binary:

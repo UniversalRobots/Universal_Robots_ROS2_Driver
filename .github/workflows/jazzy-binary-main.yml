@@ -1,8 +1,6 @@
 name: Jazzy Binary Build Main
 on:
   workflow_dispatch:
-    branches:
-      - main
   pull_request:
     branches:
       - main
