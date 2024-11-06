@@ -31,15 +31,15 @@ on:
 
 jobs:
   reusable_ici:
-    name: ${{ inputs.ros_distro }} ${{ inputs.ros_repo }} ${{ inputs.os_code_name }}
+    name: ${{ inputs.ros_distro }} ${{ inputs.ros_repo }}
     runs-on: ubuntu-latest
     env:
       DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
     steps:
-      - name: Checkout ${{ inputs.ref }} when build is not scheduled
+      - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
         uses: actions/checkout@v4
-      - name: Checkout ${{ inputs.ref }} on scheduled build
+      - name: Checkout ${{ inputs.ref_for_scheduled_build }} on scheduled build
         if: ${{ github.event_name == 'schedule' }}
         uses: actions/checkout@v4
         with:
