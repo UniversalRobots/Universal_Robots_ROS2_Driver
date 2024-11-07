@@ -3,8 +3,4 @@
 # requires a newer version than the one currently released to the target distributions.
 # Once Upstream packages are released and synced to the target distributions in the required
 # version, the entry in this file shall be removed again.
-repositories:
-  Universal_Robots_ROS2_Description:
-    type: git
-    url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git
-    version: humble
+repositories: []
