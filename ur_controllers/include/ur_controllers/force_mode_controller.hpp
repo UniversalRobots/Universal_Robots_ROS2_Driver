@@ -93,7 +93,7 @@ struct ForceModeParameters
   std::array<double, 6> task_frame;
   std::array<double, 6> selection_vec;
   std::array<double, 6> limits;
-  geometry_msgs::msg::WrenchStamped wrench;
+  geometry_msgs::msg::Wrench wrench;
   double type;
   double damping_factor;
   double gain_scaling;

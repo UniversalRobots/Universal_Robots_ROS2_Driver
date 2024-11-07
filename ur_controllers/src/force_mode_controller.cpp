@@ -200,17 +200,17 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
           force_mode_parameters->selection_vec[5]);
 
       command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(
-          force_mode_parameters->wrench.wrench.force.x);
+          force_mode_parameters->wrench.force.x);
       command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(
-          force_mode_parameters->wrench.wrench.force.y);
+          force_mode_parameters->wrench.force.y);
       command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(
-          force_mode_parameters->wrench.wrench.force.z);
+          force_mode_parameters->wrench.force.z);
       command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(
-          force_mode_parameters->wrench.wrench.torque.x);
+          force_mode_parameters->wrench.torque.x);
       command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(
-          force_mode_parameters->wrench.wrench.torque.y);
+          force_mode_parameters->wrench.torque.y);
       command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(
-          force_mode_parameters->wrench.wrench.torque.z);
+          force_mode_parameters->wrench.torque.z);
 
       command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X].set_value(force_mode_parameters->limits[0]);
       command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Y].set_value(force_mode_parameters->limits[1]);
@@ -276,12 +276,12 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 
   /* The limits specifies the maximum allowed speed along/around compliant axes. For non-compliant axes this value is
    * the maximum allowed deviation between actual tcp position and the one that has been programmed. */
-  force_mode_parameters.limits[0] = req->limits[0];
-  force_mode_parameters.limits[1] = req->limits[1];
-  force_mode_parameters.limits[2] = req->limits[2];
-  force_mode_parameters.limits[3] = req->limits[3];
-  force_mode_parameters.limits[4] = req->limits[4];
-  force_mode_parameters.limits[5] = req->limits[5];
+  force_mode_parameters.limits[0] = req->selection_vector_x ? req->speed_limits.linear.x : req->deviation_limits[0];
+  force_mode_parameters.limits[1] = req->selection_vector_y ? req->speed_limits.linear.y : req->deviation_limits[1];
+  force_mode_parameters.limits[2] = req->selection_vector_z ? req->speed_limits.linear.z : req->deviation_limits[2];
+  force_mode_parameters.limits[3] = req->selection_vector_rx ? req->speed_limits.angular.x : req->deviation_limits[3];
+  force_mode_parameters.limits[4] = req->selection_vector_ry ? req->speed_limits.angular.y : req->deviation_limits[4];
+  force_mode_parameters.limits[5] = req->selection_vector_rz ? req->speed_limits.angular.z : req->deviation_limits[5];
 
   /* The type decides how the robot interprets the force frame (the one defined in task_frame). See ur_script manual
    * for explanation, under force_mode. */
