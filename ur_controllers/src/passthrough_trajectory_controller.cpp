@@ -147,12 +147,11 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
     if (interface_it != state_interfaces_.end()) {
       if (interface_it->get_interface_name() == "position") {
         joint_position_state_interface_.emplace_back(*interface_it);
-
       } else if (interface_it->get_interface_name() == "velocity") {
         joint_velocity_state_interface_.emplace_back(*interface_it);
+      } else if (interface_it->get_interface_name() == "acceleration") {
+        joint_acceleration_state_interface_.emplace_back(*interface_it);
       }
-    } else if (interface_it->get_interface_name() == "acceleration") {
-      joint_acceleration_state_interface_.emplace_back(*interface_it);
     }
   }
 
