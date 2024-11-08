@@ -58,6 +58,15 @@ TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
 TIMEOUT_WAIT_ACTION = 10
 
+ROBOT_JOINTS = [
+    "elbow_joint",
+    "shoulder_lift_joint",
+    "shoulder_pan_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint",
+]
+
 
 def _wait_for_service(node, srv_name, srv_type, timeout):
     client = node.create_client(srv_type, srv_name)
@@ -260,7 +269,8 @@ class ForceModeInterface(
     _ServiceInterface,
     namespace="/force_mode_controller",
     initial_services={},
-    services={"start_force_mode": SetForceMode},
+    services={"start_force_mode": SetForceMode,
+              "stop_force_mode": Trigger},
 ):
     pass
 
