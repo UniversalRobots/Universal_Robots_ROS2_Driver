@@ -192,6 +192,10 @@ if(BUILD_TESTING)
       TIMEOUT
         800
     )
+    add_launch_test(test/integration_test_force_mode.py
+      TIMEOUT
+        800
+    )
     add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
