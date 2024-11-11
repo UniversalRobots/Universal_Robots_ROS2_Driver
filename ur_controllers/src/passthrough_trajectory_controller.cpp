@@ -245,7 +245,6 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
 
     if (current_index_ == 0 && current_transfer_state == TRANSFER_STATE_IDLE) {
       active_trajectory_elapsed_time_ = rclcpp::Duration(0, 0);
-      rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
       max_trajectory_time_ =
           rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
       transfer_command_interface_->get().set_value(TRANSFER_STATE_WAITING_FOR_POINT);
