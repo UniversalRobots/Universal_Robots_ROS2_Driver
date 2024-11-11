@@ -32,6 +32,10 @@
   <depend>std_srvs</depend>
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_msgs</depend>
+  <depend>control_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>action_msgs</depend>
+
 
   <export>
     <build_type>ament_cmake</build_type>
