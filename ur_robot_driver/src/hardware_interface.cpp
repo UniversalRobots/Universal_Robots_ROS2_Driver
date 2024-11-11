@@ -866,21 +866,51 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
-  start_modes_.clear();
+
+  start_modes_ = std::vector<std::string>(info_.joints.size(), "UNDEFINED");
   stop_modes_.clear();
+  std::vector<std::string> control_modes(info_.joints.size());
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
+
+  // Assess current state
+  for (auto i = 0u; i < info_.joints.size(); i++) {
+    if (position_controller_running_) {
+      control_modes[i] = hardware_interface::HW_IF_POSITION;
+    }
+    if (velocity_controller_running_) {
+      control_modes[i] = hardware_interface::HW_IF_VELOCITY;
+    }
+    if (passthrough_trajectory_controller_running_) {
+      control_modes[i] = PASSTHROUGH_GPIO;
+    }
+  }
+
+  if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
+                   [&](const std::string& other) { return other == start_modes_[0]; })) {
+    RCLCPP_ERROR(get_logger(), "Start modes of all joints have to be the same.");
+    return hardware_interface::return_type::ERROR;
+  }
+
   // Starting interfaces
-  // add start interface per joint in tmp var for later check
+  // If a joint has been reserved already, raise an error.
+  // Modes that are not directly mapped to a single joint such as force_mode reserve all joints.
   for (const auto& key : start_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-        start_modes_.push_back(hardware_interface::HW_IF_POSITION);
-      }
-      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-        start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
-      }
-      if (key == tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i)) {
-        start_modes_.push_back(PASSTHROUGH_GPIO);
+        if (start_modes_[i] != "UNDEFINED") {
+          return hardware_interface::return_type::ERROR;
+        }
+        start_modes_[i] = hardware_interface::HW_IF_POSITION;
+      } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
+        if (start_modes_[i] != "UNDEFINED") {
+          return hardware_interface::return_type::ERROR;
+        }
+        start_modes_[i] = hardware_interface::HW_IF_VELOCITY;
+      } else if (key == tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i)) {
+        if (start_modes_[i] != "UNDEFINED") {
+          return hardware_interface::return_type::ERROR;
+        }
+        start_modes_[i] = PASSTHROUGH_GPIO;
       }
     }
   }
@@ -891,65 +921,55 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     for (auto i = 0u; i < info_.joints.size(); i++) {
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
         stop_modes_.push_back(StoppingInterface::STOP_POSITION);
+        if (control_modes[i] == hardware_interface::HW_IF_POSITION) {
+          control_modes[i] = "UNDEFINED";
+        }
       }
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
+        if (control_modes[i] == hardware_interface::HW_IF_VELOCITY) {
+          control_modes[i] = "UNDEFINED";
+        }
       }
       if (key == tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i)) {
         stop_modes_.push_back(StoppingInterface::STOP_PASSTHROUGH);
+        if (control_modes[i] == PASSTHROUGH_GPIO) {
+          control_modes[i] = "UNDEFINED";
+        }
       }
     }
   }
 
-  // set new mode to all interfaces at the same time
-  if (start_modes_.size() != 0 && start_modes_.size() != 6) {
-    RCLCPP_ERROR(get_logger(), "Either none or all joint interfaces must be started at once.");
+  // Do not start conflicting controllers
+  if (std::any_of(start_modes_.begin(), start_modes_.end(),
+                  [this](auto& item) { return (item == PASSTHROUGH_GPIO); }) &&
+      (std::any_of(start_modes_.begin(), start_modes_.end(),
+                   [](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
+                   }) ||
+       std::any_of(control_modes.begin(), control_modes.end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == PASSTHROUGH_GPIO);
+       }))) {
     ret_val = hardware_interface::return_type::ERROR;
   }
-
-  if (position_controller_running_ &&
-      std::none_of(stop_modes_.begin(), stop_modes_.end(),
-                   [](auto item) { return item == StoppingInterface::STOP_POSITION; }) &&
+  if (std::any_of(start_modes_.begin(), start_modes_.end(),
+                  [](auto& item) { return (item == hardware_interface::HW_IF_POSITION); }) &&
+      (std::any_of(
+           start_modes_.begin(), start_modes_.end(),
+           [this](auto& item) { return (item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO); }) ||
+       std::any_of(control_modes.begin(), control_modes.end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == PASSTHROUGH_GPIO);
+       }))) {
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+  if (std::any_of(start_modes_.begin(), start_modes_.end(),
+                  [](auto& item) { return (item == hardware_interface::HW_IF_VELOCITY); }) &&
       std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
-        return (item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO);
+        return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                item == PASSTHROUGH_GPIO);
       })) {
-    RCLCPP_ERROR(get_logger(), "Start of velocity or passthrough interface requested while there is the position "
-                               "interface running.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  if (velocity_controller_running_ &&
-      std::none_of(stop_modes_.begin(), stop_modes_.end(),
-                   [](auto item) { return item == StoppingInterface::STOP_VELOCITY; }) &&
-      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
-        return (item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO);
-      })) {
-    RCLCPP_ERROR(get_logger(), "Start of position or passthrough interface requested while there is the velocity "
-                               "interface running.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  if (passthrough_trajectory_controller_running_ &&
-      std::none_of(stop_modes_.begin(), stop_modes_.end(),
-                   [](auto item) { return item == StoppingInterface::STOP_PASSTHROUGH; }) &&
-      std::any_of(start_modes_.begin(), start_modes_.end(), [](auto& item) {
-        return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
-      })) {
-    RCLCPP_ERROR(get_logger(), "Start of position or velocity interface requested while there is the passthrough "
-                               "interface running.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  // all start interfaces must be the same - can't mix position and velocity control
-  if (start_modes_.size() != 0 && !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin())) {
-    RCLCPP_ERROR(get_logger(), "Can't mix different control domains for joint control.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  // stop all interfaces at the same time
-  if (stop_modes_.size() != 0 &&
-      (stop_modes_.size() != 6 || !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin()))) {
-    RCLCPP_ERROR(get_logger(), "Either none or all joint interfaces must be stopped at once.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
