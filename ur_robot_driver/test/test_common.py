@@ -29,7 +29,12 @@ import logging
 import time
 
 import rclpy
-from controller_manager_msgs.srv import ListControllers, SwitchController
+from controller_manager_msgs.srv import (
+    ListControllers,
+    SwitchController,
+    LoadController,
+    UnloadController,
+)
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -232,7 +237,11 @@ class DashboardInterface(
 class ControllerManagerInterface(
     _ServiceInterface,
     namespace="/controller_manager",
-    initial_services={"switch_controller": SwitchController},
+    initial_services={
+        "switch_controller": SwitchController,
+        "load_controller": LoadController,
+        "unload_controller": UnloadController,
+    },
     services={"list_controllers": ListControllers},
 ):
     def wait_for_controller(self, controller_name, target_state="active"):
@@ -269,8 +278,7 @@ class ForceModeInterface(
     _ServiceInterface,
     namespace="/force_mode_controller",
     initial_services={},
-    services={"start_force_mode": SetForceMode,
-              "stop_force_mode": Trigger},
+    services={"start_force_mode": SetForceMode, "stop_force_mode": Trigger},
 ):
     pass
 

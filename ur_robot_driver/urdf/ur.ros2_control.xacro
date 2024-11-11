@@ -260,6 +260,38 @@
         <command_interface name="disable_cmd"/>
         <command_interface name="force_mode_async_success"/>
       </gpio>
+
+      <gpio name="${tf_prefix}trajectory_passthrough">
+        <command_interface name="setpoint_positions_0"/>
+        <command_interface name="setpoint_positions_1"/>
+        <command_interface name="setpoint_positions_2"/>
+        <command_interface name="setpoint_positions_3"/>
+        <command_interface name="setpoint_positions_4"/>
+        <command_interface name="setpoint_positions_5"/>
+        <command_interface name="setpoint_velocities_0"/>
+        <command_interface name="setpoint_velocities_1"/>
+        <command_interface name="setpoint_velocities_2"/>
+        <command_interface name="setpoint_velocities_3"/>
+        <command_interface name="setpoint_velocities_4"/>
+        <command_interface name="setpoint_velocities_5"/>
+        <command_interface name="setpoint_accelerations_0"/>
+        <command_interface name="setpoint_accelerations_1"/>
+        <command_interface name="setpoint_accelerations_2"/>
+        <command_interface name="setpoint_accelerations_3"/>
+        <command_interface name="setpoint_accelerations_4"/>
+        <command_interface name="setpoint_accelerations_5"/>
+        <command_interface name="transfer_state"/>
+        <command_interface name="time_from_start"/>
+        <command_interface name="abort"/>
+      </gpio>
+
+
+      <gpio name="${tf_prefix}get_robot_software_version">
+        <state_interface name="get_version_major"/>
+        <state_interface name="get_version_minor"/>
+        <state_interface name="get_version_build"/>
+        <state_interface name="get_version_bugfix"/>
+      </gpio>
     </ros2_control>
   </xacro:macro>
 </robot>
