@@ -175,6 +175,9 @@ def generate_launch_description():
             moveit_config.planning_pipelines,
             moveit_config.joint_limits,
             warehouse_ros_config,
+            {
+                "use_sim_time": use_sim_time,
+            },
         ],
     )
 
