@@ -295,6 +295,7 @@ def launch_setup(context, *args, **kwargs):
                     "force_torque_sensor_broadcaster",
                     "joint_state_broadcaster",
                     "speed_scaling_state_broadcaster",
+                    "tcp_pose_broadcaster",
                     "ur_configuration_controller",
                 ]
             },
@@ -338,6 +339,7 @@ def launch_setup(context, *args, **kwargs):
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
+        "tcp_pose_broadcaster",
         "ur_configuration_controller",
     ]
     controllers_inactive = ["forward_position_controller"]
