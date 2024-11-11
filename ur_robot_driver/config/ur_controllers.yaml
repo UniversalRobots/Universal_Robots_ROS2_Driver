@@ -26,6 +26,8 @@ controller_manager:
 
     passthrough_trajectory_controller:
       type: ur_controllers/PassthroughTrajectoryController
+    tcp_pose_broadcaster:
+      type: pose_broadcaster/PoseBroadcaster
 
     ur_configuration_controller:
       type: ur_controllers/URConfigurationController
@@ -148,3 +150,10 @@ forward_position_controller:
       - $(var tf_prefix)wrist_1_joint
       - $(var tf_prefix)wrist_2_joint
       - $(var tf_prefix)wrist_3_joint
+
+tcp_pose_broadcaster:
+  ros__parameters:
+    frame_id: $(var tf_prefix)base
+    pose_name: $(var tf_prefix)tcp_pose
+    tf:
+      child_frame_id: $(var tf_prefix)tool0_controller

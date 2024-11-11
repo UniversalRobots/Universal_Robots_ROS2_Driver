@@ -81,6 +81,28 @@ enum StoppingInterface
   STOP_PASSTHROUGH
 };
 
+// We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
+// interfaces.
+struct Quaternion
+{
+  Quaternion() : x(0), y(0), z(0), w(0)
+  {
+  }
+
+  void set(const tf2::Quaternion& q)
+  {
+    x = q.x();
+    y = q.y();
+    z = q.z();
+    w = q.w();
+  }
+
+  double x;
+  double y;
+  double z;
+  double w;
+};
+
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
  * driver. It contains the read and write methods of the main control loop and registers various ROS
@@ -149,6 +171,8 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
+  tf2::Quaternion tcp_rotation_quat_;
+  Quaternion tcp_rotation_buffer;
 
   bool packet_read_;
 
@@ -177,7 +201,6 @@ protected:
   // transform stuff
   tf2::Vector3 tcp_force_;
   tf2::Vector3 tcp_torque_;
-  geometry_msgs::msg::TransformStamped tcp_transform_;
 
   // asynchronous commands
   std::array<double, 18> standard_dig_out_bits_cmd_;

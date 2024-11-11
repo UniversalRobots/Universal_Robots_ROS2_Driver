@@ -175,9 +175,14 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
                                                                    &speed_scaling_combined_));
 
   for (auto& sensor : info_.sensors) {
-    for (uint j = 0; j < sensor.state_interfaces.size(); ++j) {
-      state_interfaces.emplace_back(hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name,
-                                                                       &urcl_ft_sensor_measurements_[j]));
+    if (sensor.name == tf_prefix + "tcp_fts_sensor") {
+      const std::vector<std::string> fts_names = {
+        "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
+      };
+      for (uint j = 0; j < 6; ++j) {
+        state_interfaces.emplace_back(
+            hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
+      }
     }
   }
 
@@ -236,6 +241,21 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
+
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
 
   state_interfaces.emplace_back(hardware_interface::StateInterface(
       tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
@@ -833,10 +853,8 @@ void URPositionHardwareInterface::transformForceTorque()
   tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
                        urcl_ft_sensor_measurements_[5]);
 
-  tf2::Quaternion rotation_quat;
-  tf2::fromMsg(tcp_transform_.transform.rotation, rotation_quat);
-  tcp_force_ = tf2::quatRotate(rotation_quat.inverse(), tcp_force_);
-  tcp_torque_ = tf2::quatRotate(rotation_quat.inverse(), tcp_torque_);
+  tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
+  tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
 
   urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
                                    tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
@@ -849,17 +867,12 @@ void URPositionHardwareInterface::extractToolPose()
       std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
 
   tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
-  tf2::Quaternion rotation;
   if (tcp_angle > 1e-16) {
-    rotation.setRotation(rotation_vec.normalized(), tcp_angle);
+    tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
   } else {
-    rotation.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
+    tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
   }
-  tcp_transform_.transform.translation.x = urcl_tcp_pose_[0];
-  tcp_transform_.transform.translation.y = urcl_tcp_pose_[1];
-  tcp_transform_.transform.translation.z = urcl_tcp_pose_[2];
-
-  tcp_transform_.transform.rotation = tf2::toMsg(rotation);
+  tcp_rotation_buffer.set(tcp_rotation_quat_);
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
