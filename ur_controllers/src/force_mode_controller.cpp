@@ -236,6 +236,14 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 
   // transform task frame into base
   const std::string tf_prefix = params_.tf_prefix;
+  if (std::abs(req->task_frame.pose.orientation.x) < 1e-6 && std::abs(req->task_frame.pose.orientation.y) < 1e-6 &&
+      std::abs(req->task_frame.pose.orientation.z) < 1e-6 && std::abs(req->task_frame.pose.orientation.w) < 1e-6) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Received task frame with all-zeros quaternion. It should have at least one "
+                                           "non-zero entry.");
+    resp->success = false;
+    return false;
+  }
+
   try {
     auto task_frame_transformed = tf_buffer_->transform(req->task_frame, tf_prefix + "base");
 
@@ -251,6 +259,7 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   } catch (const tf2::TransformException& ex) {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not transform %s to robot base: %s",
                  req->task_frame.header.frame_id.c_str(), ex.what());
+    resp->success = false;
     return false;
   }
 
@@ -274,6 +283,12 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   force_mode_parameters.limits[3] = req->selection_vector_rx ? req->speed_limits.angular.x : req->deviation_limits[3];
   force_mode_parameters.limits[4] = req->selection_vector_ry ? req->speed_limits.angular.y : req->deviation_limits[4];
   force_mode_parameters.limits[5] = req->selection_vector_rz ? req->speed_limits.angular.z : req->deviation_limits[5];
+
+  if (req->type < 1 || req->type > 3) {
+    RCLCPP_ERROR(get_node()->get_logger(), "The force mode type has to be 1, 2, or 3. Received %u", req->type);
+    resp->success = false;
+    return false;
+  }
 
   /* The type decides how the robot interprets the force frame (the one defined in task_frame). See ur_script manual
    * for explanation, under force_mode. */

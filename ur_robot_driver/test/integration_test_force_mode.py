@@ -241,3 +241,88 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["force_mode_controller"],
             ).ok
         )
+
+    def test_illegal_force_mode_types(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self._force_mode_controller_interface = ForceModeInterface(self.node)
+
+        # Create task frame for force mode
+        point = Point(x=0.0, y=0.0, z=0.0)
+        orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+        task_frame_pose = Pose()
+        task_frame_pose.position = point
+        task_frame_pose.orientation = orientation
+        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header.stamp.sec = int(time.time()) + 1
+        header.stamp.nanosec = 0
+        frame_stamp = PoseStamped()
+        frame_stamp.header = header
+        frame_stamp.pose = task_frame_pose
+
+        res = self._force_mode_controller_interface.start_force_mode(task_frame=frame_stamp, type=0)
+        self.assertFalse(res.success)
+        res = self._force_mode_controller_interface.start_force_mode(task_frame=frame_stamp, type=4)
+        self.assertFalse(res.success)
+        res = self._force_mode_controller_interface.start_force_mode(task_frame=frame_stamp, type=1)
+        self.assertTrue(res.success)
+        res = self._force_mode_controller_interface.stop_force_mode()
+        res = self._force_mode_controller_interface.start_force_mode(task_frame=frame_stamp, type=2)
+        self.assertTrue(res.success)
+        res = self._force_mode_controller_interface.stop_force_mode()
+        res = self._force_mode_controller_interface.start_force_mode(task_frame=frame_stamp, type=3)
+        self.assertTrue(res.success)
+        res = self._force_mode_controller_interface.stop_force_mode()
+
+    def test_illegal_task_frame(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self._force_mode_controller_interface = ForceModeInterface(self.node)
+
+        # Create task frame for force mode
+        point = Point(x=0.0, y=0.0, z=0.0)
+        orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+        task_frame_pose = Pose()
+        task_frame_pose.position = point
+        task_frame_pose.orientation = orientation
+        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header.stamp.sec = int(time.time()) + 1
+        header.stamp.nanosec = 0
+        frame_stamp = PoseStamped()
+        frame_stamp.header = header
+        frame_stamp.pose = task_frame_pose
+
+        # Illegal frame name produces error
+        header.frame_id = "nonexisting6t54"
+        res = self._force_mode_controller_interface.start_force_mode(
+            task_frame=frame_stamp,
+        )
+        self.assertFalse(res.success)
+        header.frame_id = "base"
+
+        # Illegal quaternion produces error
+        task_frame_pose.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=0.0)
+        res = self._force_mode_controller_interface.start_force_mode(
+            task_frame=frame_stamp,
+        )
+        self.assertFalse(res.success)
