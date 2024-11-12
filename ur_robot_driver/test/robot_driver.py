@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright 2019, FZI Forschungszentrum Informatik
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@ import pytest
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
+from control_msgs.msg import JointTolerance
 from controller_manager_msgs.srv import SwitchController
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
@@ -49,15 +50,16 @@ from test_common import (  # noqa: E402
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
+    ConfigurationInterface,
     generate_driver_test_description,
 )
 
 TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 ROBOT_JOINTS = [
-    "elbow_joint",
-    "shoulder_lift_joint",
     "shoulder_pan_joint",
+    "shoulder_lift_joint",
+    "elbow_joint",
     "wrist_1_joint",
     "wrist_2_joint",
     "wrist_3_joint",
@@ -92,10 +94,16 @@ class RobotDriverTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
 
         self._scaled_follow_joint_trajectory = ActionInterface(
             self.node,
             "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
+        self._passthrough_forward_joint_trajectory = ActionInterface(
+            self.node,
+            "/passthrough_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
 
@@ -108,10 +116,31 @@ class RobotDriverTest(unittest.TestCase):
     # Test functions
     #
 
+    def test_get_robot_software_version(self):
+        self.assertNotEqual(
+            self._configuration_controller_interface.get_robot_software_version().major, 0
+        )
+
     def test_start_scaled_jtc_controller(self):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
+
+    def test_start_passthrough_controller(self):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["passthrough_trajectory_controller"],
                 activate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
@@ -258,7 +287,10 @@ class RobotDriverTest(unittest.TestCase):
                 Duration(sec=6, nanosec=50000000),
                 [-1.0 for j in ROBOT_JOINTS],
             ),  # physically unfeasible
-            (Duration(sec=8, nanosec=0), [-1.5 for j in ROBOT_JOINTS]),  # physically unfeasible
+            (
+                Duration(sec=8, nanosec=0),
+                [-1.5 for j in ROBOT_JOINTS],
+            ),  # physically unfeasible
         ]
 
         trajectory = JointTrajectory(
@@ -311,17 +343,105 @@ class RobotDriverTest(unittest.TestCase):
             )
         )
 
-        # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
-        # see https://github.com/ros-controls/ros2_controllers/issues/249
-        # Now do the same again, but with a goal time constraint
-        # self.node.get_logger().info("Sending scaled goal with time restrictions")
-        #
-        # goal.goal_time_tolerance = Duration(nanosec=10000000)
-        # goal_response = self.call_action("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal)
-        #
-        # self.assertEqual(goal_response.accepted, True)
-        #
-        # if goal_response.accepted:
-        #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
-        #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
-        #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
+    # TODO: uncomment when JTC starts taking into account goal_time_tolerance from goal message
+    # see https://github.com/ros-controls/ros2_controllers/issues/249
+    # Now do the same again, but with a goal time constraint
+    # self.node.get_logger().info("Sending scaled goal with time restrictions")
+    #
+    # goal.goal_time_tolerance = Duration(nanosec=10000000)
+    # goal_response = self.call_action("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal)
+    #
+    # self.assertEqual(goal_response.accepted, True)
+    #
+    # if goal_response.accepted:
+    #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
+    #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
+    #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
+
+    def test_passthrough_trajectory(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
+        waypts = [
+            [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+            [-3, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+            [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+        ]
+        time_vec = [
+            Duration(sec=4, nanosec=0),
+            Duration(sec=8, nanosec=0),
+            Duration(sec=12, nanosec=0),
+        ]
+        goal_tolerance = [
+            JointTolerance(position=0.01, name=tf_prefix + ROBOT_JOINTS[i])
+            for i in range(len(ROBOT_JOINTS))
+        ]
+        goal_time_tolerance = Duration(sec=1, nanosec=0)
+        test_trajectory = zip(time_vec, waypts)
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(positions=pos, time_from_start=times)
+                for (times, pos) in test_trajectory
+            ],
+            joint_names=[tf_prefix + ROBOT_JOINTS[i] for i in range(len(ROBOT_JOINTS))],
+        )
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+        # Test impossible goal tolerance, should fail.
+        goal_tolerance = [
+            JointTolerance(position=0.000000001, name=tf_prefix + ROBOT_JOINTS[i])
+            for i in range(len(ROBOT_JOINTS))
+        ]
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(
+                result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED
+            )
+
+        # Test impossible goal time
+        goal_tolerance = [
+            JointTolerance(position=0.01, name=tf_prefix + ROBOT_JOINTS[i]) for i in range(6)
+        ]
+        goal_time_tolerance.sec = 0
+        goal_time_tolerance.nanosec = 10
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(
+                result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED
+            )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["passthrough_trajectory_controller"],
+                activate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )

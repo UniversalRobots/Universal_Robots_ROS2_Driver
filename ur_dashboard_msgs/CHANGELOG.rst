@@ -2,6 +2,15 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.13 (2024-10-28)
+-------------------
+
+2.4.12 (2024-10-14)
+-------------------
+
+2.4.11 (2024-10-10)
+-------------------
+
 2.4.10 (2024-09-11)
 -------------------
 * Update maintainers team (`#1088 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1088>`_)

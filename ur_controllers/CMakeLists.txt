@@ -19,7 +19,10 @@ find_package(std_srvs REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
 find_package(generate_parameter_library REQUIRED)
+find_package(trajectory_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(action_msgs REQUIRED)
+
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   angles
@@ -35,6 +38,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   ur_dashboard_msgs
   ur_msgs
   generate_parameter_library
+  control_msgs
+  trajectory_msgs
   action_msgs
 )
 
@@ -61,11 +66,23 @@ generate_parameter_library(
   src/freedrive_mode_controller_parameters.yaml
 )
 
+generate_parameter_library(
+  passthrough_trajectory_controller_parameters
+  src/passthrough_trajectory_controller_parameters.yaml
+)
+
+generate_parameter_library(
+  ur_configuration_controller_parameters
+  src/ur_configuration_controller_parameters.yaml
+)
+
 add_library(${PROJECT_NAME} SHARED
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
   src/freedrive_mode_controller.cpp
-  src/gpio_controller.cpp)
+  src/gpio_controller.cpp
+  src/passthrough_trajectory_controller.cpp
+  src/ur_configuration_controller.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   include
@@ -75,6 +92,8 @@ target_link_libraries(${PROJECT_NAME}
   speed_scaling_state_broadcaster_parameters
   scaled_joint_trajectory_controller_parameters
   freedrive_mode_controller_parameters
+  passthrough_trajectory_controller_parameters
+  ur_configuration_controller_parameters
 )
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}

@@ -10,7 +10,7 @@ repositories:
   ur_msgs:
     type: git
     url: https://github.com/ros-industrial/ur_msgs.git
-    version: foxy-devel
+    version: humble-devel
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
@@ -27,3 +27,19 @@ repositories:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
     version: master
+  realtime_tools:
+    type: git
+    url: https://github.com/ros-controls/realtime_tools.git
+    version: master
+  moveit2:
+    type: git
+    url: https://github.com/ros-planning/moveit2.git
+    version: main
+  moveit_msgs:
+    type: git
+    url: https://github.com/ros-planning/moveit_msgs.git
+    version: ros2
+  srdfdom:
+    type: git
+    url: https://github.com/moveit/srdfdom.git
+    version: ros2

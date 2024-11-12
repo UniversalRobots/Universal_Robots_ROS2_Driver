@@ -29,7 +29,12 @@ import logging
 import time
 
 import rclpy
-from controller_manager_msgs.srv import ListControllers, SwitchController
+from controller_manager_msgs.srv import (
+    ListControllers,
+    SwitchController,
+    LoadController,
+    UnloadController,
+)
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -52,11 +57,20 @@ from ur_dashboard_msgs.srv import (
     IsProgramRunning,
     Load,
 )
-from ur_msgs.srv import SetIO
+from ur_msgs.srv import SetIO, GetRobotSoftwareVersion
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
 TIMEOUT_WAIT_ACTION = 10
+
+ROBOT_JOINTS = [
+    "elbow_joint",
+    "shoulder_lift_joint",
+    "shoulder_pan_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint",
+]
 
 
 def _wait_for_service(node, srv_name, srv_type, timeout):
@@ -223,7 +237,11 @@ class DashboardInterface(
 class ControllerManagerInterface(
     _ServiceInterface,
     namespace="/controller_manager",
-    initial_services={"switch_controller": SwitchController},
+    initial_services={
+        "switch_controller": SwitchController,
+        "load_controller": LoadController,
+        "unload_controller": UnloadController,
+    },
     services={"list_controllers": ListControllers},
 ):
     def wait_for_controller(self, controller_name, target_state="active"):
@@ -240,7 +258,18 @@ class IoStatusInterface(
     _ServiceInterface,
     namespace="/io_and_status_controller",
     initial_services={"set_io": SetIO},
-    services={"resend_robot_program": Trigger},
+    services={
+        "resend_robot_program": Trigger,
+    },
+):
+    pass
+
+
+class ConfigurationInterface(
+    _ServiceInterface,
+    namespace="/ur_configuration_controller",
+    initial_services={"get_robot_software_version": GetRobotSoftwareVersion},
+    services={},
 ):
     pass
 

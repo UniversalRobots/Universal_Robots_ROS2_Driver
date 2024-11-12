@@ -1,3 +1,4 @@
+.. _robot_setup:
 
 Setting up a UR robot for ur_robot_driver
 =========================================

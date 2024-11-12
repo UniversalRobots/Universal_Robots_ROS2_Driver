@@ -1,15 +1,13 @@
 name: Humble Binary Build Testing
 on:
   workflow_dispatch:
-    branches:
-      - humble
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 5 * * *'
 
 
 jobs:
-  binary:
+  humble_binary_testing:
     uses: ./.github/workflows/reusable_ici.yml
     with:
       ros_distro: humble

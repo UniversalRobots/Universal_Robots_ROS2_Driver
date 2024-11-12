@@ -1,3 +1,25 @@
+2.4.13 (2024-10-28)
+-------------------
+* Fix component lifecycle (`#1098 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1098>`_)
+* Add missing state interfaces for get_robot_software_version (`#1153 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1153>`_)
+* Contributors: Felix Exner (fexner)
+
+2.4.12 (2024-10-14)
+-------------------
+* Revert "Add passthrough interfaces for joints (`#1121 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1121>`_)" (`#1151 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1151>`_)
+* Contributors: Felix Exner (fexner)
+
+2.4.11 (2024-10-10)
+-------------------
+* Add note about TEM (`#1136 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1136>`_)
+* Allow setting the analog output domain when setting an analog IO (`#1123 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1123>`_)
+* Service to get software version of robot (`#964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/964>`_)
+* Add passthrough interfaces for joints (`#1121 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1121>`_)
+* Fix for Controller Switching Issue and Refactor Controller Spawning (`#1093 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1093>`_)
+* Improve usage documentation (`#1110 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1110>`_)
+* Assure the description is loaded as string (`#1106 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1106>`_)
+* Contributors: Chen Chen, Felix Exner (fexner), URJala
+
 2.4.10 (2024-09-11)
 -------------------
 * Fix for forward_velocity_controller test (`#1076 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1076>`_)

@@ -1,6 +1,0 @@
-# The not-released files are meant to use upstream packages in binary form whenever possible.
-# Packages get added here, if they are not released at all or when the repo's current version
-# requires a newer version than the one currently released to the target distributions.
-# Once Upstream packages are released and synced to the target distributions in the required
-# version, the entry in this file shall be removed again.
-repositories:

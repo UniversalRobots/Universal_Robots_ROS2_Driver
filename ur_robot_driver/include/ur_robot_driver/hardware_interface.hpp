@@ -78,7 +78,30 @@ enum StoppingInterface
   NONE,
   STOP_POSITION,
   STOP_VELOCITY,
-  STOP_FREEDRIVE
+  STOP_FREEDRIVE,
+  STOP_PASSTHROUGH
+};
+
+// We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
+// interfaces.
+struct Quaternion
+{
+  Quaternion() : x(0), y(0), z(0), w(0)
+  {
+  }
+
+  void set(const tf2::Quaternion& q)
+  {
+    x = q.x();
+    y = q.y();
+    z = q.z();
+    w = q.w();
+  }
+
+  double x;
+  double y;
+  double z;
+  double w;
 };
 
 /*!
@@ -136,6 +159,10 @@ protected:
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
+  void check_passthrough_trajectory_controller();
+  void trajectory_done_callback(urcl::control::TrajectoryResult result);
+  bool has_accelerations(std::vector<std::array<double, 6>> accelerations);
+  bool has_velocities(std::vector<std::array<double, 6>> velocities);
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -145,6 +172,8 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
+  tf2::Quaternion tcp_rotation_quat_;
+  Quaternion tcp_rotation_buffer;
 
   bool packet_read_;
 
@@ -173,11 +202,11 @@ protected:
   // transform stuff
   tf2::Vector3 tcp_force_;
   tf2::Vector3 tcp_torque_;
-  geometry_msgs::msg::TransformStamped tcp_transform_;
 
   // asynchronous commands
   std::array<double, 18> standard_dig_out_bits_cmd_;
   std::array<double, 2> standard_analog_output_cmd_;
+  double analog_output_domain_cmd_;
   double tool_voltage_cmd_;
   double io_async_success_;
   double target_speed_fraction_cmd_;
@@ -191,7 +220,11 @@ protected:
   bool first_pass_;
   bool initialized_;
   double system_interface_initialized_;
-  bool async_thread_shutdown_;
+  std::atomic_bool async_thread_shutdown_;
+  double get_robot_software_version_major_;
+  double get_robot_software_version_minor_;
+  double get_robot_software_version_bugfix_;
+  double get_robot_software_version_build_;
 
   // Freedrive mode controller interface values
   bool freedrive_action_requested_;
@@ -199,6 +232,15 @@ protected:
   double freedrive_mode_async_success_;
   double freedrive_mode_enable_;
   double freedrive_mode_abort_;
+
+  // Passthrough trajectory controller interface values
+  double passthrough_trajectory_transfer_state_;
+  double passthrough_trajectory_abort_;
+  bool passthrough_trajectory_controller_running_;
+  urcl::vector6d_t passthrough_trajectory_positions_;
+  urcl::vector6d_t passthrough_trajectory_velocities_;
+  urcl::vector6d_t passthrough_trajectory_accelerations_;
+  double passthrough_trajectory_time_from_start_;
 
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
@@ -221,6 +263,13 @@ protected:
   bool non_blocking_read_;
   double robot_program_running_copy_;
 
+  /* Vectors used to store the trajectory received from the passthrough trajectory controller. The whole trajectory is
+   * received before it is sent to the robot. */
+  std::vector<std::array<double, 6>> trajectory_joint_positions_;
+  std::vector<std::array<double, 6>> trajectory_joint_velocities_;
+  std::vector<std::array<double, 6>> trajectory_joint_accelerations_;
+  std::vector<double> trajectory_times_;
+
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
 
@@ -239,6 +288,7 @@ protected:
 
   // Check if name is correct here
   const std::string FREEDRIVE_MODE = "freedrive_mode";
+  const std::string PASSTHROUGH_GPIO = "trajectory_passthrough";
 };
 }  // namespace ur_robot_driver
 
