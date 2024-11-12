@@ -1110,6 +1110,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                                      StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
     force_mode_controller_running_ = false;
+    stop_force_mode();
   } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                                      StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;

@@ -34,8 +34,8 @@
  */
 //----------------------------------------------------------------------
 
-#include <future>
 #include <limits>
+#include <lifecycle_msgs/msg/state.hpp>
 #include <rclcpp/logging.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
@@ -232,6 +232,13 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
 bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
                                        ur_msgs::srv::SetForceMode::Response::SharedPtr resp)
 {
+  // Reject if controller is not active
+  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new action goals. Controller is not running.");
+    resp->success = false;
+    return false;
+  }
+
   ForceModeParameters force_mode_parameters;
 
   // transform task frame into base

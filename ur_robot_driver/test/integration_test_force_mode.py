@@ -104,6 +104,18 @@ class RobotDriverTest(unittest.TestCase):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self.node)
 
+    def lookup_tcp_in_base(self, tf_prefix, timepoint):
+        trans = None
+        while not trans:
+            rclpy.spin_once(self.node)
+            try:
+                trans = self.tf_buffer.lookup_transform(
+                    tf_prefix + "base", tf_prefix + "tool0", timepoint
+                )
+            except TransformException:
+                pass
+        return trans
+
     def test_force_mode_controller(self, tf_prefix):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -153,15 +165,7 @@ class RobotDriverTest(unittest.TestCase):
         damping_factor = 0.1
         gain_scale = 0.8
 
-        trans_before = None
-        while not trans_before:
-            rclpy.spin_once(self.node)
-            try:
-                trans_before = self.tf_buffer.lookup_transform(
-                    tf_prefix + "base", tf_prefix + "tool0", rclpy.time.Time()
-                )
-            except TransformException:
-                pass
+        trans_before = self.lookup_tcp_in_base(tf_prefix, rclpy.time.Time())
 
         # Send request to controller
         res = self._force_mode_controller_interface.start_force_mode(
@@ -183,16 +187,7 @@ class RobotDriverTest(unittest.TestCase):
 
         time.sleep(5.0)
 
-        trans_after = None
-        timepoint = self.node.get_clock().now()
-        while not trans_after:
-            rclpy.spin_once(self.node)
-            try:
-                trans_after = self.tf_buffer.lookup_transform(
-                    tf_prefix + "base", tf_prefix + "tool0", timepoint
-                )
-            except TransformException:
-                pass
+        trans_after = self.lookup_tcp_in_base(tf_prefix, self.node.get_clock().now())
 
         # task frame and wrench determines the expected motion
         # In the example we used
@@ -326,3 +321,127 @@ class RobotDriverTest(unittest.TestCase):
             task_frame=frame_stamp,
         )
         self.assertFalse(res.success)
+
+    def test_start_force_mode_on_inactive_controller_fails(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[],
+                deactivate_controllers=[
+                    "force_mode_controller",
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self._force_mode_controller_interface = ForceModeInterface(self.node)
+
+        # Create task frame for force mode
+        point = Point(x=0.0, y=0.0, z=0.0)
+        orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+        task_frame_pose = Pose()
+        task_frame_pose.position = point
+        task_frame_pose.orientation = orientation
+        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header.stamp.sec = int(time.time()) + 1
+        header.stamp.nanosec = 0
+        frame_stamp = PoseStamped()
+        frame_stamp.header = header
+        frame_stamp.pose = task_frame_pose
+
+        res = self._force_mode_controller_interface.start_force_mode(
+            task_frame=frame_stamp,
+        )
+        self.assertFalse(res.success)
+
+    def test_deactivating_controller_stops_force_mode(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self._force_mode_controller_interface = ForceModeInterface(self.node)
+
+        # Create task frame for force mode
+        point = Point(x=0.0, y=0.0, z=0.0)
+        orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+        task_frame_pose = Pose()
+        task_frame_pose.position = point
+        task_frame_pose.orientation = orientation
+        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header.stamp.sec = int(time.time()) + 1
+        header.stamp.nanosec = 0
+        frame_stamp = PoseStamped()
+        frame_stamp.header = header
+        frame_stamp.pose = task_frame_pose
+
+        # Create compliance vector (which axes should be force controlled)
+        compliance = [False, False, True, False, False, False]
+
+        # Create Wrench message for force mode
+        wrench = Wrench()
+        wrench.force = Vector3(x=0.0, y=0.0, z=5.0)
+        wrench.torque = Vector3(x=0.0, y=0.0, z=0.0)
+
+        # Specify interpretation of task frame (no transform)
+        type_spec = 2
+
+        # Specify max speeds and deviations of force mode
+        speed_limits = Twist()
+        speed_limits.linear = Vector3(x=0.0, y=0.0, z=1.0)
+        speed_limits.angular = Vector3(x=0.0, y=0.0, z=1.0)
+        deviation_limits = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
+        # specify damping and gain scaling
+        damping_factor = 0.1
+        gain_scale = 0.8
+
+        res = self._force_mode_controller_interface.start_force_mode(
+            task_frame=frame_stamp,
+            selection_vector_x=compliance[0],
+            selection_vector_y=compliance[1],
+            selection_vector_z=compliance[2],
+            selection_vector_rx=compliance[3],
+            selection_vector_ry=compliance[4],
+            selection_vector_rz=compliance[5],
+            wrench=wrench,
+            type=type_spec,
+            speed_limits=speed_limits,
+            deviation_limits=deviation_limits,
+            damping_factor=damping_factor,
+            gain_scaling=gain_scale,
+        )
+        self.assertTrue(res.success)
+
+        time.sleep(0.5)
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[],
+                deactivate_controllers=[
+                    "force_mode_controller",
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self._force_mode_controller_interface = ForceModeInterface(self.node)
+
+        time.sleep(0.5)
+        trans_before_wait = self.lookup_tcp_in_base(tf_prefix, self.node.get_clock().now())
+
+        # Make sure the robot didn't move anymore
+        time.sleep(0.5)
+        trans_after_wait = self.lookup_tcp_in_base(tf_prefix, self.node.get_clock().now())
+
+        self.assertAlmostEqual(
+            trans_before_wait.transform.translation.z, trans_after_wait.transform.translation.z
+        )
