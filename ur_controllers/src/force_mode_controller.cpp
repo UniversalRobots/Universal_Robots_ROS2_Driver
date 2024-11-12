@@ -44,8 +44,6 @@ namespace ur_controllers
 {
 controller_interface::CallbackReturn ForceModeController::on_init()
 {
-  RCLCPP_WARN(get_node()->get_logger(), "The ForceModeController is considered a beta feature. Its interface might "
-                                        "change in the future.");
   try {
     // Create the parameter listener and get the parameters
     param_listener_ = std::make_shared<force_mode_controller::ParamListener>(get_node());
