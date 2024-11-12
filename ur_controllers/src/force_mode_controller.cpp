@@ -303,8 +303,27 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 
   /* The damping factor decides how fast the robot decelarates if no force is present. 0 means no deceleration, 1
    * means quick deceleration*/
+  if (req->damping_factor < 0.0 || req->damping_factor > 1.0) {
+    RCLCPP_ERROR(get_node()->get_logger(), "The damping factor has to be between 0 and 1. Received %f",
+                 req->damping_factor);
+    resp->success = false;
+    return false;
+  }
   force_mode_parameters.damping_factor = req->damping_factor;
+
   /*The gain scaling factor scales the force mode gain. A value larger than 1 may make force mode unstable. */
+  if (req->gain_scaling < 0.0 || req->gain_scaling > 2.0) {
+    RCLCPP_ERROR(get_node()->get_logger(), "The gain scaling has to be between 0 and 2. Received %f",
+                 req->gain_scaling);
+    resp->success = false;
+    return false;
+  }
+  if (req->gain_scaling > 1.0) {
+    RCLCPP_WARN(get_node()->get_logger(),
+                "A gain_scaling >1.0 can make force mode unstable, e.g. in case of collisions or pushing against "
+                "hard surfaces. Received %f",
+                req->gain_scaling);
+  }
   force_mode_parameters.gain_scaling = req->gain_scaling;
 
   force_mode_params_buffer_.writeFromNonRT(force_mode_parameters);
