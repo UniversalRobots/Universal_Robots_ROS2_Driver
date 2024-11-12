@@ -1,23 +1,5 @@
 ---
 force_mode_controller:
-  damping: {
-    type: double,
-    default_value: 0.025,
-    description: "Sets the damping parameter in force mode. A value of 1 is full damping, so the robot will decelerate quickly if no force is present. A value of 0 is no damping, here the robot will maintain the speed.",
-    read_only: true,
-    validation: {
-      bounds<>: [0.0, 1.0]
-    }
-  }
-  gain_scaling: {
-    type: double,
-    default_value: 0.5,
-    description: "Scales the gain in force mode. A value larger than 1 can make force mode unstable, e.g. in case of collisions or pushing against hard surfaces.",
-    read_only: true,
-    validation: {
-      bounds<>: [0.0, 2.0]
-    }
-  }
   tf_prefix: {
     type: string,
     default_value: "",
