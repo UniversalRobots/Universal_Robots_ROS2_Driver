@@ -27,8 +27,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import copy
-import logging
 import os
 import sys
 import time
@@ -52,22 +50,18 @@ from geometry_msgs.msg import (
     Quaternion,
     Point,
     Twist,
-    WrenchStamped,
     Wrench,
     Vector3,
 )
-from ur_msgs.srv import SetForceMode
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
-    ActionInterface,
     ControllerManagerInterface,
     DashboardInterface,
     ForceModeInterface,
     IoStatusInterface,
     ConfigurationInterface,
     generate_driver_test_description,
-    ROBOT_JOINTS,
 )
 
 TIMEOUT_EXECUTE_TRAJECTORY = 30
@@ -106,9 +100,7 @@ class RobotDriverTest(unittest.TestCase):
     def setUp(self):
         self._dashboard_interface.start_robot()
         time.sleep(1)
-        self.assertTrue(
-            self._io_status_controller_interface.resend_robot_program().success
-        )
+        self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self.node)
 
@@ -155,7 +147,7 @@ class RobotDriverTest(unittest.TestCase):
         speed_limits = Twist()
         speed_limits.linear = Vector3(x=0.0, y=0.0, z=1.0)
         speed_limits.angular = Vector3(x=0.0, y=0.0, z=1.0)
-        deviation_limits = [1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0]
+        deviation_limits = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
         # specify damping and gain scaling
         damping_factor = 0.1
@@ -168,7 +160,7 @@ class RobotDriverTest(unittest.TestCase):
                 trans_before = self.tf_buffer.lookup_transform(
                     tf_prefix + "base", tf_prefix + "tool0", rclpy.time.Time()
                 )
-            except TransformException as ex:
+            except TransformException:
                 pass
 
         # Send request to controller
@@ -199,7 +191,7 @@ class RobotDriverTest(unittest.TestCase):
                 trans_after = self.tf_buffer.lookup_transform(
                     tf_prefix + "base", tf_prefix + "tool0", timepoint
                 )
-            except TransformException as ex:
+            except TransformException:
                 pass
 
         # task frame and wrench determines the expected motion
@@ -207,9 +199,7 @@ class RobotDriverTest(unittest.TestCase):
         #   - a task frame rotated pi/2 deg around the base frame's x axis
         #   - a wrench with a positive z component for the force
         # => we should expect a motion in negative y of the base frame
-        self.assertTrue(
-            trans_after.transform.translation.y < trans_before.transform.translation.y
-        )
+        self.assertTrue(trans_after.transform.translation.y < trans_before.transform.translation.y)
         self.assertAlmostEqual(
             trans_after.transform.translation.x,
             trans_before.transform.translation.x,

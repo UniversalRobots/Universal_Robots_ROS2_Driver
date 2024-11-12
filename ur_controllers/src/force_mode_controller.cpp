@@ -197,18 +197,12 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
       command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RZ].set_value(
           force_mode_parameters->selection_vec[5]);
 
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(
-          force_mode_parameters->wrench.force.x);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(
-          force_mode_parameters->wrench.force.y);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(
-          force_mode_parameters->wrench.force.z);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(
-          force_mode_parameters->wrench.torque.x);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(
-          force_mode_parameters->wrench.torque.y);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(
-          force_mode_parameters->wrench.torque.z);
+      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(force_mode_parameters->wrench.force.x);
+      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(force_mode_parameters->wrench.force.y);
+      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(force_mode_parameters->wrench.force.z);
+      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(force_mode_parameters->wrench.torque.x);
+      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(force_mode_parameters->wrench.torque.y);
+      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(force_mode_parameters->wrench.torque.z);
 
       command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X].set_value(force_mode_parameters->limits[0]);
       command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Y].set_value(force_mode_parameters->limits[1]);

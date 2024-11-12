@@ -35,22 +35,20 @@
 
 TEST(TestLoadForceModeController, load_controller)
 {
-  std::shared_ptr<rclcpp::Executor> executor =
-    std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  std::shared_ptr<rclcpp::Executor> executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
 
-  controller_manager::ControllerManager cm{
-    executor, ros2_control_test_assets::minimal_robot_urdf, true, "test_controller_manager"};
+  controller_manager::ControllerManager cm{ executor, ros2_control_test_assets::minimal_robot_urdf, true,
+                                            "test_controller_manager" };
 
-  const std::string test_file_path =
-    std::string{TEST_FILES_DIRECTORY} + "/force_mode_controller_params.yaml";
-  cm.set_parameter({"test_force_mode_controller.params_file", test_file_path});
+  const std::string test_file_path = std::string{ TEST_FILES_DIRECTORY } + "/force_mode_controller_params.yaml";
+  cm.set_parameter({ "test_force_mode_controller.params_file", test_file_path });
 
-  cm.set_parameter({"test_force_mode_controller.type", "ur_controllers/ForceModeController"});
+  cm.set_parameter({ "test_force_mode_controller.type", "ur_controllers/ForceModeController" });
 
   ASSERT_NE(cm.load_controller("test_force_mode_controller"), nullptr);
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleMock(&argc, argv);
   rclcpp::init(argc, argv);
