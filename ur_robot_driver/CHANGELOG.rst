@@ -1,3 +1,9 @@
+Forthcoming
+-----------
+* Use pose_broadcaster to publish the TCP pose (`#1108 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1108>`_) (`#1182 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1182>`_)
+  Adds a broadcaster for the robot's TCP pose.
+* Contributors: Felix Exner
+
 2.3.11 (2024-10-28)
 -------------------
 * Allow setting the analog output domain when setting an analog output (backport of `#1123 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1123>`_)
