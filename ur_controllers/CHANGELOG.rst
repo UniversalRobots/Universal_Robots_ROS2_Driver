@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.12 (2024-11-14)
+-------------------
 * [SJTC] Make scaling interface optional (`#1145 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1145>`_) (`#1171 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1171>`_)
 * Contributors: Felix Exner
 
