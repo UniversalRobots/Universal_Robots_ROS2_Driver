@@ -53,7 +53,6 @@
 #include <rclcpp/time.hpp>
 #include <rclcpp/duration.hpp>
 
-#include <ur_msgs/action/enable_freedrive_mode.hpp>
 #include "freedrive_mode_controller_parameters.hpp"
 
 namespace ur_controllers
@@ -94,33 +93,12 @@ private:
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> enable_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
 
-  // Everything related to the RT action server
-  using FreedriveModeAction = ur_msgs::action::EnableFreedriveMode;
-  using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<FreedriveModeAction>;
-  using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
-  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
 
-  RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
-  realtime_tools::RealtimeBuffer<std::unordered_map<std::string, size_t>> joint_trajectory_mapping_;
   rclcpp::Duration action_monitor_period_ = rclcpp::Duration(50ms);
-
-  rclcpp_action::Server<ur_msgs::action::EnableFreedriveMode>::SharedPtr freedrive_mode_action_server_;
-  rclcpp_action::GoalResponse
-  goal_received_callback(const rclcpp_action::GoalUUID& uuid,
-                         std::shared_ptr<const ur_msgs::action::EnableFreedriveMode::Goal> goal);
-
-  rclcpp_action::CancelResponse goal_cancelled_callback(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle);
-
-  void goal_accepted_callback(
-      std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle);
 
   std::shared_ptr<freedrive_mode_controller::ParamListener> freedrive_param_listener_;
   freedrive_mode_controller::Params freedrive_params_;
-
-  /* Start an action server with an action called: /freedrive_mode_controller/start_freedrive_mode. */
-  void start_action_server(void);
 
   std::atomic<bool> freedrive_active_;
   std::atomic<bool> change_requested_;

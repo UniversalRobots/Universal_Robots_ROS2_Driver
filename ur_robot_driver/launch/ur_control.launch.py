@@ -175,12 +175,8 @@ def launch_setup(context):
         "joint_trajectory_controller",
         "forward_velocity_controller",
         "forward_position_controller",
-        "freedrive_mode_controller",
-    ]
-
-    controller_spawners = [controller_spawner(controllers_active)] + [
-        controller_spawner(controllers_inactive, active=False)
         "passthrough_trajectory_controller",
+        "freedrive_mode_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
