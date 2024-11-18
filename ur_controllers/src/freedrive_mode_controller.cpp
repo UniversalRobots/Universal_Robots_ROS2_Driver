@@ -184,6 +184,8 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
         return controller_interface::return_type::OK;
       } else {
 
+        RCLCPP_INFO(get_node()->get_logger(), "Received command to start Freedrive Mode.");
+
         // Set command interface to enable
         enable_command_interface_->get().set_value(1.0);
 
@@ -192,6 +194,8 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
       }
 
     } else {
+      RCLCPP_INFO(get_node()->get_logger(), "Received command to stop Freedrive Mode.");
+
       abort_command_interface_->get().set_value(1.0);
 
       async_success_command_interface_->get().set_value(ASYNC_WAITING);
@@ -217,13 +221,11 @@ void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::Sh
   // Process the freedrive_mode command.
   if(msg->data)
   {
-    RCLCPP_INFO(get_node()->get_logger(), "Received command to start Freedrive Mode.");
     if((!freedrive_active_) && (!change_requested_)){
       freedrive_active_ = true;
       change_requested_ = true;
     }
   } else{
-    RCLCPP_INFO(get_node()->get_logger(), "Received command to stop Freedrive Mode.");
     if((freedrive_active_) && (!change_requested_)){
       freedrive_active_ = false;
       change_requested_ = true;
