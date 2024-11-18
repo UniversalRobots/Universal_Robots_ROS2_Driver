@@ -348,6 +348,7 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + FREEDRIVE_MODE, "abort", &freedrive_mode_abort_));
+
   command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "transfer_state",
                                                                        &passthrough_trajectory_transfer_state_));
 
@@ -849,52 +850,52 @@ void URPositionHardwareInterface::checkAsyncIO()
 
 void URPositionHardwareInterface::updateNonDoubleValues()
 {
-for (size_t i = 0; i < 18; ++i) {
-  actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
-  actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
-}
+  for (size_t i = 0; i < 18; ++i) {
+    actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+    actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
+  }
 
-for (size_t i = 0; i < 11; ++i) {
-  safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
-}
+  for (size_t i = 0; i < 11; ++i) {
+    safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
+  }
 
-for (size_t i = 0; i < 4; ++i) {
-  analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
-  robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
-}
+  for (size_t i = 0; i < 4; ++i) {
+    analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
+    robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
+  }
 
-for (size_t i = 0; i < 2; ++i) {
-  tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
-}
+  for (size_t i = 0; i < 2; ++i) {
+    tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
+  }
 
-tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
-robot_mode_copy_ = static_cast<double>(robot_mode_);
-safety_mode_copy_ = static_cast<double>(safety_mode_);
-tool_mode_copy_ = static_cast<double>(tool_mode_);
-system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
-robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
+  tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
+  robot_mode_copy_ = static_cast<double>(robot_mode_);
+  safety_mode_copy_ = static_cast<double>(safety_mode_);
+  tool_mode_copy_ = static_cast<double>(tool_mode_);
+  system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 }
 
 void URPositionHardwareInterface::transformForceTorque()
 {
-// imported from ROS1 driver - hardware_interface.cpp#L867-L876
-tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
-                    urcl_ft_sensor_measurements_[2]);
-tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
-                      urcl_ft_sensor_measurements_[5]);
+  // imported from ROS1 driver - hardware_interface.cpp#L867-L876
+  tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
+                      urcl_ft_sensor_measurements_[2]);
+  tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
+                        urcl_ft_sensor_measurements_[5]);
 
   tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
   tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
 
-urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
+  urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
                                   tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
 }
 
 void URPositionHardwareInterface::extractToolPose()
 {
-// imported from ROS1 driver hardware_interface.cpp#L911-L928
-double tcp_angle =
-    std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
+  // imported from ROS1 driver hardware_interface.cpp#L911-L928
+  double tcp_angle =
+      std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
 
   tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
   if (tcp_angle > 1e-16) {
@@ -959,48 +960,6 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         start_modes_.push_back(FREEDRIVE_MODE);
       }
     }
-  }
-  // set new mode to all interfaces at the same time
-  if (start_modes_.size() != 0 && start_modes_.size() != 6) {
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  if (position_controller_running_ &&
-      std::none_of(stop_modes_.begin(), stop_modes_.end(),
-                   [](auto item) { return item == StoppingInterface::STOP_POSITION; }) &&
-      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
-        return (item == hardware_interface::HW_IF_VELOCITY || item == FREEDRIVE_MODE);
-      })) {
-    RCLCPP_ERROR(get_logger(), "Start of velocity interface or freedrive mode requested while there is the position "
-                               "interface running.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  if (velocity_controller_running_ &&
-      std::none_of(stop_modes_.begin(), stop_modes_.end(),
-                   [](auto item) { return item == StoppingInterface::STOP_VELOCITY; }) &&
-      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
-        return (item == hardware_interface::HW_IF_POSITION || item == FREEDRIVE_MODE);
-      })) {
-    RCLCPP_ERROR(get_logger(), "Start of position interface or freedrive mode requested while there is the velocity "
-                               "interface running.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  if (freedrive_mode_controller_running_ &&
-      std::none_of(stop_modes_.begin(), stop_modes_.end(),
-                   [](auto item) { return item == StoppingInterface::STOP_FREEDRIVE; }) &&
-      std::any_of(start_modes_.begin(), start_modes_.end(), [](auto& item) {
-        return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
-      })) {
-    RCLCPP_ERROR(get_logger(), "Start of position or velocity interface requested while the freedrive controller "
-                               "is running.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  // all start interfaces must be the same - can't mix position and velocity control
-  if (start_modes_.size() != 0 && !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin())) {
-    ret_val = hardware_interface::return_type::ERROR;
   }
 
   // Stopping interfaces
