@@ -83,6 +83,10 @@ controller_interface::CallbackReturn
 ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
 
+  // Subscriber definition
+  enable_freedrive_mode_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(  
+      "~/freedrive_mode_active", 10,
+      std::bind(&FreedriveModeController::readFreedriveModeCmd, this, std::placeholders::_1));
 
   const auto logger = get_node()->get_logger();
 
@@ -105,6 +109,7 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
 {
   change_requested_ = false;
   freedrive_active_ = false;
+  first_log_ = false;
   async_state_ = std::numeric_limits<double>::quiet_NaN();
 
   {
@@ -155,6 +160,11 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
 {
   abort_command_interface_->get().set_value(1.0);
 
+  // Set enable value to false, so in the update
+  // we can deactivate the freedrive mode
+  //Old comment?
+  freedrive_active_ = false;
+
   return CallbackReturn::SUCCESS;
 }
 
@@ -187,13 +197,37 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
       async_success_command_interface_->get().set_value(ASYNC_WAITING);
       async_state_ = ASYNC_WAITING;
     }
+    first_log_ = true;
     change_requested_ = false;
+  }
+
+  if((async_state_ == 1.0) && (first_log_)){
+    if(freedrive_active_){
+      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been enabled successfully.");
+    } else {
+      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been disabled successfully.");
+    }
+    first_log_ = false;
   }
   return controller_interface::return_type::OK;
 }
 
+void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg)
 {
   // Process the freedrive_mode command.
+  if(msg->data)
+  {
+    RCLCPP_INFO(get_node()->get_logger(), "Received command to start Freedrive Mode.");
+    if((!freedrive_active_) && (!change_requested_)){
+      freedrive_active_ = true;
+      change_requested_ = true;
+    }
+  } else{
+    RCLCPP_INFO(get_node()->get_logger(), "Received command to stop Freedrive Mode.");
+    if((freedrive_active_) && (!change_requested_)){
+      freedrive_active_ = false;
+      change_requested_ = true;
+    }
   }
 }
 

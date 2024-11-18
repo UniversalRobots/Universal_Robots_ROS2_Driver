@@ -52,6 +52,7 @@
 #include <rclcpp_action/server_goal_handle.hpp>
 #include <rclcpp/time.hpp>
 #include <rclcpp/duration.hpp>
+#include "std_msgs/msg/bool.hpp"
 
 #include "freedrive_mode_controller_parameters.hpp"
 
@@ -93,9 +94,11 @@ private:
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> enable_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
 
+  std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Bool>> enable_freedrive_mode_sub_;
 
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
   rclcpp::Duration action_monitor_period_ = rclcpp::Duration(50ms);
+  void readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg);
 
   std::shared_ptr<freedrive_mode_controller::ParamListener> freedrive_param_listener_;
   freedrive_mode_controller::Params freedrive_params_;
@@ -103,6 +106,7 @@ private:
   std::atomic<bool> freedrive_active_;
   std::atomic<bool> change_requested_;
   std::atomic<double> async_state_;
+  std::atomic<double> first_log_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   /**
