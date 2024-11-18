@@ -84,7 +84,7 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
 {
 
   // Subscriber definition
-  enable_freedrive_mode_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(  
+  enable_freedrive_mode_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(
       "~/freedrive_mode_active", 10,
       std::bind(&FreedriveModeController::readFreedriveModeCmd, this, std::placeholders::_1));
 
@@ -186,7 +186,7 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 
         // Set command interface to enable
         enable_command_interface_->get().set_value(1.0);
-        
+
         async_success_command_interface_->get().set_value(ASYNC_WAITING);
         async_state_ = ASYNC_WAITING;
       }
@@ -237,7 +237,7 @@ rclcpp_action::CancelResponse FreedriveModeController::goal_cancelled_callback(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle)
 {
   bool success;
-  
+
   // Check that cancel request refers to currently active goal (if any)
   const auto active_goal = *rt_active_goal_.readFromNonRT();
   if (active_goal && active_goal->gh_ == goal_handle) {
