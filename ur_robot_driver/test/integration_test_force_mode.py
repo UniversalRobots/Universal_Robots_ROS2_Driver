@@ -480,14 +480,14 @@ class RobotDriverTest(unittest.TestCase):
         self.assertFalse(res.success)
 
         res = self._force_mode_controller_interface.start_force_mode(
-            task_frame=frame_stamp, gain_scaling=0
+            task_frame=frame_stamp, gain_scaling=0.0
         )
         self.assertTrue(res.success)
         res = self._force_mode_controller_interface.stop_force_mode()
         self.assertTrue(res.success)
 
         res = self._force_mode_controller_interface.start_force_mode(
-            task_frame=frame_stamp, gain_scaling=2
+            task_frame=frame_stamp, gain_scaling=2.0
         )
         self.assertTrue(res.success)
         res = self._force_mode_controller_interface.stop_force_mode()
@@ -505,14 +505,14 @@ class RobotDriverTest(unittest.TestCase):
         self.assertFalse(res.success)
 
         res = self._force_mode_controller_interface.start_force_mode(
-            task_frame=frame_stamp, damping_factor=0
+            task_frame=frame_stamp, damping_factor=0.0
         )
         self.assertTrue(res.success)
         res = self._force_mode_controller_interface.stop_force_mode()
         self.assertTrue(res.success)
 
         res = self._force_mode_controller_interface.start_force_mode(
-            task_frame=frame_stamp, damping_factor=1
+            task_frame=frame_stamp, damping_factor=1.0
         )
         self.assertTrue(res.success)
         res = self._force_mode_controller_interface.stop_force_mode()
