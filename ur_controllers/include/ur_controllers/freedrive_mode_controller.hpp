@@ -109,6 +109,7 @@ private:
   std::atomic<double> first_log_;
   std::atomic<double> timer_started_;
 
+  void start_timer();
   void timeout_callback();
 
   static constexpr double ASYNC_WAITING = 2.0;

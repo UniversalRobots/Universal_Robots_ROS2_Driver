@@ -220,6 +220,31 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 
 void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg)
 {
+
+  // Process the freedrive_mode command.
+  if(msg->data)
+  {
+    if((!freedrive_active_) && (!change_requested_)){
+      freedrive_active_ = true;
+      change_requested_ = true;
+      start_timer();
+    }
+  } else{
+    if((freedrive_active_) && (!change_requested_)){
+      freedrive_active_ = false;
+      change_requested_ = true;
+      start_timer();
+    }
+  }
+
+  if (freedrive_sub_timer_)
+  {
+    freedrive_sub_timer_->reset();
+  }
+}
+
+void FreedriveModeController::start_timer()
+{
   if (!timer_started_)
   {
     // Start the timer only after the first message is received
@@ -229,25 +254,6 @@ void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::Sh
     timer_started_ = true;
 
     RCLCPP_INFO(get_node()->get_logger(), "Timer started after receiving first command.");
-  }
-
-  // Process the freedrive_mode command.
-  if(msg->data)
-  {
-    if((!freedrive_active_) && (!change_requested_)){
-      freedrive_active_ = true;
-      change_requested_ = true;
-    }
-  } else{
-    if((freedrive_active_) && (!change_requested_)){
-      freedrive_active_ = false;
-      change_requested_ = true;
-    }
-  }
-
-  if (freedrive_sub_timer_)
-  {
-    freedrive_sub_timer_->reset();
   }
 }
 
