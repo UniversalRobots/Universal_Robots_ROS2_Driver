@@ -88,6 +88,8 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
       "~/freedrive_mode_active", 10,
       std::bind(&FreedriveModeController::readFreedriveModeCmd, this, std::placeholders::_1));
 
+  timer_started_ = false;
+
   const auto logger = get_node()->get_logger();
 
   if (!freedrive_param_listener_) {
@@ -218,6 +220,17 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 
 void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg)
 {
+  if (!timer_started_)
+  {
+    // Start the timer only after the first message is received
+    freedrive_sub_timer_ = get_node()->create_wall_timer(
+        timeout_interval_,
+        std::bind(&FreedriveModeController::timeout_callback, this));
+    timer_started_ = true;
+
+    RCLCPP_INFO(get_node()->get_logger(), "Timer started after receiving first command.");
+  }
+
   // Process the freedrive_mode command.
   if(msg->data)
   {
@@ -231,6 +244,24 @@ void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::Sh
       change_requested_ = true;
     }
   }
+
+  if (freedrive_sub_timer_)
+  {
+    freedrive_sub_timer_->reset();
+  }
+}
+
+void FreedriveModeController::timeout_callback()
+{
+
+  if(timer_started_){
+    RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode will be deactivated since client is not reachable.");
+
+    freedrive_active_ = false;
+    change_requested_ = true;
+  }
+
+  timer_started_ = false;
 }
 
 // Timeout handling for the topic
