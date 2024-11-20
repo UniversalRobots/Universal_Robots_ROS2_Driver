@@ -71,7 +71,8 @@ controller_interface::InterfaceConfiguration FreedriveModeController::command_in
   return config;
 }
 
-controller_interface::InterfaceConfiguration ur_controllers::FreedriveModeController::state_interface_configuration() const
+controller_interface::InterfaceConfiguration
+ur_controllers::FreedriveModeController::state_interface_configuration() const
 {
   controller_interface::InterfaceConfiguration config;
   config.type = controller_interface::interface_configuration_type::NONE;
@@ -82,7 +83,6 @@ controller_interface::InterfaceConfiguration ur_controllers::FreedriveModeContro
 controller_interface::CallbackReturn
 ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
-
   // Subscriber definition
   enable_freedrive_mode_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(
       "~/freedrive_mode_active", 10,
@@ -164,7 +164,7 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
 
   // Set enable value to false, so in the update
   // we can deactivate the freedrive mode
-  //Old comment?
+  // Old comment?
   freedrive_active_ = false;
 
   return CallbackReturn::SUCCESS;
@@ -177,15 +177,14 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 
   if(change_requested_) {
     if (freedrive_active_) {
-      // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the teach
-      // pendant.
+      // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the
+      // teach pendant.
       if (!std::isnan(abort_command_interface_->get().get_value()) &&
           abort_command_interface_->get().get_value() == 1.0) {
         RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting action.");
         freedrive_active_ = false;
         return controller_interface::return_type::OK;
       } else {
-
         RCLCPP_INFO(get_node()->get_logger(), "Received command to start Freedrive Mode.");
 
         // Set command interface to enable
@@ -220,7 +219,6 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 
 void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg)
 {
-
   // Process the freedrive_mode command.
   if(msg->data)
   {
@@ -259,7 +257,6 @@ void FreedriveModeController::start_timer()
 
 void FreedriveModeController::timeout_callback()
 {
-
   if(timer_started_){
     RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode will be deactivated since client is not reachable.");
 

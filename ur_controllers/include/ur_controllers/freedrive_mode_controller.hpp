@@ -119,5 +119,5 @@ private:
    */
   bool waitForAsyncCommand(std::function<double(void)> get_value);
 };
-} // namespace ur_controllers
-#endif // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_
+}  // namespace ur_controllers
+#endif  // UR_CONTROLLERS__PASSTHROUGH_TRAJECTORY_CONTROLLER_HPP_

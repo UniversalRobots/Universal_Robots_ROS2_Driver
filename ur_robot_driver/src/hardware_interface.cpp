@@ -834,7 +834,8 @@ void URPositionHardwareInterface::checkAsyncIO()
 
   if (!std::isnan(freedrive_mode_enable_) && ur_driver_ != nullptr) {
     RCLCPP_INFO(get_logger(), "Starting freedrive mode.");
-    freedrive_mode_async_success_ = ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
+    freedrive_mode_async_success_ =
+        ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
     freedrive_mode_enable_ = NO_NEW_CMD_;
     freedrive_action_requested_ = true;
   }
@@ -842,7 +843,8 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(freedrive_mode_abort_) && freedrive_mode_abort_ == 1.0 && freedrive_action_requested_ &&
       ur_driver_ != nullptr) {
     RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
-    freedrive_mode_async_success_ = ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
+    freedrive_mode_async_success_ =
+        ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
     freedrive_action_requested_ = false;
     freedrive_mode_abort_ = NO_NEW_CMD_;
 }
@@ -882,13 +884,13 @@ void URPositionHardwareInterface::transformForceTorque()
   tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
                       urcl_ft_sensor_measurements_[2]);
   tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
-                        urcl_ft_sensor_measurements_[5]);
+                       urcl_ft_sensor_measurements_[5]);
 
   tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
   tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
 
   urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
-                                  tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
+                                   tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
 }
 
 void URPositionHardwareInterface::extractToolPose()
@@ -907,7 +909,7 @@ void URPositionHardwareInterface::extractToolPose()
 }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
-  const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
+   const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
@@ -1011,11 +1013,11 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
        }))) {
     ret_val = hardware_interface::return_type::ERROR;
   }
-  if (std::any_of(start_modes_.begin(), start_modes_.end(),
-                  [this](auto& item) { return (item == FREEDRIVE_MODE); }) &&
+  if (std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) { return (item == FREEDRIVE_MODE); }) &&
       (std::any_of(start_modes_.begin(), start_modes_.end(),
                    [this](auto& item) {
-                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO);
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                             item == PASSTHROUGH_GPIO);
                    }) ||
        std::any_of(control_modes.begin(), control_modes.end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
