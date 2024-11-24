@@ -29,8 +29,8 @@
 //----------------------------------------------------------------------
 /*!\file
  *
- * \author  Felix Exner exner@fzi.de
- * \date    2023-06-29
+ * \author  Vincenzo Di Pentima dipentima@fzi.de
+ * \date    2024-09-26
  */
 //----------------------------------------------------------------------
 #ifndef UR_CONTROLLERS__FREEDRIVE_MODE_CONTROLLER_HPP_
@@ -60,12 +60,9 @@ namespace ur_controllers
 {
 enum CommandInterfaces
 {
-  FREEDRIVE_MODE_ASYNC_SUCCESS = 25,
-  FREEDRIVE_MODE_CMD = 26,
-};
-enum StateInterfaces
-{
-  INITIALIZED_FLAG = 0u,
+  FREEDRIVE_MODE_ASYNC_SUCCESS = 0u,
+  FREEDRIVE_MODE_ENABLE = 1,
+  FREEDRIVE_MODE_ABORT = 2,
 };
 
 using namespace std::chrono_literals; // NOLINT

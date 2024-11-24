@@ -85,7 +85,7 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
 {
   // Subscriber definition
   enable_freedrive_mode_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(
-      "~/freedrive_mode_active", 10,
+      "~/enable_freedrive_mode", 10,
       std::bind(&FreedriveModeController::readFreedriveModeCmd, this, std::placeholders::_1));
 
   timer_started_ = false;
@@ -266,89 +266,6 @@ void FreedriveModeController::timeout_callback()
 
   timer_started_ = false;
 }
-
-// Timeout handling for the topic
-/*
-rclcpp_action::CancelResponse FreedriveModeController::goal_cancelled_callback(
-    const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle)
-{
-  bool success;
-
-  // Check that cancel request refers to currently active goal (if any)
-  const auto active_goal = *rt_active_goal_.readFromNonRT();
-  if (active_goal && active_goal->gh_ == goal_handle) {
-    RCLCPP_INFO(get_node()->get_logger(), "Disabling freedrive mode requested.");
-
-    freedrive_active_ = false;
-    change_requested_ = true;
-
-    RCLCPP_INFO(get_node()->get_logger(), "Waiting for the freedrive mode to be disabled.");
-    while (async_state_ == ASYNC_WAITING || change_requested_) {
-      // Asynchronous wait until the hardware interface has set the force mode
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-
-    success = async_state_ == 1.0;
-    if (success) {
-      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been disabled successfully.");
-    } else {
-      RCLCPP_ERROR(get_node()->get_logger(), "Could not disable freedrive mode.");
-    }
-
-    // Mark the current goal as canceled
-    auto result = std::make_shared<FreedriveModeAction::Result>();
-    active_goal->setCanceled(result);
-    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-  }
-  return rclcpp_action::CancelResponse::ACCEPT;
-}
-*/
-
-// Don't need this anymore, but logic must be reproduced in subscriber topic
-/*
-void FreedriveModeController::goal_accepted_callback(
-    std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::EnableFreedriveMode>> goal_handle)
-{
-  RCLCPP_INFO_STREAM(get_node()->get_logger(), "Starting freedrive mode.");
-
-  bool success;
-
-  freedrive_active_ = true;
-  change_requested_ = true;
-
-  RCLCPP_INFO(get_node()->get_logger(), "Waiting for freedrive mode to be set.");
-  const auto maximum_retries = freedrive_params_.check_io_successful_retries;
-  int retries = 0;
-  while (async_state_ == ASYNC_WAITING || change_requested_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    retries++;
-
-    if (retries > maximum_retries) {
-      success = false;
-    }
-  }
-
-  // Check if the change was successful
-  success = async_state_ == 1.0;
-
-  if (success) {
-    RCLCPP_INFO_STREAM(get_node()->get_logger(), "Freedrive mode has been set successfully.");
-  } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the freedrive mode.");
-  }
-
-  // Action handling will be done from the timer callback to avoid those things in the realtime
-  // thread. First, we delete the existing (if any) timer by resetting the pointer and then create a new
-  // one.
-  RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
-  rt_goal->execute();
-  rt_active_goal_.writeFromNonRT(rt_goal);
-  goal_handle_timer_.reset();
-  goal_handle_timer_ = get_node()->create_wall_timer(action_monitor_period_.to_chrono<std::chrono::nanoseconds>(),
-                                                     std::bind(&RealtimeGoalHandle::runNonRealtime, rt_goal));
-  return;
-}
-*/
 
 bool FreedriveModeController::waitForAsyncCommand(std::function<double(void)> get_value)
 {

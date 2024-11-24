@@ -287,7 +287,7 @@ protected:
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
 
   // Check if name is correct here
-  const std::string FREEDRIVE_MODE = "freedrive_mode";
+  const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
   const std::string PASSTHROUGH_GPIO = "trajectory_passthrough";
 };
 }  // namespace ur_robot_driver
