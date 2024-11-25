@@ -1033,8 +1033,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                      return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
-         return (item == hardware_interface::HW_IF_VELOCITY ||
-                 item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO);
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == PASSTHROUGH_GPIO);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start passthrough_trajectory control while there is either position or "
                                "velocity mode is running.");
