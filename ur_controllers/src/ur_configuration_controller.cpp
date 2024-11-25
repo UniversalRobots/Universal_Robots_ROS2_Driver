@@ -114,7 +114,7 @@ bool URConfigurationController::getRobotSoftwareVersion(
     ur_msgs::srv::GetRobotSoftwareVersion::Response::SharedPtr resp)
 {
   std::shared_ptr<VersionInformation> temp;
-  return robot_software_version_.tryGet([resp](const std::shared_ptr<VersionInformation> ptr) {
+  return robot_software_version_.try_get([resp](const std::shared_ptr<VersionInformation> ptr) {
     resp->major = ptr->major;
     resp->minor = ptr->minor;
     resp->build = ptr->build;
