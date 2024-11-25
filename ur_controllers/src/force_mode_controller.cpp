@@ -234,7 +234,7 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 {
   // Reject if controller is not active
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new action goals. Controller is not running.");
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Controller is not running.");
     resp->success = false;
     return false;
   }
