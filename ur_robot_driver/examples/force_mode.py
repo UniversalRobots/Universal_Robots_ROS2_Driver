@@ -33,6 +33,7 @@ import rclpy
 from rclpy.node import Node
 from controller_manager_msgs.srv import SwitchController
 from builtin_interfaces.msg import Duration
+from geometry_msgs.msg import Twist
 from std_msgs.msg import Header
 from std_srvs.srv import Trigger
 
@@ -42,7 +43,6 @@ from geometry_msgs.msg import (
     Pose,
     PoseStamped,
     Wrench,
-    WrenchStamped,
     Vector3,
 )
 
@@ -55,33 +55,36 @@ if __name__ == "__main__":
     node = Node("robot_driver_test")
     robot = Robot(node)
 
-    # Activate force mode controller
+    # Add force mode service to service interfaces and re-init robot
+    robot.service_interfaces.update({"/force_mode_controller/start_force_mode": SetForceMode})
+    robot.service_interfaces.update({"/force_mode_controller/stop_force_mode": Trigger})
+    robot.init_robot()
+    time.sleep(0.5)
+    # Press play on the robot
+    robot.call_service("/dashboard_client/play", Trigger.Request())
+
+    time.sleep(0.5)
+    # Start controllers
     robot.call_service(
         "/controller_manager/switch_controller",
         SwitchController.Request(
-            activate_controllers=["force_mode_controller", "scaled_joint_trajectory_controller"],
+            deactivate_controllers=["scaled_joint_trajectory_controller"],
+            activate_controllers=["passthrough_trajectory_controller", "force_mode_controller"],
             strictness=SwitchController.Request.BEST_EFFORT,
         ),
     )
 
-    # Add force mode service to service interfaces and re-init robot
-    robot.service_interfaces.update({"/force_mode_controller/start_force_mode": SetForceMode})
-    robot.init_robot()
-    time.sleep(2)
-    # Press play on the robot
-    robot.call_service("/dashboard_client/play", Trigger.Request())
-
     # Move robot in to position
     robot.send_trajectory(
         waypts=[[-1.5707, -1.5707, -1.5707, -1.5707, 1.5707, 0]],
-        time_vec=[Duration(sec=6, nanosec=0)],
+        time_vec=[Duration(sec=5, nanosec=0)],
+        action_client=robot.passthrough_trajectory_action_client,
     )
 
     # Finished moving
-
     # Create task frame for force mode
     point = Point(x=0.0, y=0.0, z=0.0)
-    orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=0.0)
+    orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
     task_frame_pose = Pose()
     task_frame_pose.position = point
     task_frame_pose.orientation = orientation
@@ -96,17 +99,19 @@ if __name__ == "__main__":
     compliance = [False, False, True, False, False, False]
 
     # Create Wrench message for force mode
-    wrench_vec = Wrench(force=Vector3(x=0.0, y=0.0, z=-10.0), torque=Vector3(x=0.0, y=0.0, z=0.0))
-    wrench_stamp = WrenchStamped(header=header, wrench=wrench_vec)
+    wrench_vec = Wrench(force=Vector3(x=0.0, y=0.0, z=-20.0), torque=Vector3(x=0.0, y=0.0, z=0.0))
     # Specify interpretation of task frame (no transform)
     type_spec = SetForceMode.Request.NO_TRANSFORM
 
     # Specify max speeds and deviations of force mode
-    limits = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    speed_limits = Twist()
+    speed_limits.linear = Vector3(x=0.0, y=0.0, z=1.0)
+    speed_limits.angular = Vector3(x=0.0, y=0.0, z=1.0)
+    deviation_limits = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
     # specify damping and gain scaling
-    damping_factor = 0.025
-    gain_scale = 0.5
+    damping_factor = 0.1
+    gain_scale = 0.8
 
     req = SetForceMode.Request()
     req.task_frame = frame_stamp
@@ -116,21 +121,22 @@ if __name__ == "__main__":
     req.selection_vector_rx = compliance[3]
     req.selection_vector_ry = compliance[4]
     req.selection_vector_rz = compliance[5]
-    req.wrench = wrench_stamp
+    req.wrench = wrench_vec
     req.type = type_spec
-    req.limits = limits
+    req.speed_limits = speed_limits
+    req.deviation_limits = deviation_limits
     req.damping_factor = damping_factor
     req.gain_scaling = gain_scale
 
     # Send request to controller
+    node.get_logger().info(f"Starting force mode with {req}")
     robot.call_service("/force_mode_controller/start_force_mode", req)
-
-    time.sleep(15)
-    # Deactivate force mode controller
-    robot.call_service(
-        "/controller_manager/switch_controller",
-        SwitchController.Request(
-            deactivate_controllers=["force_mode_controller"],
-            strictness=SwitchController.Request.BEST_EFFORT,
-        ),
+    robot.send_trajectory(
+        waypts=[[1.5707, -1.5707, -1.5707, -1.5707, 1.5707, 0]],
+        time_vec=[Duration(sec=5, nanosec=0)],
+        action_client=robot.passthrough_trajectory_action_client,
     )
+
+    time.sleep(3)
+    node.get_logger().info("Deactivating force mode controller.")
+    robot.call_service("/force_mode_controller/stop_force_mode", Trigger.Request())

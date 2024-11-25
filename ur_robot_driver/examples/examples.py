@@ -94,6 +94,11 @@ class Robot:
             "/scaled_joint_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
+        self.passthrough_trajectory_action_client = waitForAction(
+            self.node,
+            "/passthrough_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
 
     def set_io(self, pin, value):
         """Test to set an IO."""
@@ -104,7 +109,7 @@ class Robot:
 
         self.call_service("/io_and_status_controller/set_io", set_io_req)
 
-    def send_trajectory(self, waypts, time_vec):
+    def send_trajectory(self, waypts, time_vec, action_client):
         """Send robot trajectory."""
         if len(waypts) != len(time_vec):
             raise Exception("waypoints vector and time vec should be same length")
@@ -120,13 +125,13 @@ class Robot:
 
         # Sending trajectory goal
         goal_response = self.call_action(
-            self.jtc_action_client, FollowJointTrajectory.Goal(trajectory=joint_trajectory)
+            action_client, FollowJointTrajectory.Goal(trajectory=joint_trajectory)
         )
         if not goal_response.accepted:
             raise Exception("trajectory was not accepted")
 
         # Verify execution
-        result = self.get_result(self.jtc_action_client, goal_response)
+        result = self.get_result(action_client, goal_response)
         return result.error_code == FollowJointTrajectory.Result.SUCCESSFUL
 
     def call_service(self, srv_name, request):
