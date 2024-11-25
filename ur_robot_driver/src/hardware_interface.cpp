@@ -721,7 +721,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
 
-    } else if (freedrive_mode_controller_running_ && freedrive_action_requested_) {
+    } else if (freedrive_mode_controller_running_ && freedrive_activated_) {
       ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
     } else if (passthrough_trajectory_controller_running_) {
@@ -837,15 +837,15 @@ void URPositionHardwareInterface::checkAsyncIO()
     freedrive_mode_async_success_ =
         ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
     freedrive_mode_enable_ = NO_NEW_CMD_;
-    freedrive_action_requested_ = true;
+    freedrive_activated_ = true;
   }
 
-  if (!std::isnan(freedrive_mode_abort_) && freedrive_mode_abort_ == 1.0 && freedrive_action_requested_ &&
+  if (!std::isnan(freedrive_mode_abort_) && freedrive_mode_abort_ == 1.0 && freedrive_activated_ &&
       ur_driver_ != nullptr) {
     RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
     freedrive_mode_async_success_ =
         ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
-    freedrive_action_requested_ = false;
+    freedrive_activated_ = false;
     freedrive_mode_abort_ = NO_NEW_CMD_;
 }
 }
@@ -1069,7 +1069,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
                                                   StoppingInterface::STOP_FREEDRIVE) != stop_modes_.end()) {
     freedrive_mode_controller_running_ = false;
-    freedrive_action_requested_ = false;
+    freedrive_activated_ = false;
     freedrive_mode_abort_ = 1.0;
   } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
                                                   StoppingInterface::STOP_PASSTHROUGH) != stop_modes_.end()) {
@@ -1098,7 +1098,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     velocity_controller_running_ = false;
     position_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
-    freedrive_action_requested_ = false;
+    freedrive_activated_ = false;
   } else if (start_modes_.size() != 0 &&
              std::find(start_modes_.begin(), start_modes_.end(), PASSTHROUGH_GPIO) != start_modes_.end()) {
     velocity_controller_running_ = false;

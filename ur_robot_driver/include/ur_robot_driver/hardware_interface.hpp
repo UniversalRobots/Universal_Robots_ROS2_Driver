@@ -227,7 +227,7 @@ protected:
   double get_robot_software_version_build_;
 
   // Freedrive mode controller interface values
-  bool freedrive_action_requested_;
+  bool freedrive_activated_;
   bool freedrive_mode_controller_running_;
   double freedrive_mode_async_success_;
   double freedrive_mode_enable_;
