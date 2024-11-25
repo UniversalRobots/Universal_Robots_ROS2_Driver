@@ -1004,16 +1004,18 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   if (std::any_of(start_modes_.begin(), start_modes_.end(),
                   [this](auto& item) { return (item == PASSTHROUGH_GPIO); }) &&
       (std::any_of(start_modes_.begin(), start_modes_.end(),
-                   [](auto& item) {
-                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                             item == FREEDRIVE_MODE_GPIO);
                    }) ||
        std::any_of(control_modes.begin(), control_modes.end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO);
+                 item == FREEDRIVE_MODE_GPIO || item == PASSTHROUGH_GPIO);
        }))) {
     ret_val = hardware_interface::return_type::ERROR;
   }
-  if (std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) { return (item == FREEDRIVE_MODE_GPIO); }) &&
+  if (std::any_of(start_modes_.begin(), start_modes_.end(),
+                  [this](auto& item) { return (item == FREEDRIVE_MODE_GPIO); }) &&
       (std::any_of(start_modes_.begin(), start_modes_.end(),
                    [this](auto& item) {
                      return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
@@ -1027,12 +1029,14 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   }
   if (std::any_of(start_modes_.begin(), start_modes_.end(),
                   [](auto& item) { return (item == hardware_interface::HW_IF_POSITION); }) &&
-      (std::any_of(
-           start_modes_.begin(), start_modes_.end(),
-           [this](auto& item) { return (item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO); }) ||
+      (std::any_of(start_modes_.begin(), start_modes_.end(),
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == FREEDRIVE_MODE_GPIO ||
+                             item == PASSTHROUGH_GPIO);
+                   }) ||
        std::any_of(control_modes.begin(), control_modes.end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO);
+                 item == FREEDRIVE_MODE_GPIO || item == PASSTHROUGH_GPIO);
        }))) {
     ret_val = hardware_interface::return_type::ERROR;
   }
@@ -1040,7 +1044,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                   [](auto& item) { return (item == hardware_interface::HW_IF_VELOCITY); }) &&
       std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                item == PASSTHROUGH_GPIO);
+                item == FREEDRIVE_MODE_GPIO || item == PASSTHROUGH_GPIO);
       })) {
     ret_val = hardware_interface::return_type::ERROR;
   }
