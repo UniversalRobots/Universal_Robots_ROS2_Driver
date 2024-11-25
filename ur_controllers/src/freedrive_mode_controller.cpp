@@ -181,7 +181,7 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
       // teach pendant.
       if (!std::isnan(abort_command_interface_->get().get_value()) &&
           abort_command_interface_->get().get_value() == 1.0) {
-        RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting action.");
+        RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting request.");
         freedrive_active_ = false;
         return controller_interface::return_type::OK;
       } else {
@@ -231,7 +231,7 @@ void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::Sh
     if((freedrive_active_) && (!change_requested_)){
       freedrive_active_ = false;
       change_requested_ = true;
-      start_timer();
+      //start_timer();
     }
   }
 
@@ -257,7 +257,7 @@ void FreedriveModeController::start_timer()
 
 void FreedriveModeController::timeout_callback()
 {
-  if(timer_started_){
+  if(timer_started_ && freedrive_active_){
     RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode will be deactivated since client is not reachable.");
 
     freedrive_active_ = false;
