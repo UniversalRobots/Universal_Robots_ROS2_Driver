@@ -62,6 +62,11 @@ generate_parameter_library(
 )
 
 generate_parameter_library(
+  freedrive_mode_controller_parameters
+  src/freedrive_mode_controller_parameters.yaml
+)
+
+generate_parameter_library(
   passthrough_trajectory_controller_parameters
   src/passthrough_trajectory_controller_parameters.yaml
 )
@@ -74,6 +79,7 @@ generate_parameter_library(
 add_library(${PROJECT_NAME} SHARED
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
+  src/freedrive_mode_controller.cpp
   src/gpio_controller.cpp
   src/passthrough_trajectory_controller.cpp
   src/ur_configuration_controller.cpp)
@@ -85,6 +91,7 @@ target_link_libraries(${PROJECT_NAME}
   gpio_controller_parameters
   speed_scaling_state_broadcaster_parameters
   scaled_joint_trajectory_controller_parameters
+  freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters
 )
