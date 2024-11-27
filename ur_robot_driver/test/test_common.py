@@ -57,7 +57,7 @@ from ur_dashboard_msgs.srv import (
     IsProgramRunning,
     Load,
 )
-from ur_msgs.srv import SetIO, GetRobotSoftwareVersion
+from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
@@ -270,6 +270,15 @@ class ConfigurationInterface(
     namespace="/ur_configuration_controller",
     initial_services={"get_robot_software_version": GetRobotSoftwareVersion},
     services={},
+):
+    pass
+
+
+class ForceModeInterface(
+    _ServiceInterface,
+    namespace="/force_mode_controller",
+    initial_services={},
+    services={"start_force_mode": SetForceMode, "stop_force_mode": Trigger},
 ):
     pass
 
