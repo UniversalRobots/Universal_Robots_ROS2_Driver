@@ -175,6 +175,7 @@ def launch_setup(context):
         "joint_trajectory_controller",
         "forward_velocity_controller",
         "forward_position_controller",
+        "force_mode_controller",
         "passthrough_trajectory_controller",
     ]
     if activate_joint_controller.perform(context) == "true":

@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(angles REQUIRED)
 find_package(controller_interface REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(joint_trajectory_controller REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -16,6 +17,8 @@ find_package(rcutils REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
 find_package(generate_parameter_library REQUIRED)
@@ -27,6 +30,7 @@ find_package(action_msgs REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   angles
   controller_interface
+  geometry_msgs
   joint_trajectory_controller
   lifecycle_msgs
   pluginlib
@@ -35,6 +39,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   realtime_tools
   std_msgs
   std_srvs
+  tf2_geometry_msgs
+  tf2_ros
   ur_dashboard_msgs
   ur_msgs
   generate_parameter_library
@@ -45,6 +51,10 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 
 include_directories(include)
 
+generate_parameter_library(
+  force_mode_controller_parameters
+  src/force_mode_controller_parameters.yaml
+)
 
 generate_parameter_library(
   gpio_controller_parameters
@@ -72,6 +82,7 @@ generate_parameter_library(
 )
 
 add_library(${PROJECT_NAME} SHARED
+  src/force_mode_controller.cpp
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
   src/gpio_controller.cpp
@@ -82,6 +93,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
 target_link_libraries(${PROJECT_NAME}
+  force_mode_controller_parameters
   gpio_controller_parameters
   speed_scaling_state_broadcaster_parameters
   scaled_joint_trajectory_controller_parameters
@@ -123,5 +135,24 @@ ament_export_include_directories(
 ament_export_libraries(
   ${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gmock REQUIRED)
+  find_package(controller_manager REQUIRED)
+  find_package(hardware_interface REQUIRED)
+  find_package(ros2_control_test_assets REQUIRED)
+
+  add_definitions(-DTEST_FILES_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/test")
+  ament_add_gmock(test_load_force_mode_controller
+    test/test_load_force_mode_controller.cpp
+  )
+  target_link_libraries(test_load_force_mode_controller
+    ${PROJECT_NAME}
+  )
+  ament_target_dependencies(test_load_force_mode_controller
+    controller_manager
+    ros2_control_test_assets
+  )
+endif()
 
 ament_package()
