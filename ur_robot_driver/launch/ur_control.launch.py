@@ -342,9 +342,6 @@ def launch_setup(context, *args, **kwargs):
         "tcp_pose_broadcaster",
         "ur_configuration_controller",
     ]
-<<<<<<< HEAD
-    controllers_inactive = ["forward_position_controller"]
-=======
     controllers_inactive = [
         "scaled_joint_trajectory_controller",
         "joint_trajectory_controller",
@@ -355,38 +352,10 @@ def launch_setup(context, *args, **kwargs):
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
         controllers_inactive.remove(initial_joint_controller.perform(context))
->>>>>>> ca5fb3e (Add trajectory passthrough controller (#944))
 
     controller_spawners = [controller_spawner(controllers_active)] + [
         controller_spawner(controllers_inactive, active=False)
     ]
-
-    # There may be other controllers of the joints, but this is the initially-started one
-    initial_joint_controller_spawner_started = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            initial_joint_controller,
-            "-c",
-            "/controller_manager",
-            "--controller-manager-timeout",
-            controller_spawner_timeout,
-        ],
-        condition=IfCondition(activate_joint_controller),
-    )
-    initial_joint_controller_spawner_stopped = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            initial_joint_controller,
-            "-c",
-            "/controller_manager",
-            "--controller-manager-timeout",
-            controller_spawner_timeout,
-            "--inactive",
-        ],
-        condition=UnlessCondition(activate_joint_controller),
-    )
 
     nodes_to_start = [
         control_node,
@@ -397,8 +366,6 @@ def launch_setup(context, *args, **kwargs):
         urscript_interface,
         robot_state_publisher_node,
         rviz_node,
-        initial_joint_controller_spawner_stopped,
-        initial_joint_controller_spawner_started,
     ] + controller_spawners
 
     return nodes_to_start
@@ -527,8 +494,6 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "initial_joint_controller",
             default_value="scaled_joint_trajectory_controller",
-<<<<<<< HEAD
-=======
             choices=[
                 "scaled_joint_trajectory_controller",
                 "joint_trajectory_controller",
@@ -536,7 +501,6 @@ def generate_launch_description():
                 "forward_position_controller",
                 "passthrough_trajectory_controller",
             ],
->>>>>>> ca5fb3e (Add trajectory passthrough controller (#944))
             description="Initially loaded robot controller.",
         )
     )

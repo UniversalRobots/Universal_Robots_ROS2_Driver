@@ -156,6 +156,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/tool_communication.py
+  scripts/example_move.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

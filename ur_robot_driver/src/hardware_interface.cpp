@@ -900,7 +900,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
 
   if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
                    [&](const std::string& other) { return other == start_modes_[0]; })) {
-    RCLCPP_ERROR(get_logger(), "Start modes of all joints have to be the same.");
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Start modes of all joints have to be the same.");
     return hardware_interface::return_type::ERROR;
   }
 

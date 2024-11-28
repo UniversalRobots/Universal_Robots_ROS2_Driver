@@ -327,7 +327,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
         scaling_factor_ = scaling_state_interface_->get().get_value();
       }
 
-      active_trajectory_elapsed_time_ += period * scaling_factor_;
+      active_trajectory_elapsed_time_ = active_trajectory_elapsed_time_ + (period * scaling_factor_);
 
       // RCLCPP_INFO(get_node()->get_logger(), "Elapsed trajectory time: %f. Scaling factor: %f, period: %f",
       // active_trajectory_elapsed_time_.seconds(), scaling_factor_, period.seconds());
@@ -356,7 +356,7 @@ rclcpp_action::GoalResponse PassthroughTrajectoryController::goal_received_callb
 {
   RCLCPP_INFO(get_node()->get_logger(), "Received new trajectory.");
   // Precondition: Running controller
-  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new trajectories. Controller is not running.");
     return rclcpp_action::GoalResponse::REJECT;
   }

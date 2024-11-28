@@ -24,20 +24,12 @@ controller_manager:
     forward_position_controller:
       type: position_controllers/JointGroupPositionController
 
-<<<<<<< HEAD
     tcp_pose_broadcaster:
       type: pose_broadcaster/PoseBroadcaster
 
-=======
-<<<<<<< HEAD
-=======
     passthrough_trajectory_controller:
       type: ur_controllers/PassthroughTrajectoryController
-    tcp_pose_broadcaster:
-      type: pose_broadcaster/PoseBroadcaster
 
->>>>>>> ca5fb3e (Add trajectory passthrough controller (#944))
->>>>>>> f0879d8 (Add trajectory passthrough controller (#944))
     ur_configuration_controller:
       type: ur_controllers/URConfigurationController
 
