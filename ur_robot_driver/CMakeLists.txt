@@ -156,6 +156,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/tool_communication.py
+  scripts/example_move.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -189,6 +190,10 @@ if(BUILD_TESTING)
         180
     )
     add_launch_test(test/robot_driver.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_controller_switch.py
       TIMEOUT
         800
     )
