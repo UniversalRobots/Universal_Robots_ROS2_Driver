@@ -44,6 +44,7 @@
 #ifndef UR_CALIBRATION__CALIBRATION_HPP_
 #define UR_CALIBRATION__CALIBRATION_HPP_
 
+#include <cassert>
 #include <Eigen/Dense>
 #include <fstream>
 #include <string>
@@ -111,7 +112,7 @@ struct DHRobot
   /*!
    * \brief Create a new robot representation giving a set of \ref DHSegment objects
    */
-  explicit DHRobot(const std::vector<DHSegment>& segments)
+  explicit DHRobot(const std::vector<DHSegment>& segments) : segments_(segments)
   {
     delta_theta_correction2_ = 0;
     delta_theta_correction3_ = 0;
