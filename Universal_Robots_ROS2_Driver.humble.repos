@@ -30,4 +30,4 @@ repositories:
   realtime_tools:
     type: git
     url: https://github.com/ros-controls/realtime_tools.git
-    version: master
+    version: humble
