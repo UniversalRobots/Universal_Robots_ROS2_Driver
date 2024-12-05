@@ -264,3 +264,31 @@ Implementation details / dataflow
 * When the hardware reports that execution has been aborted (The ``passthrough_trajectory_abort``
   command interface), the action will be aborted.
 * When the action is preempted, execution on the hardware is preempted.
+
+.. _freedrive_mode_controller:
+
+ur_controllers/FreedriveModeController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller activates the robot's *Freedrive Mode*, allowing to freely manually move the robot.
+For such reason, the controller is never (and can't be) coupled with any other controller.
+
+Parameters
+""""""""""
+
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| Parameter name                   | Type         | Default value                          | Description                                                                                                      |
+|                                  |              |                                        |                                                                                                                  |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``tf_prefix``                    | string       | <empty>                                | Urdf prefix of the corresponding arm                                                                             |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+
+Usage
+"""""
+
+The controller provides the ``enable_freedrive_mode`` topic of type ``[std_msgs/msg/Bool]`` for handling activation and deactivation:
+
+* to start and keep the freedrive active, it is necessary to continously publish a ``True`` msg on the indicated topic.
+  To deal with malfunctioning on the client side, the controller deactivates the freedrive mode if messages
+  are not received anymore within the ``timeout`` parameter.
++ to deactivate the freedrive mode is enough to publish a ``False`` msg on the indicated topic or to deactivate the controller.
