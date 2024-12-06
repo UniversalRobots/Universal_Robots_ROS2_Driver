@@ -264,3 +264,79 @@ Implementation details / dataflow
 * When the hardware reports that execution has been aborted (The ``passthrough_trajectory_abort``
   command interface), the action will be aborted.
 * When the action is preempted, execution on the hardware is preempted.
+
+.. _force_mode_controller:
+
+ur_controllers/ForceModeController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller activates the robot's *Force Mode*. This allows direct force control running on the
+robot control box. This controller basically interfaces the URScript function ``force_mode(...)``.
+
+Force mode can be combined with (and only with) the :ref:`passthrough trajectory controller
+<passthrough_trajectory_controller>` in order to execute motions under a given force constraints.
+
+.. note::
+   This is not an admittance controller, as given force constraints in a certain Cartesian
+   dimension will overwrite the motion commands in that dimension. E.g. when specifying a certain
+   force in the base frame's ``z`` direction, any motion resulting from the move command in the
+   base frame's ``z`` axis will not be executed.
+
+Parameters
+""""""""""
+
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+| Parameter name                   | Type   | Default value | Description                                                         |
+|                                  |        |               |                                                                     |
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``tf_prefix``                    | string | <empty>       | Urdf prefix of the corresponding arm                                |
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``check_io_successful_retries``  | int    | 10            | Amount of retries for checking if setting force_mode was successful |
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+The controller provides two services: One for activating force_mode and one for leaving it. To use
+those services, the controller has to be in ``active`` state.
+
+* ``~/stop_force_mode [std_srvs/srv/Trigger]``: Stop force mode
+* ``~/start_force_mode [ur_msgs/srv/SetForceMode]``: Start force mode
+
+In ``ur_msgs/srv/SetForceMode`` the fields have the following meanings:
+
+task_frame
+   All information (selection vector, wrench, limits, etc) will be considered to be relative
+   to that pose. The pose's frame_id can be anything that is transformable to the robot's
+   ``base`` frame.
+selection_vector_<x,y,z,rx,ry,rz>
+   1 means that the robot will be compliant in the corresponding axis of the task frame.
+wrench
+   The forces/torques the robot will apply to its environment. The robot adjusts its position
+   along/about compliant axis in order to achieve the specified force/torque. Values have no effect for non-
+   compliant axes.
+   Actual wrench applied may be lower than requested due to joint safety limits.
+type
+   An integer [1;3] specifying how the robot interprets the force frame
+
+   1
+      The force frame is transformed in a way such that its y-axis is aligned with a vector pointing
+      from the robot tcp towards the origin of the force frame.
+   2
+      The force frame is not transformed.
+   3
+      The force frame is transformed in a way such that its x-axis is the projection of the robot tcp
+      velocity vector onto the x-y plane of the force frame.
+speed_limits
+   Maximum allowed tcp speed (relative to the task frame). This is **only relevant for axes marked as
+   compliant** in the selection_vector.
+deviation_limits
+   For **non-compliant axes**, these values are the maximum allowed deviation along/about an axis
+   between the actual tcp position and the one set by the program.
+damping_factor
+   Force mode damping factor. Sets the damping parameter in force mode. In range [0;1], default value is 0.025
+   A value of 1 is full damping, so the robot will decelerate quickly if no force is present. A value of 0
+   is no damping, here the robot will maintain the speed.
+gain_scaling
+   Force mode gain scaling factor. Scales the gain in force mode. scaling parameter is in range [0;2], default is 0.5.
+   A value larger than 1 can make force mode unstable, e.g. in case of collisions or pushing against hard surfaces.

@@ -22,6 +22,7 @@
 
   <depend>angles</depend>
   <depend>controller_interface</depend>
+  <depend>geometry_msgs</depend>
   <depend>joint_trajectory_controller</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pluginlib</depend>
@@ -30,11 +31,15 @@
   <depend>realtime_tools</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_msgs</depend>
   <depend>control_msgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>action_msgs</depend>
+
+  <test_depend>hardware_interface_testing</test_depend>
 
 
   <export>
