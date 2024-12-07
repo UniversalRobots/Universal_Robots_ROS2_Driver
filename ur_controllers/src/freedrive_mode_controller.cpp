@@ -62,6 +62,7 @@ controller_interface::InterfaceConfiguration FreedriveModeController::command_in
   config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
   const std::string tf_prefix = freedrive_params_.tf_prefix;
+  timeout_interval_ = std::chrono::seconds(freedrive_params_.inactive_timeout);
 
   // Get the command interfaces needed for freedrive mode from the hardware interface
   config.names.emplace_back(tf_prefix + "freedrive_mode/async_success");

@@ -5,6 +5,11 @@ freedrive_mode_controller:
     default_value: "",
     description: "Urdf prefix of the corresponding arm"
   }
+  inactive_timeout: {
+    type: int,
+    default_value: 10,
+    description: "Time interval (in seconds) of message inactivity after which freedrive is deactivated"
+  }
   check_io_successful_retries: {
     type: int,
     default_value: 10,

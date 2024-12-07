@@ -282,13 +282,15 @@ Parameters
 +----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
 | ``tf_prefix``                    | string       | <empty>                                | Urdf prefix of the corresponding arm                                                                             |
 +----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``inactive_timeout``             | int          | 10                                     | Time interval (in seconds) of message inactivity after which freedrive is deactivated                            |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
 
 Usage
 """""
 
-The controller provides the ``enable_freedrive_mode`` topic of type ``[std_msgs/msg/Bool]`` for handling activation and deactivation:
+The controller provides the ``/enable_freedrive_mode`` topic of type ``[std_msgs/msg/Bool]`` for handling activation and deactivation:
 
 * to start and keep the freedrive active, it is necessary to continously publish a ``True`` msg on the indicated topic.
   To deal with malfunctioning on the client side, the controller deactivates the freedrive mode if messages
-  are not received anymore within the ``timeout`` parameter.
+  are not received anymore within the ``inactive_timeout`` parameter.
 + to deactivate the freedrive mode is enough to publish a ``False`` msg on the indicated topic or to deactivate the controller.
