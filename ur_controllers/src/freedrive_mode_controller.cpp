@@ -169,6 +169,9 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
   abort_command_interface_->get().set_value(1.0);
   freedrive_active_ = false;
 
+  freedrive_sub_timer_.reset();
+  timer_started_ = false;
+
   stop_logging_thread();
 
   return CallbackReturn::SUCCESS;
@@ -224,17 +227,20 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
 void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg)
 {
   // Process the freedrive_mode command.
-  if(msg->data)
+  if (get_node()->get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    if((!freedrive_active_) && (!change_requested_)){
-      freedrive_active_ = true;
-      change_requested_ = true;
-      start_timer();
-    }
-  } else{
-    if((freedrive_active_) && (!change_requested_)){
-      freedrive_active_ = false;
-      change_requested_ = true;
+    if(msg->data)
+    {
+      if((!freedrive_active_) && (!change_requested_)){
+        freedrive_active_ = true;
+        change_requested_ = true;
+        start_timer();
+      }
+    } else{
+      if((freedrive_active_) && (!change_requested_)){
+        freedrive_active_ = false;
+        change_requested_ = true;
+      }
     }
   }
 
