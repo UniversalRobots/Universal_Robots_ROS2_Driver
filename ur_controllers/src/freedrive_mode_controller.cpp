@@ -104,6 +104,8 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
   // Get parameters from the listener in case they were updated
   freedrive_params_ = freedrive_param_listener_->get_params();
 
+  start_logging_thread();
+
   return ControllerInterface::on_configure(previous_state);
 }
 
@@ -112,8 +114,11 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
 {
   change_requested_ = false;
   freedrive_active_ = false;
-  first_log_ = false;
   async_state_ = std::numeric_limits<double>::quiet_NaN();
+
+  first_log_ = false;
+  logging_thread_running_ = false;
+  logging_requested_ = false;
 
   {
     const std::string interface_name = freedrive_params_.tf_prefix + "freedrive_mode/"
@@ -162,11 +167,9 @@ controller_interface::CallbackReturn
 ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::State&)
 {
   abort_command_interface_->get().set_value(1.0);
-
-  // Set enable value to false, so in the update
-  // we can deactivate the freedrive mode
-  // Old comment?
   freedrive_active_ = false;
+
+  stop_logging_thread();
 
   return CallbackReturn::SUCCESS;
 }
@@ -208,12 +211,12 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
   }
 
   if((async_state_ == 1.0) && (first_log_)){
-    if(freedrive_active_){
-      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been enabled successfully.");
-    } else {
-      RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been disabled successfully.");
-    }
     first_log_ = false;
+    logging_requested_= true;
+
+    // Notify logging thread
+    logging_condition_.notify_one();
+
   }
   return controller_interface::return_type::OK;
 }
@@ -232,7 +235,6 @@ void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::Sh
     if((freedrive_active_) && (!change_requested_)){
       freedrive_active_ = false;
       change_requested_ = true;
-      //start_timer();
     }
   }
 
@@ -267,6 +269,46 @@ void FreedriveModeController::timeout_callback()
 
   timer_started_ = false;
 }
+
+  void FreedriveModeController::start_logging_thread() {
+    if (!logging_thread_running_) {
+      logging_thread_running_ = true;
+      logging_thread_ = std::thread(&FreedriveModeController::log_task, this);
+    }
+  }
+
+  void FreedriveModeController::stop_logging_thread() {
+    logging_thread_running_ = false;
+    if (logging_thread_.joinable()) {
+      logging_thread_.join();
+    }
+  }
+
+  void FreedriveModeController::log_task() {
+    while (logging_thread_running_) {
+
+      std::unique_lock<std::mutex> lock(log_mutex_);
+
+      auto condition = [this] {
+            return !logging_thread_running_ || logging_requested_;
+      };
+
+      // Wait for the condition
+      logging_condition_.wait(lock, condition);
+
+
+      if (!logging_thread_running_) break;
+
+      if(freedrive_active_){
+        RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been enabled successfully.");
+      } else {
+        RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode has been disabled successfully.");
+      }
+
+      // Reset to log only once
+      logging_requested_ = false;
+    }
+  }
 
 bool FreedriveModeController::waitForAsyncCommand(std::function<double(void)> get_value)
 {

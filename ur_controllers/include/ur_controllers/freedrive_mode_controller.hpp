@@ -38,12 +38,11 @@
 
 #pragma once
 
-#include <realtime_tools/realtime_buffer.h>
-#include <realtime_tools/realtime_server_goal_handle.h>
-
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -108,6 +107,15 @@ private:
 
   void start_timer();
   void timeout_callback();
+
+  std::thread logging_thread_;
+  std::atomic<bool> logging_thread_running_;
+  std::atomic<bool> logging_requested_;
+  std::condition_variable logging_condition_;
+  std::mutex log_mutex_;
+  void log_task();
+  void start_logging_thread();
+  void stop_logging_thread();
 
   static constexpr double ASYNC_WAITING = 2.0;
   /**
