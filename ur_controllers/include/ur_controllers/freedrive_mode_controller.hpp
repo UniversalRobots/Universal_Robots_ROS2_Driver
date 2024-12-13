@@ -64,7 +64,7 @@ enum CommandInterfaces
   FREEDRIVE_MODE_ABORT = 2,
 };
 
-using namespace std::chrono_literals; // NOLINT
+using namespace std::chrono_literals;  // NOLINT
 
 class FreedriveModeController : public controller_interface::ControllerInterface
 {
