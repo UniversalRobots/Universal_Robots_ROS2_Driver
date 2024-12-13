@@ -1076,6 +1076,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   }
 
   // Do not start conflicting controllers
+  // Passthrough controller requested to start
   if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [this](auto& item) { return (item == PASSTHROUGH_GPIO); }) &&
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
@@ -1092,15 +1093,34 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     ret_val = hardware_interface::return_type::ERROR;
   }
 
+  // Force mode requested to start
   if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [this](auto& item) { return (item == FORCE_MODE_GPIO); }) &&
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
-                   [](auto& item) {
-                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                             item == FREEDRIVE_MODE_GPIO);
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == FORCE_MODE_GPIO);
+                 item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
+       }))) {
+    RCLCPP_ERROR(get_logger(), "Attempting to start force mode control while there is either position or "
+                               "velocity mode running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // Freedrive mode requested to start
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                  [this](auto& item) { return (item == FREEDRIVE_MODE_GPIO); }) &&
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                             item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
+                   }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start force mode control while there is either position or "
                                "velocity mode running.");
