@@ -14,6 +14,11 @@
       This controller publishes the Tool IO.
     </description>
   </class>
+  <class name="ur_controllers/ForceModeController" type="ur_controllers::ForceModeController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to use UR's force_mode.
+    </description>
+  </class>
   <class name="ur_controllers/FreedriveModeController" type="ur_controllers::FreedriveModeController" base_class_type="controller_interface::ControllerInterface">
     <description>
       This controller handles the activation of the freedrive mode.

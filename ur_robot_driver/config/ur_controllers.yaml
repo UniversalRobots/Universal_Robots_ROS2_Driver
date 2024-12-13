@@ -24,11 +24,15 @@ controller_manager:
     forward_position_controller:
       type: position_controllers/JointGroupPositionController
 
+    force_mode_controller:
+      type: ur_controllers/ForceModeController
+
     freedrive_mode_controller:
       type: ur_controllers/FreedriveModeController
 
     passthrough_trajectory_controller:
       type: ur_controllers/PassthroughTrajectoryController
+
     tcp_pose_broadcaster:
       type: pose_broadcaster/PoseBroadcaster
 
@@ -153,6 +157,10 @@ forward_position_controller:
       - $(var tf_prefix)wrist_1_joint
       - $(var tf_prefix)wrist_2_joint
       - $(var tf_prefix)wrist_3_joint
+
+force_mode_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
 
 freedrive_mode_controller:
   ros__parameters:

@@ -1,0 +1,7 @@
+---
+force_mode_controller:
+  ros__parameters:
+    tf_prefix: ""
+    damping: 0.025
+    gain_scaling: 0.5
+    check_io_successful_retries: 10

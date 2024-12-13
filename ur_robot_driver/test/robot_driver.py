@@ -52,18 +52,10 @@ from test_common import (  # noqa: E402
     IoStatusInterface,
     ConfigurationInterface,
     generate_driver_test_description,
+    ROBOT_JOINTS,
 )
 
 TIMEOUT_EXECUTE_TRAJECTORY = 30
-
-ROBOT_JOINTS = [
-    "shoulder_pan_joint",
-    "shoulder_lift_joint",
-    "elbow_joint",
-    "wrist_1_joint",
-    "wrist_2_joint",
-    "wrist_3_joint",
-]
 
 
 @pytest.mark.launch_test
