@@ -36,11 +36,14 @@ jobs:
           colcon-defaults: |
             {
               "build": {
-                "mixin": ["coverage-gcc"]
+                "mixin": ["coverage-gcc", "coverage-pytest"]
+              },
+              "test": {
+                "mixin": ["coverage-pytest"]
               }
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
-          skip-tests: true
+          skip-tests: false
       - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
