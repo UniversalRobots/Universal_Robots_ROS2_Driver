@@ -92,7 +92,7 @@ private:
 
   std::shared_ptr<rclcpp::Subscription<std_msgs::msg::Bool>> enable_freedrive_mode_sub_;
 
-  rclcpp::TimerBase::SharedPtr freedrive_sub_timer_;  ///< Timer to check on the topic
+  rclcpp::TimerBase::SharedPtr freedrive_sub_timer_;  ///< Timer to check for timeout on input
   mutable std::chrono::seconds timeout_interval_;
   void readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg);
 
