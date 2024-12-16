@@ -364,7 +364,7 @@ Parameters
 Usage
 """""
 
-The controller provides the ``/enable_freedrive_mode`` topic of type ``[std_msgs/msg/Bool]`` for handling activation and deactivation:
+The controller provides the ``~/enable_freedrive_mode`` topic of type ``[std_msgs/msg/Bool]`` for handling activation and deactivation:
 
 * to start and keep freedrive active, you'll have to frequently publish a ``True`` msg on the indicated topic.
   If no further messages are received by the controller within the ``inactive_timeout`` seconds,
