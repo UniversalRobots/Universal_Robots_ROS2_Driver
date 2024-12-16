@@ -5,8 +5,9 @@
   <version>2.2.16</version>
   <description>Messages around the UR Dashboard server.</description>
 
-  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
+  <maintainer email="feex@universal-robots.com">Felix Exner</maintainer>
+  <maintainer email="rsk@universal-robots.com">Rune Søe-Knudsen</maintainer>
+  <maintainer email="ros@universal-robots.com">Universal Robots A/S</maintainer>
 
   <license>BSD-3-Clause</license>
 
