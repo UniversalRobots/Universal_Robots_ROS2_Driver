@@ -1,5 +1,5 @@
 
-// Copyright 2023, FZI Forschungszentrum Informatik, Created on behalf of Universal Robots A/S
+// Copyright 2024, FZI Forschungszentrum Informatik, Created on behalf of Universal Robots A/S
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
