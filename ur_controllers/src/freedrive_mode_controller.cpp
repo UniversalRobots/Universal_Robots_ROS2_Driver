@@ -261,7 +261,7 @@ void FreedriveModeController::start_timer()
 void FreedriveModeController::timeout_callback()
 {
   if (timer_started_ && freedrive_active_) {
-    RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode will be deactivated since client is not reachable.");
+    RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode will be deactivated since no new message received.");
 
     freedrive_active_ = false;
     change_requested_ = true;
