@@ -87,7 +87,7 @@ ur_controllers::FreedriveModeController::on_configure(const rclcpp_lifecycle::St
   // Subscriber definition
   enable_freedrive_mode_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(
       "~/enable_freedrive_mode", 10,
-      std::bind(&FreedriveModeController::readFreedriveModeCmd, this, std::placeholders::_1));
+      std::bind(&FreedriveModeController::freedrive_cmd_callback, this, std::placeholders::_1));
 
   timer_started_ = false;
 
@@ -230,7 +230,7 @@ controller_interface::return_type ur_controllers::FreedriveModeController::updat
   return controller_interface::return_type::OK;
 }
 
-void FreedriveModeController::readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg)
+void FreedriveModeController::freedrive_cmd_callback(const std_msgs::msg::Bool::SharedPtr msg)
 {
   // Process the freedrive_mode command.
   if (get_node()->get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {

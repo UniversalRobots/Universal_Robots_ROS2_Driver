@@ -87,7 +87,7 @@ public:
   CallbackReturn on_init() override;
 
 private:
-  // Command interfaces
+  // Command interfaces: optional is used only to avoid adding reference initialization
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> async_success_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> enable_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
@@ -96,7 +96,7 @@ private:
 
   rclcpp::TimerBase::SharedPtr freedrive_sub_timer_;  ///< Timer to check for timeout on input
   mutable std::chrono::seconds timeout_interval_;
-  void readFreedriveModeCmd(const std_msgs::msg::Bool::SharedPtr msg);
+  void freedrive_cmd_callback(const std_msgs::msg::Bool::SharedPtr msg);
 
   std::shared_ptr<freedrive_mode_controller::ParamListener> freedrive_param_listener_;
   freedrive_mode_controller::Params freedrive_params_;
