@@ -117,7 +117,7 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
   async_state_ = std::numeric_limits<double>::quiet_NaN();
 
   first_log_ = false;
-  logging_thread_running_ = false;
+  logging_thread_running_ = true;
   logging_requested_ = false;
 
   {
@@ -164,15 +164,22 @@ ur_controllers::FreedriveModeController::on_activate(const rclcpp_lifecycle::Sta
 }
 
 controller_interface::CallbackReturn
-ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::State&)
+ur_controllers::FreedriveModeController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   abort_command_interface_->get().set_value(1.0);
+
+  stop_logging_thread();
+
+  return CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn
+ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::State&)
+{
   freedrive_active_ = false;
 
   freedrive_sub_timer_.reset();
   timer_started_ = false;
-
-  stop_logging_thread();
 
   return CallbackReturn::SUCCESS;
 }

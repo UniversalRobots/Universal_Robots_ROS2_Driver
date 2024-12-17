@@ -80,6 +80,8 @@ public:
 
   CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
 
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) override;
+
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
   CallbackReturn on_init() override;
