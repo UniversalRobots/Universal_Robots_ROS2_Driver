@@ -116,19 +116,9 @@ class RobotDriverTest(unittest.TestCase):
                 pass
         return trans
 
-    def test_force_mode_controller(self, tf_prefix):
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=[
-                    "force_mode_controller",
-                ],
-                deactivate_controllers=[
-                    "scaled_joint_trajectory_controller",
-                    "joint_trajectory_controller",
-                ],
-            ).ok
-        )
+    # Implementation of force mode test to be reused
+    # todo: If we move to pytest this could be done using parametrization
+    def run_force_mode(self, tf_prefix):
         self._force_mode_controller_interface = ForceModeInterface(self.node)
 
         # Create task frame for force mode
@@ -236,6 +226,49 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["force_mode_controller"],
             ).ok
         )
+
+    def test_force_mode_controller(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self.run_force_mode(tf_prefix)
+
+    def test_force_mode_controller_with_passthrough_controller(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "passthrough_trajectory_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        time.sleep(1)
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self.run_force_mode(tf_prefix)
 
     def test_illegal_force_mode_types(self, tf_prefix):
         self.assertTrue(
@@ -443,7 +476,8 @@ class RobotDriverTest(unittest.TestCase):
         trans_after_wait = self.lookup_tcp_in_base(tf_prefix, self.node.get_clock().now())
 
         self.assertAlmostEqual(
-            trans_before_wait.transform.translation.z, trans_after_wait.transform.translation.z
+            trans_before_wait.transform.translation.z,
+            trans_after_wait.transform.translation.z,
         )
 
     def test_params_out_of_range_fails(self, tf_prefix):
