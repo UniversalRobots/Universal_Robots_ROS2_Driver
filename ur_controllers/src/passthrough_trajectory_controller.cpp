@@ -331,6 +331,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
 #if RCLCPP_VERSION_MAJOR >= 17
       active_trajectory_elapsed_time_ += period * scaling_factor_;
 #else
+      // This is kept for Humble compatibility
       active_trajectory_elapsed_time_ = active_trajectory_elapsed_time_ + period * scaling_factor_;
 #endif
       // RCLCPP_INFO(get_node()->get_logger(), "Elapsed trajectory time: %f. Scaling factor: %f, period: %f",
