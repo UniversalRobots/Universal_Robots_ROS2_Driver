@@ -6,8 +6,9 @@
   <description>
      An example package with MoveIt2 configurations for UR robots.
   </description>
-  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <maintainer email="dipentima@fzi.de">Vincenzo Di Pentima</maintainer>
+  <maintainer email="feex@universal-robots.com">Felix Exner</maintainer>
+  <maintainer email="rsk@universal-robots.com">Rune Søe-Knudsen</maintainer>
+  <maintainer email="ros@universal-robots.com">Universal Robots A/S</maintainer>
 
   <license>Apache2.0</license>
 
@@ -15,6 +16,7 @@
   <author email="denis@stoglrobotics.de">Denis Stogl</author>
   <author email="lovro.ivanov@gmail.com">Lovro Ivanov</author>
   <author email="zelenak@picknik.ai">Andy Zelenak</author>
+  <author email="dipentima@fzi.de">Vincenzo Di Pentima</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
