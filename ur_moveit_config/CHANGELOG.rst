@@ -2,6 +2,11 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update package maintainers (backport of `#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
+* Contributors: mergify[bot]
+
 2.2.16 (2024-10-28)
 -------------------
 * Properly handle use_sim_time (`#1146 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1146>`_) (`#1159 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1159>`_)
