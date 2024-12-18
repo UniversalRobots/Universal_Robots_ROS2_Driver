@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.0.0 (2024-12-18)
+------------------
 * Freedrive Controller (`#1114 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1114>`_)
 * Fix running force_mode controller alongside passthrough trajectory controller (`#1210 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1210>`_)
 * Update package maintainers (`#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
