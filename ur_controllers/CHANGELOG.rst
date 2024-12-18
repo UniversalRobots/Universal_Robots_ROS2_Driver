@@ -2,6 +2,16 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Freedrive Controller (`#1114 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1114>`_)
+* Make ur_controllers compilable on humble (`#1207 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1207>`_)
+* Update package maintainers (`#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
+* Add force mode controller (`#1049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1049>`_)
+* ur_controllers: Update RealTimeBox (`#1189 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1189>`_)
+* Add trajectory passthrough controller (`#944 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/944>`_)
+* Contributors: Christoph Fröhlich, Felix Exner, URJala, Vincenzo Di Pentima
+
 2.4.13 (2024-10-28)
 -------------------
 * [SJTC] Make scaling interface optional (`#1145 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1145>`_)
