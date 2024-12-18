@@ -81,9 +81,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  stop_modes_ = { StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE,
-                  StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE };
-  start_modes_ = {};
   position_controller_running_ = false;
   velocity_controller_running_ = false;
   passthrough_trajectory_controller_running_ = false;
@@ -317,6 +314,36 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
 
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_x", &force_mode_task_frame_[0]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_y", &force_mode_task_frame_[1]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_z", &force_mode_task_frame_[2]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_rx", &force_mode_task_frame_[3]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_ry", &force_mode_task_frame_[4]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_rz", &force_mode_task_frame_[5]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_x", &force_mode_selection_vector_[0]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_y", &force_mode_selection_vector_[1]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_z", &force_mode_selection_vector_[2]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_rx", &force_mode_selection_vector_[3]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_ry", &force_mode_selection_vector_[4]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_rz", &force_mode_selection_vector_[5]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_x", &force_mode_wrench_[0]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_y", &force_mode_wrench_[1]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_z", &force_mode_wrench_[2]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_rx", &force_mode_wrench_[3]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_ry", &force_mode_wrench_[4]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_rz", &force_mode_wrench_[5]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "type", &force_mode_type_);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_x", &force_mode_limits_[0]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_y", &force_mode_limits_[1]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_z", &force_mode_limits_[2]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_rx", &force_mode_limits_[3]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_ry", &force_mode_limits_[4]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_rz", &force_mode_limits_[5]);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "force_mode_async_success", &force_mode_async_success_);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "disable_cmd", &force_mode_disable_cmd_);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "damping", &force_mode_damping_);
+  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "gain_scaling", &force_mode_gain_scaling_);
+
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
@@ -541,6 +568,14 @@ hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous_state)
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Activating HW interface");
+
+  for (size_t i = 0; i < 6; i++) {
+    force_mode_task_frame_[i] = NO_NEW_CMD_;
+    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_wrench_[i] = NO_NEW_CMD_;
+    force_mode_limits_[i] = NO_NEW_CMD_;
+  }
+  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -680,6 +715,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
+      force_mode_disable_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -713,6 +749,14 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       check_passthrough_trajectory_controller();
     } else {
       ur_driver_->writeKeepalive();
+    }
+
+    if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
+        !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
+        !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
+      start_force_mode();
+    } else if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
+      stop_force_mode();
     }
 
     packet_read_ = false;
@@ -880,26 +924,29 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-  start_modes_ = std::vector<std::string>(info_.joints.size(), "UNDEFINED");
-  stop_modes_.clear();
-  std::vector<std::string> control_modes(info_.joints.size());
+  start_modes_ = std::vector<std::vector<std::string>>(info_.joints.size());
+  stop_modes_ = std::vector<std::vector<uint>>(info_.joints.size());
+  std::vector<std::vector<std::string>> control_modes(info_.joints.size());
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
 
   // Assess current state
   for (auto i = 0u; i < info_.joints.size(); i++) {
     if (position_controller_running_) {
-      control_modes[i] = hardware_interface::HW_IF_POSITION;
+      control_modes[i] = { hardware_interface::HW_IF_POSITION };
     }
     if (velocity_controller_running_) {
-      control_modes[i] = hardware_interface::HW_IF_VELOCITY;
+      control_modes[i] = { hardware_interface::HW_IF_VELOCITY };
+    }
+    if (force_mode_controller_running_) {
+      control_modes[i].push_back(FORCE_MODE_GPIO);
     }
     if (passthrough_trajectory_controller_running_) {
-      control_modes[i] = PASSTHROUGH_GPIO;
+      control_modes[i].push_back(PASSTHROUGH_GPIO);
     }
   }
 
   if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
-                   [&](const std::string& other) { return other == start_modes_[0]; })) {
+                   [&](const std::vector<std::string>& other) { return other == start_modes_[0]; })) {
     RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Start modes of all joints have to be the same.");
     return hardware_interface::return_type::ERROR;
   }
@@ -910,20 +957,43 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   for (const auto& key : start_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-        if (start_modes_[i] != "UNDEFINED") {
+        if (!start_modes_[i].empty()) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start position control while "
+                                                                          "there is another control mode already "
+                                                                          "requested.");
           return hardware_interface::return_type::ERROR;
         }
-        start_modes_[i] = hardware_interface::HW_IF_POSITION;
+        start_modes_[i] = { hardware_interface::HW_IF_POSITION };
       } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-        if (start_modes_[i] != "UNDEFINED") {
+        if (!start_modes_[i].empty()) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start velocity control while "
+                                                                          "there is another control mode already "
+                                                                          "requested.");
           return hardware_interface::return_type::ERROR;
         }
-        start_modes_[i] = hardware_interface::HW_IF_VELOCITY;
+        start_modes_[i] = { hardware_interface::HW_IF_VELOCITY };
+      } else if (key == tf_prefix + FORCE_MODE_GPIO + "/type") {
+        if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
+              return item == hardware_interface::HW_IF_POSITION || item == hardware_interface::HW_IF_VELOCITY;
+            })) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start force_mode control "
+                                                                          "while there is either position or "
+                                                                          "velocity mode already requested by another "
+                                                                          "controller.");
+          return hardware_interface::return_type::ERROR;
+        }
+        start_modes_[i].push_back(FORCE_MODE_GPIO);
       } else if (key == tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i)) {
-        if (start_modes_[i] != "UNDEFINED") {
+        if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
+              return item == hardware_interface::HW_IF_POSITION || item == hardware_interface::HW_IF_VELOCITY;
+            })) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start trajectory passthrough "
+                                                                          "control while there is either "
+                                                                          "position or velocity mode already requested "
+                                                                          "by another controller.");
           return hardware_interface::return_type::ERROR;
         }
-        start_modes_[i] = PASSTHROUGH_GPIO;
+        start_modes_[i].push_back(PASSTHROUGH_GPIO);
       }
     }
   }
@@ -933,56 +1003,99 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   for (const auto& key : stop_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-        stop_modes_.push_back(StoppingInterface::STOP_POSITION);
-        if (control_modes[i] == hardware_interface::HW_IF_POSITION) {
-          control_modes[i] = "UNDEFINED";
-        }
+        stop_modes_[i].push_back(StoppingInterface::STOP_POSITION);
+        control_modes[i].erase(
+            std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                           [](const std::string& item) { return item == hardware_interface::HW_IF_POSITION; }),
+            control_modes[i].end());
       }
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-        stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
-        if (control_modes[i] == hardware_interface::HW_IF_VELOCITY) {
-          control_modes[i] = "UNDEFINED";
-        }
+        stop_modes_[i].push_back(StoppingInterface::STOP_VELOCITY);
+        control_modes[i].erase(
+            std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                           [](const std::string& item) { return item == hardware_interface::HW_IF_VELOCITY; }),
+            control_modes[i].end());
+      }
+      if (key == tf_prefix + FORCE_MODE_GPIO + "/disable_cmd") {
+        stop_modes_[i].push_back(StoppingInterface::STOP_FORCE_MODE);
+        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                                              [&](const std::string& item) { return item == FORCE_MODE_GPIO; }),
+                               control_modes[i].end());
       }
       if (key == tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i)) {
-        stop_modes_.push_back(StoppingInterface::STOP_PASSTHROUGH);
-        if (control_modes[i] == PASSTHROUGH_GPIO) {
-          control_modes[i] = "UNDEFINED";
-        }
+        stop_modes_[i].push_back(StoppingInterface::STOP_PASSTHROUGH);
+        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                                              [&](const std::string& item) { return item == PASSTHROUGH_GPIO; }),
+                               control_modes[i].end());
       }
     }
   }
 
   // Do not start conflicting controllers
-  if (std::any_of(start_modes_.begin(), start_modes_.end(),
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [this](auto& item) { return (item == PASSTHROUGH_GPIO); }) &&
-      (std::any_of(start_modes_.begin(), start_modes_.end(),
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                    [](auto& item) {
                      return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
                    }) ||
-       std::any_of(control_modes.begin(), control_modes.end(), [this](auto& item) {
-         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO);
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
        }))) {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start passthrough_trajectory "
+                                                                    "control while there is either position or "
+                                                                    "velocity mode is running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
-  if (std::any_of(start_modes_.begin(), start_modes_.end(),
+
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                  [this](auto& item) { return (item == FORCE_MODE_GPIO); }) &&
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
+                   }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == FORCE_MODE_GPIO);
+       }))) {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start force mode control while "
+                                                                    "there is either position or "
+                                                                    "velocity mode running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // Position mode requested to start
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [](auto& item) { return (item == hardware_interface::HW_IF_POSITION); }) &&
-      (std::any_of(
-           start_modes_.begin(), start_modes_.end(),
-           [this](auto& item) { return (item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO); }) ||
-       std::any_of(control_modes.begin(), control_modes.end(), [this](auto& item) {
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO ||
+                             item == FORCE_MODE_GPIO);
+                   }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO);
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
        }))) {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start position control while there "
+                                                                    "is either trajectory passthrough or "
+                                                                    "velocity mode or force_mode running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
-  if (std::any_of(start_modes_.begin(), start_modes_.end(),
+
+  // Velocity mode requested to start
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [](auto& item) { return (item == hardware_interface::HW_IF_VELOCITY); }) &&
-      std::any_of(start_modes_.begin(), start_modes_.end(), [this](auto& item) {
-        return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                item == PASSTHROUGH_GPIO);
-      })) {
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO ||
+                             item == FORCE_MODE_GPIO);
+                   }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
+       }))) {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Attempting to start velosity control while there "
+                                                                    "is either trajectory passthrough or "
+                                                                    "position mode or force_mode running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
@@ -995,16 +1108,20 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-  if (stop_modes_.size() != 0 &&
-      std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_POSITION) != stop_modes_.end()) {
+  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                              StoppingInterface::STOP_POSITION) != stop_modes_[0].end()) {
     position_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
-  } else if (stop_modes_.size() != 0 &&
-             std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_VELOCITY) != stop_modes_.end()) {
+  } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                                     StoppingInterface::STOP_VELOCITY) != stop_modes_[0].end()) {
     velocity_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  } else if (stop_modes_.size() != 0 && std::find(stop_modes_.begin(), stop_modes_.end(),
-                                                  StoppingInterface::STOP_PASSTHROUGH) != stop_modes_.end()) {
+  } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                                     StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
+    force_mode_controller_running_ = false;
+    stop_force_mode();
+  } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                                     StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;
     passthrough_trajectory_abort_ = 1.0;
     trajectory_joint_positions_.clear();
@@ -1012,21 +1129,24 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     trajectory_joint_velocities_.clear();
   }
 
-  if (start_modes_.size() != 0 &&
-      std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
+  if (start_modes_.size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
+                                            hardware_interface::HW_IF_POSITION) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
 
-  } else if (start_modes_.size() != 0 && std::find(start_modes_.begin(), start_modes_.end(),
-                                                   hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
+  } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
+                                                      hardware_interface::HW_IF_VELOCITY) != start_modes_[0].end()) {
     position_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
-  } else if (start_modes_.size() != 0 &&
-             std::find(start_modes_.begin(), start_modes_.end(), PASSTHROUGH_GPIO) != start_modes_.end()) {
+  } else if (start_modes_[0].size() != 0 &&
+             std::find(start_modes_[0].begin(), start_modes_[0].end(), FORCE_MODE_GPIO) != start_modes_[0].end()) {
+    force_mode_controller_running_ = true;
+  } else if (start_modes_[0].size() != 0 &&
+             std::find(start_modes_[0].begin(), start_modes_[0].end(), PASSTHROUGH_GPIO) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
@@ -1037,6 +1157,46 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   stop_modes_.clear();
 
   return ret_val;
+}
+
+void URPositionHardwareInterface::start_force_mode()
+{
+  for (size_t i = 0; i < force_mode_selection_vector_.size(); i++) {
+    force_mode_selection_vector_copy_[i] = force_mode_selection_vector_[i];
+  }
+  /* Check version of robot to ensure that the correct startForceMode is called. */
+  if (ur_driver_->getVersion().major < 5) {
+    force_mode_async_success_ =
+        ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
+                                   force_mode_type_, force_mode_limits_, force_mode_damping_);
+    if (force_mode_gain_scaling_ != 0.5) {
+      RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"), "Force mode gain scaling cannot be used on "
+                                                                     "CB3 "
+                                                                     "robots. Starting force mode, but "
+                                                                     "disregarding "
+                                                                     "gain scaling.");
+    }
+  } else {
+    force_mode_async_success_ =
+        ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
+                                   force_mode_type_, force_mode_limits_, force_mode_damping_, force_mode_gain_scaling_);
+  }
+
+  for (size_t i = 0; i < 6; i++) {
+    force_mode_task_frame_[i] = NO_NEW_CMD_;
+    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_wrench_[i] = NO_NEW_CMD_;
+    force_mode_limits_[i] = NO_NEW_CMD_;
+  }
+  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+  force_mode_damping_ = NO_NEW_CMD_;
+  force_mode_gain_scaling_ = NO_NEW_CMD_;
+}
+
+void URPositionHardwareInterface::stop_force_mode()
+{
+  force_mode_async_success_ = ur_driver_->endForceMode();
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
 }
 
 void URPositionHardwareInterface::check_passthrough_trajectory_controller()

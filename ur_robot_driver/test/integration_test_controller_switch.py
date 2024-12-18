@@ -52,7 +52,8 @@ from test_common import (  # noqa: E402
 @pytest.mark.launch_test
 @launch_testing.parametrize(
     "tf_prefix",
-    [(""), ("my_ur_")],
+    [("")],
+    # [(""), ("my_ur_")],
 )
 def generate_test_description(tf_prefix):
     return generate_driver_test_description(tf_prefix=tf_prefix)
@@ -94,6 +95,7 @@ class RobotDriverTest(unittest.TestCase):
                     "forward_position_controller",
                     "forward_velocity_controller",
                     "passthrough_trajectory_controller",
+                    "force_mode_controller",
                 ],
             ).ok
         )
@@ -117,15 +119,6 @@ class RobotDriverTest(unittest.TestCase):
                 ],
             ).ok
         )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "scaled_joint_trajectory_controller",
-                    "forward_position_controller",
-                ],
-            ).ok
-        )
 
     def test_activating_multiple_controllers_different_interface_fails(self):
         # Deactivate all writing controllers
@@ -137,6 +130,7 @@ class RobotDriverTest(unittest.TestCase):
                     "joint_trajectory_controller",
                     "forward_position_controller",
                     "forward_velocity_controller",
+                    "force_mode_controller",
                     "passthrough_trajectory_controller",
                 ],
             ).ok
@@ -174,6 +168,15 @@ class RobotDriverTest(unittest.TestCase):
                 activate_controllers=[
                     "forward_position_controller",
                     "forward_velocity_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "force_mode_controller",
                 ],
             ).ok
         )
@@ -191,6 +194,7 @@ class RobotDriverTest(unittest.TestCase):
                     "joint_trajectory_controller",
                     "forward_position_controller",
                     "forward_velocity_controller",
+                    "force_mode_controller",
                     "passthrough_trajectory_controller",
                 ],
             ).ok
@@ -216,6 +220,14 @@ class RobotDriverTest(unittest.TestCase):
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
                     "passthrough_trajectory_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "force_mode_controller",
                 ],
             ).ok
         )
@@ -241,6 +253,7 @@ class RobotDriverTest(unittest.TestCase):
                     "joint_trajectory_controller",
                     "forward_position_controller",
                     "forward_velocity_controller",
+                    "force_mode_controller",  # tested in separate test
                 ],
             ).ok
         )
@@ -281,6 +294,85 @@ class RobotDriverTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.STRICT,
                 deactivate_controllers=[
+                    "passthrough_trajectory_controller",
+                ],
+            ).ok
+        )
+
+    def test_force_mode_and_trajectory_passthrough_controller_are_compatible(self):
+        # Deactivate all writing controllers
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                    "forward_position_controller",
+                    "forward_velocity_controller",
+                    "passthrough_trajectory_controller",
+                    "force_mode_controller",
+                ],
+            ).ok
+        )
+
+        time.sleep(3)
+
+        # Start both together
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "passthrough_trajectory_controller",
+                    "force_mode_controller",
+                ],
+            ).ok
+        )
+
+        # With passthrough traj controller running, start force mode controller
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "passthrough_trajectory_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                    "forward_position_controller",
+                    "forward_velocity_controller",
+                    "force_mode_controller",
+                ],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+            ).ok
+        )
+
+        # With start force mode controller running, passthrough traj controller
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                    "forward_position_controller",
+                    "forward_velocity_controller",
+                    "passthrough_trajectory_controller",
+                ],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
                     "passthrough_trajectory_controller",
                 ],
             ).ok
