@@ -1,0 +1,5 @@
+---
+freedrive_mode_controller:
+  ros__parameters:
+    tf_prefix: ""
+    inactive_timeout: 10

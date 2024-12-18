@@ -19,6 +19,11 @@
       Controller to use UR's force_mode.
     </description>
   </class>
+  <class name="ur_controllers/FreedriveModeController" type="ur_controllers::FreedriveModeController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller handles the activation of the freedrive mode.
+    </description>
+  </class>
   <class name="ur_controllers/PassthroughTrajectoryController" type="ur_controllers::PassthroughTrajectoryController" base_class_type="controller_interface::ControllerInterface">
     <description>
       This controller forwards a joint-based trajectory to the robot controller for interpolation.

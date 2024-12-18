@@ -96,6 +96,7 @@ class RobotDriverTest(unittest.TestCase):
                     "forward_velocity_controller",
                     "passthrough_trajectory_controller",
                     "force_mode_controller",
+                    "freedrive_mode_controller",
                 ],
             ).ok
         )
@@ -132,6 +133,7 @@ class RobotDriverTest(unittest.TestCase):
                     "forward_velocity_controller",
                     "force_mode_controller",
                     "passthrough_trajectory_controller",
+                    "freedrive_mode_controller",
                 ],
             ).ok
         )
@@ -177,6 +179,15 @@ class RobotDriverTest(unittest.TestCase):
                 activate_controllers=[
                     "scaled_joint_trajectory_controller",
                     "force_mode_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "freedrive_mode_controller",
                 ],
             ).ok
         )
@@ -195,6 +206,7 @@ class RobotDriverTest(unittest.TestCase):
                     "forward_position_controller",
                     "forward_velocity_controller",
                     "force_mode_controller",
+                    "freedrive_mode_controller",
                     "passthrough_trajectory_controller",
                 ],
             ).ok
@@ -212,6 +224,14 @@ class RobotDriverTest(unittest.TestCase):
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
                     "forward_velocity_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "freedrive_mode_controller",
                 ],
             ).ok
         )
@@ -286,6 +306,14 @@ class RobotDriverTest(unittest.TestCase):
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
                     "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "freedrive_mode_controller",
                 ],
             ).ok
         )
