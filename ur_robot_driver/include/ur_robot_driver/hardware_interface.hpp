@@ -79,7 +79,8 @@ enum StoppingInterface
   STOP_POSITION,
   STOP_VELOCITY,
   STOP_PASSTHROUGH,
-  STOP_FORCE_MODE
+  STOP_FORCE_MODE,
+  STOP_FREEDRIVE,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -228,6 +229,13 @@ protected:
   double get_robot_software_version_bugfix_;
   double get_robot_software_version_build_;
 
+  // Freedrive mode controller interface values
+  bool freedrive_activated_;
+  bool freedrive_mode_controller_running_;
+  double freedrive_mode_async_success_;
+  double freedrive_mode_enable_;
+  double freedrive_mode_abort_;
+
   // Passthrough trajectory controller interface values
   double passthrough_trajectory_transfer_state_;
   double passthrough_trajectory_abort_;
@@ -236,6 +244,7 @@ protected:
   urcl::vector6d_t passthrough_trajectory_velocities_;
   urcl::vector6d_t passthrough_trajectory_accelerations_;
   double passthrough_trajectory_time_from_start_;
+
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
   double payload_mass_;
@@ -293,8 +302,9 @@ protected:
 
   urcl::RobotReceiveTimeout receive_timeout_ = urcl::RobotReceiveTimeout::millisec(20);
 
-  const std::string FORCE_MODE_GPIO = "force_mode";
   const std::string PASSTHROUGH_GPIO = "trajectory_passthrough";
+  const std::string FORCE_MODE_GPIO = "force_mode";
+  const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
 };
 }  // namespace ur_robot_driver
 
