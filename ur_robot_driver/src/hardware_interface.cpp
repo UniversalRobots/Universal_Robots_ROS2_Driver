@@ -83,6 +83,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   position_controller_running_ = false;
   velocity_controller_running_ = false;
+  freedrive_mode_controller_running_ = false;
   passthrough_trajectory_controller_running_ = false;
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
@@ -92,6 +93,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   initialized_ = false;
   async_thread_shutdown_ = false;
   system_interface_initialized_ = 0.0;
+  freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
   trajectory_joint_positions_.clear();
@@ -364,6 +366,15 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
+
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "async_success",
+                                                                       &freedrive_mode_async_success_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "enable", &freedrive_mode_enable_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "abort", &freedrive_mode_abort_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "transfer_state",
                                                                        &passthrough_trajectory_transfer_state_));
@@ -716,6 +727,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
       hand_back_control_cmd_ = NO_NEW_CMD_;
       force_mode_disable_cmd_ = NO_NEW_CMD_;
+      freedrive_mode_abort_ = NO_NEW_CMD_;
+      freedrive_mode_enable_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -743,6 +756,9 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
+
+    } else if (freedrive_mode_controller_running_ && freedrive_activated_) {
+      ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
     } else if (passthrough_trajectory_controller_running_) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP);
@@ -859,6 +875,23 @@ void URPositionHardwareInterface::checkAsyncIO()
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
   }
+
+  if (!std::isnan(freedrive_mode_enable_) && ur_driver_ != nullptr) {
+    RCLCPP_INFO(get_logger(), "Starting freedrive mode.");
+    freedrive_mode_async_success_ =
+        ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
+    freedrive_mode_enable_ = NO_NEW_CMD_;
+    freedrive_activated_ = true;
+  }
+
+  if (!std::isnan(freedrive_mode_abort_) && freedrive_mode_abort_ == 1.0 && freedrive_activated_ &&
+      ur_driver_ != nullptr) {
+    RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
+    freedrive_mode_async_success_ =
+        ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
+    freedrive_activated_ = false;
+    freedrive_mode_abort_ = NO_NEW_CMD_;
+  }
 }
 
 void URPositionHardwareInterface::updateNonDoubleValues()
@@ -943,6 +976,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     if (passthrough_trajectory_controller_running_) {
       control_modes[i].push_back(PASSTHROUGH_GPIO);
     }
+    if (freedrive_mode_controller_running_) {
+      control_modes[i].push_back(FREEDRIVE_MODE_GPIO);
+    }
   }
 
   if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
@@ -988,6 +1024,14 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           return hardware_interface::return_type::ERROR;
         }
         start_modes_[i].push_back(PASSTHROUGH_GPIO);
+      } else if (key == tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success") {
+        if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
+              return item == hardware_interface::HW_IF_POSITION || item == hardware_interface::HW_IF_VELOCITY ||
+                     item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO;
+            })) {
+          return hardware_interface::return_type::ERROR;
+        }
+        start_modes_[i].push_back(FREEDRIVE_MODE_GPIO);
       }
     }
   }
@@ -1022,33 +1066,61 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                                               [&](const std::string& item) { return item == PASSTHROUGH_GPIO; }),
                                control_modes[i].end());
       }
+      if (key == tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success") {
+        stop_modes_[i].push_back(StoppingInterface::STOP_FREEDRIVE);
+        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                                              [&](const std::string& item) { return item == FREEDRIVE_MODE_GPIO; }),
+                               control_modes[i].end());
+      }
     }
   }
 
   // Do not start conflicting controllers
+  // Passthrough controller requested to start
   if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [this](auto& item) { return (item == PASSTHROUGH_GPIO); }) &&
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
-                   [](auto& item) {
-                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
-                   }) ||
-       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
-         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
-       }))) {
-    RCLCPP_ERROR(get_logger(), "Attempting to start passthrough_trajectory control while there is either position or "
-                               "velocity mode is running.");
-    ret_val = hardware_interface::return_type::ERROR;
-  }
-
-  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
-                  [this](auto& item) { return (item == FORCE_MODE_GPIO); }) &&
-      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
-                   [](auto& item) {
-                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION);
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                             item == FREEDRIVE_MODE_GPIO);
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == FORCE_MODE_GPIO);
+                 item == FREEDRIVE_MODE_GPIO);
+       }))) {
+    RCLCPP_ERROR(get_logger(), "Attempting to start passthrough_trajectory control while there is either position or "
+                               "velocity or freedrive mode running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // Force mode requested to start
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                  [this](auto& item) { return (item == FORCE_MODE_GPIO); }) &&
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                             item == FREEDRIVE_MODE_GPIO);
+                   }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
+       }))) {
+    RCLCPP_ERROR(get_logger(), "Attempting to start force mode control while there is either position or "
+                               "velocity mode running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // Freedrive mode requested to start
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                  [this](auto& item) { return (item == FREEDRIVE_MODE_GPIO); }) &&
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                             item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
+                   }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start force mode control while there is either position or "
                                "velocity mode running.");
@@ -1061,14 +1133,14 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                    [this](auto& item) {
                      return (item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO ||
-                             item == FORCE_MODE_GPIO);
+                             item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start position control while there is either trajectory passthrough or "
-                               "velocity mode or force_mode running.");
+                               "velocity mode or force_mode or freedrive mode running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
@@ -1078,14 +1150,14 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                    [this](auto& item) {
                      return (item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO ||
-                             item == FORCE_MODE_GPIO);
+                             item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start velosity control while there is either trajectory passthrough or "
-                               "position mode or force_mode running.");
+                               "position mode or force_mode or freedrive mode running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
@@ -1117,6 +1189,11 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     trajectory_joint_positions_.clear();
     trajectory_joint_accelerations_.clear();
     trajectory_joint_velocities_.clear();
+  } else if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                                  StoppingInterface::STOP_FREEDRIVE) != stop_modes_[0].end()) {
+    freedrive_mode_controller_running_ = false;
+    freedrive_activated_ = false;
+    freedrive_mode_abort_ = 1.0;
   }
 
   if (start_modes_.size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
@@ -1141,6 +1218,12 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     position_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
     passthrough_trajectory_abort_ = 0.0;
+  } else if (start_modes_[0].size() != 0 &&
+             std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
+    velocity_controller_running_ = false;
+    position_controller_running_ = false;
+    freedrive_mode_controller_running_ = true;
+    freedrive_activated_ = false;
   }
 
   start_modes_.clear();

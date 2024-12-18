@@ -117,3 +117,11 @@ force_mode_controller
 Type: :ref:`ur_controllers/ForceModeController <force_mode_controller>`
 
 Allows utilizing the robot's builtin *Force Mode*.
+
+freedrive_mode_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Type: :ref:`ur_controllers/FreedriveModeController <freedrive_mode_controller>`
+
+Allows utilizing the robot's *Freedrive mode*, making it possible to manually move the robot's
+joints.

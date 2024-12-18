@@ -72,6 +72,11 @@ generate_parameter_library(
 )
 
 generate_parameter_library(
+  freedrive_mode_controller_parameters
+  src/freedrive_mode_controller_parameters.yaml
+)
+
+generate_parameter_library(
   passthrough_trajectory_controller_parameters
   src/passthrough_trajectory_controller_parameters.yaml
 )
@@ -85,6 +90,7 @@ add_library(${PROJECT_NAME} SHARED
   src/force_mode_controller.cpp
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
+  src/freedrive_mode_controller.cpp
   src/gpio_controller.cpp
   src/passthrough_trajectory_controller.cpp
   src/ur_configuration_controller.cpp)
@@ -97,6 +103,7 @@ target_link_libraries(${PROJECT_NAME}
   gpio_controller_parameters
   speed_scaling_state_broadcaster_parameters
   scaled_joint_trajectory_controller_parameters
+  freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters
 )
@@ -150,6 +157,16 @@ if(BUILD_TESTING)
     ${PROJECT_NAME}
   )
   ament_target_dependencies(test_load_force_mode_controller
+    controller_manager
+    ros2_control_test_assets
+  )
+  ament_add_gmock(test_load_freedrive_mode_controller
+    test/test_load_freedrive_mode_controller.cpp
+  )
+  target_link_libraries(test_load_freedrive_mode_controller
+    ${PROJECT_NAME}
+  )
+  ament_target_dependencies(test_load_freedrive_mode_controller
     controller_manager
     ros2_control_test_assets
   )
