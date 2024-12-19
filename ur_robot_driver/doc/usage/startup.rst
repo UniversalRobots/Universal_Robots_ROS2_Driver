@@ -79,13 +79,19 @@ Verify calibration info is being used correctly
 .. _verify_calibration:
 
 If you passed a path to extracted calibration via the *kinematics_params_file*
-parameter, verify that the checksum of the loaded calibration matches that of your extracted
-calibration. Search for the term *checksum* in the console output after launching the driver,
-and you should see:
+parameter, ensure that the loaded calibration matches that of the robot by inspecting the console
+output after launching ur_robot_driver. If the calibration does not match, you will see an error:
 
-.. code-block:: console
+.. code-block:: none
 
-  $ [INFO] [1694437690.406932381] [URPositionHardwareInterface]: Calibration checksum: 'calib_xxxxxxxxxxxxxxxxxxx'
+  [ERROR] [1694437624.484381456] [URPositionHardwareInterface]: The calibration parameters of the connected robot don't match the ones from the given kinematics config file.
+
+Alternatively, search for the term *checksum* in the console output after launching the driver, and
+you should see:
+
+.. code-block:: none
+
+  [INFO] [1694437690.406932381] [URPositionHardwareInterface]: Calibration checksum: 'calib_xxxxxxxxxxxxxxxxxxx'
 
 Verify that the printed checksum matches that on the final line of your extracted calibration file.
 
