@@ -28,6 +28,7 @@ Allowed ``ur_type`` strings: ``ur3``, ``ur3e``, ``ur5``, ``ur5e``, ``ur10``, ``u
 Other important arguments are:
 
 
+* ``kinematics_params_file`` (default: *None*) - Path to the calibration file extracted from the robot, as described in :ref:`calibration_extraction`.
 * ``use_mock_hardware`` (default: *false* ) - Use simple hardware emulator from ros2_control. Useful for testing launch files, descriptions, etc.
 * ``headless_mode`` (default: *false*) - Start driver in :ref:`headless_mode`.
 * ``launch_rviz`` (default: *true*) - Start RViz together with the driver.
@@ -71,6 +72,31 @@ Depending on the :ref:`robot control mode<operation_modes>` do the following:
   already.
 
 .. _continuation_after_interruptions:
+
+Verify calibration info is being used correctly
+-----------------------------------------------
+
+.. _verify_calibration:
+
+If you passed a path to an extracted calibration via the *kinematics_params_file*
+parameter, ensure that the loaded calibration matches that of the robot by inspecting the console
+output after launching the ``ur_robot_driver``. If the calibration does not match, you will see an error:
+
+.. code-block::
+
+  [INFO] [1694437690.406932381] [URPositionHardwareInterface]: Calibration checksum: 'calib_xxxxxxxxxxxxxxxxxxx'
+  [ERROR] [1694437690.516957265] [URPositionHardwareInterface]: The calibration parameters of the connected robot don't match the ones from the given kinematics config file.
+
+With the correct calibration you should see:
+
+.. code-block::
+
+  [INFO] [1694437690.406932381] [URPositionHardwareInterface]: Calibration checksum: 'calib_xxxxxxxxxxxxxxxxxxx'
+  [INFO] [1694437690.516957265] [URPositionHardwareInterface]: Calibration checked successfully.
+
+Alternatively, search for the term *checksum* in the console output after launching the driver.
+Verify that the printed checksum matches that on the final line of your extracted calibration file.
+
 
 Continuation after interruptions
 --------------------------------
