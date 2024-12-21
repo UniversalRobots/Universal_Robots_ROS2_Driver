@@ -26,6 +26,7 @@
   <depend>angles</depend>
   <depend>controller_interface</depend>
   <depend>geometry_msgs</depend>
+  <depend>hardware_interface</depend>
   <depend>joint_trajectory_controller</depend>
   <depend>lifecycle_msgs</depend>
   <depend>pluginlib</depend>
@@ -42,6 +43,8 @@
   <depend>trajectory_msgs</depend>
   <depend>action_msgs</depend>
 
+  <test_depend>controller_manager</test_depend>
+  <test_depend>ros2_control_test_assets</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
