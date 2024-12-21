@@ -1,3 +1,6 @@
+Forthcoming
+-----------
+
 2.5.0 (2024-12-18)
 ------------------
 * Freedrive Controller (`#1114 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1114>`_) (`#1211 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1211>`_)
