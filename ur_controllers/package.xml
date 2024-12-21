@@ -41,14 +41,9 @@
   <depend>control_msgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>action_msgs</depend>
-
-<<<<<<< HEAD
-  <test_depend>hardware_interface_testing</test_depend>
-
-=======
+  
   <test_depend>controller_manager</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
->>>>>>> aea2ccd (Add missing test dependencies for ur_controllers (#1215))
 
   <export>
     <build_type>ament_cmake</build_type>
