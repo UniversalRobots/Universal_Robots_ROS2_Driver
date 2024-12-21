@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.5.1 (2024-12-21)
+------------------
 * Add missing test dependencies for ur_controllers (backport of `#1215 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1215>`_)
 * Contributors: mergify[bot]
 
