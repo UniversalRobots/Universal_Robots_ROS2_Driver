@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.0.1 (2024-12-30)
+------------------
 * Remove unused include (`#1220 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1220>`_)
 * improve docs around usage of extracted calibration info (`#1214 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1214>`_)
 * Contributors: Bence Magyar, Carter Sifferman
