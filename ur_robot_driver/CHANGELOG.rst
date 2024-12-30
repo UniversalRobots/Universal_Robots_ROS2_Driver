@@ -1,3 +1,9 @@
+Forthcoming
+-----------
+* Remove unused include (`#1220 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1220>`_)
+* improve docs around usage of extracted calibration info (`#1214 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1214>`_)
+* Contributors: Bence Magyar, Carter Sifferman
+
 3.0.0 (2024-12-18)
 ------------------
 * Freedrive Controller (`#1114 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1114>`_)
