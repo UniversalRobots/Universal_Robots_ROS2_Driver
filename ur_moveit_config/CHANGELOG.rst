@@ -2,6 +2,9 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.0.0 (2024-12-18)
 ------------------
 * Update package maintainers (`#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
