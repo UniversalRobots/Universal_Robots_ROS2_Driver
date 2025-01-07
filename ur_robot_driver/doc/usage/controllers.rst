@@ -110,3 +110,18 @@ Type: `position_controllers/JointGroupPositionController <https://control.ros.or
 Allows setting target joint velocities directly. The user is responsible for sending commands that
 are achievable. This controller is particularly useful when doing servoing such as
 ``moveit_servo``.
+
+force_mode_controller
+^^^^^^^^^^^^^^^^^^^^^
+
+Type: :ref:`ur_controllers/ForceModeController <force_mode_controller>`
+
+Allows utilizing the robot's builtin *Force Mode*.
+
+freedrive_mode_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Type: :ref:`ur_controllers/FreedriveModeController <freedrive_mode_controller>`
+
+Allows utilizing the robot's *Freedrive mode*, making it possible to manually move the robot's
+joints.

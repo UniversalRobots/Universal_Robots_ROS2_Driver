@@ -130,6 +130,7 @@ def launch_setup(context):
                     "force_torque_sensor_broadcaster",
                     "joint_state_broadcaster",
                     "speed_scaling_state_broadcaster",
+                    "tcp_pose_broadcaster",
                     "ur_configuration_controller",
                 ]
             },
@@ -166,6 +167,7 @@ def launch_setup(context):
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
+        "tcp_pose_broadcaster",
         "ur_configuration_controller",
     ]
     controllers_inactive = [
@@ -173,6 +175,9 @@ def launch_setup(context):
         "joint_trajectory_controller",
         "forward_velocity_controller",
         "forward_position_controller",
+        "force_mode_controller",
+        "passthrough_trajectory_controller",
+        "freedrive_mode_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
@@ -318,6 +323,8 @@ def generate_launch_description():
                 "joint_trajectory_controller",
                 "forward_velocity_controller",
                 "forward_position_controller",
+                "freedrive_mode_controller",
+                "passthrough_trajectory_controller",
             ],
             description="Initially loaded robot controller.",
         )

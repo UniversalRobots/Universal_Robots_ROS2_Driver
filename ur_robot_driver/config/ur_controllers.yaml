@@ -24,6 +24,18 @@ controller_manager:
     forward_position_controller:
       type: position_controllers/JointGroupPositionController
 
+    force_mode_controller:
+      type: ur_controllers/ForceModeController
+
+    freedrive_mode_controller:
+      type: ur_controllers/FreedriveModeController
+
+    passthrough_trajectory_controller:
+      type: ur_controllers/PassthroughTrajectoryController
+
+    tcp_pose_broadcaster:
+      type: pose_broadcaster/PoseBroadcaster
+
     ur_configuration_controller:
       type: ur_controllers/URConfigurationController
 
@@ -110,6 +122,21 @@ scaled_joint_trajectory_controller:
       $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
     speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
 
+passthrough_trajectory_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+    state_interfaces:
+      - position
+      - velocity
+    speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
+
 forward_velocity_controller:
   ros__parameters:
     joints:
@@ -130,3 +157,18 @@ forward_position_controller:
       - $(var tf_prefix)wrist_1_joint
       - $(var tf_prefix)wrist_2_joint
       - $(var tf_prefix)wrist_3_joint
+
+force_mode_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+freedrive_mode_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+tcp_pose_broadcaster:
+  ros__parameters:
+    frame_id: $(var tf_prefix)base
+    pose_name: $(var tf_prefix)tcp_pose
+    tf:
+      child_frame_id: $(var tf_prefix)tool0_controller

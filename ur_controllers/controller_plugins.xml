@@ -14,6 +14,21 @@
       This controller publishes the Tool IO.
     </description>
   </class>
+  <class name="ur_controllers/ForceModeController" type="ur_controllers::ForceModeController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to use UR's force_mode.
+    </description>
+  </class>
+  <class name="ur_controllers/FreedriveModeController" type="ur_controllers::FreedriveModeController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller handles the activation of the freedrive mode.
+    </description>
+  </class>
+  <class name="ur_controllers/PassthroughTrajectoryController" type="ur_controllers::PassthroughTrajectoryController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller forwards a joint-based trajectory to the robot controller for interpolation.
+    </description>
+  </class>
   <class name="ur_controllers/URConfigurationController" type="ur_controllers::URConfigurationController" base_class_type="controller_interface::ControllerInterface">
     <description>
       Controller used to get and change the configuration of the robot

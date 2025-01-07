@@ -69,10 +69,10 @@ Prepare the ROS PC
 For using the driver make sure it is installed (either by the debian package or built from source
 inside a colcon workspace).
 
+.. _calibration_extraction:
+
 Extract calibration information
 -------------------------------
-
-.. _calibration_extraction:
 
 Each UR robot is calibrated inside the factory giving exact forward and inverse kinematics. To also
 make use of this in ROS, you first have to extract the calibration information from the robot.
@@ -87,5 +87,11 @@ For this, there exists a helper script:
    $ ros2 launch ur_calibration calibration_correction.launch.py \
    robot_ip:=<robot_ip> target_filename:="${HOME}/my_robot_calibration.yaml"
 
+.. note::
+   The robot must be powered on (can be idle) before executing this script.
+
+
 For the parameter ``robot_ip`` insert the IP address on which the ROS pc can reach the robot. As
 ``target_filename`` provide an absolute path where the result will be saved to.
+
+See :ref:`ur_robot_driver_startup` for instructions on using the extracted calibration information.

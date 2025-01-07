@@ -135,3 +135,246 @@ Advertised services
 * ``~/set_speed_slider [ur_msgs/srv/SetSpeedSliderFraction]``: Set the value of the speed slider.
 * ``~/zero_ftsensor [std_srvs/srv/Trigger]``: Zeroes the reported wrench of the force torque
   sensor.
+
+.. _passthrough_trajectory_controller:
+
+ur_controllers/PassthroughTrajectoryController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller uses a ``control_msgs/FollowJointTrajectory`` action but instead of interpolating
+the trajectory on the ROS pc it forwards the complete trajectory to the robot controller for
+interpolation and execution. This way, the realtime requirements for the control PC can be
+massively decreased, since the robot always "knows" what to do next. That means that you should be
+able to run a stable driver connection also without a real-time patched kernel.
+
+Interpolation depends on the robot controller's implementation, but in conjunction with the
+ur_robot_driver it defaults to mimicking ros2_control's spline interpolation. So, any trajectory
+planned e.g. with MoveIt! will be executed following the trajectory exactly.
+
+A trajectory sent to the controller's action server will be forwarded to the robot controller and
+executed there. Once all setpoints are transferred to the robot, the controller goes into a waiting
+state where it waits for the trajectory to be finished. While waiting, the controller tracks the
+time spent on the trajectory to ensure the robot isn't stuck during execution.
+
+This controller also supports **speed scaling** such that and scaling down of the trajectory done
+by the robot, for example due to safety settings on the robot or simply because a slower execution
+is configured on the teach pendant. This will be considered, during execution monitoring, so the
+controller basically tracks the scaled time instead of the real time.
+
+.. note::
+
+   When using this controller with the URSim simulator execution times can be slightly larger than
+   the expected time depending on the simulation host's resources. This effect will not be present
+   when using a real UR arm.
+
+.. note::
+
+   This controller can currently only be used with URSim or a real UR robot. Neither mock hardware
+   nor gazebo support this type of trajectory interfaces at the time being.
+
+Tolerances
+""""""""""
+
+Currently, the trajectory passthrough controller only supports goal tolerances and goal time
+tolerances passed in the action directly. Please make sure that the tolerances are completely
+filled with all joint names.
+
+A **goal time tolerance** of ``0.0`` means that no goal time tolerance is set and the action will
+not fail when execution takes too long.
+
+Action interface / usage
+""""""""""""""""""""""""
+
+To use this controller, publish a goal to the ``~/follow_joint_trajectory`` action interface
+similar to the `joint_trajectory_controller <https://control.ros.org/master/doc/ros2_controllers/joint_trajectory_controller/doc/userdoc.html>`_.
+
+Currently, the controller doesn't support replacing a running trajectory action. While a trajectory
+is being executed, goals will be rejected until the action has finished. If you want to replace it,
+first cancel the running action and then send a new one.
+
+Parameters
+""""""""""
+
+The trajectory passthrough controller uses the following parameters:
+
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| Parameter name                   | Type         | Default value                          | Description                                                                                                      |
+|                                  |              |                                        |                                                                                                                  |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``joints`` (required)            | string_array | <empty>                                | Joint names to  listen to                                                                                        |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``state_interfaces`` (required)  | string_array | <empty>                                | State interfaces provided by the hardware for all joints. Subset of ``["position", "velocity", "acceleration"]`` |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``speed_scaling_interface_name`` | string       | ``speed_scaling/speed_scaling_factor`` | Fully qualified name of the speed scaling interface name.                                                        |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+| ``tf_prefix``                    | string       | <empty>                                | Urdf prefix of the corresponding arm                                                                             |
++----------------------------------+--------------+----------------------------------------+------------------------------------------------------------------------------------------------------------------+
+
+Interfaces
+""""""""""
+
+In order to use this, the hardware has to export a command interface for passthrough operations for each joint. It always has
+to export position, velocity and acceleration interfaces in order to be able to project the full
+JointTrajectory definition. This is why there are separate fields used, as for passthrough mode
+accelerations might be relevant also for robots that don't support commanding accelerations
+directly to their joints.
+
+.. code:: xml
+
+   <gpio name="${tf_prefix}trajectory_passthrough">
+     <command_interface name="setpoint_positions_0"/>
+     <command_interface name="setpoint_positions_1"/>
+     <command_interface name="setpoint_positions_2"/>
+     <command_interface name="setpoint_positions_3"/>
+     <command_interface name="setpoint_positions_4"/>
+     <command_interface name="setpoint_positions_5"/>
+     <command_interface name="setpoint_velocities_0"/>
+     <command_interface name="setpoint_velocities_1"/>
+     <command_interface name="setpoint_velocities_2"/>
+     <command_interface name="setpoint_velocities_3"/>
+     <command_interface name="setpoint_velocities_4"/>
+     <command_interface name="setpoint_velocities_5"/>
+     <command_interface name="setpoint_accelerations_0"/>
+     <command_interface name="setpoint_accelerations_1"/>
+     <command_interface name="setpoint_accelerations_2"/>
+     <command_interface name="setpoint_accelerations_3"/>
+     <command_interface name="setpoint_accelerations_4"/>
+     <command_interface name="setpoint_accelerations_5"/>
+     <command_interface name="transfer_state"/>
+     <command_interface name="time_from_start"/>
+     <command_interface name="abort"/>
+   </gpio>
+
+.. note::
+
+   The hardware component has to take care that the passthrough command interfaces cannot be
+   activated in parallel to the streaming command interfaces.
+
+Implementation details / dataflow
+"""""""""""""""""""""""""""""""""
+
+* A trajectory passed to the controller will be sent to the hardware component one by one.
+* The controller will send one setpoint and then wait for the hardware to acknowledge that it can
+  take a new setpoint.
+* This happens until all setpoints have been transferred to the hardware. Then, the controller goes
+  into a waiting state where it monitors execution time and waits for the hardware to finish
+  execution.
+* If execution takes longer than anticipated, a warning will be printed.
+* If execution finished taking longer than expected (plus the goal time tolerance), the action will fail.
+* When the hardware reports that execution has been aborted (The ``passthrough_trajectory_abort``
+  command interface), the action will be aborted.
+* When the action is preempted, execution on the hardware is preempted.
+
+.. _force_mode_controller:
+
+ur_controllers/ForceModeController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller activates the robot's *Force Mode*. This allows direct force control running on the
+robot control box. This controller basically interfaces the URScript function ``force_mode(...)``.
+
+Force mode can be combined with (and only with) the :ref:`passthrough trajectory controller
+<passthrough_trajectory_controller>` in order to execute motions under a given force constraints.
+
+.. note::
+   This is not an admittance controller, as given force constraints in a certain Cartesian
+   dimension will overwrite the motion commands in that dimension. E.g. when specifying a certain
+   force in the base frame's ``z`` direction, any motion resulting from the move command in the
+   base frame's ``z`` axis will not be executed.
+
+Parameters
+""""""""""
+
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+| Parameter name                   | Type   | Default value | Description                                                         |
+|                                  |        |               |                                                                     |
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``tf_prefix``                    | string | <empty>       | Urdf prefix of the corresponding arm                                |
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``check_io_successful_retries``  | int    | 10            | Amount of retries for checking if setting force_mode was successful |
++----------------------------------+--------+---------------+---------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+The controller provides two services: One for activating force_mode and one for leaving it. To use
+those services, the controller has to be in ``active`` state.
+
+* ``~/stop_force_mode [std_srvs/srv/Trigger]``: Stop force mode
+* ``~/start_force_mode [ur_msgs/srv/SetForceMode]``: Start force mode
+
+In ``ur_msgs/srv/SetForceMode`` the fields have the following meanings:
+
+task_frame
+   All information (selection vector, wrench, limits, etc) will be considered to be relative
+   to that pose. The pose's frame_id can be anything that is transformable to the robot's
+   ``base`` frame.
+selection_vector_<x,y,z,rx,ry,rz>
+   1 means that the robot will be compliant in the corresponding axis of the task frame.
+wrench
+   The forces/torques the robot will apply to its environment. The robot adjusts its position
+   along/about compliant axis in order to achieve the specified force/torque. Values have no effect for non-
+   compliant axes.
+   Actual wrench applied may be lower than requested due to joint safety limits.
+type
+   An integer [1;3] specifying how the robot interprets the force frame
+
+   1
+      The force frame is transformed in a way such that its y-axis is aligned with a vector pointing
+      from the robot tcp towards the origin of the force frame.
+   2
+      The force frame is not transformed.
+   3
+      The force frame is transformed in a way such that its x-axis is the projection of the robot tcp
+      velocity vector onto the x-y plane of the force frame.
+speed_limits
+   Maximum allowed tcp speed (relative to the task frame). This is **only relevant for axes marked as
+   compliant** in the selection_vector.
+deviation_limits
+   For **non-compliant axes**, these values are the maximum allowed deviation along/about an axis
+   between the actual tcp position and the one set by the program.
+damping_factor
+   Force mode damping factor. Sets the damping parameter in force mode. In range [0;1], default value is 0.025
+   A value of 1 is full damping, so the robot will decelerate quickly if no force is present. A value of 0
+   is no damping, here the robot will maintain the speed.
+gain_scaling
+   Force mode gain scaling factor. Scales the gain in force mode. scaling parameter is in range [0;2], default is 0.5.
+   A value larger than 1 can make force mode unstable, e.g. in case of collisions or pushing against hard surfaces.
+
+.. _freedrive_mode_controller:
+
+ur_controllers/FreedriveModeController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller activates the robot's *Freedrive Mode*, allowing to manually move the robot' joints.
+This controller can't be combined with any other motion controller.
+
+Parameters
+""""""""""
+
++----------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name       | Type   | Default value | Description                                                                           |
+|                      |        |               |                                                                                       |
++----------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``        | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++----------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``inactive_timeout`` | int    | 1             | Time interval (in seconds) of message inactivity after which freedrive is deactivated |
++----------------------+--------+---------------+---------------------------------------------------------------------------------------+
+
+Usage
+"""""
+
+The controller provides the ``~/enable_freedrive_mode`` topic of type ``[std_msgs/msg/Bool]`` for handling activation and deactivation:
+
+* to start and keep freedrive active, you'll have to frequently publish a ``True`` msg on the indicated topic.
+  If no further messages are received by the controller within the ``inactive_timeout`` seconds,
+  freedrive mode will be deactivated. Hence, it is recommended to publish a ``True`` message at least every
+  ``inactive_timeout/2`` seconds.
+
+  .. code-block::
+
+     ros2 topic pub --rate 2 /freedrive_mode_controller/enable_freedrive_mode std_msgs/msg/Bool "{data: true}"
+
+* to deactivate freedrive mode is enough to publish a ``False`` msg on the indicated topic or
+  to deactivate the controller or to stop publishing ``True`` on the enable topic and wait for the
+  controller timeout.

@@ -41,13 +41,10 @@
 #ifndef UR_CONTROLLERS__UR_CONFIGURATION_CONTROLLER_HPP_
 #define UR_CONTROLLERS__UR_CONFIGURATION_CONTROLLER_HPP_
 
-// TODO(fmauch): Currently, the realtime_box_best_effort doesn't include this
-#include <functional>
-#include <realtime_tools/realtime_box_best_effort.h>  // NOLINT
-
 #include <memory>
 
 #include <controller_interface/controller_interface.hpp>
+#include <realtime_tools/realtime_box.h>
 
 #include "ur_msgs/srv/get_robot_software_version.hpp"
 #include "ur_configuration_controller_parameters.hpp"
@@ -88,7 +85,7 @@ public:
   CallbackReturn on_init() override;
 
 private:
-  realtime_tools::RealtimeBoxBestEffort<std::shared_ptr<VersionInformation>> robot_software_version_{
+  realtime_tools::RealtimeBox<std::shared_ptr<VersionInformation>> robot_software_version_{
     std::make_shared<VersionInformation>()
   };
 

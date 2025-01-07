@@ -1,8 +1,6 @@
 name: Iron Semi Binary Build Testing
 on:
   workflow_dispatch:
-    branches:
-      - iron
   pull_request:
     branches:
       - iron
@@ -14,7 +12,7 @@ on:
     - cron: '13 5 * * *'
 
 jobs:
-  binary:
+  iron_semi_testing:
     uses: ./.github/workflows/reusable_ici.yml
     with:
       ros_distro: iron

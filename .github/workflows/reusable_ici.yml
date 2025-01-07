@@ -28,23 +28,39 @@ on:
         default: ''
         required: false
         type: string
+      ccache_dir:
+        description: 'CCache dir that should be used. Relative to github.workspace'
+        default: '.ccache'
+        required: false
+        type: string
 
 jobs:
   reusable_ici:
-    name: ${{ inputs.ros_distro }} ${{ inputs.ros_repo }} ${{ inputs.os_code_name }}
+    name: ${{ inputs.ros_distro }} ${{ inputs.ros_repo }}
     runs-on: ubuntu-latest
     env:
       DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
+      CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
+      CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}-${{ github.job }}
     steps:
-      - name: Checkout ${{ inputs.ref }} when build is not scheduled
+      - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
         uses: actions/checkout@v4
-      - name: Checkout ${{ inputs.ref }} on scheduled build
+      - name: Checkout ${{ inputs.ref_for_scheduled_build }} on scheduled build
         if: ${{ github.event_name == 'schedule' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_for_scheduled_build }}
       - run: docker network create --subnet=192.168.56.0/24 ursim_net
+        if: ${{ !env.ACT }}
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}
+            ccache-${{ env.CACHE_PREFIX }}
       - uses: 'ros-industrial/industrial_ci@master'
         env:
           UPSTREAM_WORKSPACE: ${{ inputs.upstream_workspace }}

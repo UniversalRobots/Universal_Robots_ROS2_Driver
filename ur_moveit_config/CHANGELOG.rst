@@ -2,6 +2,19 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.1 (2024-12-30)
+------------------
+
+3.0.0 (2024-12-18)
+------------------
+* Update package maintainers (`#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
+* Contributors: Felix Exner
+
+2.4.13 (2024-10-28)
+-------------------
+* Pass use_sim_time to MoveIt's RViz instance (`#1144 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1144>`_)
+* Contributors: Felix Exner (fexner)
+
 2.4.12 (2024-10-14)
 -------------------
 

@@ -1,3 +1,25 @@
+3.0.1 (2024-12-30)
+------------------
+* Remove unused include (`#1220 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1220>`_)
+* improve docs around usage of extracted calibration info (`#1214 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1214>`_)
+* Contributors: Bence Magyar, Carter Sifferman
+
+3.0.0 (2024-12-18)
+------------------
+* Freedrive Controller (`#1114 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1114>`_)
+* Fix running force_mode controller alongside passthrough trajectory controller (`#1210 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1210>`_)
+* Update package maintainers (`#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
+* Add force mode controller (`#1049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1049>`_)
+* Add trajectory passthrough controller (`#944 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/944>`_)
+* Use pose_broadcaster to publish the TCP pose (`#1108 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1108>`_)
+* Contributors: Felix Exner, URJala, Vincenzo Di Pentima
+
+2.4.13 (2024-10-28)
+-------------------
+* Fix component lifecycle (`#1098 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1098>`_)
+* Add missing state interfaces for get_robot_software_version (`#1153 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1153>`_)
+* Contributors: Felix Exner (fexner)
+
 2.4.12 (2024-10-14)
 -------------------
 * Revert "Add passthrough interfaces for joints (`#1121 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1121>`_)" (`#1151 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1151>`_)
