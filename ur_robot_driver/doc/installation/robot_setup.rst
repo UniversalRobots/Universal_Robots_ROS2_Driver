@@ -43,13 +43,13 @@ There are many possible ways to connect a UR robot. This section describes a goo
 
 * PolyScope 5.xx screen:
 
-.. image:: initial_setup_images/services_ps5_xx.png
+.. image:: initial_setup_images/services_polyscope5.png
       :width: 600
       :alt: Screenshot from PolyScope 5.xx services menu.
 
 * PolyScope X screen:
 
-.. image:: initial_setup_images/services_psx.jpg
+.. image:: initial_setup_images/services_polyscopex.jpg
    :width: 600
    :alt: Screenshot from PolyScope X screen.
 
