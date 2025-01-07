@@ -48,9 +48,17 @@ namespace ur_controllers
 class ToolContactController : public controller_interface::ChainableControllerInterface
 {
 public:
-  CallbackReturn on_init() override;
-  controller_interface::InterfaceConfiguration command_interface_configuration() override;
-  controller_interface::InterfaceConfiguration state_interface_configuration() override;
+  controller_interface::CallbackReturn on_init() override;
+
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
+
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
+
+  controller_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
+
+  controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
+
+  controller_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
 protected:
   /// Virtual method that each chainable controller should implement to export its read-only
