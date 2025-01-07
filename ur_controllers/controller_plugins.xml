@@ -34,4 +34,9 @@
       Controller used to get and change the configuration of the robot
     </description>
   </class>
+  <class name="ur_controllers/ToolContactController" type="ur_controllers::ToolContactController" base_class_type="controller_interface::ChainableControllerInterface">
+    <description>
+      Chainable controller to use the tool contact functionality of the robot.
+    </description>
+  </class>
 </library>
