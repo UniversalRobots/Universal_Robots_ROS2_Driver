@@ -99,6 +99,12 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   config.names.emplace_back(tf_prefix + "gpio/analog_output_domain_cmd");
 
+  // Gravity stuff
+  config.names.emplace_back(tf_prefix + "gravity/x");
+  config.names.emplace_back(tf_prefix + "gravity/y");
+  config.names.emplace_back(tf_prefix + "gravity/z");
+  config.names.emplace_back(tf_prefix + "gravity/gravity_async_success");
+
   return config;
 }
 
@@ -318,6 +324,9 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
         "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_gravity_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
+        "~/set_gravity", std::bind(&GPIOController::setGravity, this, std::placeholders::_1, std::placeholders::_2));
 
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
         "~/zero_ftsensor",
@@ -559,6 +568,36 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
     RCLCPP_INFO(get_node()->get_logger(), "Payload has been set successfully");
   } else {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not set the payload");
+    return false;
+  }
+
+  return true;
+}
+
+bool GPIOController::setGravity(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
+                                ur_msgs::srv::SetPayload::Response::SharedPtr resp)
+{
+  // reset success flag
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(req->center_of_gravity.x);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(req->center_of_gravity.y);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(req->center_of_gravity.z);
+
+  if (!waitForAsyncCommand([&]() {
+        return command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+      })) {
+    RCLCPP_WARN(get_node()->get_logger(), "Could not verify that gravity was set. (This might happen when using the "
+                                          "mocked interface)");
+  }
+
+  resp->success = static_cast<bool>(
+      command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
+
+  if (resp->success) {
+    RCLCPP_INFO(get_node()->get_logger(), "Gravity has been set successfully");
+  } else {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the gravity");
     return false;
   }
 

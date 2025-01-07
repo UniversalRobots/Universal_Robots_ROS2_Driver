@@ -290,6 +290,10 @@ protected:
   double force_mode_disable_cmd_;
   double force_mode_damping_;
   double force_mode_gain_scaling_;
+  
+  // Gravity stuff
+  urcl::vector3d_t gravity_vector_;
+  double gravity_async_success_;
 
   //*************** Motion primitives stuff ***************
   std::shared_ptr<urcl::InstructionExecutor> instruction_executor_;
