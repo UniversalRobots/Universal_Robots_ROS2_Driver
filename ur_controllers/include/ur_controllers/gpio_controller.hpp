@@ -81,6 +81,10 @@ enum CommandInterfaces
   HAND_BACK_CONTROL_CMD = 33,
   HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
   ANALOG_OUTPUTS_DOMAIN = 35,
+  GRAVITY_X = 36,
+  GRAVITY_Y = 37,
+  GRAVITY_Z = 38,
+  GRAVITY_ASYNC_SUCCESS = 39,
 };
 
 enum StateInterfaces
@@ -139,6 +143,9 @@ private:
   bool setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                   ur_msgs::srv::SetPayload::Response::SharedPtr resp);
 
+  bool setGravity(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
+                  ur_msgs::srv::SetPayload::Response::SharedPtr resp);
+
   bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
 
   void publishIO();
@@ -168,6 +175,7 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetAnalogOutput>::SharedPtr set_analog_output_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
+  rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_gravity_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
