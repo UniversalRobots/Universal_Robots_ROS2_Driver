@@ -50,6 +50,7 @@ namespace ur_calibration
 Calibration::Calibration(const DHRobot& robot_parameters) : robot_parameters_(robot_parameters)
 {
   buildChain();
+  correctChain();
 }
 
 Calibration::~Calibration()
