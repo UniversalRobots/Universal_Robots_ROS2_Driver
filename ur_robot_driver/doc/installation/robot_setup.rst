@@ -23,7 +23,7 @@ There are many possible ways to connect a UR robot. This section describes a goo
    Preferred DNS server: 192.168.1.1
    Alternative DNS server: 0.0.0.0
 
-* Enable remote control (Not applicable on Polyscope X versions)
+* Enable remote control (Not applicable on PolyScope X versions)
    #. Go to the hamburger menu -> settings.
    #. Go to System -> Remote control.
    #. Unlock the menu using the admin password, and enable Remote Control.
@@ -34,14 +34,14 @@ There are many possible ways to connect a UR robot. This section describes a goo
    :width: 600
    :alt: Screenshot showing remote control toggle.
 
-* **If using Polyscope 5.10 or greater:**
+* **If using PolyScope 5.10 or greater:**
    #. Go to the hamburger menu -> settings.
    #. Go to Security -> Services.
    #. Unlock the menu using the admin password.
-   #. Enable the Dashboard Server (Not applicable on Polyscope X versions), Primary Client Interface, Secondary Client Interface, Real-Time Clien Interface and Real-Time Data Exchange (RTDE) interfaces.
+   #. Enable the Dashboard Server (Not applicable on PolyScope X versions), Primary Client Interface, Secondary Client Interface and Real-Time Data Exchange (RTDE) interfaces.
    #. Lock the menu and press exit.
 
-* PolyScope 5.xx screen:
+* PolyScope 5 screen:
 
 .. image:: initial_setup_images/services_polyscope5.png
       :width: 600
