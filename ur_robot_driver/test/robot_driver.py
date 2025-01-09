@@ -56,16 +56,22 @@ from test_common import (  # noqa: E402
 )
 
 TIMEOUT_EXECUTE_TRAJECTORY = 30
+MOCK_HARDWARE = False
+
+def set_mock_hardware_flag(use_mock_hardware):
+    return use_mock_hardware=="true"
 
 
 @pytest.mark.launch_test
 @launch_testing.parametrize(
-    "tf_prefix",
-    [(""), ("my_ur_")],
+    "tf_prefix, use_mock_hardware, mock_sensor_commands",
+    [("", "false", "false"), ("my_ur_", "false", "false"), ("", "true", "true")]
 )
-def generate_test_description(tf_prefix):
-    return generate_driver_test_description(tf_prefix=tf_prefix)
 
+def generate_test_description(tf_prefix, use_mock_hardware, mock_sensor_commands):
+    global MOCK_HARDWARE 
+    MOCK_HARDWARE = set_mock_hardware_flag(use_mock_hardware)
+    return generate_driver_test_description(tf_prefix=tf_prefix, use_mock_hardware=use_mock_hardware, mock_sensor_commands=mock_sensor_commands)
 
 class RobotDriverTest(unittest.TestCase):
     @classmethod
@@ -83,7 +89,10 @@ class RobotDriverTest(unittest.TestCase):
         rclpy.shutdown()
 
     def init_robot(self):
-        self._dashboard_interface = DashboardInterface(self.node)
+        if(not MOCK_HARDWARE):
+            self._dashboard_interface = DashboardInterface(self.node)
+        else:
+            self._dashboard_interface = None
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._configuration_controller_interface = ConfigurationInterface(self.node)
@@ -100,7 +109,8 @@ class RobotDriverTest(unittest.TestCase):
         )
 
     def setUp(self):
-        self._dashboard_interface.start_robot()
+        if(self._dashboard_interface):
+            self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
@@ -372,6 +382,8 @@ class RobotDriverTest(unittest.TestCase):
     #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
 
     def test_passthrough_trajectory(self, tf_prefix):
+        if(MOCK_HARDWARE):
+            return True
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
