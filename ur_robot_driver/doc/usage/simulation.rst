@@ -43,6 +43,7 @@ environment for testing of "piping" of hardware and controllers, as well as test
 descriptions. For more details see `ros2_control documentation
 <https://control.ros.org/rolling/doc/ros2_control/hardware_interface/doc/mock_components_userdoc.html>`_
 for more details.
+
 .. note::
    Some driver functionalities currently don't work with mock hardware:
 
