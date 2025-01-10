@@ -402,11 +402,11 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
                                                                          &passthrough_trajectory_accelerations_[i]));
   }
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "start_tool_contact", "start_tool_contact_cmd", &start_tool_contact_cmd_));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "tool_contact", "enable_cmd", &tool_contact_enable_cmd_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "start_tool_contact", "start_tool_contact_async_success", &start_tool_contact_async_success_));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "tool_contact", "async_success", &tool_contact_async_success_));
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "end_tool_contact",
                                                                        "end_tool_contact_cmd", &end_tool_contact_cmd_));
@@ -583,6 +583,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   ur_driver_->registerTrajectoryDoneCallback(
       std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
 
+  ur_driver_->registerToolContactResultCallback(
+      std::bind(&URPositionHardwareInterface::tool_contact_callback, this, std::placeholders::_1));
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -740,7 +743,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       force_mode_disable_cmd_ = NO_NEW_CMD_;
       freedrive_mode_abort_ = NO_NEW_CMD_;
       freedrive_mode_enable_ = NO_NEW_CMD_;
-      start_tool_contact_cmd_ = NO_NEW_CMD_;
+      tool_contact_enable_cmd_ = NO_NEW_CMD_;
       end_tool_contact_cmd_ = NO_NEW_CMD_;
       initialized_ = true;
     }
@@ -906,9 +909,16 @@ void URPositionHardwareInterface::checkAsyncIO()
     freedrive_mode_abort_ = NO_NEW_CMD_;
   }
 
-  if (!std::isnan(start_tool_contact_cmd_) && ur_driver_ != nullptr) {
-    start_tool_contact_async_success_ = ur_driver_->startToolContact();
-    start_tool_contact_cmd_ = NO_NEW_CMD_;
+  if (!std::isnan(tool_contact_enable_cmd_) && ur_driver_ != nullptr) {
+    if (tool_contact_enable_cmd_ == 1.0) {
+      tool_contact_async_success_ = static_cast<double>(ur_driver_->startToolContact());
+      tool_contact_enable_cmd_ = NO_NEW_CMD_;
+      std::cout << "--------------Enabled tool contact --------------------------" << std::endl;
+    } else if (tool_contact_enable_cmd_ == 0.0) {
+      tool_contact_async_success_ = static_cast<double>(ur_driver_->endToolContact());
+      tool_contact_enable_cmd_ = NO_NEW_CMD_;
+      std::cout << "--------------Disabled tool contact --------------------------" << std::endl;
+    }
   }
 
   if (!std::isnan(end_tool_contact_cmd_) && ur_driver_ != nullptr) {
@@ -1362,6 +1372,12 @@ void URPositionHardwareInterface::trajectory_done_callback(urcl::control::Trajec
     passthrough_trajectory_abort_ = 0.0;
   }
   passthrough_trajectory_transfer_state_ = 5.0;
+  return;
+}
+
+void URPositionHardwareInterface::tool_contact_callback(urcl::control::ToolContactResult result)
+{
+  std::cout << "-------------------Tool contact callback activated-----------------------------" << std::endl;
   return;
 }
 

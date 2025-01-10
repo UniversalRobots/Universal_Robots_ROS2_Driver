@@ -42,6 +42,9 @@
 #define UR_CONTROLLERS__TOOL_CONTACT_CONTROLLER_HPP_
 
 #include <controller_interface/chainable_controller_interface.hpp>
+#include "std_msgs/msg/bool.hpp"
+
+#include "tool_contact_controller_parameters.hpp"
 
 namespace ur_controllers
 {
@@ -120,6 +123,29 @@ protected:
    */
   controller_interface::return_type update_and_write_commands(const rclcpp::Time& time,
                                                               const rclcpp::Duration& period) override;
+
+private:
+  double tool_contact_enable;
+  double tool_contact_active;
+
+  std::atomic<bool> tool_contact_active_ = false;
+  std::atomic<bool> change_requested_ = false;
+
+  double old_reference_val = 0.0;
+
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> async_success_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> enable_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> reference_interface_;
+
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr tool_contact_enable_sub_;
+
+  std::shared_ptr<tool_contact_controller::ParamListener> tool_contact_param_listener_;
+  tool_contact_controller::Params tool_contact_params_;
+
+  void tool_contact_sub_callback(const std_msgs::msg::Bool::SharedPtr msg);
+
+  static constexpr double ASYNC_WAITING = 2.0;
+  static constexpr double ASYNC_STANDBY_ = std::numeric_limits<double>::quiet_NaN();
 };
 }  // namespace ur_controllers
 

@@ -165,6 +165,7 @@ protected:
   void trajectory_done_callback(urcl::control::TrajectoryResult result);
   bool has_accelerations(std::vector<std::array<double, 6>> accelerations);
   bool has_velocities(std::vector<std::array<double, 6>> velocities);
+  void tool_contact_callback(urcl::control::ToolContactResult);
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -223,8 +224,8 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   std::atomic_bool async_thread_shutdown_;
-  double start_tool_contact_cmd_;
-  double start_tool_contact_async_success_;
+  double tool_contact_enable_cmd_;
+  double tool_contact_async_success_;
   double end_tool_contact_cmd_;
   double end_tool_contact_async_success_;
   double get_robot_software_version_major_;

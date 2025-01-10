@@ -231,9 +231,9 @@
         <command_interface name="abort"/>
       </gpio>
 
-      <gpio name="${tf_prefix}start_tool_contact">
-        <command_interface name="start_tool_contact_cmd"/>
-        <command_interface name="start_tool_contact_async_success"/>
+      <gpio name="${tf_prefix}tool_contact">
+        <command_interface name="enable_cmd"/>
+        <command_interface name="async_success"/>
       </gpio>
 
       <gpio name="${tf_prefix}end_tool_contact">
