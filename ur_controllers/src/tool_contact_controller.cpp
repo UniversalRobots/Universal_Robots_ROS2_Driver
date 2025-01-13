@@ -85,20 +85,22 @@ controller_interface::InterfaceConfiguration ToolContactController::state_interf
 
 controller_interface::CallbackReturn ToolContactController::on_activate(const rclcpp_lifecycle::State& previous_state)
 {
-  tool_contact_enable_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(
-      "~/enable_tool_contact", 10,
-      std::bind(&ToolContactController::tool_contact_sub_callback, this, std::placeholders::_1));
+  tool_contact_action_server_ = rclcpp_action::create_server<ur_msgs::action::ToolContact>(
+      get_node(), std::string(get_node()->get_name()) + "/enable_tool_contact",
+      std::bind(&ToolContactController::goal_received_callback, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&ToolContactController::goal_cancelled_callback, this, std::placeholders::_1),
+      std::bind(&ToolContactController::goal_accepted_callback, this, std::placeholders::_1));
 
   /*Figure out how to get reference interface by name*/
-  // const std::string interface_name = tool_contact_params_.tf_prefix + get_node()->get_name() + "tool_contact/enable";
-  // auto it = std::find_if(reference_interfaces_.begin(), reference_interfaces_.end(),
+  // const std::string interface_name = tool_contact_params_.tf_prefix + get_node()->get_name() +
+  // "tool_contact/enable"; auto it = std::find_if(reference_interfaces_.begin(), reference_interfaces_.end(),
   //                        [&](auto& interface) { return (interface.get_name() == interface_name); });
   // if (it != reference_interfaces_.end()) {
   //   reference_interface_ = *it;
   //   reference_interface_->get().set_value(0.0);
   // } else {
-  //   RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
-  //   return controller_interface::CallbackReturn::ERROR;
+  //   RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.",
+  //   interface_name.c_str()); return controller_interface::CallbackReturn::ERROR;
   // }
   reference_interfaces_[0] = 0.0;
   {
@@ -131,7 +133,7 @@ controller_interface::CallbackReturn ToolContactController::on_activate(const rc
 
 controller_interface::CallbackReturn ToolContactController::on_deactivate(const rclcpp_lifecycle::State& previous_state)
 {
-  tool_contact_enable_sub_.reset();
+  tool_contact_action_server_.reset();
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -174,15 +176,33 @@ std::vector<hardware_interface::StateInterface> ToolContactController::on_export
 bool ToolContactController::on_set_chained_mode(bool chained_mode)
 {
   if (chained_mode) {
-    tool_contact_enable_sub_.reset();
+    tool_contact_action_server_.reset();
   } else {
-    tool_contact_enable_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>(
-        "~/enable_tool_contact", 10,
-        std::bind(&ToolContactController::tool_contact_sub_callback, this, std::placeholders::_1));
+    // tool_contact_action_server_ = get_node()->create_subscription<std_msgs::msg::Bool>(
+    //     "~/enable_tool_contact", 10,
+    //     std::bind(&ToolContactController::tool_contact_sub_callback, this, std::placeholders::_1));
   }
   change_requested_ = false;
   tool_contact_active_ = false;
   return true;
+}
+
+rclcpp_action::GoalResponse ToolContactController::goal_received_callback(
+    const rclcpp_action::GoalUUID& /*uuid*/, std::shared_ptr<const ur_msgs::action::ToolContact::Goal> goal)
+{
+  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
+
+void ToolContactController::goal_accepted_callback(
+    std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle)
+{
+  return;
+}
+
+rclcpp_action::CancelResponse ToolContactController::goal_cancelled_callback(
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle)
+{
+  return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 controller_interface::return_type

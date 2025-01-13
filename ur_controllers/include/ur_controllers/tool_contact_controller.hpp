@@ -43,7 +43,12 @@
 
 #include <controller_interface/chainable_controller_interface.hpp>
 #include "std_msgs/msg/bool.hpp"
+#include <rclcpp_action/server.hpp>
+#include <rclcpp_action/create_server.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/server_goal_handle.hpp>
 
+#include <ur_msgs/action/tool_contact.hpp>
 #include "tool_contact_controller_parameters.hpp"
 
 namespace ur_controllers
@@ -125,6 +130,15 @@ protected:
                                                               const rclcpp::Duration& period) override;
 
 private:
+  rclcpp_action::GoalResponse goal_received_callback(const rclcpp_action::GoalUUID& /*uuid*/,
+                                                     std::shared_ptr<const ur_msgs::action::ToolContact::Goal> goal);
+
+  void
+  goal_accepted_callback(std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
+
+  rclcpp_action::CancelResponse goal_cancelled_callback(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
+
   double tool_contact_enable;
   double tool_contact_active;
 
@@ -137,7 +151,7 @@ private:
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> enable_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> reference_interface_;
 
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr tool_contact_enable_sub_;
+  rclcpp_action::Server<ur_msgs::action::ToolContact>::SharedPtr tool_contact_action_server_;
 
   std::shared_ptr<tool_contact_controller::ParamListener> tool_contact_param_listener_;
   tool_contact_controller::Params tool_contact_params_;
