@@ -355,8 +355,17 @@ def launch_setup(context, *args, **kwargs):
         controllers_active.append(initial_joint_controller.perform(context))
         controllers_inactive.remove(initial_joint_controller.perform(context))
 
+<<<<<<< HEAD
     controller_spawners = [controller_spawner(controllers_active)] + [
         controller_spawner(controllers_inactive, active=False)
+=======
+    if use_mock_hardware.perform(context) == "true":
+        controllers_active.remove("tcp_pose_broadcaster")
+
+    controller_spawners = [
+        controller_spawner(controllers_active),
+        controller_spawner(controllers_inactive, active=False),
+>>>>>>> 79252cf (Disable pose broadcaster on mock hardware (#1229))
     ]
 
     nodes_to_start = [
