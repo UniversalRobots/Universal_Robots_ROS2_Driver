@@ -43,9 +43,6 @@
 
 #include <stdint.h>
 
-#include <realtime_tools/realtime_buffer.h>
-#include <realtime_tools/realtime_server_goal_handle.h>
-
 #include <functional>
 #include <limits>
 #include <memory>
@@ -54,6 +51,8 @@
 #include <vector>
 
 #include <controller_interface/controller_interface.hpp>
+#include <realtime_tools/realtime_buffer.hpp>
+#include <realtime_tools/realtime_server_goal_handle.hpp>
 #include <rclcpp_action/server.hpp>
 #include <rclcpp_action/create_server.hpp>
 #include <rclcpp/rclcpp.hpp>
