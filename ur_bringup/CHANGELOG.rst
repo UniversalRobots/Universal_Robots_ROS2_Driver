@@ -88,7 +88,7 @@ Changelog for package ur_bringup
 * Update MoveIt file for working with simulation. (`#278 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/278>`_)
 * Start the tool communication script if the flag is set (`#267 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/267>`_)
 * Used ``spawner`` instead of ``spanwer.py`` in launch files (`#293 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/293>`_)
-* Do not start dashboard client if FakeHardware simuation is used. (`#286 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/286>`_)
+* Do not start dashboard client if FakeHardware simulation is used. (`#286 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/286>`_)
 * Use scaled trajectory controller per default. (`#287 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/287>`_)
 * Separate control node (`#281 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/281>`_)
 * Fix launch file arguments. (`#243 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/243>`_)
