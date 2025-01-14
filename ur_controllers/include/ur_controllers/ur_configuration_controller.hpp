@@ -44,7 +44,7 @@
 #include <memory>
 
 #include <controller_interface/controller_interface.hpp>
-#include <realtime_tools/realtime_box.h>
+#include <realtime_tools/realtime_box.hpp>
 
 #include "ur_msgs/srv/get_robot_software_version.hpp"
 #include "ur_configuration_controller_parameters.hpp"
