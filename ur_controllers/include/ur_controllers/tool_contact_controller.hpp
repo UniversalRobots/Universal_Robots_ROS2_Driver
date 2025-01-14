@@ -41,12 +41,18 @@
 #ifndef UR_CONTROLLERS__TOOL_CONTACT_CONTROLLER_HPP_
 #define UR_CONTROLLERS__TOOL_CONTACT_CONTROLLER_HPP_
 
+#include <chrono>
+
 #include <controller_interface/chainable_controller_interface.hpp>
 #include "std_msgs/msg/bool.hpp"
 #include <rclcpp_action/server.hpp>
 #include <rclcpp_action/create_server.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/server_goal_handle.hpp>
+#include <rclcpp/duration.hpp>
+
+#include <realtime_tools/realtime_buffer.hpp>
+#include <realtime_tools/realtime_server_goal_handle.hpp>
 
 #include <ur_msgs/action/tool_contact.hpp>
 #include "tool_contact_controller_parameters.hpp"
@@ -130,6 +136,14 @@ protected:
                                                               const rclcpp::Duration& period) override;
 
 private:
+  using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<ur_msgs::action::ToolContact>;
+  using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
+  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
+
+  RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
+  rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
+  rclcpp::Duration action_monitor_period_ = rclcpp::Duration(std::chrono::milliseconds(50));
+
   rclcpp_action::GoalResponse goal_received_callback(const rclcpp_action::GoalUUID& /*uuid*/,
                                                      std::shared_ptr<const ur_msgs::action::ToolContact::Goal> goal);
 
@@ -139,16 +153,19 @@ private:
   rclcpp_action::CancelResponse goal_cancelled_callback(
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
 
+  void failed_update();
+
   double tool_contact_enable;
   double tool_contact_active;
 
   std::atomic<bool> tool_contact_active_ = false;
   std::atomic<bool> change_requested_ = false;
+  std::atomic<bool> logged_once_ = false;
 
   double old_reference_val = 0.0;
 
-  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> async_success_interface_;
-  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> enable_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_result_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> tool_contact_status_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> reference_interface_;
 
   rclcpp_action::Server<ur_msgs::action::ToolContact>::SharedPtr tool_contact_action_server_;
@@ -156,10 +173,13 @@ private:
   std::shared_ptr<tool_contact_controller::ParamListener> tool_contact_param_listener_;
   tool_contact_controller::Params tool_contact_params_;
 
-  void tool_contact_sub_callback(const std_msgs::msg::Bool::SharedPtr msg);
-
-  static constexpr double ASYNC_WAITING = 2.0;
-  static constexpr double ASYNC_STANDBY_ = std::numeric_limits<double>::quiet_NaN();
+  static constexpr double TOOL_CONTACT_STANDBY = 1.0;
+  static constexpr double TOOL_CONTACT_WAITING_BEGIN = 2.0;
+  static constexpr double TOOL_CONTACT_EXECUTING = 3.0;
+  static constexpr double TOOL_CONTACT_FAILURE_BEGIN = 4.0;
+  static constexpr double TOOL_CONTACT_WAITING_END = 5.0;
+  static constexpr double TOOL_CONTACT_SUCCESS_END = 6.0;
+  static constexpr double TOOL_CONTACT_FAILURE_END = 7.0;
 };
 }  // namespace ur_controllers
 

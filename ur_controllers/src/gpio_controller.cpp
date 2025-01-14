@@ -565,60 +565,6 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
   return true;
 }
 
-// bool GPIOController::startToolContact(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
-//                                       std_srvs::srv::Trigger::Response::SharedPtr resp)
-// {
-//   // reset success flag
-//   command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-
-//   // call the service in the hardware
-//   command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_CMD].set_value(1.0);
-
-//   if (!waitForAsyncCommand(
-//           [&]() { return command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_ASYNC_SUCCESS].get_value(); })) {
-//     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that tool contact was started.");
-//   }
-
-//   resp->success =
-//       static_cast<bool>(command_interfaces_[CommandInterfaces::START_TOOL_CONTACT_ASYNC_SUCCESS].get_value());
-
-//   if (resp->success) {
-//     RCLCPP_INFO(get_node()->get_logger(), "Successfully started tool contact");
-//   } else {
-//     RCLCPP_ERROR(get_node()->get_logger(), "Could not start tool contact");
-//     return false;
-//   }
-
-//   return true;
-// }
-
-// bool GPIOController::endToolContact(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
-//                                     std_srvs::srv::Trigger::Response::SharedPtr resp)
-// {
-//   // reset success flag
-//   command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-
-//   // call the service in the hardware
-//   command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_CMD].set_value(1.0);
-
-//   if (!waitForAsyncCommand(
-//           [&]() { return command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_ASYNC_SUCCESS].get_value(); })) {
-//     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that tool contact was stopped.");
-//   }
-
-//   resp->success =
-//   static_cast<bool>(command_interfaces_[CommandInterfaces::END_TOOL_CONTACT_ASYNC_SUCCESS].get_value());
-
-//   if (resp->success) {
-//     RCLCPP_INFO(get_node()->get_logger(), "Successfully stopped tool contact");
-//   } else {
-//     RCLCPP_ERROR(get_node()->get_logger(), "Could not stop tool contact");
-//     return false;
-//   }
-
-//   return true;
-// }
-
 void GPIOController::initMsgs()
 {
   io_msg_.digital_in_states.resize(standard_digital_output_cmd_.size());

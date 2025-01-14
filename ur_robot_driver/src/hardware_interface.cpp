@@ -96,6 +96,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
+  tool_contact_result_ = NO_NEW_CMD_;
   trajectory_joint_positions_.clear();
   trajectory_joint_velocities_.clear();
   trajectory_joint_accelerations_.clear();
@@ -268,6 +269,9 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(hardware_interface::StateInterface(
       tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
 
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "tool_contact", "tool_contact_result", &tool_contact_result_));
+
   return state_interfaces;
 }
 
@@ -403,16 +407,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   }
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "tool_contact", "enable_cmd", &tool_contact_enable_cmd_));
+      hardware_interface::CommandInterface(tf_prefix + "tool_contact", "tool_contact_status", &tool_contact_status_));
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "tool_contact", "async_success", &tool_contact_async_success_));
-
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "end_tool_contact",
-                                                                       "end_tool_contact_cmd", &end_tool_contact_cmd_));
-
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "end_tool_contact", "end_tool_contact_async_success", &end_tool_contact_async_success_));
   return command_interfaces;
 }
 
@@ -743,8 +739,9 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       force_mode_disable_cmd_ = NO_NEW_CMD_;
       freedrive_mode_abort_ = NO_NEW_CMD_;
       freedrive_mode_enable_ = NO_NEW_CMD_;
-      tool_contact_enable_cmd_ = NO_NEW_CMD_;
-      end_tool_contact_cmd_ = NO_NEW_CMD_;
+      tool_contact_result_ = NO_NEW_CMD_;
+      tool_contact_status_ = NO_NEW_CMD_;
+      tool_contact_controller_running_ = true;
       initialized_ = true;
     }
 
@@ -789,6 +786,10 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       start_force_mode();
     } else if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
       stop_force_mode();
+    }
+
+    if (tool_contact_controller_running_) {
+      check_tool_contact_controller();
     }
 
     packet_read_ = false;
@@ -908,23 +909,39 @@ void URPositionHardwareInterface::checkAsyncIO()
     freedrive_activated_ = false;
     freedrive_mode_abort_ = NO_NEW_CMD_;
   }
+}
 
-  if (!std::isnan(tool_contact_enable_cmd_) && ur_driver_ != nullptr) {
-    if (tool_contact_enable_cmd_ == 1.0) {
-      tool_contact_async_success_ = static_cast<double>(ur_driver_->startToolContact());
-      tool_contact_enable_cmd_ = NO_NEW_CMD_;
-      std::cout << "--------------Enabled tool contact --------------------------" << std::endl;
-    } else if (tool_contact_enable_cmd_ == 0.0) {
-      tool_contact_async_success_ = static_cast<double>(ur_driver_->endToolContact());
-      tool_contact_enable_cmd_ = NO_NEW_CMD_;
-      std::cout << "--------------Disabled tool contact --------------------------" << std::endl;
+void URPositionHardwareInterface::check_tool_contact_controller()
+{
+  if (ur_driver_ != nullptr) {
+    if (tool_contact_status_ == 2.0) {
+      bool success = static_cast<double>(ur_driver_->startToolContact());
+      if (success) {
+        // TOOL_CONTACT_EXECUTING
+        tool_contact_status_ = 3.0;
+        tool_contact_result_ = 3.0;
+      } else {
+        // TOOL_CONTACT_FAILURE_BEGIN
+        tool_contact_status_ = 4.0;
+      }
+
+    } else if (tool_contact_status_ == 5.0) {
+      bool success = static_cast<double>(ur_driver_->endToolContact());
+      if (success) {
+        // TOOL_CONTACT_SUCCESS_END
+        tool_contact_status_ = 6.0;
+      } else {
+        // TOOL_CONTACT_FAILURE_END
+        tool_contact_status_ = 7.0;
+      }
     }
   }
+}
 
-  if (!std::isnan(end_tool_contact_cmd_) && ur_driver_ != nullptr) {
-    end_tool_contact_async_success_ = ur_driver_->endToolContact();
-    end_tool_contact_cmd_ = NO_NEW_CMD_;
-  }
+void URPositionHardwareInterface::tool_contact_callback(urcl::control::ToolContactResult result)
+{
+  tool_contact_result_ = static_cast<double>(result);
+  return;
 }
 
 void URPositionHardwareInterface::updateNonDoubleValues()
@@ -1372,12 +1389,6 @@ void URPositionHardwareInterface::trajectory_done_callback(urcl::control::Trajec
     passthrough_trajectory_abort_ = 0.0;
   }
   passthrough_trajectory_transfer_state_ = 5.0;
-  return;
-}
-
-void URPositionHardwareInterface::tool_contact_callback(urcl::control::ToolContactResult result)
-{
-  std::cout << "-------------------Tool contact callback activated-----------------------------" << std::endl;
   return;
 }
 
