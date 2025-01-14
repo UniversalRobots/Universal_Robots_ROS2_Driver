@@ -355,7 +355,7 @@ def launch_setup(context, *args, **kwargs):
         controllers_active.append(initial_joint_controller.perform(context))
         controllers_inactive.remove(initial_joint_controller.perform(context))
 
-    if use_mock_hardware.perform(context) == "true":
+    if use_fake_hardware.perform(context) == "true":
         controllers_active.remove("tcp_pose_broadcaster")
 
     controller_spawners = [
