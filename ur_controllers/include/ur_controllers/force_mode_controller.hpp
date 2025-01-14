@@ -47,7 +47,7 @@
 #include <std_srvs/srv/trigger.hpp>
 #include <ur_msgs/srv/set_force_mode.hpp>
 
-#include "force_mode_controller_parameters.hpp"
+#include "ur_controllers/force_mode_controller_parameters.hpp"
 
 namespace ur_controllers
 {
