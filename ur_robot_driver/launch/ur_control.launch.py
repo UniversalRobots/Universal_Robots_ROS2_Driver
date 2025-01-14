@@ -355,8 +355,12 @@ def launch_setup(context, *args, **kwargs):
         controllers_active.append(initial_joint_controller.perform(context))
         controllers_inactive.remove(initial_joint_controller.perform(context))
 
-    controller_spawners = [controller_spawner(controllers_active)] + [
-        controller_spawner(controllers_inactive, active=False)
+    if use_fake_hardware.perform(context) == "true":
+        controllers_active.remove("tcp_pose_broadcaster")
+
+    controller_spawners = [
+        controller_spawner(controllers_active),
+        controller_spawner(controllers_inactive, active=False),
     ]
 
     nodes_to_start = [
