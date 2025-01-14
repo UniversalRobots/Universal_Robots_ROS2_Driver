@@ -407,7 +407,7 @@ bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::Sha
       return false;
   }
 
-  if (req->data.pin < 0 || req->data.pin > 1) {
+  if (!(req->data.pin == 0 || req->data.pin == 1)) {
     RCLCPP_ERROR(get_node()->get_logger(), "Invalid pin selected. Only pins 0 and 1 are allowed.");
     resp->success = false;
     return false;
