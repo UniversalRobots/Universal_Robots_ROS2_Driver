@@ -38,7 +38,7 @@ controller_manager:
 
     ur_configuration_controller:
       type: ur_controllers/URConfigurationController
-    
+
     tool_contact_controller:
       type: ur_controllers/ToolContactController
 
