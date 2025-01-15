@@ -44,7 +44,6 @@
 #include <rclcpp/logging.hpp>
 #include "std_msgs/msg/bool.hpp"
 #include <lifecycle_msgs/msg/state.hpp>
-#include <iostream>
 
 namespace ur_controllers
 {
@@ -89,6 +88,7 @@ controller_interface::InterfaceConfiguration ToolContactController::state_interf
 
   const std::string tf_prefix = tool_contact_params_.tf_prefix;
   config.names.push_back(tf_prefix + "tool_contact/tool_contact_result");
+  config.names.push_back(tf_prefix + "get_robot_software_version/get_version_major");
   return config;
 }
 
@@ -139,6 +139,27 @@ ToolContactController::on_activate(const rclcpp_lifecycle::State& /* previous_st
       RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in state interfaces.", interface_name.c_str());
       return controller_interface::CallbackReturn::ERROR;
     }
+  }
+  {
+    const std::string interface_name = tool_contact_params_.tf_prefix + "get_robot_software_version/get_version_major";
+    auto it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != state_interfaces_.end()) {
+      tool_contact_version_interface_ = *it;
+      if (!tool_contact_result_interface_->get().get_value()) {
+        RCLCPP_ERROR(get_node()->get_logger(),
+                     "Failed to read '%s' state interface, aborting activation of controller.", interface_name.c_str());
+        return controller_interface::CallbackReturn::ERROR;
+      }
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in state interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+  if (tool_contact_version_interface_->get().get_value() < 5) {
+    RCLCPP_ERROR(get_node()->get_logger(), "This feature is not supported on CB3 robots, controller will not be "
+                                           "started.");
+    return controller_interface::CallbackReturn::ERROR;
   }
 
   return controller_interface::CallbackReturn::SUCCESS;

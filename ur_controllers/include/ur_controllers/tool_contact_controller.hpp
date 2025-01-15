@@ -42,6 +42,8 @@
 #define UR_CONTROLLERS__TOOL_CONTACT_CONTROLLER_HPP_
 
 #include <chrono>
+#include <vector>
+#include <memory>
 
 #include <controller_interface/chainable_controller_interface.hpp>
 #include "std_msgs/msg/bool.hpp"
@@ -165,6 +167,7 @@ private:
   double old_reference_val = 0.0;
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_result_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_version_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> tool_contact_status_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> reference_interface_;
 
@@ -183,4 +186,4 @@ private:
 };
 }  // namespace ur_controllers
 
-#endif
+#endif  // UR_CONTROLLERS__TOOL_CONTACT_CONTROLLER_HPP_
