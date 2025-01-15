@@ -45,13 +45,13 @@ repos:
         args: ["--line-length=100"]
 
   - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.1.1
+    rev: 6.3.0
     hooks:
     - id: pydocstyle
       args: ["--ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D212,D401,D404"]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 3.9.0
+    rev: 7.1.1
     hooks:
     - id: flake8
       args: ["--ignore=E501,W503"]
@@ -126,7 +126,7 @@ repos:
         args: ['--max-line-length=100', '--ignore=D001']
 
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.8.0
+    rev: v1.10.0
     hooks:
       - id: rst-backticks
       - id: rst-directive-colons
@@ -135,8 +135,8 @@ repos:
   # Spellcheck in comments and docs
   # skipping of *.svg files is not working...
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.0.0
+    rev: v2.3.0
     hooks:
       - id: codespell
-        args: ['--write-changes']
+        args: ['--write-changes', '-L bootup,assertIn']
         exclude: \.(svg|pyc|drawio)$
