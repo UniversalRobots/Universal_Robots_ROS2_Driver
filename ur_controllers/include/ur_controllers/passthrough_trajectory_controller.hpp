@@ -64,7 +64,7 @@
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
-#include "passthrough_trajectory_controller_parameters.hpp"
+#include "ur_controllers/passthrough_trajectory_controller_parameters.hpp"
 
 namespace ur_controllers
 {

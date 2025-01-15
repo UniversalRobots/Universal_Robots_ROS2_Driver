@@ -50,7 +50,7 @@
 #include <controller_interface/controller_interface.hpp>
 
 #include "ur_msgs/srv/get_robot_software_version.hpp"
-#include "ur_configuration_controller_parameters.hpp"
+#include "ur_controllers/ur_configuration_controller_parameters.hpp"
 
 namespace ur_controllers
 {

@@ -48,7 +48,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/float64.hpp"
-#include "speed_scaling_state_broadcaster_parameters.hpp"
+#include "ur_controllers/speed_scaling_state_broadcaster_parameters.hpp"
 
 namespace ur_controllers
 {
