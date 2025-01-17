@@ -156,7 +156,9 @@ controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   // Stop force mode if this controller is deactivated.
-  command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0);
+  if (!command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0)) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -175,53 +177,79 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
 
   // Publish state of force_mode?
   if (change_requested_) {
+    bool write_successful = true;
     if (force_mode_active_) {
       const auto force_mode_parameters = force_mode_params_buffer_.readFromRT();
-      command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_X].set_value(force_mode_parameters->task_frame[0]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_Y].set_value(force_mode_parameters->task_frame[1]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_Z].set_value(force_mode_parameters->task_frame[2]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RX].set_value(force_mode_parameters->task_frame[3]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RY].set_value(force_mode_parameters->task_frame[4]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RZ].set_value(force_mode_parameters->task_frame[5]);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_X].set_value(
+          force_mode_parameters->task_frame[0]);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_Y].set_value(
+          force_mode_parameters->task_frame[1]);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_Z].set_value(
+          force_mode_parameters->task_frame[2]);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RX].set_value(
+          force_mode_parameters->task_frame[3]);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RY].set_value(
+          force_mode_parameters->task_frame[4]);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_RZ].set_value(
+          force_mode_parameters->task_frame[5]);
 
-      command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_X].set_value(
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_X].set_value(
           force_mode_parameters->selection_vec[0]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Y].set_value(
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Y].set_value(
           force_mode_parameters->selection_vec[1]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Z].set_value(
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_Z].set_value(
           force_mode_parameters->selection_vec[2]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RX].set_value(
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RX].set_value(
           force_mode_parameters->selection_vec[3]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RY].set_value(
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RY].set_value(
           force_mode_parameters->selection_vec[4]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RZ].set_value(
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_SELECTION_VECTOR_RZ].set_value(
           force_mode_parameters->selection_vec[5]);
 
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(force_mode_parameters->wrench.force.x);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(force_mode_parameters->wrench.force.y);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(force_mode_parameters->wrench.force.z);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(force_mode_parameters->wrench.torque.x);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(force_mode_parameters->wrench.torque.y);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(force_mode_parameters->wrench.torque.z);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_X].set_value(force_mode_parameters->wrench.force.x);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Y].set_value(force_mode_parameters->wrench.force.y);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_Z].set_value(force_mode_parameters->wrench.force.z);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RX].set_value(
+          force_mode_parameters->wrench.torque.x);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RY].set_value(
+          force_mode_parameters->wrench.torque.y);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_WRENCH_RZ].set_value(
+          force_mode_parameters->wrench.torque.z);
 
-      command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X].set_value(force_mode_parameters->limits[0]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Y].set_value(force_mode_parameters->limits[1]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Z].set_value(force_mode_parameters->limits[2]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RX].set_value(force_mode_parameters->limits[3]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RY].set_value(force_mode_parameters->limits[4]);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RZ].set_value(force_mode_parameters->limits[5]);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_X].set_value(force_mode_parameters->limits[0]);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Y].set_value(force_mode_parameters->limits[1]);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_Z].set_value(force_mode_parameters->limits[2]);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RX].set_value(force_mode_parameters->limits[3]);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RY].set_value(force_mode_parameters->limits[4]);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_LIMITS_RZ].set_value(force_mode_parameters->limits[5]);
 
-      command_interfaces_[CommandInterfaces::FORCE_MODE_TYPE].set_value(force_mode_parameters->type);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_DAMPING].set_value(force_mode_parameters->damping_factor);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_GAIN_SCALING].set_value(force_mode_parameters->gain_scaling);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_TYPE].set_value(force_mode_parameters->type);
+      write_successful &=
+          command_interfaces_[CommandInterfaces::FORCE_MODE_DAMPING].set_value(force_mode_parameters->damping_factor);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_GAIN_SCALING].set_value(
+          force_mode_parameters->gain_scaling);
 
       // Signal that we are waiting for confirmation that force mode is activated
-      command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
       async_state_ = ASYNC_WAITING;
     } else {
-      command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0);
-      command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0);
+      write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
       async_state_ = ASYNC_WAITING;
+    }
+    if (!write_successful) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Could not write to a command interfaces.");
+      return controller_interface::return_type::ERROR;
     }
     change_requested_ = false;
   }
