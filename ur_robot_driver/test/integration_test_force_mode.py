@@ -67,6 +67,11 @@ from test_common import (  # noqa: E402
 TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 
+def are_quaternions_same(q1, q2, tolerance):
+    dot_product = q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w
+    return (abs(dot_product) - 1.0) < tolerance
+
+
 @pytest.mark.launch_test
 @launch_testing.parametrize(
     "tf_prefix",
@@ -205,25 +210,10 @@ class RobotDriverTest(unittest.TestCase):
             trans_before.transform.translation.z,
             delta=0.001,
         )
-        self.assertAlmostEqual(
-            trans_after.transform.rotation.x,
-            trans_before.transform.rotation.x,
-            delta=0.01,
-        )
-        self.assertAlmostEqual(
-            trans_after.transform.rotation.y,
-            trans_before.transform.rotation.y,
-            delta=0.01,
-        )
-        self.assertAlmostEqual(
-            trans_after.transform.rotation.z,
-            trans_before.transform.rotation.z,
-            delta=0.01,
-        )
-        self.assertAlmostEqual(
-            trans_after.transform.rotation.w,
-            trans_before.transform.rotation.w,
-            delta=0.01,
+        self.assertTrue(
+            are_quaternions_same(
+                trans_after.transform.rotation, trans_before.transform.rotation, 0.001
+            )
         )
 
         res = self._force_mode_controller_interface.stop_force_mode()
