@@ -1,98 +1,11 @@
-.. _robot_setup:
-
 Setting up a UR robot for ur_robot_driver
 =========================================
 
-Network setup
--------------
+Prepare robot and network connection
+------------------------------------
 
-There are many possible ways to connect a UR robot. This section describes a good example using static IP addresses and a direct connection from the PC to the Robot to minimize latency introduced by network hardware. Though a good network switch usually works fine, as well.
-
-
-#.
-   Connect the UR control box directly to the remote PC with an ethernet cable.
-
-#.
-   Open the network settings from the UR teach pendant (Setup Robot -> Network) and enter these settings:
-
-.. code-block::
-
-   IP address: 192.168.1.102
-   Subnet mask: 255.255.255.0
-   Default gateway: 192.168.1.1
-   Preferred DNS server: 192.168.1.1
-   Alternative DNS server: 0.0.0.0
-
-* Enable remote control (Not applicable on PolyScope X versions)
-   #. Go to the hamburger menu -> settings.
-   #. Go to System -> Remote control.
-   #. Unlock the menu using the admin password, and enable Remote Control.
-   #. Press exit.
-   #. The robot can now be toggled between local and remote control in the upper right hand corner.
-
-.. image:: initial_setup_images/remote_control.png
-   :width: 600
-   :alt: Screenshot showing remote control toggle.
-
-* **If using PolyScope 5.10 or greater:**
-   #. Go to the hamburger menu -> settings.
-   #. Go to Security -> Services.
-   #. Unlock the menu using the admin password.
-   #. Enable the Dashboard Server (Not applicable on PolyScope X versions), Primary Client Interface, Secondary Client Interface and Real-Time Data Exchange (RTDE) interfaces.
-   #. Lock the menu and press exit.
-
-* PolyScope 5 screen:
-
-.. image:: initial_setup_images/services_polyscope5.png
-      :width: 600
-      :alt: Screenshot from PolyScope 5.xx services menu.
-
-* PolyScope X screen:
-
-.. image:: initial_setup_images/services_polyscopex.jpg
-   :width: 600
-   :alt: Screenshot from PolyScope X screen.
-
-Remote PC Setup
-~~~~~~~~~~~~~~~
-#.
-   On the remote PC, turn off all network devices except the "wired connection", e.g. turn off wifi.
-
-#.
-   Open Network Settings and create a new Wired connection with these settings. You may want to name this new connection ``UR`` or something similar:
-
-.. code-block::
-
-   IPv4
-   Manual
-   Address: 192.168.1.101
-   Netmask: 255.255.255.0
-   Gateway: 192.168.1.1
-
-
-#. Verify the connection from the PC with e.g. ping.
-
-.. code-block::
-
-   ping 192.168.1.102
-
-Prepare the robot
------------------
-
-This section describes installation and launching of the URCap program from the pendant. It allows ROS to control the robot externally. Generally, you will launch the driver via ROS then start URCap from the pendant.
-
-For using the *ur_robot_driver* with a real robot you need to install the
-**externalcontrol urcap**. The latest release can be downloaded from `its own repository <https://github.com/UniversalRobots/Universal_Robots_ExternalControl_URCap/releases>`_.
-
-**Note**: For installing this URCap a minimal PolyScope version of 3.14.3 or 5.9.4 (in case of e-Series) is
-necessary.
-
-For installing the necessary URCap and creating a program, please see the individual tutorials on
-how to :ref:`setup a cb3 robot <install-urcap-cb3>` or how to
-:ref:`setup an e-Series robot <install-urcap-e-series>`.
-
-To setup the tool communication on an e-Series robot, please consider the :ref:`tool communication setup
-guide <setup-tool-communication>`.
+Before you can use the ``ur_robot_driver`` you need to prepare the robot and the network
+connection as described in the :ref:`robot_setup`  and :ref:`network_setup` section of the UR Client Library documentation.
 
 Prepare the ROS PC
 ------------------
