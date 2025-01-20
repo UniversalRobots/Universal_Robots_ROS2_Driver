@@ -17,8 +17,8 @@ E-series robots can operate in different command modes: It can be either in *loc
 The remote control mode is needed for many aspects of this driver such as
 
 - :ref:`headless_mode`
-- :ref:`Sending script code to the robot<script_command_interface>`
-- Many :ref:`dashboard<dashboard_client>` functionalities such as
+- :ref:`Sending script code to the robot<script_command_interface_ros2>`
+- Many :ref:`dashboard<dashboard_client_ros2>` functionalities such as
 
   - restarting the robot after protective / EM-Stop
   - powering on the robot and do brake release

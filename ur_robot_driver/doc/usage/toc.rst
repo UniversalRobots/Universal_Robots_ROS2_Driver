@@ -111,7 +111,7 @@ On the e-Series the robot has to be in :ref:`remote control mode <operation_mode
 Using the dashboard doesn't work
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On the e-Series the robot has to be in :ref:`remote control mode <operation_modes>` to accept certain calls on the dashboard server. See :ref:`Available dashboard commands <dashboard_client>` for details.
+On the e-Series the robot has to be in :ref:`remote control mode <operation_modes>` to accept certain calls on the dashboard server. See :ref:`Available dashboard commands <dashboard_client_ros2>` for details.
 
 .. |play_button| image:: ../resources/play_button.svg
                  :height: 20px

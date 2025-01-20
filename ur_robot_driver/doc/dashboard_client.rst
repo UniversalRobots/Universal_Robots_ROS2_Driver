@@ -1,4 +1,4 @@
-.. _dashboard_client:
+.. _dashboard_client_ros2:
 
 Dashboard client
 ================
