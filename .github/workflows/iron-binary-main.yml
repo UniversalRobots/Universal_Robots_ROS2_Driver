@@ -1,0 +1,20 @@
+name: Iron Binary Build Main
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - iron
+  push:
+    branches:
+      - iron
+  schedule:
+    # Run every morning to detect flakiness and broken dependencies
+    - cron: '13 5 * * *'
+
+jobs:
+  iron_binary_main:
+    uses: ./.github/workflows/reusable_ici.yml
+    with:
+      ros_distro: iron
+      ros_repo: main
+      ref_for_scheduled_build: iron
