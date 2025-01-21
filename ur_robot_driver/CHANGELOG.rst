@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.5.2 (2025-01-21)
+------------------
 * Check quaternions for equal dot_product instead of comparing their components individually (backport `#1238 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1238>`_) (`#1243 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1243>`_)
 * fix sphinx doc link in ur_robot_driver (`#1240 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1240>`_) (`#1242 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1242>`_)
 * Update pre-commit the same as on the main branch (`#1232 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1232>`_)
