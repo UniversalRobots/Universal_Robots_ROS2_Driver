@@ -97,23 +97,23 @@ For getting started, you'll basically need three steps:
    ```bash
    sudo apt-get install ros-humble-ur
    ```
-   See the [installation instructions](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/installation.html) for more details and source-build instructions.
+   See the [installation instructions](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/installation.html) for more details and source-build instructions.
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
-   robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/robot_setup.html)
+   robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/robot_setup.html)
    and [create a program for external
-   control](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/install_urcap_e_series.html).
+   control](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/install_urcap_e_series.html).
 
    Please do this step carefully and extract the calibration as explained
-   [here](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/installation/robot_setup.html#extract-calibration-information).
+   [here](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/robot_setup.html#extract-calibration-information).
    Otherwise the TCP's pose will not be correct inside the ROS ecosystem.
 
    If no real robot is required, you can [use a simulated
-   robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator)
+   robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/usage.html#usage-with-official-ur-simulator)
    that will behave almost exactly like the real robot.
 
 3. **Start the driver**. See the [usage
-   documentation](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html) for
+   documentation](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/usage.html) for
    details.
 
    ```bash
@@ -122,7 +122,7 @@ For getting started, you'll basically need three steps:
    ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
    ```
 
-4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
+4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
 
 
 ## MoveIt! support
@@ -135,8 +135,8 @@ Watch MoveIt in action with the Universal Robots ROS2 driver:
   *The video shows free-space trajectory planning around a modeled collision scene object using the MoveIt2 MotionPlanning widget for Rviz2.*
 
 See the [MoveIt!
-section](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html#using-moveit)
-of the [Usage guide](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/usage.html)
+section](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/usage.html#using-moveit)
+of the [Usage guide](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/usage.html)
 for details.
 
 
