@@ -2,6 +2,11 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* ur_moveit_config: Do not change default controller when using fake hardware (`#1237 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1237>`_)
+* Contributors: Felix Exner
+
 2.5.1 (2024-12-21)
 ------------------
 

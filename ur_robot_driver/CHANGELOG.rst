@@ -1,3 +1,13 @@
+Forthcoming
+-----------
+* Check quaternions for equal dot_product instead of comparing their components individually (backport `#1238 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1238>`_) (`#1243 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1243>`_)
+* fix sphinx doc link in ur_robot_driver (`#1240 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1240>`_) (`#1242 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1242>`_)
+* Update pre-commit the same as on the main branch (`#1232 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1232>`_)
+* Disable pose broadcaster on mock hardware (backport of `#1229 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1229>`_) (`#1230 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1230>`_)
+* Remove unused include (backport of `#1220 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1220>`_)
+  Co-authored-by: Bence Magyar <bence.magyar.robotics@gmail.com>
+* Contributors: Felix Exner, mergify[bot]
+
 2.5.1 (2024-12-21)
 ------------------
 
