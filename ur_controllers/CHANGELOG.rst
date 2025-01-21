@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.2 (2025-01-21)
+------------------
 * Remove all build warnings (`#1233 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1233>`_)
 * Contributors: Felix Exner
 

@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.0.2 (2025-01-21)
+------------------
 * Check quaternions for equal dot_product instead of comparing their components individually (`#1238 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1238>`_)
 * fix sphinx doc link in ur_robot_driver (`#1240 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1240>`_)
 * Disable pose broadcaster on mock hardware (`#1229 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1229>`_)
