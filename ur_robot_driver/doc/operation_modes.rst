@@ -29,7 +29,7 @@ Driver's operation modes
 ------------------------
 
 There are two fundamentally different control modes of the UR ROS driver to control a UR robot or the URSim robot simulator:
-- *Teach Pendant mode* using the :ref:`External Control URCap<install-urcap-e-series>`
+- *Teach Pendant mode* using the :ref:`External Control URCap<install_urcap>`
 - *Headless mode* that works without interacting with Teach pendant, when *remote control mode* has been selected on the teach pendant.
 
 .. _teach_pendant_mode:
@@ -37,8 +37,8 @@ There are two fundamentally different control modes of the UR ROS driver to cont
 Teach Pendant Mode
 ^^^^^^^^^^^^^^^^^^^^^
 
-In Teach Pendant mode you will need the :ref:`External Control URCap<install-urcap-e-series>`
-installed on the robot. Please follow the installation guidelines for the :ref:`CB3<install-urcap-cb3>` or :ref:`E-series<install-urcap-e-series>`. Remember to set the correct IP address for the ROS driver host computer, and ensure the configured port number matches the ``script_sender_port`` defined in the ROS driver's launch arguments, default is 50002.
+In Teach Pendant mode you will need the :ref:`External Control URCap<install_urcap>`
+installed on the robot. Remember to set the correct IP address for the ROS driver host computer, and ensure the configured port number matches the ``script_sender_port`` defined in the ROS driver's launch arguments, default is 50002.
 
 With that, create a program containing the *External Control* program node and press "play" on the teach pendant to start the program.
 Hereafter the URCap will request script code from the ROS driver and execute it, once the program enters that node. In addition, the ROS driver can return the control to the Teach pendent program. This gives the possibility to combine the teach pendant program and the use of the ROS driver.

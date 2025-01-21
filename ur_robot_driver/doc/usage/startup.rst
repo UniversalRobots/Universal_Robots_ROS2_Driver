@@ -9,7 +9,7 @@ Prepare the robot
 If you want to use a real robot, or a URSim simulator, with this driver, you need to prepare it,
 first. Make sure that you complete all steps from the :ref:`setup instructions<robot_setup>`,
 installed the External Control URCap and created a program as explained
-:ref:`here<install-urcap-e-series>`.
+:ref:`here<install_urcap>`.
 
 Launch files
 ------------

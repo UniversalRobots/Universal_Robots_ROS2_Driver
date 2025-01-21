@@ -26,7 +26,7 @@ Robot setup
 -----------
 
 For setting up the robot, please install the **rs485-1.0.urcap** found in the **resources** folder.
-Installing a URCap is explained in the :ref:`setup guide <install-urcap-e-series>` for the **external-control** URCap.
+Installing a URCap is explained in the :ref:`setup guide <install_urcap>` for the **external-control** URCap.
 
 After installing the URCap the robot will expose its tool communication device to the network.
 
