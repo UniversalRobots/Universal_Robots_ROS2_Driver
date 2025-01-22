@@ -52,9 +52,6 @@ controller_interface::CallbackReturn ToolContactController::on_init()
 {
   tool_contact_param_listener_ = std::make_shared<tool_contact_controller::ParamListener>(get_node());
   tool_contact_params_ = tool_contact_param_listener_->get_params();
-
-  // Resize this value depending on reference interfaces to be sent
-  reference_interfaces_.resize(1, std::numeric_limits<double>::quiet_NaN());
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -95,18 +92,6 @@ controller_interface::InterfaceConfiguration ToolContactController::state_interf
 controller_interface::CallbackReturn
 ToolContactController::on_activate(const rclcpp_lifecycle::State& /* previous_state */)
 {
-  /*Figure out how to get reference interface by name*/
-  // const std::string interface_name = tool_contact_params_.tf_prefix + get_node()->get_name() +
-  // "tool_contact/enable"; auto it = std::find_if(reference_interfaces_.begin(), reference_interfaces_.end(),
-  //                        [&](auto& interface) { return (interface.get_name() == interface_name); });
-  // if (it != reference_interfaces_.end()) {
-  //   reference_interface_ = *it;
-  //   reference_interface_->get().set_value(0.0);
-  // } else {
-  //   RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.",
-  //   interface_name.c_str()); return controller_interface::CallbackReturn::ERROR;
-  // }
-  reference_interfaces_[0] = 0.0;
   {
     const std::string interface_name = tool_contact_params_.tf_prefix + "tool_contact/tool_contact_status";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
@@ -179,65 +164,20 @@ ToolContactController::on_deactivate(const rclcpp_lifecycle::State& /* previous_
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
   }
   if (tool_contact_active_) {
-    tool_contact_active_ = false;
-    change_requested_ = false;
     if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
       failed_update();
+      return controller_interface::CallbackReturn::ERROR;
     }
   }
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-// controller_interface::CallbackReturn ToolContactController::on_cleanup(const rclcpp_lifecycle::State&
-// previous_state){
-
-// }
-
-std::vector<hardware_interface::CommandInterface> ToolContactController::on_export_reference_interfaces()
+controller_interface::CallbackReturn ToolContactController::on_shutdown(const rclcpp_lifecycle::State&
+                                                                        /* previous_state */)
 {
-  std::vector<hardware_interface::CommandInterface> reference_interfaces;
-  reference_interfaces.reserve(1);
-  reference_interfaces.push_back(
-      hardware_interface::CommandInterface(get_node()->get_name(), "tool_contact/enable", &tool_contact_enable));
-
-  return reference_interfaces;
-}
-
-std::vector<hardware_interface::StateInterface> ToolContactController::on_export_state_interfaces()
-{
-  std::vector<hardware_interface::StateInterface> state_interfaces;
-  state_interfaces.push_back(
-      hardware_interface::StateInterface(get_node()->get_name(), "tool_contact/active", &tool_contact_active));
-
-  return state_interfaces;
-}
-
-bool ToolContactController::on_set_chained_mode(bool chained_mode)
-{
-  /* Abort action, if one is running */
-  const auto active_goal = *rt_active_goal_.readFromNonRT();
-  if (active_goal) {
-    RCLCPP_WARN(get_node()->get_logger(), "Aborting tool contact action, as controller is entering chained mode.");
-    auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-    result->result = ur_msgs::action::ToolContact::Result::ABORTED_BY_CONTROLLER;
-    active_goal->setAborted(result);
-    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-  }
-  if (chained_mode) {
-    RCLCPP_INFO(get_node()->get_logger(), "Entering chained mode, enabling tool contact.");
-    if (!tool_contact_active_) {
-      change_requested_ = true;
-      tool_contact_active_ = true;
-    }
-  } else {
-    RCLCPP_INFO(get_node()->get_logger(), "Leaving chained mode, disabling tool contact.");
-    if (!tool_contact_active_) {
-      change_requested_ = true;
-      tool_contact_active_ = false;
-    }
-  }
-  return true;
+  tool_contact_action_server_.reset();
+  return controller_interface::CallbackReturn::SUCCESS;
 }
 
 rclcpp_action::GoalResponse ToolContactController::goal_received_callback(
@@ -250,10 +190,7 @@ rclcpp_action::GoalResponse ToolContactController::goal_received_callback(
                                            "goals.");
     return rclcpp_action::GoalResponse::REJECT;
   }
-  if (is_in_chained_mode()) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Tool contact controller is in chained mode, can not accept action goals.");
-    return rclcpp_action::GoalResponse::REJECT;
-  }
+
   if (tool_contact_active_) {
     RCLCPP_ERROR(get_node()->get_logger(), "Tool contact already active, rejecting goal.");
     return rclcpp_action::GoalResponse::REJECT;
@@ -265,8 +202,8 @@ void ToolContactController::goal_accepted_callback(
     std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle)
 {
   RCLCPP_INFO(get_node()->get_logger(), "Goal accepted.");
-  tool_contact_active_ = true;
-  change_requested_ = true;
+  tool_contact_enable_ = true;
+  tool_contact_abort_ = false;
   RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
   rt_goal->execute();
   rt_active_goal_.writeFromNonRT(rt_goal);
@@ -289,96 +226,72 @@ rclcpp_action::CancelResponse ToolContactController::goal_cancelled_callback(
     result->result = ur_msgs::action::ToolContact::Result::CANCELLED_BY_USER;
     active_goal->setCanceled(result);
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-    tool_contact_active_ = false;
-    change_requested_ = true;
+    tool_contact_abort_ = true;
+    tool_contact_enable_ = false;
   }
 
   return rclcpp_action::CancelResponse::ACCEPT;
 }
 
-controller_interface::return_type ToolContactController::update_reference_from_subscribers(
-    const rclcpp::Time& /* time */, const rclcpp::Duration& /* period */)
-{
-  if (change_requested_) {
-    reference_interfaces_[0] = static_cast<double>(tool_contact_active_);
-  }
-  return controller_interface::return_type::OK;
-}
-
-void ToolContactController::failed_update()
+controller_interface::return_type ToolContactController::failed_update()
 {
   RCLCPP_FATAL(get_node()->get_logger(), "Controller failed to update or read command/state interface.");
-  return;
+  return controller_interface::return_type::ERROR;
 }
 
-controller_interface::return_type ToolContactController::update_and_write_commands(const rclcpp::Time& /* time */,
-                                                                                   const rclcpp::Duration& /* period */)
+controller_interface::return_type ToolContactController::update(const rclcpp::Time& /* time */,
+                                                                const rclcpp::Duration& /* period */)
 {
-  if (!is_in_chained_mode()) {
-    if (change_requested_) {
-      change_requested_ = false;
-      if (reference_interfaces_[0] == 1.0) {
-        if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN)) {
-          failed_update();
-        }
-      } else if (reference_interfaces_[0] == 0.0) {
-        if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
-          failed_update();
-        }
-      }
+  // Abort takes priority
+  if (tool_contact_abort_) {
+    tool_contact_abort_ = false;
+    tool_contact_enable_ = false;
+    if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
+      return failed_update();
     }
-  } else {
-    if (reference_interfaces_[0] != old_reference_val) {
-      if (reference_interfaces_[0] == 1.0) {
-        if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN)) {
-          failed_update();
-        }
-      } else if (reference_interfaces_[0] == 0.0) {
-        if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
-          failed_update();
-        }
-      }
+  } else if (tool_contact_enable_) {
+    tool_contact_enable_ = false;
+    if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN)) {
+      return failed_update();
     }
   }
+
   const auto active_goal = *rt_active_goal_.readFromRT();
 
   const int status = static_cast<int>(tool_contact_status_interface_->get().get_value());
   switch (status) {
     case static_cast<int>(TOOL_CONTACT_EXECUTING):
     {
+      tool_contact_active_ = true;
       if (!logged_once_) {
         RCLCPP_INFO(get_node()->get_logger(), "Tool contact enabled successfully.");
         logged_once_ = true;
       }
       double result = tool_contact_result_interface_->get().get_value();
       if (result == 0.0) {
+        tool_contact_active_ = false;
         RCLCPP_INFO(get_node()->get_logger(), "Tool contact finished successfully.");
-
-        if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
-          failed_update();
+        if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
+          return failed_update();
         }
-
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
           result->result = ur_msgs::action::ToolContact::Result::SUCCESS;
           active_goal->setSucceeded(result);
           rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-          tool_contact_active_ = false;
-          change_requested_ = true;
         }
       } else if (result == 1.0) {
+        tool_contact_active_ = false;
         RCLCPP_ERROR(get_node()->get_logger(), "Tool contact aborted by hardware.");
 
         if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
-          failed_update();
+          return failed_update();
         }
-
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
           result->result = ur_msgs::action::ToolContact::Result::ABORTED_BY_HARDWARE;
           active_goal->setAborted(result);
           rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-          tool_contact_active_ = false;
         }
       }
     } break;
@@ -386,9 +299,9 @@ controller_interface::return_type ToolContactController::update_and_write_comman
     case static_cast<int>(TOOL_CONTACT_FAILURE_BEGIN):
     {
       RCLCPP_ERROR(get_node()->get_logger(), "Tool contact could not be enabled.");
-
+      tool_contact_active_ = false;
       if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
-        failed_update();
+        return failed_update();
       }
 
       if (active_goal) {
@@ -396,19 +309,16 @@ controller_interface::return_type ToolContactController::update_and_write_comman
         result->result = ur_msgs::action::ToolContact::Result::ABORTED_BY_HARDWARE;
         active_goal->setAborted(result);
         rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-        tool_contact_active_ = false;
       }
     } break;
 
     case static_cast<int>(TOOL_CONTACT_SUCCESS_END):
     {
       RCLCPP_INFO(get_node()->get_logger(), "Tool contact disabled successfully.");
-
-      if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
-        failed_update();
-      }
-
       tool_contact_active_ = false;
+      if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
+        return failed_update();
+      }
     } break;
 
     case static_cast<int>(TOOL_CONTACT_FAILURE_END):
@@ -416,7 +326,7 @@ controller_interface::return_type ToolContactController::update_and_write_comman
       RCLCPP_ERROR(get_node()->get_logger(), "Tool contact could not be disabled.");
 
       if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
-        failed_update();
+        return failed_update();
       }
 
       if (active_goal) {
@@ -432,8 +342,11 @@ controller_interface::return_type ToolContactController::update_and_write_comman
     default:
       break;
   }
-
-  old_reference_val = reference_interfaces_[0];
+  if (tool_contact_result_interface_->get().get_value() == 0.0) {
+    tool_contact_active_state_interface = 2.0;
+  } else {
+    tool_contact_active_state_interface = static_cast<double>(tool_contact_active_);
+  }
   return controller_interface::return_type::OK;
 }
 
@@ -441,4 +354,4 @@ controller_interface::return_type ToolContactController::update_and_write_comman
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(ur_controllers::ToolContactController, controller_interface::ChainableControllerInterface)
+PLUGINLIB_EXPORT_CLASS(ur_controllers::ToolContactController, controller_interface::ControllerInterface)

@@ -80,6 +80,7 @@ enum StoppingInterface
   STOP_PASSTHROUGH,
   STOP_FORCE_MODE,
   STOP_FREEDRIVE,
+  STOP_TOOL_CONTACT,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -311,6 +312,7 @@ protected:
   const std::string PASSTHROUGH_GPIO = "trajectory_passthrough";
   const std::string FORCE_MODE_GPIO = "force_mode";
   const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
+  const std::string TOOL_CONTACT_GPIO = "tool_contact";
 };
 }  // namespace ur_robot_driver
 

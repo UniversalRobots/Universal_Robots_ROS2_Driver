@@ -85,6 +85,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   velocity_controller_running_ = false;
   freedrive_mode_controller_running_ = false;
   passthrough_trajectory_controller_running_ = false;
+  tool_contact_controller_running_ = false;
   runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
@@ -270,7 +271,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tool_contact", "tool_contact_result", &tool_contact_result_));
+      hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_result", &tool_contact_result_));
 
   return state_interfaces;
 }
@@ -406,8 +407,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
                                                                          &passthrough_trajectory_accelerations_[i]));
   }
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "tool_contact", "tool_contact_status", &tool_contact_status_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + TOOL_CONTACT_GPIO,
+                                                                       "tool_contact_status", &tool_contact_status_));
 
   return command_interfaces;
 }
@@ -741,7 +742,6 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       freedrive_mode_enable_ = NO_NEW_CMD_;
       tool_contact_result_ = NO_NEW_CMD_;
       tool_contact_status_ = NO_NEW_CMD_;
-      tool_contact_controller_running_ = true;
       initialized_ = true;
     }
 
@@ -1029,6 +1029,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     if (freedrive_mode_controller_running_) {
       control_modes[i].push_back(FREEDRIVE_MODE_GPIO);
     }
+    if (tool_contact_controller_running_) {
+      control_modes[i].push_back(TOOL_CONTACT_GPIO);
+    }
   }
 
   if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
@@ -1082,6 +1085,15 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           return hardware_interface::return_type::ERROR;
         }
         start_modes_[i].push_back(FREEDRIVE_MODE_GPIO);
+      } else if (key == tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_status") {
+        if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
+              return item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO;
+            })) {
+          RCLCPP_ERROR(get_logger(), "Attempting to start tool contact controller while either the force mode or "
+                                     "freedrive controller is running.");
+          return hardware_interface::return_type::ERROR;
+        }
+        start_modes_[i].push_back(TOOL_CONTACT_GPIO);
       }
     }
   }
@@ -1120,6 +1132,12 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         stop_modes_[i].push_back(StoppingInterface::STOP_FREEDRIVE);
         control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
                                               [&](const std::string& item) { return item == FREEDRIVE_MODE_GPIO; }),
+                               control_modes[i].end());
+      }
+      if (key == tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_status") {
+        stop_modes_[i].push_back(StoppingInterface::STOP_TOOL_CONTACT);
+        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                                              [&](const std::string& item) { return item == TOOL_CONTACT_GPIO; }),
                                control_modes[i].end());
       }
     }
@@ -1174,6 +1192,18 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start force mode control while there is either position or "
                                "velocity mode running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
+  // Tool contact controller requested to start
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                  [this](auto& item) { return (item == TOOL_CONTACT_GPIO); }) &&
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [this](auto& item) { return (item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO); }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(),
+                   [this](auto& item) { return (item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO); }))) {
+    RCLCPP_ERROR(get_logger(), "Attempting to start tool contact controller while either the force mode controller or "
+                               "the freedrive controller is running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
@@ -1244,6 +1274,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     freedrive_mode_controller_running_ = false;
     freedrive_activated_ = false;
     freedrive_mode_abort_ = 1.0;
+  } else if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                                  StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
+    tool_contact_controller_running_ = false;
+    tool_contact_result_ = 3.0;
   }
 
   if (start_modes_.size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
@@ -1275,7 +1309,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     freedrive_mode_controller_running_ = true;
     freedrive_activated_ = false;
   }
-
+  if (start_modes_[0].size() != 0 &&
+      std::find(start_modes_[0].begin(), start_modes_[0].end(), TOOL_CONTACT_GPIO) != start_modes_[0].end()) {
+    tool_contact_controller_running_ = true;
+  }
   start_modes_.clear();
   stop_modes_.clear();
 

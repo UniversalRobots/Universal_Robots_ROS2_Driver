@@ -45,7 +45,7 @@
 #include <vector>
 #include <memory>
 
-#include <controller_interface/chainable_controller_interface.hpp>
+#include <controller_interface/controller_interface.hpp>
 #include "std_msgs/msg/bool.hpp"
 #include <rclcpp_action/server.hpp>
 #include <rclcpp_action/create_server.hpp>
@@ -57,13 +57,16 @@
 #include <realtime_tools/realtime_server_goal_handle.hpp>
 
 #include <ur_msgs/action/tool_contact.hpp>
-#include "tool_contact_controller_parameters.hpp"
+#include "ur_controllers/tool_contact_controller_parameters.hpp"
 
 namespace ur_controllers
 {
-class ToolContactController : public controller_interface::ChainableControllerInterface
+class ToolContactController : public controller_interface::ControllerInterface
 {
 public:
+  ToolContactController() = default;
+  ~ToolContactController() override = default;
+
   controller_interface::CallbackReturn on_init() override;
 
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
@@ -76,66 +79,9 @@ public:
 
   controller_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
-protected:
-  /// Virtual method that each chainable controller should implement to export its read-only
-  /// chainable interfaces.
-  /**
-   * Each chainable controller implements this methods where all its state(read only) interfaces are
-   * exported. The method has the same meaning as `export_state_interfaces` method from
-   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
-   *
-   * \returns list of StateInterfaces that other controller can use as their inputs.
-   */
-  std::vector<hardware_interface::StateInterface> on_export_state_interfaces() override;
+  controller_interface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& previous_state) override;
 
-  /// Virtual method that each chainable controller should implement to export its read/write
-  /// chainable interfaces.
-  /**
-   * Each chainable controller implements this methods where all input (command) interfaces are
-   * exported. The method has the same meaning as `export_command_interface` method from
-   * hardware_interface::SystemInterface or hardware_interface::ActuatorInterface.
-   *
-   * \returns list of CommandInterfaces that other controller can use as their outputs.
-   */
-  std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
-
-  /// Virtual method that each chainable controller should implement to switch chained mode.
-  /**
-   * Each chainable controller implements this methods to switch between "chained" and "external"
-   * mode. In "chained" mode all external interfaces like subscriber and service servers are
-   * disabled to avoid potential concurrency in input commands.
-   *
-   * \param[in] flag marking a switch to or from chained mode.
-   *
-   * \returns true if controller successfully switched between "chained" and "external" mode.
-   * \default returns true so the method don't have to be overridden if controller can always switch
-   * chained mode.
-   */
-  bool on_set_chained_mode(bool chained_mode) override;
-
-  /// Update reference from input topics when not in chained mode.
-  /**
-   * Each chainable controller implements this method to update reference from subscribers when not
-   * in chained mode.
-   *
-   * \returns return_type::OK if update is successfully, otherwise return_type::ERROR.
-   */
-  controller_interface::return_type update_reference_from_subscribers(const rclcpp::Time& time,
-                                                                      const rclcpp::Duration& period) override;
-
-  /// Execute calculations of the controller and update command interfaces.
-  /**
-   * Update method for chainable controllers.
-   * In this method is valid to assume that \reference_interfaces_ hold the values for calculation
-   * of the commands in the current control step.
-   * This means that this method is called after \update_reference_from_subscribers if controller is
-   * not in chained mode.
-   *
-   * \returns return_type::OK if calculation and writing of interface is successfully, otherwise
-   * return_type::ERROR.
-   */
-  controller_interface::return_type update_and_write_commands(const rclcpp::Time& time,
-                                                              const rclcpp::Duration& period) override;
+  controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
 private:
   using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<ur_msgs::action::ToolContact>;
@@ -155,12 +101,14 @@ private:
   rclcpp_action::CancelResponse goal_cancelled_callback(
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
 
-  void failed_update();
+  controller_interface::return_type failed_update();
 
-  double tool_contact_enable;
-  double tool_contact_active;
+  double tool_contact_enable_ref_interface;
+  double tool_contact_active_state_interface;
 
+  std::atomic<bool> tool_contact_enable_ = false;
   std::atomic<bool> tool_contact_active_ = false;
+  std::atomic<bool> tool_contact_abort_ = false;
   std::atomic<bool> change_requested_ = false;
   std::atomic<bool> logged_once_ = false;
 
