@@ -39,7 +39,7 @@
 //----------------------------------------------------------------------
 
 #include <ur_controllers/ur_configuration_controller.hpp>
-#include <realtime_tools/realtime_box.h>
+#include <realtime_tools/realtime_box.hpp>
 namespace ur_controllers
 {
 

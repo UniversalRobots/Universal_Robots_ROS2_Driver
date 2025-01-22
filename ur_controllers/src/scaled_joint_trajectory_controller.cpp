@@ -141,9 +141,11 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   // TODO(anyone): can I here also use const on joint_interface since the reference_wrapper is not
   // changed, but its value only?
   auto assign_interface_from_point = [&](auto& joint_interface, const std::vector<double>& trajectory_point_interface) {
+    bool success = true;
     for (size_t index = 0; index < dof_; ++index) {
-      joint_interface[index].get().set_value(trajectory_point_interface[index]);
+      success &= joint_interface[index].get().set_value(trajectory_point_interface[index]);
     }
+    return success;
   };
 
   // current state update
@@ -241,21 +243,26 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
         }
 
         // set values for next hardware write()
+        bool write_success = true;
         if (has_position_command_interface_) {
-          assign_interface_from_point(joint_command_interface_[0], state_desired_.positions);
+          write_success &= assign_interface_from_point(joint_command_interface_[0], state_desired_.positions);
         }
         if (has_velocity_command_interface_) {
           if (use_closed_loop_pid_adapter_) {
-            assign_interface_from_point(joint_command_interface_[1], tmp_command_);
+            write_success &= assign_interface_from_point(joint_command_interface_[1], tmp_command_);
           } else {
-            assign_interface_from_point(joint_command_interface_[1], state_desired_.velocities);
+            write_success &= assign_interface_from_point(joint_command_interface_[1], state_desired_.velocities);
           }
         }
         if (has_acceleration_command_interface_) {
-          assign_interface_from_point(joint_command_interface_[2], state_desired_.accelerations);
+          write_success &= assign_interface_from_point(joint_command_interface_[2], state_desired_.accelerations);
         }
         if (has_effort_command_interface_) {
-          assign_interface_from_point(joint_command_interface_[3], tmp_command_);
+          write_success &= assign_interface_from_point(joint_command_interface_[3], tmp_command_);
+        }
+        if (!write_success) {
+          RCLCPP_ERROR(get_node()->get_logger(), "Could not write to a command interfaces.");
+          return controller_interface::return_type::ERROR;
         }
 
         // store the previous command. Used in open-loop control mode
