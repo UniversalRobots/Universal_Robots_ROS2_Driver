@@ -164,6 +164,7 @@ ToolContactController::on_deactivate(const rclcpp_lifecycle::State& /* previous_
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
   }
   if (tool_contact_active_) {
+    tool_contact_active_ = false;
     if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
       failed_update();
       return controller_interface::CallbackReturn::ERROR;

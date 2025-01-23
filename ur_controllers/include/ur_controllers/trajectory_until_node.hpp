@@ -65,10 +65,8 @@ private:
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr trajectory_action_client_;
   rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr until_action_client_;
 
-  rclcpp::CallbackGroup::SharedPtr server_callback_group =
-      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  rclcpp::CallbackGroup::SharedPtr clients_callback_group =
-      create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr server_callback_group;
+  rclcpp::CallbackGroup::SharedPtr clients_callback_group;
 
   std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> server_goal_handle_;
 
@@ -95,24 +93,26 @@ private:
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> goal_handle);
 
   void send_trajectory_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+
   void send_until_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
 
-  void report_goal(auto result, bool until_triggered);
+  void report_goal(rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult result);
 
-  void reset_vars();
+  template <typename UntilResult>
+  void report_goal(UntilResult result);
 
-  std::atomic<bool> trajectory_accepted_;
-  std::atomic<bool> until_accepted_;
+  void reset_node();
 
   rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::SharedPtr
       current_trajectory_goal_handle_;
   rclcpp_action::ClientGoalHandle<ur_msgs::action::ToolContact>::SharedPtr current_until_goal_handle_;
 
-  std::shared_ptr<ur_msgs::action::TrajectoryUntil::Result> prealloc_res =
-      std::make_shared<ur_msgs::action::TrajectoryUntil::Result>(ur_msgs::action::TrajectoryUntil::Result());
+  std::shared_ptr<ur_msgs::action::TrajectoryUntil::Result> prealloc_res;
 
-  std::shared_ptr<ur_msgs::action::TrajectoryUntil::Feedback> prealloc_fb =
-      std::make_shared<ur_msgs::action::TrajectoryUntil::Feedback>(ur_msgs::action::TrajectoryUntil::Feedback());
+  std::shared_ptr<ur_msgs::action::TrajectoryUntil::Feedback> prealloc_fb;
+
+  std::atomic<bool> trajectory_accepted_;
+  std::atomic<bool> until_accepted_;
 
   std::condition_variable cv_until_;
   std::condition_variable cv_trajectory_;
