@@ -1,3 +1,12 @@
+3.0.2 (2025-01-21)
+------------------
+* Check quaternions for equal dot_product instead of comparing their components individually (`#1238 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1238>`_)
+* fix sphinx doc link in ur_robot_driver (`#1240 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1240>`_)
+* Disable pose broadcaster on mock hardware (`#1229 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1229>`_)
+* Add information about which driver features dont work with mock hardware (`#1227 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1227>`_)
+* Add instructions for enabling necessary services and remote control (`#1224 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1224>`_)
+* Contributors: Felix Exner, Rune Søe-Knudsen, URJala
+
 3.0.1 (2024-12-30)
 ------------------
 * Remove unused include (`#1220 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1220>`_)
