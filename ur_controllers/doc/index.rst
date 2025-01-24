@@ -11,6 +11,8 @@ robot family. Currently this contains:
   but it uses the speed scaling reported to align progress of the trajectory between the robot and controller.
 * A **io_and_status_controller** that allows setting I/O ports, controlling some UR-specific
   functionality and publishes status information about the robot.
+* A **tool_contact_controller** that exposes an action to enable the tool contact function on the robot.
+* A **trajectory_until_node**. This is not a controller in itself, but allows for executing a trajectory with any of the motion controllers while having tool contact enabled.
 
 About this package
 ------------------
@@ -378,3 +380,63 @@ The controller provides the ``~/enable_freedrive_mode`` topic of type ``[std_msg
 * to deactivate freedrive mode is enough to publish a ``False`` msg on the indicated topic or
   to deactivate the controller or to stop publishing ``True`` on the enable topic and wait for the
   controller timeout.
+
+.. _tool_contact_controller:
+
+ur_controllers/ToolContactController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This controller can enable tool contact on the robot. When tool contact is enabled,
+and the robot senses that the tool has made contact with something, it will stop all motion,
+and retract to where it first sensed the contact.
+This controller can be used with any of the motion controllers.
+This is not a complete interface of the URScript function ``tool_contact(direction)``, as it does not allow for choosing the direction.
+The direction of tool contact will always be the current TCP direction of movement.
+
+Parameters
+""""""""""
+
++----------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name       | Type   | Default value | Description                                                                           |
+|                      |        |               |                                                                                       |
++----------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``        | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++----------------------+--------+---------------+---------------------------------------------------------------------------------------+
+
+Action interface / usage
+""""""""""""""""""""""""
+The controller provides one action for enabling tool contact. For the controller to accept action goals it needs to be in ``active`` state.
+
+* ``~/enable_tool_contact [ur_msgs/action/ToolContact]``
+
+The goal section of ``ur_msgs/action/ToolContact`` has no fields, as a call to the action implicitly means that tool contact should be enabled.
+The result section has one field ``result``, which contains the result from the tool contact in the form of an integer.
+The action provides no feedback.
+
+The action can be called from the command line using the following command, when the controller is active:
+   .. code-block::
+
+      ros2 action send_goal /tool_contact_controller/enable_tool_contact ur_msgs/action/ToolContact
+
+.. _trajectory_until_node:
+
+ur_controllers/TrajectoryUntilNode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is not a controller in itself, but it allows the user to execute a trajectory with tool contact enabled without having to call 2 actions at the same time.
+This means that the trajectory will execute until either the trajectory is finished or tool contact has been triggered.
+Both scenarios will result in the trajectory being reported as successful.
+
+Action interface / usage
+""""""""""""""""""""""""
+The node provides an action to execute a trajectory with tool contact enabled. For the node to accept action goals, both the motion controller and the tool contact controller need to be in ``active`` state.
+
+* ``/trajectory_until_node/execute [ur_msgs/action/TrajectoryUntil]``
+
+The action contains all the same fields as the ordinary `FollowJointTrajectory <http://docs.ros.org/en/noetic/api/control_msgs/html/action/FollowJointTrajectory.html>`_ action, but has two additional fields.
+One in the goal section called ``until_type``, which is used to choose between different conditions that can stop the trajectory. Currently only tool contact is available.
+The result section contains the other new field called ``until_condition_result``, which reports whether the chosen condition was triggered or not, and also error codes if something went wrong with the controller responsible for the until condition.
+
+Implementation details
+""""""""""""""""""""""
+Upon instantiation of the node, the internal trajectory action client will connect to an action named ``motion_controller/follow_joint_trajectory``.
+This action does not exist, but upon launch of the driver, the node is remapped to connect to the ``initial_joint_controller``, default is ``scaled_joint_trajectory_controller``.
+If you wish to use the node with another motion controller use the launch argument ``initial_joint_controller:=<your_motion_controller>`` when launching the driver.

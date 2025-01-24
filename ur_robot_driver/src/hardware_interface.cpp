@@ -1046,14 +1046,20 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   for (const auto& key : start_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-        if (!start_modes_[i].empty()) {
+        if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
+              return item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO ||
+                     item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO;
+            })) {
           RCLCPP_ERROR(get_logger(), "Attempting to start position control while there is another control mode already "
                                      "requested.");
           return hardware_interface::return_type::ERROR;
         }
         start_modes_[i] = { hardware_interface::HW_IF_POSITION };
       } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-        if (!start_modes_[i].empty()) {
+        if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
+              return item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO ||
+                     item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO;
+            })) {
           RCLCPP_ERROR(get_logger(), "Attempting to start velocity control while there is another control mode already "
                                      "requested.");
           return hardware_interface::return_type::ERROR;

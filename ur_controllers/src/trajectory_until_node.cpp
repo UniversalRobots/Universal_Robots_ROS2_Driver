@@ -79,7 +79,7 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
 
   // Create action server to advertise the "/trajectory_until/execute"
   action_server_ = rclcpp_action::create_server<TrajectoryUntil>(
-      this, "trajectory_until/execute",
+      this, std::string(this->get_name()) + "/execute",
       std::bind(&TrajectoryUntilNode::goal_received_callback, this, std::placeholders::_1, std::placeholders::_2),
       std::bind(&TrajectoryUntilNode::goal_cancelled_callback, this, std::placeholders::_1),
       std::bind(&TrajectoryUntilNode::goal_accepted_callback, this, std::placeholders::_1),

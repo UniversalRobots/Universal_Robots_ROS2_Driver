@@ -191,6 +191,18 @@ class ActionInterface:
                 f"Exception while calling action '{self.__action_name}': {future_res.exception()}"
             )
 
+    def cancel_goal(self, goal_handle, timeout=2):
+        future_res = goal_handle.cancel_goal_async()
+        logging.info("Canceling goal from '%s' with timeout %fs", self.__action_name, timeout)
+        rclpy.spin_until_future_complete(self.__node, future_res, timeout_sec=timeout)
+        if future_res.result() is not None:
+            logging.info("  Received result: %s", future_res.result())
+            return future_res.result()
+        else:
+            raise Exception(
+                f"Exception while calling action '{self.__action_name}': {future_res.exception()}"
+            )
+
 
 class DashboardInterface(
     _ServiceInterface,

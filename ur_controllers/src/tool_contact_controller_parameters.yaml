@@ -1,4 +1,3 @@
----
 tool_contact_controller:
   tf_prefix: {
     type: string,
