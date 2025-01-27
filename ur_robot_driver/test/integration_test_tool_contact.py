@@ -90,7 +90,7 @@ class RobotDriverTest(unittest.TestCase):
             self.node, "/tool_contact_controller/enable_tool_contact", ToolContact
         )
         self._trajectory_until_interface = ActionInterface(
-            self.node, "/trajectory_until/execute", TrajectoryUntil
+            self.node, "/trajectory_until_node/execute", TrajectoryUntil
         )
 
     def setUp(self):
@@ -117,14 +117,14 @@ class RobotDriverTest(unittest.TestCase):
         cancel_res = self._tool_contact_interface.cancel_goal(goal_handle)
         self.assertEqual(cancel_res.return_code, 0)
 
-    def test_trajectory_until(self):
+    def test_trajectory_until(self, tf_prefix):
         L_pose_to_down = {
-            "waypts": [[-0.45, -1.5, 1.5, -1.5, -1.5, -1.5], [-0.45, -1.2, 2.1, -2.4, -1.5, -1.5]],
+            "waypts": [[1.5, -1.5, -0.45, -1.5, -1.5, -1.5], [2.1, -1.2, -0.45, -2.4, -1.5, -1.5]],
             "time_vec": [Duration(sec=3, nanosec=0), Duration(sec=6, nanosec=0)],
         }
 
         trajectory = JointTrajectory()
-        trajectory.joint_names = ROBOT_JOINTS
+        trajectory.joint_names = [tf_prefix + joint for joint in ROBOT_JOINTS]
 
         trajectory.points = [
             JointTrajectoryPoint(

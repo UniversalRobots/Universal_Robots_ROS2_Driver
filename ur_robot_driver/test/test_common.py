@@ -353,7 +353,9 @@ def generate_dashboard_test_description():
 
 
 def generate_driver_test_description(
-    tf_prefix="", controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL
+    tf_prefix="",
+    initial_joint_controller="scaled_joint_trajectory_controller",
+    controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -362,7 +364,7 @@ def generate_driver_test_description(
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
-        "initial_joint_controller": "scaled_joint_trajectory_controller",
+        "initial_joint_controller": initial_joint_controller,
         "headless_mode": "true",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
