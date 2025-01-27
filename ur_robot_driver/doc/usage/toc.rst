@@ -87,8 +87,7 @@ In general, make sure you're starting up the robot as explained :ref:`here<ur_ro
 When starting the program on the teach pendant, I get an error "The connection to the remote PC could not be established"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Make sure, the IP address setup is correct, as described in the setup guides
-(:ref:`CB3 robots<install-urcap-cb3>`, :ref:`e-Series robots<install-urcap-e-series>`)
+Make sure, the IP address setup is correct, as described in the :ref:`setup guide<robot_setup>`.
 
 .. note::
 
@@ -111,7 +110,7 @@ On the e-Series the robot has to be in :ref:`remote control mode <operation_mode
 Using the dashboard doesn't work
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On the e-Series the robot has to be in :ref:`remote control mode <operation_modes>` to accept certain calls on the dashboard server. See :ref:`Available dashboard commands <dashboard_client>` for details.
+On the e-Series the robot has to be in :ref:`remote control mode <operation_modes>` to accept certain calls on the dashboard server. See :ref:`Available dashboard commands <dashboard_client_ros2>` for details.
 
 .. |play_button| image:: ../resources/play_button.svg
                  :height: 20px
