@@ -33,7 +33,7 @@ request.
 **Custom script snippets** can be sent to the robot on a topic basis. By default, they will
 interrupt other programs (such as the one controlling the robot). For a certain subset of functions,
 it is however possible to send them as secondary programs. See [UR
-documentation](https://www.universal-robots.com/how-tos-and-faqs/how-to/ur-how-tos/secondary-program-17257/)
+documentation](https://www.universal-robots.com/articles/ur/programming/secondary-program/)
 on details.
 <br/>
 **Note to e-Series users:**
