@@ -209,7 +209,7 @@ Now you can build the kernel. This will take some time...
 
 .. code-block:: console
 
-   $ make -j `getconf _NPROCESSORS_ONLN` deb-pkg
+   $ make -j $(getconf _NPROCESSORS_ONLN) deb-pkg
 
 After building, install the ``linux-headers`` and ``linux-image`` packages in the parent folder (only
 the ones without the ``-dbg`` in the name)
