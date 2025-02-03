@@ -52,7 +52,7 @@ from test_common import (  # noqa: E402
 @pytest.mark.launch_test
 @launch_testing.parametrize(
     "tf_prefix",
-    [("")],
+    [""],
     # [(""), ("my_ur_")],
 )
 def generate_test_description(tf_prefix):
