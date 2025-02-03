@@ -53,7 +53,7 @@
 #include <rclcpp/duration.hpp>
 #include "std_msgs/msg/bool.hpp"
 
-#include "freedrive_mode_controller_parameters.hpp"
+#include "ur_controllers/freedrive_mode_controller_parameters.hpp"
 
 namespace ur_controllers
 {

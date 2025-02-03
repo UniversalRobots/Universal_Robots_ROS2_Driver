@@ -41,7 +41,7 @@
 // ROS includes
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "realtime_tools/thread_priority.hpp"
+#include "realtime_tools/realtime_helpers.hpp"
 
 // code is inspired by
 // https://github.com/ros-controls/ros2_control/blob/master/controller_manager/src/ros2_control_node.cpp
