@@ -99,8 +99,7 @@ For getting started, you'll basically need three steps:
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
    robot](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/robot_setup.html)
-   and [create a program for external
-   control](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/install_urcap_e_series.html).
+   to be able to communicate with this driver correctly.
 
    Please do this step carefully and extract the calibration as explained
    [here](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/robot_setup.html#extract-calibration-information).
