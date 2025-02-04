@@ -237,8 +237,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
           // Update PIDs
           for (auto i = 0ul; i < dof_; ++i) {
             tmp_command_[i] = (state_desired_.velocities[i] * ff_velocity_scale_[i]) +
-                              pids_[i]->computeCommand(state_error_.positions[i], state_error_.velocities[i],
-                                                       (uint64_t)period.nanoseconds());
+                              pids_[i]->compute_command(state_error_.positions[i], state_error_.velocities[i], period);
           }
         }
 
