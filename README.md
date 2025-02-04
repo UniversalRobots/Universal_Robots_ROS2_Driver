@@ -100,9 +100,14 @@ For getting started, you'll basically need three steps:
    See the [installation instructions](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/installation.html) for more details and source-build instructions.
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
+<<<<<<< HEAD
    robot](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/robot_setup.html)
    and [create a program for external
    control](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/install_urcap_e_series.html).
+=======
+   robot](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/robot_setup.html)
+   to be able to communicate with this driver correctly.
+>>>>>>> d7f3ea7 (Fix broken link to robot_setup in README (#1263))
 
    Please do this step carefully and extract the calibration as explained
    [here](https://docs.ros.org/en/ros2_packages/humble/api/ur_robot_driver/doc/installation/robot_setup.html#extract-calibration-information).
