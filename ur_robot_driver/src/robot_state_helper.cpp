@@ -243,7 +243,7 @@ void RobotStateHelper::startActionServer()
     is_started_ = true;
   }
   set_mode_as_ = rclcpp_action::create_server<ur_dashboard_msgs::action::SetMode>(
-      node_, "set_mode",
+      node_, "~/set_mode",
       std::bind(&RobotStateHelper::setModeGoalCallback, this, std::placeholders::_1, std::placeholders::_2),
       std::bind(&RobotStateHelper::setModeCancelCallback, this, std::placeholders::_1),
       std::bind(&RobotStateHelper::setModeAcceptCallback, this, std::placeholders::_1));
