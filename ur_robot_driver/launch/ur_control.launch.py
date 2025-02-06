@@ -96,6 +96,9 @@ def launch_setup(context):
         executable="robot_state_helper",
         name="ur_robot_state_helper",
         output="screen",
+        parameters=[
+            {"headless_mode": headless_mode},
+        ],
     )
 
     tool_communication_node = Node(

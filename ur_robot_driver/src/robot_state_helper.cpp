@@ -66,6 +66,9 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
   stop_program_cb_ = unlock_cb_;
   play_program_cb_ = unlock_cb_;
 
+  node->declare_parameter("headless_mode", false);
+  headless_mode_ = node->get_parameter("headless_mode").as_bool();
+
   // Service to unlock protective stop
   unlock_protective_stop_srv_ = node_->create_client<std_srvs::srv::Trigger>(
       "dashboard_client/unlock_protective_stop", rclcpp::QoS(rclcpp::KeepLast(10)), unlock_cb_);
@@ -88,6 +91,10 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
   play_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/play",
                                                                    rclcpp::QoS(rclcpp::KeepLast(10)), play_program_cb_);
   play_program_srv_->wait_for_service();
+
+  resend_robot_program_srv_ = node_->create_client<std_srvs::srv::Trigger>(
+      "io_and_status_controller/resend_robot_program", rclcpp::QoS(rclcpp::KeepLast(10)), unlock_cb_);
+  resend_robot_program_srv_->wait_for_service();
 
   feedback_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Feedback>();
   result_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Result>();
@@ -222,9 +229,13 @@ void RobotStateHelper::updateRobotState()
       result_->success = true;
       result_->message = "Reached target robot mode.";
       if (robot_mode_ == urcl::RobotMode::RUNNING && goal_->play_program) {
-        // The dashboard denies playing immediately after switching the mode to RUNNING
-        sleep(1);
-        safeDashboardTrigger(this->play_program_srv_);
+        if (headless_mode_) {
+          safeDashboardTrigger(this->resend_robot_program_srv_);
+        } else {
+          // The dashboard denies playing immediately after switching the mode to RUNNING
+          sleep(1);
+          safeDashboardTrigger(this->play_program_srv_);
+        }
       }
       current_goal_handle_->succeed(result_);
     } else {

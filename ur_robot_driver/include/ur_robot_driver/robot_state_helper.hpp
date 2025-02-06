@@ -75,6 +75,8 @@ private:
   bool is_started_;
   bool in_action_;
 
+  bool headless_mode_;
+
   std::shared_ptr<ur_dashboard_msgs::action::SetMode::Result> result_;
   std::shared_ptr<ur_dashboard_msgs::action::SetMode::Feedback> feedback_;
   std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal_;
@@ -105,6 +107,7 @@ private:
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr brake_release_srv_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr stop_program_srv_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr play_program_srv_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr resend_robot_program_srv_;
 };
 }  // namespace ur_robot_driver
 
