@@ -283,11 +283,11 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
       case urcl::RobotMode::POWER_OFF:
       case urcl::RobotMode::IDLE:
       case urcl::RobotMode::RUNNING:
+        if (goal_->stop_program) {
+          safeDashboardTrigger(this->stop_program_srv_);
+        }
         if (robot_mode_ != static_cast<urcl::RobotMode>(goal_->target_robot_mode) ||
             safety_mode_ > urcl::SafetyMode::REDUCED) {
-          if (goal_->stop_program) {
-            safeDashboardTrigger(this->stop_program_srv_);
-          }
           doTransition();
         } else {
           updateRobotState();
