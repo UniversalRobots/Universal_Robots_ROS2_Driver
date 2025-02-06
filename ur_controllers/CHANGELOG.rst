@@ -2,6 +2,80 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.2 (2025-01-21)
+------------------
+* Remove all build warnings (`#1233 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1233>`_)
+* Contributors: Felix Exner
+
+3.0.1 (2024-12-30)
+------------------
+* Add missing test dependencies for ur_controllers (`#1215 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1215>`_)
+* Contributors: Felix Exner
+
+3.0.0 (2024-12-18)
+------------------
+* Freedrive Controller (`#1114 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1114>`_)
+* Make ur_controllers compilable on humble (`#1207 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1207>`_)
+* Update package maintainers (`#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
+* Add force mode controller (`#1049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1049>`_)
+* ur_controllers: Update RealTimeBox (`#1189 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1189>`_)
+* Add trajectory passthrough controller (`#944 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/944>`_)
+* Contributors: Christoph Fröhlich, Felix Exner, URJala, Vincenzo Di Pentima
+
+2.4.13 (2024-10-28)
+-------------------
+* [SJTC] Make scaling interface optional (`#1145 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1145>`_)
+* Contributors: Felix Exner (fexner)
+
+2.4.12 (2024-10-14)
+-------------------
+
+2.4.11 (2024-10-10)
+-------------------
+* Allow setting the analog output domain when setting an analog IO (`#1123 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1123>`_)
+* Service to get software version of robot (`#964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/964>`_)
+* Improve usage documentation (`#1110 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1110>`_)
+* Contributors: Felix Exner (fexner), URJala, Rune Søe-Knudsen
+
+2.4.10 (2024-09-11)
+-------------------
+* Updated get_state to get_lifecycle_state (`#1087 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1087>`_)
+* Update maintainers team (`#1088 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1088>`_)
+* Contributors: Vincenzo Di Pentima
+
+2.4.9 (2024-08-09)
+------------------
+
+2.4.8 (2024-07-01)
+------------------
+
+2.4.7 (2024-06-19)
+------------------
+
+2.4.6 (2024-06-17)
+------------------
+* this simple fix should fix the goal time violated issue (`#882 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/882>`_)
+* Restructure documentation for full stack documentation (`#984 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/984>`_)
+* Contributors: Felix Exner (fexner), Lennart Nachtigall, Vincenzo Di Pentima
+
+2.4.5 (2024-05-16)
+------------------
+* Use latched publishing for robot_mode and safety_mode
+* Contributors: Felix Exner
+
+2.4.4 (2024-04-04)
+------------------
+
+2.4.3 (2024-02-02)
+------------------
+
+2.4.2 (2023-11-23)
+------------------
+* Update read_state_from_hardware
+* Renamed normalize_joint_error to joints_angle_wraparound
+* Remove noisy controller log message
+* Contributors: Felix Exner, Robert Wilbrandt
+
 2.4.1 (2023-09-21)
 ------------------
 * Update sjtc to newest upstream API (`#810 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/810>`_)

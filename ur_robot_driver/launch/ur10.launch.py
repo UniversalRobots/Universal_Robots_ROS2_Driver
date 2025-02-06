@@ -55,8 +55,8 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "mock_sensor_commands",
             default_value="false",
-            description="Enable mock command interfaces for sensors used for simple simulations. \
-            Used only if 'use_mock_hardware' parameter is true.",
+            description="Enable mock command interfaces for sensors used for simple simulations. "
+            "Used only if 'use_mock_hardware' parameter is true.",
         )
     )
     declared_arguments.append(
@@ -69,6 +69,8 @@ def generate_launch_description():
                 "joint_trajectory_controller",
                 "forward_velocity_controller",
                 "forward_position_controller",
+                "freedrive_mode_controller",
+                "passthrough_trajectory_controller",
             ],
         )
     )

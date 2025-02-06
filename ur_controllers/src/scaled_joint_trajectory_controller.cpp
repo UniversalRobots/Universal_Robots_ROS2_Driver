@@ -50,6 +50,12 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_init()
   // Create the parameter listener and get the parameters
   scaled_param_listener_ = std::make_shared<scaled_joint_trajectory_controller::ParamListener>(get_node());
   scaled_params_ = scaled_param_listener_->get_params();
+  if (!scaled_params_.speed_scaling_interface_name.empty()) {
+    RCLCPP_INFO(get_node()->get_logger(), "Using scaling state from the hardware from interface %s.",
+                scaled_params_.speed_scaling_interface_name.c_str());
+  } else {
+    RCLCPP_INFO(get_node()->get_logger(), "No scaling interface set. This controller will not use speed scaling.");
+  }
 
   return JointTrajectoryController::on_init();
 }
@@ -58,7 +64,10 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
 {
   controller_interface::InterfaceConfiguration conf;
   conf = JointTrajectoryController::state_interface_configuration();
-  conf.names.push_back(scaled_params_.speed_scaling_interface_name);
+
+  if (!scaled_params_.speed_scaling_interface_name.empty()) {
+    conf.names.push_back(scaled_params_.speed_scaling_interface_name);
+  }
 
   return conf;
 }
@@ -70,27 +79,37 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_activat
   time_data.period = rclcpp::Duration::from_nanoseconds(0);
   time_data.uptime = get_node()->now();
   time_data_.initRT(time_data);
+
+  // Set scaling interfaces
+  if (!scaled_params_.speed_scaling_interface_name.empty()) {
+    auto it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(), [&](auto& interface) {
+      return (interface.get_name() == scaled_params_.speed_scaling_interface_name);
+    });
+    if (it != state_interfaces_.end()) {
+      scaling_state_interface_ = *it;
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find speed scaling interface in state interfaces.");
+    }
+  }
+
   return JointTrajectoryController::on_activate(state);
 }
 
 controller_interface::return_type ScaledJointTrajectoryController::update(const rclcpp::Time& time,
                                                                           const rclcpp::Duration& period)
 {
-  if (state_interfaces_.back().get_name() == scaled_params_.speed_scaling_interface_name) {
-    scaling_factor_ = state_interfaces_.back().get_value();
-  } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface (%s) not found in hardware interface.",
-                 scaled_params_.speed_scaling_interface_name.c_str());
+  if (scaling_state_interface_.has_value()) {
+    scaling_factor_ = scaling_state_interface_->get().get_value();
   }
 
-  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     return controller_interface::return_type::OK;
   }
 
   auto compute_error_for_joint = [&](JointTrajectoryPoint& error, size_t index, const JointTrajectoryPoint& current,
                                      const JointTrajectoryPoint& desired) {
     // error defined as the difference between current and desired
-    if (normalize_joint_error_[index]) {
+    if (joints_angle_wraparound_[index]) {
       // if desired, the shortest_angular_distance is calculated, i.e., the error is
       //  normalized between -pi<error<pi
       error.positions[index] = angles::shortest_angular_distance(current.positions[index], desired.positions[index]);
@@ -122,14 +141,16 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   // TODO(anyone): can I here also use const on joint_interface since the reference_wrapper is not
   // changed, but its value only?
   auto assign_interface_from_point = [&](auto& joint_interface, const std::vector<double>& trajectory_point_interface) {
+    bool success = true;
     for (size_t index = 0; index < dof_; ++index) {
-      joint_interface[index].get().set_value(trajectory_point_interface[index]);
+      success &= joint_interface[index].get().set_value(trajectory_point_interface[index]);
     }
+    return success;
   };
 
   // current state update
   state_current_.time_from_start.set__sec(0);
-  read_state_from_hardware(state_current_);
+  read_state_from_state_interfaces(state_current_);
 
   // currently carrying out a trajectory
   if (has_active_trajectory()) {
@@ -168,7 +189,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
       // time_difference is
       // - negative until first point is reached
       // - counting from zero to time_from_start of next point
-      double time_difference = time.seconds() - segment_time_from_start.seconds();
+      const double time_difference = time_data.uptime.seconds() - segment_time_from_start.seconds();
       bool tolerance_violated_while_moving = false;
       bool outside_goal_tolerance = false;
       bool within_goal_time = true;
@@ -222,21 +243,26 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
         }
 
         // set values for next hardware write()
+        bool write_success = true;
         if (has_position_command_interface_) {
-          assign_interface_from_point(joint_command_interface_[0], state_desired_.positions);
+          write_success &= assign_interface_from_point(joint_command_interface_[0], state_desired_.positions);
         }
         if (has_velocity_command_interface_) {
           if (use_closed_loop_pid_adapter_) {
-            assign_interface_from_point(joint_command_interface_[1], tmp_command_);
+            write_success &= assign_interface_from_point(joint_command_interface_[1], tmp_command_);
           } else {
-            assign_interface_from_point(joint_command_interface_[1], state_desired_.velocities);
+            write_success &= assign_interface_from_point(joint_command_interface_[1], state_desired_.velocities);
           }
         }
         if (has_acceleration_command_interface_) {
-          assign_interface_from_point(joint_command_interface_[2], state_desired_.accelerations);
+          write_success &= assign_interface_from_point(joint_command_interface_[2], state_desired_.accelerations);
         }
         if (has_effort_command_interface_) {
-          assign_interface_from_point(joint_command_interface_[3], tmp_command_);
+          write_success &= assign_interface_from_point(joint_command_interface_[3], tmp_command_);
+        }
+        if (!write_success) {
+          RCLCPP_ERROR(get_node()->get_logger(), "Could not write to a command interfaces.");
+          return controller_interface::return_type::ERROR;
         }
 
         // store the previous command. Used in open-loop control mode

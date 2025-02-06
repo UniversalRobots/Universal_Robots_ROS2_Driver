@@ -2,10 +2,11 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ur</name>
-  <version>2.4.1</version>
+  <version>3.0.2</version>
   <description>Metapackage for universal robots</description>
-  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <maintainer email="wilbrandt@fzi.de">Robert Wilbrandt</maintainer>
+  <maintainer email="feex@universal-robots.com">Felix Exner</maintainer>
+  <maintainer email="rsk@universal-robots.com">Rune Søe-Knudsen</maintainer>
+  <maintainer email="ros@universal-robots.com">Universal Robots A/S</maintainer>
   <license>BSD-3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

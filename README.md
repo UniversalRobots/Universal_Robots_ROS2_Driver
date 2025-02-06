@@ -1,13 +1,13 @@
 # Universal Robots ROS2 Driver
 
 Universal Robots has become a dominant supplier of lightweight, robotic manipulators for industry, as well as for scientific research and education.
-<center><img src="ur_robot_driver/doc/installation/initial_setup_images/e-Series.jpg" alt="Universal Robot e-Series family" style="width: 80%;"/></center>
+<div align="center"><img src="ur_robot_driver/doc/installation/initial_setup_images/family_photo.png" alt="Universal Robot family" style="width: 90%;"/></div>
 
 This is one of the very first ROS2 manipulator drivers. Some of the new features are enabled by ROS2 and include decreased latency, improved security, and more flexibility regarding middleware configuration. The package contains launch files to quickly get started using the driver as a standalone version or in combination with MoveIt2
 
 This driver is developed on top of [Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) and support some key cobot functionalities like; pause at emergency stop, safeguard stop, automatic speed scaling to avoid violate the safety setting and manually speed scaling from the teach pendant. In addition the externalControl URCap makes it possible to include ROS2 behaviors in the robot program.
 
-The driver is compatible across the entire line of UR robots -- from 3 kg payload to 16 kg payload and includes both the CB3 and the E-series.
+The driver is compatible across the entire line of UR robots -- from 3 kg payload to 30 kg payload and includes all robots from the CB3 series and newer.
 
 
 Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) about this driver.
@@ -18,63 +18,59 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
 <table width="100%">
   <tr>
     <th>ROS2 Distro</th>
-    <th>Foxy (EOL)</th>
-    <th>Galactic (EOL)</th>
     <th>Humble</th>
-    <th>Iron</th>
+    <th>Jazzy</th>
     <th>Rolling</th>
-  </tr>
-  <tr>
-    <th>Branch</th>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy">foxy</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic">galactic</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/iron">iron</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
-  </tr>
-  <tr>
-    <th>Release status</th>
-    <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?event=schedule"
-              alt="Foxy Binary Build"/>
-      </a> <br />
-    </td>
-    <td>
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?event=schedule"
-              alt="Galactic Binary Build"/>
-      </a> <br />
-    </td>
-    <td>
+      </tr>
+      <tr>
+        <th>Branch</th>
+        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
+        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
+        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
+      </tr>
+      <tr>
+        <th>Release status</th>
+        <td> <!-- humble -->
       <a href='https://build.ros2.org/job/Hbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
       <a href='https://build.ros2.org/job/Hbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_controllers'></a>
       <a href='https://build.ros2.org/job/Hbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
       <a href='https://build.ros2.org/job/Hbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
       <a href='https://build.ros2.org/job/Hbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Hbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
     </td>
-    <td>
-      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
-      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_controllers'></a>
-      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
-      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
-      <a href='https://build.ros2.org/job/Ibin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Ibin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
+    <td> <!-- jazzy -->
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/badge/icon?subject=ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Jbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Jbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
     </td>
-    <td>
-      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_calibration__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
-      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_controllers__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_controllers'></a>
-      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_dashboard_msgs__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
-      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_moveit_config__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
-      <a href='https://build.ros2.org/job/Rbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uJ64__ur_robot_driver__ubuntu_jammy_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
+    <td> <!-- rolling -->
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_calibration__ubuntu_noble_amd64__binary/badge/icon?subject=ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_controllers__ubuntu_noble_amd64__binary/badge/icon?subject=ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_dashboard_msgs__ubuntu_noble_amd64__binary/badge/icon?subject=ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_moveit_config__ubuntu_noble_amd64__binary/badge/icon?subject=ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Rbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/badge/icon?subject=ur_robot_driver'></a>
     </td>
   </tr>
 </table>
 
-The table above shows the build status for each package of this repo from the [ROS buildfarm](https://build.ros2.org/). For end-of-life (EOL) distributions the nightly binary builds from our CI are shown. EOL distributions will receive no more updates and may be lacking features.
+The table above shows the build status for each package of this repo from the [ROS
+buildfarm](https://build.ros2.org/).
 
 A more [detailed build status](ci_status.md) shows the state of all CI workflows inside this repo.
 Please note that the detailed view is intended for developers, while the one here should give end
 users an overview of the current released state.
+
+### EOL distros
+The following distributions are End-Of-Line (EOL). Branches for these exist and released packages
+are probably available for an unknown amount of time, but it is recommended to upgrade to a
+supported distribution.
+For EOL distributions the nightly binary builds from our CI are shown. EOL distributions will
+receive no more updates and may be lacking features.
+
+* Foxy (branch: [foxy](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/foxy)) [![Foxy Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/foxy-binary-build.yml?query=event%3Aschedule++)
+* Galactic (branch: [galactic](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/galactic)) [![Galactic Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/galactic-binary-build.yml?query=event%3Aschedule++)
+* Iron (branch: [iron](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/iron)) [![Iron Binary Build](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/iron-binary-main.yml/badge.svg?event=schedule)](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/iron-binary-main.yml?query=event%3Aschedule++)
 
 ## Packages in the Repository:
 
@@ -85,90 +81,47 @@ users an overview of the current released state.
   - `ur_moveit_config` - example MoveIt configuration for UR robots.
   - `ur_robot_driver` - driver / hardware interface for communication with UR robots.
 
+## System Requirements
+
+Please see the [requirements for the Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library#requirements), as this driver is build on top of Universal_Robots_Client_Library.
+
+**Note**: A fundamental requirement for the driver is using Linux. Currently, there is no support for any other OS.
+
 ## Getting Started
 
 For getting started, you'll basically need three steps:
 
-1. **Install the driver** (see below). You can either install this driver from binary packages or build it from source. We recommend a
-binary package installation unless you want to join development and submit changes.
+1. **Install the driver**
+   ```bash
+   sudo apt-get install ros-rolling-ur
+   ```
+   See the [installation instructions](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/installation.html) for more details and source-build instructions.
 
 2. **Start & Setup the robot**. Once you've installed the driver, [setup the
-   robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html)
-   and [create a program for external
-   control](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/install_urcap_e_series.html).
+   robot](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/robot_setup.html)
+   to be able to communicate with this driver correctly.
 
    Please do this step carefully and extract the calibration as explained
-   [here](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/robot_setup.html#extract-calibration-information).
+   [here](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/installation/robot_setup.html#extract-calibration-information).
    Otherwise the TCP's pose will not be correct inside the ROS ecosystem.
 
    If no real robot is required, you can [use a simulated
-   robot](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#usage-with-official-ur-simulator)
+   robot](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/simulation.html#usage-with-official-ur-simulator)
    that will behave almost exactly like the real robot.
 
 
 3. **Start the driver**. See the [usage
-   documentation](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for
+   documentation](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/toc.html) for
    details.
 
-4. Unless started in [headless mode](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/ROS_INTERFACE.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
-
-### Install from binary packages
-1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html). This
-      branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective
-      branches.
-2. Install the driver using
-   ```
-   sudo apt-get install ros-${ROS_DISTRO}-ur
+   ```bash
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20, ur30
+   # Replace the IP address with the IP address of your actual robot / URSim
+   ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
    ```
 
-### Build from source
-Before building from source please make sure that you actually need to do that. Building from source
-might require some special treatment, especially when it comes to dependency management.
-Dependencies might change from time to time. Upstream packages (such as the library) might change
-their features / API which require changes in this repo. Therefore, this repo's source builds might
-require upstream repositories to be present in a certain version as otherwise builds might fail.
-Starting from scratch following exactly the steps below should always work, but simply pulling and
-building might fail occasionally.
+4. Unless started in [headless mode](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/operation_modes.html#headless-mode): Run the external_control program by **pressing `play` on the teach pendant**.
 
-1. [Install ROS2](https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html). This
-      branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective
-      branches.
-
-   Once installed, please make sure to actually [source ROS2](https://docs.ros.org/en/rolling/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html#source-the-setup-files) before proceeding.
-
-3. Make sure that `colcon`, its extensions and `vcs` are installed:
-   ```
-   sudo apt install python3-colcon-common-extensions python3-vcstool
-   ```
-
-4. Create a new ROS2 workspace:
-   ```
-   export COLCON_WS=~/workspace/ros_ur_driver
-   mkdir -p $COLCON_WS/src
-   ```
-
-5. Clone relevant packages, install dependencies, compile, and source the workspace by using:
-   ```
-   cd $COLCON_WS
-   git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos
-   rosdep update
-   rosdep install --ignore-src --from-paths src -y
-   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
-   source install/setup.bash
-   ```
-
-6. When consecutive pulls lead to build errors it is possible that you'll have to build an upstream
-   package from source, as well. See the [detailed build status](ci_status.md). When the binary builds are red, but
-   the semi-binary builds are green, you need to build the upstream dependencies from source. The
-   easiest way to achieve this, is using the repos file:
-
-   ```
-   cd $COLCON_WS
-   vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.${ROS_DISTRO}.repos
-   rosdep update
-   rosdep install --ignore-src --from-paths src -y
-   ```
 
 ## MoveIt! support
 
@@ -180,9 +133,9 @@ Watch MoveIt in action with the Universal Robots ROS2 driver:
   *The video shows free-space trajectory planning around a modeled collision scene object using the MoveIt2 MotionPlanning widget for Rviz2.*
 
 See the [MoveIt!
-section](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#using-moveit)
+section](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/move.html#using-moveit)
 of the [Usage
-guide](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html) for details.
+guide](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/toc.html) for details.
 
 ## Expected Changes in the Near Future
 

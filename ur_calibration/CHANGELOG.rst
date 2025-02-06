@@ -2,6 +2,59 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.2 (2025-01-21)
+------------------
+
+3.0.1 (2024-12-30)
+------------------
+
+3.0.0 (2024-12-18)
+------------------
+* Update package maintainers (`#1203 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1203>`_)
+* Initialize segments in constructor of DHRobot in calibration.hpp (`#1197 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1197>`_)
+* Contributors: Benjamin, Felix Exner
+
+2.4.13 (2024-10-28)
+-------------------
+
+2.4.12 (2024-10-14)
+-------------------
+
+2.4.11 (2024-10-10)
+-------------------
+
+2.4.10 (2024-09-11)
+-------------------
+* Update maintainers team (`#1088 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1088>`_)
+* Contributors: Vincenzo Di Pentima
+
+2.4.9 (2024-08-09)
+------------------
+
+2.4.8 (2024-07-01)
+------------------
+
+2.4.7 (2024-06-19)
+------------------
+
+2.4.6 (2024-06-17)
+------------------
+* Fix calibration (`#1017 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1017>`_)
+* Restructure documentation for full stack documentation (`#984 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/984>`_)
+* Contributors: Felix Exner (fexner), Vincenzo Di Pentima
+
+2.4.5 (2024-05-16)
+------------------
+
+2.4.4 (2024-04-04)
+------------------
+
+2.4.3 (2024-02-02)
+------------------
+
+2.4.2 (2023-11-23)
+------------------
+
 2.4.1 (2023-09-21)
 ------------------
 
