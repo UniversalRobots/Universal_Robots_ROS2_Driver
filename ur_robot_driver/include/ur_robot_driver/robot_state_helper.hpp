@@ -92,13 +92,7 @@ private:
   rclcpp::Subscription<ur_dashboard_msgs::msg::RobotMode>::SharedPtr robot_mode_sub_;
   rclcpp::Subscription<ur_dashboard_msgs::msg::SafetyMode>::SharedPtr safety_mode_sub_;
 
-  rclcpp::CallbackGroup::SharedPtr unlock_cb_;
-  rclcpp::CallbackGroup::SharedPtr restart_cb_;
-  rclcpp::CallbackGroup::SharedPtr power_on_cb_;
-  rclcpp::CallbackGroup::SharedPtr power_off_cb_;
-  rclcpp::CallbackGroup::SharedPtr brake_release_cb_;
-  rclcpp::CallbackGroup::SharedPtr stop_program_cb_;
-  rclcpp::CallbackGroup::SharedPtr play_program_cb_;
+  rclcpp::CallbackGroup::SharedPtr service_cb_grp_;
 
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_srv_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr restart_safety_srv_;
