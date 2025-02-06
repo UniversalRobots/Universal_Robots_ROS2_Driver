@@ -94,7 +94,7 @@ def launch_setup(context):
     robot_state_helper_node = Node(
         package="ur_robot_driver",
         executable="robot_state_helper",
-        name="robot_state_helper",
+        name="ur_robot_state_helper",
         output="screen",
     )
 
