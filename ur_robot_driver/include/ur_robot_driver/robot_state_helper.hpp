@@ -1,7 +1,36 @@
+// Copyright 2024, FZI Forschungszentrum Informatik, Created on behalf of Universal Robots A/S
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+//    * Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//    * Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in the
+//      documentation and/or other materials provided with the distribution.
+//
+//    * Neither the name of the {copyright_holder} nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
 #ifndef UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 #define UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 
 #include <chrono>
+#include <memory>
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/create_server.hpp"
@@ -19,7 +48,7 @@ class RobotStateHelper
 public:
   using SetModeGoalHandle = rclcpp_action::ServerGoalHandle<ur_dashboard_msgs::action::SetMode>;
 
-  RobotStateHelper(const rclcpp::Node::SharedPtr& node);
+  explicit RobotStateHelper(const rclcpp::Node::SharedPtr& node);
   RobotStateHelper() = delete;
   virtual ~RobotStateHelper() = default;
 
@@ -38,8 +67,7 @@ private:
   void setModeAcceptCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
   rclcpp_action::GoalResponse setModeGoalCallback(const rclcpp_action::GoalUUID& uuid,
                                                   std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal);
-  rclcpp_action::CancelResponse
-  setModeCancelCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
+  rclcpp_action::CancelResponse setModeCancelCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
 
   void setModeExecute(const std::shared_ptr<SetModeGoalHandle> goal_handle);
 
