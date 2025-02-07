@@ -84,7 +84,7 @@ add_executable(dashboard_client
   src/dashboard_client_node.cpp
   src/urcl_log_handler.cpp
 )
-target_link_libraries(dashboard_client ${catkin_LIBRARIES} ur_client_library::urcl)
+target_link_libraries(dashboard_client ur_client_library::urcl)
 ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 #
@@ -103,7 +103,7 @@ add_executable(robot_state_helper
   src/robot_state_helper.cpp
   src/robot_state_helper_node.cpp
 )
-target_link_libraries(robot_state_helper ${catkin_LIBRARIES} ur_client_library::urcl)
+target_link_libraries(robot_state_helper ur_client_library::urcl)
 ament_target_dependencies(robot_state_helper ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 add_executable(urscript_interface
