@@ -71,12 +71,12 @@ Depending on the :ref:`robot control mode<operation_modes>` do the following:
 * When the driver is started with ``headless_mode:=true`` nothing is needed. The driver is running
   already.
 
-.. _continuation_after_interruptions:
+
+.. _verify_calibration:
 
 Verify calibration info is being used correctly
 -----------------------------------------------
 
-.. _verify_calibration:
 
 If you passed a path to an extracted calibration via the *kinematics_params_file*
 parameter, ensure that the loaded calibration matches that of the robot by inspecting the console
@@ -98,8 +98,11 @@ Alternatively, search for the term *checksum* in the console output after launch
 Verify that the printed checksum matches that on the final line of your extracted calibration file.
 
 
+.. _continuation_after_interruptions:
+
 Continuation after interruptions
 --------------------------------
+
 
 Whenever the *External Control URCap* program gets interrupted, it has to be unpaused / restarted.
 
