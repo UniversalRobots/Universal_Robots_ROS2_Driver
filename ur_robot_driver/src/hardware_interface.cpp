@@ -58,9 +58,6 @@ namespace ur_robot_driver
 
 URPositionHardwareInterface::~URPositionHardwareInterface()
 {
-  // If the controller manager is shutdown via Ctrl + C the on_deactivate methods won't be called.
-  // We therefore need to make sure to actually deactivate the communication
-  on_cleanup(rclcpp_lifecycle::State());
 }
 
 hardware_interface::CallbackReturn
@@ -592,6 +589,19 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
 
 hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_state)
+{
+  RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "on_cleanup");
+  return stop();
+}
+
+hardware_interface::CallbackReturn
+URPositionHardwareInterface::on_shutdown(const rclcpp_lifecycle::State& previous_state)
+{
+  RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "on_shutdown");
+  return stop();
+}
+
+hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
 
