@@ -17,3 +17,4 @@ ur_robot_driver
    setup_tool_communication
    hardware_interface_parameters
    dashboard_client
+   robot_state_helper
