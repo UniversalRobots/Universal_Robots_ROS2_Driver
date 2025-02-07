@@ -124,6 +124,7 @@ public:
   hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
+  hardware_interface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& previous_state) final;
 
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) final;
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) final;
@@ -153,6 +154,9 @@ protected:
   template <typename T, size_t N>
   void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
                       std::bitset<N>& data);
+
+  // stop function used by on_shutdown and on_cleanup
+  hardware_interface::CallbackReturn stop();
 
   void initAsyncIO();
   void checkAsyncIO();
