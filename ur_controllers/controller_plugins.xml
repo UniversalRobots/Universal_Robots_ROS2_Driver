@@ -36,7 +36,7 @@
   </class>
   <class name="ur_controllers/ToolContactController" type="ur_controllers::ToolContactController" base_class_type="controller_interface::ControllerInterface">
     <description>
-      Chainable controller to use the tool contact functionality of the robot.
+      Controller to use the tool contact functionality of the robot.
     </description>
   </class>
 </library>

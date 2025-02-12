@@ -25,7 +25,6 @@ find_package(generate_parameter_library REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(action_msgs REQUIRED)
-find_package(rclcpp REQUIRED)
 
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -48,7 +47,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   control_msgs
   trajectory_msgs
   action_msgs
-  rclcpp
 )
 
 include_directories(include)
@@ -117,14 +115,6 @@ target_link_libraries(${PROJECT_NAME}
   ur_configuration_controller_parameters
 )
 
-#
-# trajectory_until_node
-#
-add_executable(trajectory_until_node
-  src/trajectory_until_node.cpp
-)
-ament_target_dependencies(trajectory_until_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
@@ -134,11 +124,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror=return-type)
 # prevent pluginlib from using boost
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 pluginlib_export_plugin_description_file(controller_interface controller_plugins.xml)
-
-install(
-  TARGETS trajectory_until_node
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib

@@ -43,7 +43,6 @@
   <depend>control_msgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>action_msgs</depend>
-  <depend>rclcpp_components</depend>
 
   <test_depend>controller_manager</test_depend>
   <test_depend>ros2_control_test_assets</test_depend>
