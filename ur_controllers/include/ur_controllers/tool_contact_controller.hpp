@@ -90,7 +90,9 @@ private:
 
   RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
-  rclcpp::Duration action_monitor_period_ = rclcpp::Duration(std::chrono::milliseconds(50));
+  std::chrono::nanoseconds action_monitor_period_;
+
+  void action_handler(RealtimeGoalHandlePtr rt_goal);
 
   rclcpp_action::GoalResponse goal_received_callback(const rclcpp_action::GoalUUID& /*uuid*/,
                                                      std::shared_ptr<const ur_msgs::action::ToolContact::Goal> goal);
@@ -101,9 +103,6 @@ private:
   rclcpp_action::CancelResponse goal_cancelled_callback(
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
 
-  controller_interface::return_type failed_update();
-
-  double tool_contact_enable_ref_interface;
   double tool_contact_active_state_interface;
 
   std::atomic<bool> tool_contact_enable_ = false;
@@ -112,10 +111,8 @@ private:
   std::atomic<bool> change_requested_ = false;
   std::atomic<bool> logged_once_ = false;
 
-  double old_reference_val = 0.0;
-
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_result_interface_;
-  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_version_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> major_version_state_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> tool_contact_status_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> reference_interface_;
 
