@@ -26,6 +26,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include <mutex>
 #include <ur_robot_driver/robot_state_helper.hpp>
 
 #include "rclcpp/rclcpp.hpp"
@@ -41,10 +42,9 @@ namespace ur_robot_driver
 {
 RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
   : node_(node)
-  , is_started_(false)
-  , in_action_(false)
   , robot_mode_(urcl::RobotMode::UNKNOWN)
   , safety_mode_(urcl::SafetyMode::UNDEFINED_SAFETY_MODE)
+  , in_action_(false)
 {
   robot_mode_sub_cb_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::SubscriptionOptions options;
@@ -57,6 +57,9 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
   safety_mode_sub_ = node_->create_subscription<ur_dashboard_msgs::msg::SafetyMode>(
       "io_and_status_controller/safety_mode", 1,
       std::bind(&RobotStateHelper::safetyModeCallback, this, std::placeholders::_1));
+  program_running_sub = node_->create_subscription<std_msgs::msg::Bool>(
+      "io_and_status_controller/robot_program_running", 1,
+      [this](std_msgs::msg::Bool::UniquePtr msg) -> void { program_running_ = msg->data; });
 
   service_cb_grp_ = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
@@ -92,6 +95,11 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
 
   feedback_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Feedback>();
   result_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Result>();
+  set_mode_as_ = rclcpp_action::create_server<ur_dashboard_msgs::action::SetMode>(
+      node_, "~/set_mode",
+      std::bind(&RobotStateHelper::setModeGoalCallback, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&RobotStateHelper::setModeCancelCallback, this, std::placeholders::_1),
+      std::bind(&RobotStateHelper::setModeAcceptCallback, this, std::placeholders::_1));
 }
 
 void RobotStateHelper::robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg)
@@ -101,10 +109,10 @@ void RobotStateHelper::robotModeCallback(ur_dashboard_msgs::msg::RobotMode::Shar
     RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"),
                        "The robot is currently in mode " << robotModeString(robot_mode_) << ".");
     if (in_action_) {
-      updateRobotState();
-      if (!is_started_) {
-        startActionServer();
-      }
+      std::scoped_lock lock(goal_mutex_);
+      feedback_->current_robot_mode =
+          static_cast<ur_dashboard_msgs::action::SetMode::Feedback::_current_robot_mode_type>(robot_mode_.load());
+      current_goal_handle_->publish_feedback(feedback_);
     }
   }
 }
@@ -115,78 +123,110 @@ void RobotStateHelper::safetyModeCallback(ur_dashboard_msgs::msg::SafetyMode::Sh
     safety_mode_ = urcl::SafetyMode(msg->mode);
     RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"),
                        "The robot is currently in safety mode " << safetyModeString(safety_mode_) << ".");
-    updateRobotState();
-    if (!is_started_) {
-      startActionServer();
+    if (in_action_) {
+      std::scoped_lock lock(goal_mutex_);
+      feedback_->current_safety_mode =
+          static_cast<ur_dashboard_msgs::action::SetMode::Feedback::_current_safety_mode_type>(safety_mode_.load());
+      current_goal_handle_->publish_feedback(feedback_);
     }
   }
 }
 
-void RobotStateHelper::doTransition()
+bool RobotStateHelper::recoverFromSafety()
 {
-  if (static_cast<urcl::RobotMode>(goal_->target_robot_mode) < robot_mode_) {
-    safeDashboardTrigger(this->power_off_srv_);
-  } else {
-    switch (safety_mode_) {
-      case urcl::SafetyMode::PROTECTIVE_STOP:
-        safeDashboardTrigger(this->unlock_protective_stop_srv_);
-        break;
-      case urcl::SafetyMode::SYSTEM_EMERGENCY_STOP:;
-      case urcl::SafetyMode::ROBOT_EMERGENCY_STOP:
-        RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in safety mode."
-                                                                         << safetyModeString(safety_mode_)
-                                                                         << ". Please release the EM-Stop to proceed.");
-        break;
-      case urcl::SafetyMode::VIOLATION:;
-      case urcl::SafetyMode::FAULT:
-        safeDashboardTrigger(this->restart_safety_srv_);
-        break;
-      default:
-        switch (robot_mode_) {
-          case urcl::RobotMode::CONFIRM_SAFETY:
-            RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
-                                                                             << robotModeString(robot_mode_)
-                                                                             << ". It is required to interact with the "
-                                                                                "teach pendant at this point.");
-            break;
-          case urcl::RobotMode::BOOTING:
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
-                                                                             << robotModeString(robot_mode_)
-                                                                             << ". Please wait until the robot is "
-                                                                                "booted up...");
-            break;
-          case urcl::RobotMode::POWER_OFF:
-            safeDashboardTrigger(this->power_on_srv_);
-            break;
-          case urcl::RobotMode::POWER_ON:
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
-                                                                             << robotModeString(robot_mode_)
-                                                                             << ". Please wait until the robot is in "
-                                                                                "mode "
-                                                                             << robotModeString(urcl::RobotMode::IDLE));
-            break;
-          case urcl::RobotMode::IDLE:
-            safeDashboardTrigger(this->brake_release_srv_);
-            break;
-          case urcl::RobotMode::BACKDRIVE:
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"),
-                               "The robot is currently in mode "
-                                   << robotModeString(robot_mode_) << ". It will automatically return to mode "
-                                   << robotModeString(urcl::RobotMode::IDLE) << " once the teach button is released.");
-            break;
-          case urcl::RobotMode::RUNNING:
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"),
-                               "The robot has reached operational mode " << robotModeString(robot_mode_));
-            break;
-          default:
-            RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
-                                                                             << robotModeString(robot_mode_)
-                                                                             << ". This won't be handled by this "
-                                                                                "helper. Please resolve this "
-                                                                                "manually.");
-        }
-    }
+  switch (safety_mode_) {
+    case urcl::SafetyMode::PROTECTIVE_STOP:
+      return safeDashboardTrigger(this->unlock_protective_stop_srv_);
+    case urcl::SafetyMode::SYSTEM_EMERGENCY_STOP:;
+    case urcl::SafetyMode::ROBOT_EMERGENCY_STOP:
+      RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in safety mode."
+                                                                       << safetyModeString(safety_mode_)
+                                                                       << ". Please release the EM-Stop to proceed.");
+      return false;
+    case urcl::SafetyMode::VIOLATION:;
+    case urcl::SafetyMode::FAULT:
+      return safeDashboardTrigger(this->restart_safety_srv_);
+    default:
+      // nothing to do
+      RCLCPP_DEBUG_STREAM(rclcpp::get_logger("robot_state_helper"), "No safety recovery needed.");
   }
+  return true;
+}
+
+bool RobotStateHelper::jumpToRobotMode(const urcl::RobotMode target_mode)
+{
+  switch (target_mode) {
+    case urcl::RobotMode::POWER_OFF:
+      return safeDashboardTrigger(this->power_off_srv_);
+    case urcl::RobotMode::IDLE:
+      return safeDashboardTrigger(this->power_on_srv_);
+    case urcl::RobotMode::RUNNING:
+      return safeDashboardTrigger(this->brake_release_srv_);
+    default:
+      RCLCPP_ERROR_STREAM(rclcpp::get_logger("robot_state_helper"), "Unreachable target robot mode.");
+  }
+  return false;
+}
+
+bool RobotStateHelper::doTransition(const urcl::RobotMode target_mode)
+{
+  if (!recoverFromSafety()) {
+    return false;
+  }
+  switch (robot_mode_) {
+    case urcl::RobotMode::CONFIRM_SAFETY:
+      RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
+                                                                       << robotModeString(robot_mode_)
+                                                                       << ". It is required to interact with "
+                                                                          "the "
+                                                                          "teach pendant at this point.");
+      break;
+    case urcl::RobotMode::BOOTING:
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
+                                                                       << robotModeString(robot_mode_)
+                                                                       << ". Please wait until the robot is "
+                                                                          "booted up...");
+      break;
+    case urcl::RobotMode::POWER_OFF:
+      return jumpToRobotMode(target_mode);
+    case urcl::RobotMode::POWER_ON:
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
+                                                                       << robotModeString(robot_mode_)
+                                                                       << ". Please wait until the robot is in "
+                                                                          "mode "
+                                                                       << robotModeString(urcl::RobotMode::IDLE));
+      break;
+    case urcl::RobotMode::IDLE:
+      return jumpToRobotMode(target_mode);
+      break;
+    case urcl::RobotMode::BACKDRIVE:
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
+                                                                       << robotModeString(robot_mode_)
+                                                                       << ". It will automatically return to "
+                                                                          "mode "
+                                                                       << robotModeString(urcl::RobotMode::IDLE)
+                                                                       << " once the teach button is "
+                                                                          "released.");
+      break;
+    case urcl::RobotMode::RUNNING:
+      if (target_mode == urcl::RobotMode::IDLE) {
+        // We cannot engage the brakes directly.
+        if (!jumpToRobotMode(urcl::RobotMode::POWER_OFF)) {
+          return false;
+        }
+      }
+      return jumpToRobotMode(target_mode);
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"),
+                         "The robot has reached operational mode " << robotModeString(robot_mode_));
+      break;
+    default:
+      RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in mode "
+                                                                       << robotModeString(robot_mode_)
+                                                                       << ". This won't be handled by this "
+                                                                          "helper. Please resolve this "
+                                                                          "manually.");
+  }
+  return false;
 }
 
 bool RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv)
@@ -195,63 +235,9 @@ bool RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigge
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   auto future = srv->async_send_request(request);
   future.wait();
-  RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"), "Service response received: " << future.get()->message);
-  return true;
-}
-
-void RobotStateHelper::updateRobotState()
-{
-  if (is_started_) {
-    // Update action feedback
-    feedback_->current_robot_mode =
-        static_cast<ur_dashboard_msgs::action::SetMode::Feedback::_current_robot_mode_type>(robot_mode_);
-    feedback_->current_safety_mode =
-        static_cast<ur_dashboard_msgs::action::SetMode::Feedback::_current_safety_mode_type>(safety_mode_);
-    current_goal_handle_->publish_feedback(feedback_);
-
-    if (robot_mode_ < static_cast<urcl::RobotMode>(goal_->target_robot_mode) ||
-        safety_mode_ > urcl::SafetyMode::REDUCED) {
-      // Transition to next mode
-      RCLCPP_DEBUG_STREAM(rclcpp::get_logger("ur_robot_state_helper"),
-                          "Current robot mode is "
-                              << robotModeString(robot_mode_) << " while target mode is "
-                              << robotModeString(static_cast<urcl::RobotMode>(goal_->target_robot_mode)));
-      doTransition();
-    } else if (robot_mode_ == static_cast<urcl::RobotMode>(goal_->target_robot_mode)) {
-      // Final mode reached
-      in_action_ = false;
-      result_->success = true;
-      result_->message = "Reached target robot mode.";
-      if (robot_mode_ == urcl::RobotMode::RUNNING && goal_->play_program) {
-        if (headless_mode_) {
-          safeDashboardTrigger(this->resend_robot_program_srv_);
-        } else {
-          // The dashboard denies playing immediately after switching the mode to RUNNING
-          sleep(1);
-          safeDashboardTrigger(this->play_program_srv_);
-        }
-      }
-      current_goal_handle_->succeed(result_);
-    } else {
-      result_->success = false;
-      result_->message = "Robot reached higher mode than requested during recovery. This either means that something "
-                         "went wrong or that a higher mode was requested from somewhere else (e.g. the teach "
-                         "pendant.)";
-      current_goal_handle_->abort(result_);
-    }
-  }
-}
-
-void RobotStateHelper::startActionServer()
-{
-  if (robot_mode_ != urcl::RobotMode::UNKNOWN && safety_mode_ != urcl::SafetyMode::UNDEFINED_SAFETY_MODE) {
-    is_started_ = true;
-  }
-  set_mode_as_ = rclcpp_action::create_server<ur_dashboard_msgs::action::SetMode>(
-      node_, "~/set_mode",
-      std::bind(&RobotStateHelper::setModeGoalCallback, this, std::placeholders::_1, std::placeholders::_2),
-      std::bind(&RobotStateHelper::setModeCancelCallback, this, std::placeholders::_1),
-      std::bind(&RobotStateHelper::setModeAcceptCallback, this, std::placeholders::_1));
+  auto result = future.get();
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"), "Service response received: " << result->message);
+  return result->success;
 }
 
 void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
@@ -259,32 +245,53 @@ void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHel
   std::thread{ std::bind(&RobotStateHelper::setModeExecute, this, std::placeholders::_1), goal_handle }.detach();
 }
 
+bool RobotStateHelper::stopProgram()
+{
+  if (safeDashboardTrigger(this->stop_program_srv_)) {
+    auto start = std::chrono::steady_clock::now();
+    while (program_running_ && std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(2));
+      return true;
+    }
+  }
+  return false;
+}
+
 void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
 {
+  {
+    std::scoped_lock lock(goal_mutex_);
+    current_goal_handle_ = goal_handle;
+  }
   in_action_ = true;
-  current_goal_handle_ = goal_handle;
-  const auto goal = current_goal_handle_->get_goal();
+  const auto goal = goal_handle->get_goal();
   this->goal_ = goal;
-  if (goal_->target_robot_mode > 8 || goal_->target_robot_mode < -1) {
-    result_->message = "Requested illegal mode.";
-    result_->success = false;
-    current_goal_handle_->abort(result_);
-  } else {
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"),
-                       "Target mode was set to "
-                           << robotModeString(static_cast<urcl::RobotMode>(goal_->target_robot_mode)) << ".");
-    switch (static_cast<urcl::RobotMode>(goal_->target_robot_mode)) {
+  urcl::RobotMode target_mode;
+  try {
+    target_mode = static_cast<urcl::RobotMode>(goal->target_robot_mode);
+    switch (target_mode) {
       case urcl::RobotMode::POWER_OFF:
       case urcl::RobotMode::IDLE:
       case urcl::RobotMode::RUNNING:
-        if (goal_->stop_program) {
-          safeDashboardTrigger(this->stop_program_srv_);
+        if (goal_->stop_program && program_running_) {
+          if (!stopProgram()) {
+            result_->message = "Stopping the program failed.";
+            result_->success = false;
+            std::scoped_lock lock(goal_mutex_);
+            current_goal_handle_->abort(result_);
+            return;
+          }
         }
-        if (robot_mode_ != static_cast<urcl::RobotMode>(goal_->target_robot_mode) ||
-            safety_mode_ > urcl::SafetyMode::REDUCED) {
-          doTransition();
-        } else {
-          updateRobotState();
+        if (robot_mode_ != target_mode || safety_mode_ > urcl::SafetyMode::REDUCED) {
+          RCLCPP_INFO_STREAM(rclcpp::get_logger("robot_state_helper"),
+                             "Target mode was set to " << robotModeString(target_mode) << ".");
+          if (!doTransition(target_mode)) {
+            result_->message = "Transition to target mode failed.";
+            result_->success = false;
+            std::scoped_lock lock(goal_mutex_);
+            current_goal_handle_->abort(result_);
+            return;
+          }
         }
         break;
       case urcl::RobotMode::NO_CONTROLLER:
@@ -294,17 +301,69 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
       case urcl::RobotMode::POWER_ON:
       case urcl::RobotMode::BACKDRIVE:
       case urcl::RobotMode::UPDATING_FIRMWARE:
-        result_->message = "Requested target mode " +
-                           robotModeString(static_cast<urcl::RobotMode>(goal_->target_robot_mode)) +
-                           " which cannot be explicitly selected.";
+        result_->message =
+            "Requested target mode " + robotModeString(target_mode) + " which cannot be explicitly selected.";
         result_->success = false;
-        current_goal_handle_->abort(result_);
+        {
+          std::scoped_lock lock(goal_mutex_);
+          current_goal_handle_->abort(result_);
+        }
+        return;
         break;
       default:
         result_->message = "Requested illegal mode.";
         result_->success = false;
-        current_goal_handle_->abort(result_);
+        {
+          std::scoped_lock lock(goal_mutex_);
+          current_goal_handle_->abort(result_);
+        }
+        return;
         break;
+    }
+  } catch (const std::invalid_argument& e) {
+    result_->message = e.what();
+    result_->success = false;
+    {
+      std::scoped_lock lock(goal_mutex_);
+      current_goal_handle_->abort(result_);
+    }
+    return;
+  }
+
+  // Wait until the robot reached the target mode or something went wrong
+  while (robot_mode_ != target_mode && !error_) {
+    RCLCPP_INFO(rclcpp::get_logger("robot_state_helper"), "Waiting for robot to reach target mode... Current_mode: %s",
+                robotModeString(robot_mode_).c_str());
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
+
+  if (robot_mode_ == target_mode) {
+    result_->success = true;
+    result_->message = "Reached target robot mode.";
+    if (robot_mode_ == urcl::RobotMode::RUNNING && goal_->play_program && !program_running_) {
+      if (headless_mode_) {
+        result_->success = safeDashboardTrigger(this->resend_robot_program_srv_);
+      } else {
+        // The dashboard denies playing immediately after switching the mode to RUNNING
+        sleep(1);
+        result_->success = safeDashboardTrigger(this->play_program_srv_);
+      }
+    }
+    if (result_->success) {
+      std::scoped_lock lock(goal_mutex_);
+      current_goal_handle_->succeed(result_);
+    } else {
+      std::scoped_lock lock(goal_mutex_);
+      current_goal_handle_->abort(result_);
+    }
+  } else {
+    result_->success = false;
+    result_->message = "Robot reached higher mode than requested during recovery. This either means that something "
+                       "went wrong or that a higher mode was requested from somewhere else (e.g. the teach "
+                       "pendant.)";
+    {
+      std::scoped_lock lock(goal_mutex_);
+      current_goal_handle_->abort(result_);
     }
   }
 }
@@ -313,6 +372,17 @@ rclcpp_action::GoalResponse RobotStateHelper::setModeGoalCallback(
     const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal)
 {
   (void)uuid;
+  if (robot_mode_ == urcl::RobotMode::UNKNOWN) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("robot_state_helper"), "Robot mode is unknown. Cannot accept goal, yet. Is "
+                                                                  "the robot switched on and connected to the driver?");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
+
+  if (safety_mode_ == urcl::SafetyMode::UNDEFINED_SAFETY_MODE) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("robot_state_helper"), "Safety mode is unknown. Cannot accept goal, yet. Is "
+                                                                  "the robot switched on and connected to the driver?");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 

@@ -34,6 +34,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/create_server.hpp"
+#include "std_msgs/msg/bool.hpp"
 #include "std_srvs/srv/trigger.hpp"
 
 #include "ur_dashboard_msgs/action/set_mode.hpp"
@@ -60,9 +61,13 @@ private:
 
   void updateRobotState();
 
-  void doTransition();
+  bool recoverFromSafety();
+  bool doTransition(const urcl::RobotMode target_mode);
+  bool jumpToRobotMode(const urcl::RobotMode target_mode);
 
   bool safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv);
+
+  bool stopProgram();
 
   void setModeAcceptCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
   rclcpp_action::GoalResponse setModeGoalCallback(const rclcpp_action::GoalUUID& uuid,
@@ -71,10 +76,6 @@ private:
 
   void setModeExecute(const std::shared_ptr<SetModeGoalHandle> goal_handle);
 
-  void startActionServer();
-  bool is_started_;
-  bool in_action_;
-
   bool headless_mode_;
 
   std::shared_ptr<ur_dashboard_msgs::action::SetMode::Result> result_;
@@ -82,8 +83,12 @@ private:
   std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal_;
   std::shared_ptr<SetModeGoalHandle> current_goal_handle_;
 
-  urcl::RobotMode robot_mode_;
-  urcl::SafetyMode safety_mode_;
+  std::atomic<urcl::RobotMode> robot_mode_;
+  std::atomic<urcl::SafetyMode> safety_mode_;
+  std::atomic<bool> error_ = false;
+  std::atomic<bool> in_action_;
+  std::atomic<bool> program_running_;
+  std::mutex goal_mutex_;
 
   rclcpp_action::Server<ur_dashboard_msgs::action::SetMode>::SharedPtr set_mode_as_;
 
@@ -91,6 +96,7 @@ private:
 
   rclcpp::Subscription<ur_dashboard_msgs::msg::RobotMode>::SharedPtr robot_mode_sub_;
   rclcpp::Subscription<ur_dashboard_msgs::msg::SafetyMode>::SharedPtr safety_mode_sub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr program_running_sub;
 
   rclcpp::CallbackGroup::SharedPtr service_cb_grp_;
 
