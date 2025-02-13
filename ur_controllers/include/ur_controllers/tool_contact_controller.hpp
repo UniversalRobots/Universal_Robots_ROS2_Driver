@@ -90,7 +90,7 @@ private:
 
   RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
-  std::chrono::nanoseconds action_monitor_period_;
+  rclcpp::duration<std::chrono::nanoseconds> action_monitor_period_;
 
   void action_handler(RealtimeGoalHandlePtr rt_goal);
 
@@ -113,7 +113,8 @@ private:
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_result_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> major_version_state_interface_;
-  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> tool_contact_status_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_state_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> tool_contact_set_state_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> reference_interface_;
 
   rclcpp_action::Server<ur_msgs::action::ToolContact>::SharedPtr tool_contact_action_server_;

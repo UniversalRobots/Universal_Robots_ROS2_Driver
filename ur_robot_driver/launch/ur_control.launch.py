@@ -137,45 +137,6 @@ def launch_setup(context):
         ],
     )
 
-    trajectory_until_node = Node(
-        package="ur_controllers",
-        executable="trajectory_until_node",
-        name="trajectory_until_node",
-        output="screen",
-        remappings=[
-            (
-                "motion_controller/follow_joint_trajectory/_action/feedback",
-                "/"
-                + initial_joint_controller.perform(context)
-                + "/follow_joint_trajectory/_action/feedback",
-            ),
-            (
-                "motion_controller/follow_joint_trajectory/_action/status",
-                "/"
-                + initial_joint_controller.perform(context)
-                + "/follow_joint_trajectory/_action/status",
-            ),
-            (
-                "motion_controller/follow_joint_trajectory/_action/cancel_goal",
-                "/"
-                + initial_joint_controller.perform(context)
-                + "/follow_joint_trajectory/_action/cancel_goal",
-            ),
-            (
-                "motion_controller/follow_joint_trajectory/_action/get_result",
-                "/"
-                + initial_joint_controller.perform(context)
-                + "/follow_joint_trajectory/_action/get_result",
-            ),
-            (
-                "motion_controller/follow_joint_trajectory/_action/send_goal",
-                "/"
-                + initial_joint_controller.perform(context)
-                + "/follow_joint_trajectory/_action/send_goal",
-            ),
-        ],
-    )
-
     rviz_node = Node(
         package="rviz2",
         condition=IfCondition(launch_rviz),
@@ -247,7 +208,6 @@ def launch_setup(context):
         urscript_interface,
         rsp,
         rviz_node,
-        trajectory_until_node,
     ] + controller_spawners
 
     return nodes_to_start

@@ -93,12 +93,29 @@ controller_interface::CallbackReturn
 ToolContactController::on_activate(const rclcpp_lifecycle::State& /* previous_state */)
 {
   {
-    const std::string interface_name = tool_contact_params_.tf_prefix + "tool_contact/tool_contact_status";
+    const std::string interface_name = tool_contact_params_.tf_prefix + "tool_contact/tool_contact_state";
+    auto it = std::find_if(state_interfaces_.begin(), state_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != state_interfaces_.end()) {
+      tool_contact_state_interface_ = *it;
+      if (!tool_contact_state_interface_->get().get_value()) {
+        RCLCPP_ERROR(get_node()->get_logger(),
+                     "Failed to set '%s' command interface, aborting activation of controller.",
+                     interface_name.c_str());
+        return controller_interface::CallbackReturn::ERROR;
+      }
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+  {
+    const std::string interface_name = tool_contact_params_.tf_prefix + "tool_contact/tool_contact_set_state";
     auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
-      tool_contact_status_interface_ = *it;
-      if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
+      tool_contact_set_state_interface_ = *it;
+      if (!tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY)) {
         RCLCPP_ERROR(get_node()->get_logger(),
                      "Failed to set '%s' command interface, aborting activation of controller.",
                      interface_name.c_str());
@@ -148,7 +165,8 @@ ToolContactController::on_activate(const rclcpp_lifecycle::State& /* previous_st
     }
   }
 
-  action_monitor_period_ = rclcpp::Rate(tool_contact_params.action_monitor_rate).period();
+  action_monitor_period_ =
+      rclcpp::duration<std::chrono::nanoseconds>(rclcpp::Rate(tool_contact_params_.action_monitor_rate).period());
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -167,7 +185,7 @@ ToolContactController::on_deactivate(const rclcpp_lifecycle::State& /* previous_
   }
   if (tool_contact_active_) {
     tool_contact_active_ = false;
-    if (!tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
+    if (!tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
       RCLCPP_FATAL(get_node()->get_logger(), "Controller failed to update command interface.");
       return controller_interface::CallbackReturn::ERROR;
     }
@@ -260,16 +278,16 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
   if (tool_contact_abort_) {
     tool_contact_abort_ = false;
     tool_contact_enable_ = false;
-    write_success &= tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
+    write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
   } else if (tool_contact_enable_) {
     tool_contact_enable_ = false;
-    write_success &= tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN);
+    write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN);
   }
 
   const auto active_goal = *rt_active_goal_.readFromRT();
 
-  const int status = static_cast<int>(tool_contact_status_interface_->get().get_value());
-  switch (status) {
+  const int state = static_cast<int>(tool_contact_state_interface_->get().get_value());
+  switch (state) {
     case static_cast<int>(TOOL_CONTACT_EXECUTING):
     {
       tool_contact_active_ = true;
@@ -282,7 +300,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         tool_contact_active_ = false;
         RCLCPP_INFO(get_node()->get_logger(), "Tool contact finished successfully.");
 
-        write_success &= tool_contact_status_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
+        write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
           result->result = ur_msgs::action::ToolContact::Result::SUCCESS;
@@ -292,7 +310,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         tool_contact_active_ = false;
         RCLCPP_ERROR(get_node()->get_logger(), "Tool contact aborted by hardware.");
 
-        write_success &= tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY);
+        write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
           result->result = ur_msgs::action::ToolContact::Result::ABORTED_BY_HARDWARE;
@@ -305,7 +323,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
     {
       RCLCPP_ERROR(get_node()->get_logger(), "Tool contact could not be enabled.");
       tool_contact_active_ = false;
-      write_success &= tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY);
+      write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
 
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
@@ -319,14 +337,14 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
       RCLCPP_INFO(get_node()->get_logger(), "Tool contact disabled successfully.");
       tool_contact_active_ = false;
 
-      write_success &= tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY);
+      write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
     } break;
 
     case static_cast<int>(TOOL_CONTACT_FAILURE_END):
     {
       RCLCPP_ERROR(get_node()->get_logger(), "Tool contact could not be disabled.");
 
-      write_success &= tool_contact_status_interface_->get().set_value(TOOL_CONTACT_STANDBY);
+      write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
 
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();

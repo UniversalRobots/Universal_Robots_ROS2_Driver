@@ -232,7 +232,8 @@ protected:
   double get_robot_software_version_build_;
 
   // Tool contact controller interface values
-  double tool_contact_status_;
+  double tool_contact_set_state_;
+  double tool_contact_state_;
   double tool_contact_result_;
   bool tool_contact_controller_running_;
 

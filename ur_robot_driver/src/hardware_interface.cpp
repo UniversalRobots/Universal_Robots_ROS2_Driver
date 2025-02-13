@@ -98,6 +98,8 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
   tool_contact_result_ = NO_NEW_CMD_;
+  tool_contact_set_state_ = 0.0;
+  tool_contact_state_ = 0.0;
   trajectory_joint_positions_.clear();
   trajectory_joint_velocities_.clear();
   trajectory_joint_accelerations_.clear();
@@ -273,6 +275,9 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_result", &tool_contact_result_));
 
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
+
   return state_interfaces;
 }
 
@@ -407,8 +412,8 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
                                                                          &passthrough_trajectory_accelerations_[i]));
   }
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + TOOL_CONTACT_GPIO,
-                                                                       "tool_contact_status", &tool_contact_status_));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_set_state", &tool_contact_set_state_));
 
   return command_interfaces;
 }
@@ -913,26 +918,29 @@ void URPositionHardwareInterface::checkAsyncIO()
 
 void URPositionHardwareInterface::check_tool_contact_controller()
 {
+  static double cmd_state;
+  cmd_state = tool_contact_set_state_;
+
   if (ur_driver_ != nullptr) {
-    if (tool_contact_status_ == 2.0) {
+    if (cmd_state == 2.0) {
       bool success = static_cast<double>(ur_driver_->startToolContact());
       if (success) {
         // TOOL_CONTACT_EXECUTING
-        tool_contact_status_ = 3.0;
+        tool_contact_state_ = 3.0;
         tool_contact_result_ = 3.0;
       } else {
         // TOOL_CONTACT_FAILURE_BEGIN
-        tool_contact_status_ = 4.0;
+        tool_contact_state_ = 4.0;
       }
 
-    } else if (tool_contact_status_ == 5.0) {
+    } else if (cmd_state == 5.0) {
       bool success = static_cast<double>(ur_driver_->endToolContact());
       if (success) {
         // TOOL_CONTACT_SUCCESS_END
-        tool_contact_status_ = 6.0;
+        tool_contact_state_ = 6.0;
       } else {
         // TOOL_CONTACT_FAILURE_END
-        tool_contact_status_ = 7.0;
+        tool_contact_state_ = 7.0;
       }
     }
   }
