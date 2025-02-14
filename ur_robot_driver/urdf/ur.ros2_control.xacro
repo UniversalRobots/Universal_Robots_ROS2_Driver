@@ -233,9 +233,6 @@
 
       <gpio name="${tf_prefix}tool_contact">
         <command_interface name="tool_contact_set_state"/>
-      </gpio>
-
-      <gpio name="${tf_prefix}tool_contact">
         <state_interface name="tool_contact_result"/>
         <state_interface name="tool_contact_state"/>
       </gpio>

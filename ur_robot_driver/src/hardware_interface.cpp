@@ -745,8 +745,6 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       force_mode_disable_cmd_ = NO_NEW_CMD_;
       freedrive_mode_abort_ = NO_NEW_CMD_;
       freedrive_mode_enable_ = NO_NEW_CMD_;
-      tool_contact_result_ = NO_NEW_CMD_;
-      tool_contact_status_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
