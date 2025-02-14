@@ -46,7 +46,9 @@ from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
-from launch_testing.actions import ReadyToTest
+
+# from launch_testing.actions import ReadyToTest
+from launch_pytest.actions import ReadyToTest
 from rclpy.action import ActionClient
 from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
@@ -57,11 +59,13 @@ from ur_dashboard_msgs.srv import (
     IsProgramRunning,
     Load,
 )
+from control_msgs.action import FollowJointTrajectory
 from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
 TIMEOUT_WAIT_ACTION = 10
+TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 ROBOT_JOINTS = [
     "elbow_joint",
@@ -234,6 +238,11 @@ class DashboardInterface(
             raise Exception("Service call not successful")
 
 
+class MockDashboard:
+    def start_robot(self):
+        return True
+
+
 class ControllerManagerInterface(
     _ServiceInterface,
     namespace="/controller_manager",
@@ -281,6 +290,35 @@ class ForceModeInterface(
     services={"start_force_mode": SetForceMode, "stop_force_mode": Trigger},
 ):
     pass
+
+
+class interfaces:
+    def __init__(self, node, params):
+        self.node = node
+        # Save launch parameters in case they could be used later
+        self.mock_hardware = params["mock_hardware"] == "true"
+        self.tf_prefix = params["tf_prefix"]
+
+    def init_interfaces(self):
+        print("Initialising interfaces")
+        if not self.mock_hardware:
+            self._dashboard_interface = DashboardInterface(self.node)
+        else:
+            self._dashboard_interface = MockDashboard()
+        self._controller_manager_interface = ControllerManagerInterface(self.node)
+        self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
+
+        self._scaled_follow_joint_trajectory = ActionInterface(
+            self.node,
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
+        self._passthrough_forward_joint_trajectory = ActionInterface(
+            self.node,
+            "/passthrough_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
 
 
 def _declare_launch_arguments():
@@ -341,7 +379,10 @@ def generate_dashboard_test_description():
 
 
 def generate_driver_test_description(
-    tf_prefix="", controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL
+    tf_prefix="",
+    initial_joint_controller="scaled_joint_trajectory_controller",
+    mock_hardware="false",
+    controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -350,10 +391,11 @@ def generate_driver_test_description(
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
-        "initial_joint_controller": "scaled_joint_trajectory_controller",
+        "initial_joint_controller": initial_joint_controller,
         "headless_mode": "true",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
+        "use_mock_hardware": mock_hardware,
     }
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
