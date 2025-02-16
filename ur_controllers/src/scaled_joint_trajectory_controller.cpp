@@ -178,7 +178,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     // find segment for current timestamp
     joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
     const bool valid_point = current_trajectory_->sample(traj_time, interpolation_method_, state_desired_,
-                                                              start_segment_itr, end_segment_itr);
+                                                         start_segment_itr, end_segment_itr);
 
     if (valid_point) {
       const rclcpp::Time traj_start = current_trajectory_->time_from_start();
