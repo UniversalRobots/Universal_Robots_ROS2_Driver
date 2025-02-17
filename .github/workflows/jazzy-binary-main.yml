@@ -11,6 +11,10 @@ on:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '13 4 * * *'
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   jazzy_binary_main:
     uses: ./.github/workflows/reusable_ici.yml
