@@ -19,8 +19,14 @@ jobs:
       - uses: ros-tooling/setup-ros@v0.3
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
+<<<<<<< HEAD
       - uses: actions/checkout@v2
       - uses: ros-tooling/action-ros-ci@v0.2
+=======
+          use-ros2-testing: true
+      - uses: actions/checkout@v4
+      - uses: ros-tooling/action-ros-ci@v0.4
+>>>>>>> 71b8ad4 (Bump ros-tooling/action-ros-ci from 0.3 to 0.4 (#1276))
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
           # build all packages listed in the meta package
