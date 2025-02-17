@@ -41,6 +41,8 @@ jobs:
   reusable_ici:
     name: ${{ inputs.ros_distro }} ${{ inputs.ros_repo }}
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     env:
       DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
