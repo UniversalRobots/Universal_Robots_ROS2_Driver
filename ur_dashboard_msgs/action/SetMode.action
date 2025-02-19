@@ -1,7 +1,10 @@
 # This action is for setting the robot into a desired mode (e.g. RUNNING) and safety mode into a
 # non-critical state (e.g. NORMAL or REDUCED), for example after a safety incident happened.
 
-# goal
+# Target modes can be one of
+# - 3: ROBOT_MODE_POWER_OFF
+# - 5: ROBOT_MODE_IDLE
+# - 7: ROBOT_MODE_RUNNING
 int8 target_robot_mode
 
 # Stop program execution before restoring the target mode. Can be used together with 'play_program'.
