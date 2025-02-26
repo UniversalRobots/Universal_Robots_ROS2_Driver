@@ -416,7 +416,7 @@ bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::Sha
 
   std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   std::ignore = command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->data.pin].set_value(
-      static_cast<float>(req->data.state));
+      static_cast<double>(req->data.state));
   std::ignore =
       command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_DOMAIN].set_value(static_cast<double>(req->data.domain));
 
@@ -518,7 +518,7 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(req->mass);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->mass));
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
