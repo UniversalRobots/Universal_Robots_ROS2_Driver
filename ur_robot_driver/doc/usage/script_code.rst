@@ -1,7 +1,7 @@
 Sending URScript code to the robot
 ==================================
 
-.. _script_command_interface:
+.. _script_command_interface_ros2:
 
 Custom URScript commands
 ------------------------

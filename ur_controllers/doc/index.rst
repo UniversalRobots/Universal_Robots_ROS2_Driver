@@ -36,7 +36,7 @@ This controller publishes the current actual execution speed as reported by the 
 floating points between 0 and 1.
 
 In the `ur_robot_driver
-<https://index.ros.org/p/ur_robot_driver/github-UniversalRobots-Universal_Robots_ROS2_Driver/>`_
+<https://index.ros.org/p/ur_robot_driver>`_
 this is calculated by multiplying the two `RTDE
 <https://www.universal-robots.com/articles/ur/real-time-data-exchange-rtde-guide/>`_ data
 fields ``speed_scaling`` (which should be equal to the value shown by the speed slider position on the
