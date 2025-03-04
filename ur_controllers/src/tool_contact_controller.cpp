@@ -302,7 +302,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-          result->result = ur_msgs::action::ToolContact::Result::TOOL_CONTACT_TRIGGERED;
           active_goal->setSucceeded(result);
           should_reset_goal = true;
         }
