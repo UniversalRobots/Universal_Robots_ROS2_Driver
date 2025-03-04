@@ -16,7 +16,8 @@ Welcome to ur_robot_driver's documentation!
    setup_tool_communication
    ROS_INTERFACE
    generated/index
-
+   robot_state_helper
+   controller_stopper
 
 
 Indices and tables
