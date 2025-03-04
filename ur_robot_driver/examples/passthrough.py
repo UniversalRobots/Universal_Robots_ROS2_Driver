@@ -46,6 +46,14 @@ if __name__ == "__main__":
         [-0.5, -2.0, -0.5, -2.0, -0.4, -1.0],
         [-1, -2.5998, -1.004, -2.676, -0.992, -1.5406],
     ]
+    time_vec = [
+        Duration(sec=2, nanosec=0),
+        Duration(sec=6, nanosec=0),
+        Duration(sec=10, nanosec=0),
+        Duration(sec=14, nanosec=0),
+        Duration(sec=18, nanosec=0),
+    ]
+
     # Velocities and accelerations can be omitted
     vels = [
         [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
@@ -61,27 +69,6 @@ if __name__ == "__main__":
         [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
         [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
     ]
-    bad_vels = [
-        [0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-    ]
-    bad_accels = [
-        [0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-        [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-    ]
-    time_vec = [
-        Duration(sec=2, nanosec=0),
-        Duration(sec=6, nanosec=0),
-        Duration(sec=10, nanosec=0),
-        Duration(sec=14, nanosec=0),
-        Duration(sec=18, nanosec=0),
-    ]
 
     # Execute trajectory on robot, make sure that the robot is booted and the control script is running
     robot.play()
@@ -89,7 +76,3 @@ if __name__ == "__main__":
     robot.passthrough_trajectory(waypts, time_vec, vels, accels)
     # Trajectory using only positions
     robot.passthrough_trajectory(waypts, time_vec)
-
-    robot.passthrough_trajectory(waypts, time_vec, bad_vels, accels)
-
-    robot.passthrough_trajectory(waypts, time_vec, vels, bad_accels)

@@ -35,7 +35,6 @@ from rclpy.action import ActionClient
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory as JTmsg, JointTrajectoryPoint
 from ur_msgs.srv import SetIO, SetForceMode
-from ur_msgs.action import TrajectoryUntil, ToolContact
 from controller_manager_msgs.srv import (
     UnloadController,
     LoadController,
@@ -50,6 +49,8 @@ from collections import namedtuple
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
 TIMEOUT_WAIT_ACTION = 10
+
+MOTION_CONTROLLERS = ["passthrough_trajectory_controller", "scaled_joint_trajectory_controller"]
 
 ROBOT_JOINTS = [
     "shoulder_pan_joint",
@@ -148,7 +149,7 @@ class Robot:
 
         self.call_service(Services.Set_IO, set_io_req)
 
-    def follow_trajectory(self, waypts, time_vec):
+    def follow_trajectory(self, waypts: list[list[float]], time_vec: list[float]):
         # No other motion controllers can be active at the same time as the scaled joint controller
         self.switch_controllers(
             ["scaled_joint_trajectory_controller"],
@@ -185,10 +186,10 @@ class Robot:
 
     def passthrough_trajectory(
         self,
-        waypts: list[float],
+        waypts: list[list[float]],
         time_vec: list[float],
-        vels: list[float] = [],
-        accels: list[float] = [],
+        vels: list[list[float]] = [],
+        accels: list[list[float]] = [],
         goal_time_tolerance=Duration(sec=1),
     ):
         # The scaled joint controller can't be active at the same time as the passthrough controller
@@ -219,9 +220,7 @@ class Robot:
             raise Exception("trajectory was not accepted")
 
         # Verify execution
-        result = self.get_result(
-            Actions.PASSTHROUGH_TRAJECTORY, goal_response
-        )
+        result = self.get_result(Actions.PASSTHROUGH_TRAJECTORY, goal_response)
         return result
 
     def call_service(self, Service: Services, request):
@@ -255,7 +254,7 @@ class Robot:
         # Find loaded controllers
         for controller in list_response.controller:
             names.append(controller.name)
-        # Check whether the passthrough controller is already loaded
+        # Check whether the controller is already loaded
         try:
             names.index(controller_name)
         except ValueError:
@@ -264,9 +263,7 @@ class Robot:
             self.call_service(Services.Load_Controller, load_request)
             configure_request = ConfigureController.Request(name=controller_name)
             self.call_service(Services.Configure_Controller, configure_request)
-            list_response = robot.call_service(
-                Services.List_Controllers, ListControllers.Request()
-            )
+            list_response = self.call_service(Services.List_Controllers, ListControllers.Request())
             names.clear()
             # Update the list of controller names.
             for controller in list_response.controller:
@@ -286,10 +283,10 @@ class Robot:
         switch_request.activate_asap = False
         switch_request.timeout = Duration(sec=2, nanosec=0)
         return self.call_service(Services.Switch_Controller, switch_request)
-    
+
     def start_force_mode(self, req: SetForceMode.Request):
         return self.call_service(Services.start_force_mode, req)
-    
+
     def stop_force_mode(self):
         return self.call_service(Services.stop_force_mode, Trigger.Request())
 
@@ -299,15 +296,15 @@ if __name__ == "__main__":
     node = Node("robot_driver_test")
     print("Available actions:")
     for action in Actions:
-        print(action.name)
-        print(action.value.name)
-        print(action.value.action_type)
+        print("Action Enum name: ", action.name)
+        print("Action Ros name: ", action.value.name)
+        print("Action Ros type: ", action.value.action_type)
     print("Available services:")
     for service in Services:
-        print(service.name)
-        print(service.value.name)
-        print(service.value.service_type)
-    
+        print("Service Enum name: ", service.name)
+        print("Service Ros name: ", service.value.name)
+        print("Service Ros type: ", service.value.service_type)
+
     # robot = Robot(node)
     # robot.switch_controllers(
     #     ["passthrough_trajectory_controller"], ["scaled_joint_trajectory_controller"]
