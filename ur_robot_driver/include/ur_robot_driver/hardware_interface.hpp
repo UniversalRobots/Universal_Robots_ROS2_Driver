@@ -178,6 +178,8 @@ protected:
   urcl::vector6d_t urcl_joint_efforts_;
   urcl::vector6d_t urcl_ft_sensor_measurements_;
   urcl::vector6d_t urcl_tcp_pose_;
+  urcl::vector6d_t urcl_target_tcp_pose_;
+  urcl::vector6d_t tcp_offset_;
   tf2::Quaternion tcp_rotation_quat_;
   Quaternion tcp_rotation_buffer;
 
@@ -204,10 +206,6 @@ protected:
   int32_t safety_mode_;
   std::bitset<4> robot_status_bits_;
   std::bitset<11> safety_status_bits_;
-
-  // transform stuff
-  tf2::Vector3 tcp_force_;
-  tf2::Vector3 tcp_torque_;
 
   // asynchronous commands
   std::array<double, 18> standard_dig_out_bits_cmd_;
