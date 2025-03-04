@@ -68,29 +68,29 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
 
   // Service to unlock protective stop
   unlock_protective_stop_srv_ = node_->create_client<std_srvs::srv::Trigger>(
-      "dashboard_client/unlock_protective_stop", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+      "dashboard_client/unlock_protective_stop", rmw_qos_profile_services_default, service_cb_grp_);
   // Service to restart safety
-  restart_safety_srv_ = node_->create_client<std_srvs::srv::Trigger>(
-      "dashboard_client/restart_safety", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+  restart_safety_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/restart_safety",
+                                                                     rmw_qos_profile_services_default, service_cb_grp_);
   // Service to power on the robot
   power_on_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/power_on",
-                                                               rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+                                                               rmw_qos_profile_services_default, service_cb_grp_);
   // Service to power off the robot
   power_off_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/power_off",
-                                                                rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+                                                                rmw_qos_profile_services_default, service_cb_grp_);
   // Service to release the robot's brakes
   brake_release_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/brake_release",
-                                                                    rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+                                                                    rmw_qos_profile_services_default, service_cb_grp_);
   // Service to stop UR program execution on the robot
   stop_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/stop",
-                                                                   rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+                                                                   rmw_qos_profile_services_default, service_cb_grp_);
   // Service to start UR program execution on the robot
   play_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/play",
-                                                                   rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+                                                                   rmw_qos_profile_services_default, service_cb_grp_);
   play_program_srv_->wait_for_service();
 
   resend_robot_program_srv_ = node_->create_client<std_srvs::srv::Trigger>(
-      "io_and_status_controller/resend_robot_program", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+      "io_and_status_controller/resend_robot_program", rmw_qos_profile_services_default, service_cb_grp_);
   resend_robot_program_srv_->wait_for_service();
 
   feedback_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Feedback>();
