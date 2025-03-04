@@ -14,6 +14,7 @@ Welcome to ur_robot_driver's documentation!
    installation/toc
    usage
    setup_tool_communication
+<<<<<<< HEAD
    ROS_INTERFACE
    generated/index
 
@@ -23,3 +24,9 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
+=======
+   hardware_interface_parameters
+   dashboard_client
+   robot_state_helper
+   controller_stopper
+>>>>>>> d4947aa (Port robot_state_helper to ROS2 (#933))
