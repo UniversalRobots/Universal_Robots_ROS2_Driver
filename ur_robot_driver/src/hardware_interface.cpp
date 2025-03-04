@@ -676,6 +676,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     readData(data_pkg, "runtime_state", runtime_state_);
     readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
     readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+    readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_);
     readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
     readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
     readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
@@ -694,6 +695,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
     readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
     readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+    readData(data_pkg, "tcp_offset", tcp_offset_);
 
     // required transforms
     extractToolPose();
@@ -934,17 +936,39 @@ void URPositionHardwareInterface::updateNonDoubleValues()
 
 void URPositionHardwareInterface::transformForceTorque()
 {
-  // imported from ROS1 driver - hardware_interface.cpp#L867-L876
-  tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
-                      urcl_ft_sensor_measurements_[2]);
-  tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
-                       urcl_ft_sensor_measurements_[5]);
+  KDL::Wrench ft(
+      KDL::Vector(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1], urcl_ft_sensor_measurements_[2]),
+      KDL::Vector(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4], urcl_ft_sensor_measurements_[5]));
+  if (ur_driver_->getVersion().major >= 5)  // e-Series
+  {
+    // Setup necessary frames
+    KDL::Vector vec = KDL::Vector(tcp_offset_[3], tcp_offset_[4], tcp_offset_[5]);
+    double angle = vec.Normalize();
+    KDL::Rotation rotation = KDL::Rotation::Rot(vec, angle);
+    KDL::Frame flange_to_tcp = KDL::Frame(rotation, KDL::Vector(tcp_offset_[0], tcp_offset_[1], tcp_offset_[2]));
 
-  tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
-  tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
+    vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+    angle = vec.Normalize();
+    rotation = KDL::Rotation::Rot(vec, angle);
+    KDL::Frame base_to_tcp =
+        KDL::Frame(rotation, KDL::Vector(urcl_target_tcp_pose_[0], urcl_target_tcp_pose_[1], urcl_target_tcp_pose_[2]));
+    // Calculate transformation from base to flange, see calculation details below
+    // `base_to_tcp = base_to_flange*flange_to_tcp -> base_to_flange = base_to_tcp * inv(flange_to_tcp)`
+    KDL::Frame base_to_flange = base_to_tcp * flange_to_tcp.Inverse();
+    // rotate f/t sensor output back to the flange frame
+    ft = base_to_flange.M.Inverse() * ft;
 
-  urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
-                                   tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
+    // Transform the wrench to the tcp frame
+    ft = flange_to_tcp * ft;
+  } else {  // CB3
+    KDL::Vector vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+    double angle = vec.Normalize();
+    KDL::Rotation base_to_tcp_rot = KDL::Rotation::Rot(vec, angle);
+
+    // rotate f/t sensor output back to the tcp frame
+    ft = base_to_tcp_rot.Inverse() * ft;
+  }
+  urcl_ft_sensor_measurements_ = { ft[0], ft[1], ft[2], ft[3], ft[4], ft[5] };
 }
 
 void URPositionHardwareInterface::extractToolPose()
