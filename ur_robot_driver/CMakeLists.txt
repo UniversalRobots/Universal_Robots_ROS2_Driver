@@ -170,6 +170,7 @@ install(PROGRAMS
   examples/robot_class.py
   examples/passthrough.py
   examples/scaled_joint.py
+  examples/jtc.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

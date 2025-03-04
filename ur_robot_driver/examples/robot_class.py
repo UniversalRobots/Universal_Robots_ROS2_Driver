@@ -50,7 +50,14 @@ TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 60
 TIMEOUT_WAIT_ACTION = 10
 
-MOTION_CONTROLLERS = ["passthrough_trajectory_controller", "scaled_joint_trajectory_controller"]
+# Only one of these can be active at any given time
+MOTION_CONTROLLERS = [
+    "passthrough_trajectory_controller",
+    "scaled_joint_trajectory_controller",
+    "joint_trajectory_controller",
+    "freedrive_mode_controller",
+]
+
 
 ROBOT_JOINTS = [
     "shoulder_pan_joint",
@@ -60,10 +67,15 @@ ROBOT_JOINTS = [
     "wrist_2_joint",
     "wrist_3_joint",
 ]
+
 Action_tuple = namedtuple("Actions", ["name", "action_type"])
 
 
 class Actions(Enum):
+    JTC = Action_tuple(
+        "/joint_trajectory_controller/follow_joint_trajectory", FollowJointTrajectory
+    )
+
     PASSTHROUGH_TRAJECTORY = Action_tuple(
         "/passthrough_trajectory_controller/follow_joint_trajectory", FollowJointTrajectory
     )
@@ -114,9 +126,10 @@ class Robot:
     def __init__(self, node):
         self.node = node
         self.init_robot()
+        self.HOME = [0.0, -1.5708, 0.0, -1.5708, 0.0, 0.0]
 
     def init_robot(self):
-
+        self.joints = ROBOT_JOINTS
         self.service_clients = {
             service.name: waitForService(self.node, service.value.name, service.value.service_type)
             for (service) in Services
@@ -151,14 +164,7 @@ class Robot:
 
     def follow_trajectory(self, waypts: list[list[float]], time_vec: list[float]):
         # No other motion controllers can be active at the same time as the scaled joint controller
-        self.switch_controllers(
-            ["scaled_joint_trajectory_controller"],
-            [
-                "passthrough_trajectory_controller",
-                "force_mode_controller",
-                "freedrive_mode_controller",
-            ],
-        )
+        self.switch_motion_controller("scaled_joint_trajectory_controller")
         """Send robot trajectory."""
         if len(waypts) != len(time_vec):
             raise Exception("waypoints vector and time vec should be same length")
@@ -193,9 +199,7 @@ class Robot:
         goal_time_tolerance=Duration(sec=1),
     ):
         # The scaled joint controller can't be active at the same time as the passthrough controller
-        self.switch_controllers(
-            ["passthrough_trajectory_controller"], ["scaled_joint_trajectory_controller"]
-        )
+        self.switch_motion_controller("passthrough_trajectory_controller")
         """Send trajectory through the passthrough controller."""
         if len(waypts) != len(time_vec):
             raise Exception("waypoints vector and time vec should be same length.")
@@ -231,8 +235,8 @@ class Robot:
         else:
             raise Exception(f"Exception while calling service: {future.exception()}")
 
-    def call_action(self, Action: Actions, g):
-        future = self.action_clients[Action.name].send_goal_async(g)
+    def call_action(self, Action: Actions, goal):
+        future = self.action_clients[Action.name].send_goal_async(goal)
         rclpy.spin_until_future_complete(self.node, future)
 
         if future.result() is not None:
@@ -248,10 +252,14 @@ class Robot:
         else:
             raise Exception(f"Exception while calling action: {future_res.exception()}")
 
-    def load_controller(self, controller_name: str):
+    def list_controllers(self):
         list_response = self.call_service(Services.List_Controllers, ListControllers.Request())
-        names = []
+        return list_response
+
+    def load_controller(self, controller_name: str):
+        list_response = self.list_controllers()
         # Find loaded controllers
+        names = []
         for controller in list_response.controller:
             names.append(controller.name)
         # Check whether the controller is already loaded
@@ -263,7 +271,7 @@ class Robot:
             self.call_service(Services.Load_Controller, load_request)
             configure_request = ConfigureController.Request(name=controller_name)
             self.call_service(Services.Configure_Controller, configure_request)
-            list_response = self.call_service(Services.List_Controllers, ListControllers.Request())
+            list_response = self.list_controllers()
             names.clear()
             # Update the list of controller names.
             for controller in list_response.controller:
@@ -273,16 +281,32 @@ class Robot:
         finally:
             print(f"Currently loaded controllers: {names}")
 
-    def switch_controllers(self, active: list[str] = [], inactive: list[str] = []) -> bool:
+    def switch_controllers(self, activate: list[str] = [], deactivate: list[str] = []) -> bool:
+        controllers = self.list_controllers()
+        activate_ = []
+        deactivate_ = []
+        for controller in controllers.controller:
+            if controller.name in activate and controller.state == "inactive":
+                activate_.append(controller.name)
+            elif controller.name in deactivate and controller.state == "active":
+                deactivate_.append(controller.name)
+
         switch_request = SwitchController.Request()
-        switch_request.activate_controllers = active
-        switch_request.deactivate_controllers = inactive
+        switch_request.activate_controllers = activate_
+        switch_request.deactivate_controllers = deactivate_
         switch_request.strictness = (
             SwitchController.Request.BEST_EFFORT
         )  # Best effort switching, will not terminate program if controller is already running
         switch_request.activate_asap = False
         switch_request.timeout = Duration(sec=2, nanosec=0)
         return self.call_service(Services.Switch_Controller, switch_request)
+
+    def switch_motion_controller(self, motion_controller: str):
+        if motion_controller not in MOTION_CONTROLLERS:
+            print("Requested motion controller does not exist.")
+        return self.switch_controllers(
+            [motion_controller], [i for i in MOTION_CONTROLLERS if motion_controller not in i]
+        )
 
     def start_force_mode(self, req: SetForceMode.Request):
         return self.call_service(Services.start_force_mode, req)
