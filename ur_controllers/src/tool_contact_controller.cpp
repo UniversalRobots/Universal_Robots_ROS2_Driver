@@ -179,7 +179,6 @@ ToolContactController::on_deactivate(const rclcpp_lifecycle::State& /* previous_
     RCLCPP_INFO(get_node()->get_logger(), "Aborting tool contact, as controller has been deactivated.");
     // Mark the current goal as abort
     auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-    result->result = ur_msgs::action::ToolContact::Result::ABORTED;
     active_goal->setAborted(result);
     should_reset_goal = true;
   }
@@ -260,7 +259,6 @@ rclcpp_action::CancelResponse ToolContactController::goal_cancelled_callback(
 
     // Mark the current goal as canceled
     auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-    result->result = ur_msgs::action::ToolContact::Result::PREEMPTED;
     active_goal->setCanceled(result);
     rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
     tool_contact_abort_ = true;
@@ -304,7 +302,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-          result->result = ur_msgs::action::ToolContact::Result::SUCCESS;
+          result->result = ur_msgs::action::ToolContact::Result::TOOL_CONTACT_TRIGGERED;
           active_goal->setSucceeded(result);
           should_reset_goal = true;
         }
@@ -315,7 +313,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-          result->result = ur_msgs::action::ToolContact::Result::ABORTED;
           active_goal->setAborted(result);
           should_reset_goal = true;
         }
@@ -330,7 +327,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
 
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-        result->result = ur_msgs::action::ToolContact::Result::ABORTED;
         active_goal->setAborted(result);
         should_reset_goal = true;
       }
@@ -352,7 +348,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
 
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-        result->result = ur_msgs::action::ToolContact::Result::ABORTED;
         active_goal->setAborted(result);
         should_reset_goal = true;
       }
