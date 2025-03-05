@@ -173,7 +173,8 @@ ur_controllers::ForceModeController::on_cleanup(const rclcpp_lifecycle::State& /
 controller_interface::return_type ur_controllers::ForceModeController::update(const rclcpp::Time& /*time*/,
                                                                               const rclcpp::Duration& /*period*/)
 {
-  async_state_ = command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_value();
+  async_state_ =
+      command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
 
   // Publish state of force_mode?
   if (change_requested_) {

@@ -99,7 +99,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
                                                                           const rclcpp::Duration& period)
 {
   if (scaling_state_interface_.has_value()) {
-    scaling_factor_ = scaling_state_interface_->get().get_value();
+    scaling_factor_ = scaling_state_interface_->get().get_optional().value_or(1.0);
   }
 
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
