@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.0 (2025-03-05)
+------------------
 * ur_controllers: doc -- Fix link to index page of driver (`#1284 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1284>`_)
 * Update computeCommand to compute_command (`#1265 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1265>`_)
 * Apply renaming of member variables of JTC (`#1275 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1275>`_)

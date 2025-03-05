@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.1.0 (2025-03-05)
+------------------
 * Port robot_state_helper to ROS2 (`#933 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/933>`_)
 * Fix crashes on shutting down (`#1270 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1270>`_)
 * Fix formatting (`#1262 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1262>`_)
