@@ -193,7 +193,7 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
 controller_interface::return_type ur_controllers::FreedriveModeController::update(const rclcpp::Time& /*time*/,
                                                                                   const rclcpp::Duration& /*period*/)
 {
-  async_state_ = async_success_command_interface_->get().get_optional().value();
+  async_state_ = async_success_command_interface_->get().get_optional().value_or(ASYNC_WAITING);
 
   if (change_requested_) {
     bool write_success = true;
