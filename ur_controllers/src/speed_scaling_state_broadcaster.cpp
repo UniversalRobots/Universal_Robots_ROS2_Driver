@@ -66,7 +66,6 @@ controller_interface::CallbackReturn SpeedScalingStateBroadcaster::on_init()
 
     RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with tf_prefix: %s",
                 params_.tf_prefix.c_str());
-
   } catch (std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return controller_interface::CallbackReturn::ERROR;
@@ -136,7 +135,7 @@ controller_interface::return_type SpeedScalingStateBroadcaster::update(const rcl
 {
   if (publish_rate_ > 0.0 && period > rclcpp::Duration(1.0 / publish_rate_, 0.0)) {
     // Speed scaling is the only interface of the controller
-    speed_scaling_state_msg_.data = state_interfaces_[0].get_value() * 100.0;
+    speed_scaling_state_msg_.data = state_interfaces_[0].get_optional().value_or(1.0) * 100.0;
 
     // publish
     speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);

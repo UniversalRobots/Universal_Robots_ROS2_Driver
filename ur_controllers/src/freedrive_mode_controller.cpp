@@ -193,15 +193,15 @@ ur_controllers::FreedriveModeController::on_deactivate(const rclcpp_lifecycle::S
 controller_interface::return_type ur_controllers::FreedriveModeController::update(const rclcpp::Time& /*time*/,
                                                                                   const rclcpp::Duration& /*period*/)
 {
-  async_state_ = async_success_command_interface_->get().get_value();
+  async_state_ = async_success_command_interface_->get().get_optional().value_or(ASYNC_WAITING);
 
   if (change_requested_) {
     bool write_success = true;
     if (freedrive_active_) {
       // Check if the freedrive mode has been aborted from the hardware interface. E.g. the robot was stopped on the
       // teach pendant.
-      if (!std::isnan(abort_command_interface_->get().get_value()) &&
-          abort_command_interface_->get().get_value() == 1.0) {
+      if ((abort_command_interface_->get().get_optional().has_value()) &&
+          abort_command_interface_->get().get_optional().value() == 1.0) {
         RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode aborted by hardware, aborting request.");
         freedrive_active_ = false;
         return controller_interface::return_type::OK;

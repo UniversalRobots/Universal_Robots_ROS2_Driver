@@ -230,14 +230,15 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
 {
   const auto active_goal = *rt_active_goal_.readFromRT();
 
-  const auto current_transfer_state = transfer_command_interface_->get().get_value();
+  const auto current_transfer_state = transfer_command_interface_->get().get_optional().value_or(TRANSFER_STATE_IDLE);
 
   bool write_success = true;
   if (active_goal && trajectory_active_) {
     if (current_transfer_state != TRANSFER_STATE_IDLE) {
       // Check if the trajectory has been aborted from the hardware interface. E.g. the robot was stopped on the teach
       // pendant.
-      if (abort_command_interface_->get().get_value() == 1.0 && current_index_ > 0) {
+      if (abort_command_interface_->get().get_optional().has_value() &&
+          abort_command_interface_->get().get_optional().value() == 1.0 && current_index_ > 0) {
         RCLCPP_INFO(get_node()->get_logger(), "Trajectory aborted by hardware, aborting action.");
         std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
             std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
@@ -330,7 +331,7 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     } else if (current_transfer_state == TRANSFER_STATE_IN_MOTION) {
       // Keep track of how long the trajectory has been executing, if it takes too long, send a warning.
       if (scaling_state_interface_.has_value()) {
-        scaling_factor_ = scaling_state_interface_->get().get_value();
+        scaling_factor_ = scaling_state_interface_->get().get_optional().value_or(1.0);
       }
 
 #if RCLCPP_VERSION_MAJOR >= 17
@@ -585,8 +586,11 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
     const std::string joint_name = joint_names_internal->at(i);
     const auto& joint_tol = goal_tolerance->at(i);
     const auto& setpoint = active_joint_traj_.points.back().positions[joint_mapping->at(joint_name)];
-    const double joint_pos = joint_position_state_interface_[i].get().get_value();
-    if (std::abs(joint_pos - setpoint) > joint_tol.position) {
+    const auto joint_pos = joint_position_state_interface_[i].get().get_optional();
+    if (!joint_pos.has_value()) {
+      return false;
+    }
+    if (std::abs(joint_pos.value() - setpoint) > joint_tol.position) {
       // RCLCPP_ERROR(
       // get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f, where tolerance is %f",
       // joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos, joint_tol.position);
@@ -594,16 +598,22 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
     }
 
     if (!active_joint_traj_.points.back().velocities.empty()) {
-      const double joint_vel = joint_velocity_state_interface_[i].get().get_value();
+      const auto joint_vel = joint_velocity_state_interface_[i].get().get_optional();
+      if (!joint_vel.has_value()) {
+        return false;
+      }
       const auto& expected_vel = active_joint_traj_.points.back().velocities[joint_mapping->at(joint_name)];
-      if (std::abs(joint_vel - expected_vel) > joint_tol.velocity) {
+      if (std::abs(joint_vel.value() - expected_vel) > joint_tol.velocity) {
         return false;
       }
     }
     if (!active_joint_traj_.points.back().accelerations.empty()) {
-      const double joint_vel = joint_acceleration_state_interface_[i].get().get_value();
-      const auto& expected_vel = active_joint_traj_.points.back().accelerations[joint_mapping->at(joint_name)];
-      if (std::abs(joint_vel - expected_vel) > joint_tol.acceleration) {
+      const auto joint_acc = joint_acceleration_state_interface_[i].get().get_optional();
+      if (!joint_acc.has_value()) {
+        return false;
+      }
+      const auto& expected_acc = active_joint_traj_.points.back().accelerations[joint_mapping->at(joint_name)];
+      if (std::abs(joint_acc.value() - expected_acc) > joint_tol.acceleration) {
         return false;
       }
     }
