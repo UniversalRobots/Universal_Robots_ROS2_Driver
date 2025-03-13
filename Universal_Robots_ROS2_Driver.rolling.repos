@@ -37,11 +37,11 @@ repositories:
     version: master
   moveit2:
     type: git
-    url: https://github.com/ros-planning/moveit2.git
+    url: https://github.com/moveit/moveit2.git
     version: main
   moveit_msgs:
     type: git
-    url: https://github.com/ros-planning/moveit_msgs.git
+    url: https://github.com/moveit/moveit_msgs.git
     version: ros2
   srdfdom:
     type: git
