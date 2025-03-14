@@ -103,8 +103,6 @@ private:
   rclcpp_action::CancelResponse goal_cancelled_callback(
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
 
-  double tool_contact_active_state_interface;
-
   std::atomic<bool> tool_contact_enable_ = false;
   std::atomic<bool> tool_contact_active_ = false;
   std::atomic<bool> tool_contact_abort_ = false;
@@ -116,7 +114,6 @@ private:
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> major_version_state_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_state_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> tool_contact_set_state_interface_;
-  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> reference_interface_;
 
   rclcpp_action::Server<ur_msgs::action::ToolContact>::SharedPtr tool_contact_action_server_;
 
