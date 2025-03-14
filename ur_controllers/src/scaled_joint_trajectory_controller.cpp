@@ -178,8 +178,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
       if (!before_last_point && !rt_is_holding_ && cmd_timeout_ > 0.0 && time_difference > cmd_timeout_) {
         RCLCPP_WARN(logger, "Aborted due to command timeout");
 
-        traj_msg_external_point_ptr_.reset();
-        traj_msg_external_point_ptr_.initRT(set_hold_position());
+        new_trajectory_msg_.reset();
+        new_trajectory_msg_.initRT(set_hold_position());
       }
 
       // Check state/goal tolerance
@@ -313,8 +313,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
 
             RCLCPP_WARN(logger, "%s", error_string.c_str());
 
-            traj_msg_external_point_ptr_.reset();
-            traj_msg_external_point_ptr_.initRT(set_hold_position());
+            new_trajectory_msg_.reset();
+            new_trajectory_msg_.initRT(set_hold_position());
           }
         }
       } else if (tolerance_violated_while_moving && !rt_has_pending_goal_) {
@@ -326,8 +326,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
       } else if (!before_last_point && !within_goal_time && !rt_has_pending_goal_) {
         RCLCPP_ERROR(logger, "Exceeded goal_time_tolerance: holding position...");
 
-        traj_msg_external_point_ptr_.reset();
-        traj_msg_external_point_ptr_.initRT(set_hold_position());
+        new_trajectory_msg_.reset();
+        new_trajectory_msg_.initRT(set_hold_position());
       }
       // else, run another cycle while waiting for outside_goal_tolerance
       // to be satisfied (will stay in this state until new message arrives)
