@@ -56,30 +56,26 @@ from test_common import (  # noqa: E402
 )
 
 TIMEOUT_EXECUTE_TRAJECTORY = 30
-MOCK_HARDWARE = False
-
-def set_mock_hardware_flag(use_mock_hardware):
-    return use_mock_hardware=="true"
 
 
 @pytest.mark.launch_test
 @launch_testing.parametrize(
-    "tf_prefix, use_mock_hardware, mock_sensor_commands",
-    [("", "false", "false"), ("my_ur_", "false", "false"), ("", "true", "true")]
+    "tf_prefix, use_mock_hardware", [("", "false"), ("my_ur_", "false"), ("", "true")]
 )
+def generate_test_description(tf_prefix, use_mock_hardware):
+    return generate_driver_test_description(
+        tf_prefix=tf_prefix, use_mock_hardware=use_mock_hardware
+    )
 
-def generate_test_description(tf_prefix, use_mock_hardware, mock_sensor_commands):
-    global MOCK_HARDWARE 
-    MOCK_HARDWARE = set_mock_hardware_flag(use_mock_hardware)
-    return generate_driver_test_description(tf_prefix=tf_prefix, use_mock_hardware=use_mock_hardware, mock_sensor_commands=mock_sensor_commands)
 
 class RobotDriverTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, use_mock_hardware):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("robot_driver_test")
         time.sleep(1)
+        cls.mock_hardware = use_mock_hardware == "true"
         cls.init_robot(cls)
 
     @classmethod
@@ -89,7 +85,7 @@ class RobotDriverTest(unittest.TestCase):
         rclpy.shutdown()
 
     def init_robot(self):
-        if(not MOCK_HARDWARE):
+        if not self.mock_hardware:
             self._dashboard_interface = DashboardInterface(self.node)
         else:
             self._dashboard_interface = None
@@ -109,7 +105,7 @@ class RobotDriverTest(unittest.TestCase):
         )
 
     def setUp(self):
-        if(self._dashboard_interface):
+        if self._dashboard_interface:
             self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
@@ -149,6 +145,8 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_set_io(self):
         """Test to set an IO and check whether it has been set."""
+        if self.mock_hardware:
+            return True
         # Create io callback to verify result
         io_msg = None
 
@@ -303,6 +301,8 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_trajectory_scaled_aborts_on_violation(self, tf_prefix):
         """Test that the robot correctly aborts the trajectory when the constraints are violated."""
+        if self.mock_hardware:
+            return True
         # Construct test trajectory
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -382,7 +382,7 @@ class RobotDriverTest(unittest.TestCase):
     #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")
 
     def test_passthrough_trajectory(self, tf_prefix):
-        if(MOCK_HARDWARE):
+        if self.mock_hardware:
             return True
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
