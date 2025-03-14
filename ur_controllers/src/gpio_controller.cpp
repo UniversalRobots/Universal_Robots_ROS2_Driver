@@ -197,27 +197,27 @@ void GPIOController::publishIO()
 {
   for (size_t i = 0; i < 18; ++i) {
     io_msg_.digital_out_states[i].pin = i;
-    io_msg_.digital_out_states[i].state = static_cast<bool>(state_interfaces_[i].get_value());
+    io_msg_.digital_out_states[i].state = static_cast<bool>(state_interfaces_[i].get_optional().value_or(0.0));
 
     io_msg_.digital_in_states[i].pin = i;
     io_msg_.digital_in_states[i].state =
-        static_cast<bool>(state_interfaces_[i + StateInterfaces::DIGITAL_INPUTS].get_value());
+        static_cast<bool>(state_interfaces_[i + StateInterfaces::DIGITAL_INPUTS].get_optional().value_or(0.0));
   }
 
   for (size_t i = 0; i < 2; ++i) {
     io_msg_.analog_in_states[i].pin = i;
     io_msg_.analog_in_states[i].state =
-        static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_INPUTS].get_value());
+        static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_INPUTS].get_optional().value_or(0.0));
     io_msg_.analog_in_states[i].domain =
-        static_cast<uint8_t>(state_interfaces_[i + StateInterfaces::ANALOG_IO_TYPES].get_value());
+        static_cast<uint8_t>(state_interfaces_[i + StateInterfaces::ANALOG_IO_TYPES].get_optional().value_or(0.0));
   }
 
   for (size_t i = 0; i < 2; ++i) {
     io_msg_.analog_out_states[i].pin = i;
     io_msg_.analog_out_states[i].state =
-        static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_OUTPUTS].get_value());
+        static_cast<float>(state_interfaces_[i + StateInterfaces::ANALOG_OUTPUTS].get_optional().value_or(0.0));
     io_msg_.analog_out_states[i].domain =
-        static_cast<uint8_t>(state_interfaces_[i + StateInterfaces::ANALOG_IO_TYPES + 2].get_value());
+        static_cast<uint8_t>(state_interfaces_[i + StateInterfaces::ANALOG_IO_TYPES + 2].get_optional().value_or(0.0));
   }
 
   io_pub_->publish(io_msg_);
@@ -225,25 +225,28 @@ void GPIOController::publishIO()
 
 void GPIOController::publishToolData()
 {
-  tool_data_msg_.tool_mode = static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_MODE].get_value());
+  tool_data_msg_.tool_mode =
+      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_MODE].get_optional().value_or(0.0));
   tool_data_msg_.analog_input_range2 =
-      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_ANALOG_IO_TYPES].get_value());
+      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_ANALOG_IO_TYPES].get_optional().value_or(0.0));
   tool_data_msg_.analog_input_range3 =
-      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_ANALOG_IO_TYPES + 1].get_value());
-  tool_data_msg_.analog_input2 = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS].get_value());
+      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_ANALOG_IO_TYPES + 1].get_optional().value_or(0.0));
+  tool_data_msg_.analog_input2 =
+      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS].get_optional().value_or(0.0));
   tool_data_msg_.analog_input3 =
-      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS + 1].get_value());
+      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS + 1].get_optional().value_or(0.0));
   tool_data_msg_.tool_output_voltage =
-      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_value());
-  tool_data_msg_.tool_current = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_value());
+      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_optional().value_or(0.0));
+  tool_data_msg_.tool_current =
+      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_optional().value_or(0.0));
   tool_data_msg_.tool_temperature =
-      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_value());
+      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_optional().value_or(0.0));
   tool_data_pub_->publish(tool_data_msg_);
 }
 
 void GPIOController::publishRobotMode()
 {
-  auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_value());
+  auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_optional().value_or(0.0));
 
   if (robot_mode_msg_.mode != robot_mode) {
     robot_mode_msg_.mode = robot_mode;
@@ -253,7 +256,7 @@ void GPIOController::publishRobotMode()
 
 void GPIOController::publishSafetyMode()
 {
-  auto safety_mode = static_cast<uint8_t>(state_interfaces_[StateInterfaces::SAFETY_MODE].get_value());
+  auto safety_mode = static_cast<uint8_t>(state_interfaces_[StateInterfaces::SAFETY_MODE].get_optional().value_or(0.0));
 
   if (safety_mode_msg_.mode != safety_mode) {
     safety_mode_msg_.mode = safety_mode;
@@ -263,7 +266,8 @@ void GPIOController::publishSafetyMode()
 
 void GPIOController::publishProgramRunning()
 {
-  auto program_running_value = static_cast<uint8_t>(state_interfaces_[StateInterfaces::PROGRAM_RUNNING].get_value());
+  auto program_running_value =
+      static_cast<uint8_t>(state_interfaces_[StateInterfaces::PROGRAM_RUNNING].get_optional().value_or(0.0));
   bool program_running = program_running_value == 1.0 ? true : false;
   if (program_running_msg_.data != program_running) {
     program_running_msg_.data = program_running;
@@ -274,7 +278,7 @@ void GPIOController::publishProgramRunning()
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_value() == 0.0) {
+  while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_optional().value_or(0.0) == 0.0) {
     RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
@@ -350,12 +354,14 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
-    if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
+    if (!waitForAsyncCommand([&]() {
+          return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+        })) {
       RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
                                             "mocked interface)");
     }
 
-    resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_value());
+    resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
     return resp->success;
   } else if (req->fun == req->FUN_SET_ANALOG_OUT && req->pin >= 0 && req->pin <= 2) {
     // io async success
@@ -365,12 +371,15 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%f'.", req->pin, req->state);
 
-    if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
+    if (!waitForAsyncCommand([&]() {
+          return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+        })) {
       RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
                                             "mocked interface)");
     }
 
-    resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value());
+    resp->success = static_cast<bool>(
+        command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
     return resp->success;
   } else if (req->fun == req->FUN_SET_TOOL_VOLTAGE) {
     std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
@@ -378,12 +387,15 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting tool voltage to: '%1.0f'.", req->state);
 
-    if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
+    if (!waitForAsyncCommand([&]() {
+          return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+        })) {
       RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
                                             "mocked interface)");
     }
 
-    resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value());
+    resp->success = static_cast<bool>(
+        command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
     return resp->success;
   } else {
     resp->success = false;
@@ -416,19 +428,21 @@ bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::Sha
 
   std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   std::ignore = command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_CMD + req->data.pin].set_value(
-      static_cast<float>(req->data.state));
+      static_cast<double>(req->data.state));
   std::ignore =
       command_interfaces_[CommandInterfaces::ANALOG_OUTPUTS_DOMAIN].set_value(static_cast<double>(req->data.domain));
 
   RCLCPP_INFO(get_node()->get_logger(), "Setting analog output '%d' to state: '%f' in domain %s.", req->data.pin,
               req->data.state, domain_string.c_str());
 
-  if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
+  if (!waitForAsyncCommand([&]() {
+        return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+      })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
                                           "mocked interface)");
   }
 
-  resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_value());
+  resp->success = static_cast<bool>(command_interfaces_[IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
   return resp->success;
 }
 
@@ -444,13 +458,15 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
         static_cast<double>(req->speed_slider_fraction));
 
     if (!waitForAsyncCommand([&]() {
-          return command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value();
+          return command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_optional().value_or(
+              ASYNC_WAITING);
         })) {
       RCLCPP_WARN(get_node()->get_logger(), "Could not verify that target speed fraction was set. (This might happen "
                                             "when using the mocked interface)");
     }
-    resp->success =
-        static_cast<bool>(command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_value());
+    resp->success = static_cast<bool>(
+        command_interfaces_[CommandInterfaces::TARGET_SPEED_FRACTION_ASYNC_SUCCESS].get_optional().value_or(
+            ASYNC_WAITING));
   } else {
     RCLCPP_WARN(get_node()->get_logger(), "The desired speed slider fraction must be within range (0; 1.0]. Request "
                                           "ignored.");
@@ -468,13 +484,16 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
   // call the service in the hardware
   std::ignore = command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_CMD].set_value(1.0);
 
-  if (!waitForAsyncCommand(
-          [&]() { return command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value(); })) {
+  if (!waitForAsyncCommand([&]() {
+        return command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_optional().value_or(
+            ASYNC_WAITING);
+      })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that program was sent. (This might happen when using the "
                                           "mocked interface)");
   }
-  resp->success =
-      static_cast<bool>(command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_value());
+  resp->success = static_cast<bool>(
+      command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].get_optional().value_or(
+          ASYNC_WAITING));
 
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Successfully resent robot program");
@@ -494,13 +513,15 @@ bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr 
   // call the service in the hardware
   std::ignore = command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_CMD].set_value(1.0);
 
-  if (!waitForAsyncCommand(
-          [&]() { return command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value(); })) {
+  if (!waitForAsyncCommand([&]() {
+        return command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_optional().value_or(
+            ASYNC_WAITING);
+      })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that hand_back_control was correctly triggered. (This "
                                           "might happen when using the mocked interface)");
   }
-  resp->success =
-      static_cast<bool>(command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_value());
+  resp->success = static_cast<bool>(
+      command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
 
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Deactivated control");
@@ -518,18 +539,20 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(req->mass);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->mass));
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
 
-  if (!waitForAsyncCommand(
-          [&]() { return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value(); })) {
+  if (!waitForAsyncCommand([&]() {
+        return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+      })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that payload was set. (This might happen when using the "
                                           "mocked interface)");
   }
 
-  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value());
+  resp->success = static_cast<bool>(
+      command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
 
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Payload has been set successfully");
@@ -549,13 +572,16 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
   // call the service in the hardware
   std::ignore = command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_CMD].set_value(1.0);
 
-  if (!waitForAsyncCommand(
-          [&]() { return command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value(); })) {
+  if (!waitForAsyncCommand([&]() {
+        return command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_optional().value_or(
+            ASYNC_WAITING);
+      })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that FTS was zeroed. (This might happen when using the "
                                           "mocked interface)");
   }
 
-  resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_value());
+  resp->success = static_cast<bool>(
+      command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
 
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Successfully zeroed the force torque sensor");

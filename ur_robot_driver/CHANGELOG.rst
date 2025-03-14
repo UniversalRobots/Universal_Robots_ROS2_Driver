@@ -1,3 +1,11 @@
+3.1.0 (2025-03-05)
+------------------
+* Port robot_state_helper to ROS2 (`#933 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/933>`_)
+* Fix crashes on shutting down (`#1270 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1270>`_)
+* Fix formatting (`#1262 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1262>`_)
+* Move some documentation to client_library (`#1245 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1245>`_)
+* Contributors: Felix Durchdewald, Felix Exner
+
 3.0.2 (2025-01-21)
 ------------------
 * Check quaternions for equal dot_product instead of comparing their components individually (`#1238 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1238>`_)
