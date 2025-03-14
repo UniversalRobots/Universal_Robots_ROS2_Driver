@@ -394,24 +394,26 @@ The direction of tool contact will always be the current TCP direction of moveme
 Parameters
 """"""""""
 
-+----------------------+--------+---------------+---------------------------------------------------------------------------------------+
-| Parameter name       | Type   | Default value | Description                                                                           |
-|                      |        |               |                                                                                       |
-+----------------------+--------+---------------+---------------------------------------------------------------------------------------+
-| ``tf_prefix``        | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
-+----------------------+--------+---------------+---------------------------------------------------------------------------------------+
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name          | Type   | Default value | Description                                                                           |
+|                         |        |               |                                                                                       |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``           | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``action_monitor_rate`` | double | 20.0          | The rate at which the action should be monitored in Hz.                               |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
 
 Action interface / usage
 """"""""""""""""""""""""
 The controller provides one action for enabling tool contact. For the controller to accept action goals it needs to be in ``active`` state.
 
-* ``~/enable_tool_contact [ur_msgs/action/ToolContact]``
+* ``~/detect_tool_contact [ur_msgs/action/ToolContact]``
 
-The goal section of ``ur_msgs/action/ToolContact`` has no fields, as a call to the action implicitly means that tool contact should be enabled.
-The result section has one field ``result``, which contains the result from the tool contact in the form of an integer.
+The action definition of ``ur_msgs/action/ToolContact`` has no fields, as a call to the action implicitly means that tool contact should be enabled.
+The result of the action is available through the status of the action itself. If the action succeeds it means that tool contact was detected, otherwise tool contact will remain active until it is either cancelled by the user, or aborted by the hardware.
 The action provides no feedback.
 
 The action can be called from the command line using the following command, when the controller is active:
    .. code-block::
 
-      ros2 action send_goal /tool_contact_controller/enable_tool_contact ur_msgs/action/ToolContact
+      ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact

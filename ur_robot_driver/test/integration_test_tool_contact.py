@@ -40,6 +40,7 @@ from rclpy.node import Node
 
 from controller_manager_msgs.srv import SwitchController
 from ur_msgs.action import ToolContact
+from action_msgs.msg import GoalStatus
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
@@ -130,9 +131,10 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["tool_contact_controller"],
             ).ok
         )
-
-        result = self._tool_contact_interface.get_result(goal_handle, 5)
-        self.assertEqual(result.result, ToolContact.Result.ABORTED)
+        # Wait for action to finish
+        self._tool_contact_interface.get_result(goal_handle, 5)
+        # Check status of goal handle, as result does not contain information about the status of the action. Only the empty result definition.
+        self.assertEqual(goal_handle._status, GoalStatus.STATUS_ABORTED)
 
     def test_inactive_controller_rejects_actions(self):
         self.assertTrue(
