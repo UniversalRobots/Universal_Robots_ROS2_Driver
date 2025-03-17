@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.1 (2025-03-17)
+------------------
 * Update ros2_control API to get_optional (`#1289 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1289>`_)
 * Contributors: Felix Exner
 
