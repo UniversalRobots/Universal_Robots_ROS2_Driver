@@ -2,8 +2,8 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.6.0 (2025-03-17)
+------------------
 * Fix doc links (`#1247 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1247>`_)
 * Contributors: Felix Exner
 

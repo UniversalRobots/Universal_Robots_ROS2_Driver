@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.6.0 (2025-03-17)
+------------------
 * ur_controllers: doc -- Fix link to index page of driver (backport of `#1284 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1284>`_) (`#1285 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1285>`_)
 * Remove build warnings for Humble (`#1234 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1234>`_)
 * Contributors: Felix Exner, mergify[bot]

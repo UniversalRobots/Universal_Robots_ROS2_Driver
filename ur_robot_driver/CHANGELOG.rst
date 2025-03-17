@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.6.0 (2025-03-17)
+------------------
 * Update transformForceTorque to handle whether it is a cb3 or an e-Series robot (backport of `#1287 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1287>`_) (`#1299 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1299>`_)
 * Port robot_state_helper to ROS2 (backport of  `#933 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/933>`_) (`#1286 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1286>`_)
 * Fix crashes on shutting down (`#1270 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1270>`_) (`#1271 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1271>`_)
