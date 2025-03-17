@@ -2,8 +2,8 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.6.0 (2025-03-17)
+------------------
 * Port robot_state_helper to ROS2 (backport of  `#933 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/933>`_) (`#1286 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1286>`_)
 * Contributors: mergify[bot]
 
