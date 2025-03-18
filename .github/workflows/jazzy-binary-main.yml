@@ -11,11 +11,16 @@ on:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '13 4 * * *'
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   jazzy_binary_main:
     uses: ./.github/workflows/reusable_ici.yml
     with:
       ros_distro: jazzy
       ros_repo: main
+      upstream_type: binary
       upstream_workspace: Universal_Robots_ROS2_Driver-not-released.jazzy.repos
       ref_for_scheduled_build: main
