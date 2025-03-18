@@ -1,3 +1,9 @@
+3.1.1 (2025-03-17)
+------------------
+* Update transformForceTorque to handle whether it is a cb3 or an e-Series robot (`#1287 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1287>`_)
+* Update message documentation URLs (`#1292 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1292>`_)
+* Contributors: Felix Exner
+
 3.1.0 (2025-03-05)
 ------------------
 * Port robot_state_helper to ROS2 (`#933 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/933>`_)

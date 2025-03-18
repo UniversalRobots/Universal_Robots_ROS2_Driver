@@ -22,26 +22,26 @@ repositories:
   kinematics_interface:
     type: git
     url: https://github.com/ros-controls/kinematics_interface.git
-    version: master
+    version: jazzy
   control_msgs:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
-    version: master
+    version: jazzy
   control_toolbox:
     type: git
     url: https://github.com/ros-controls/control_toolbox.git
-    version: ros2-master
+    version: jazzy
   realtime_tools:
     type: git
     url: https://github.com/ros-controls/realtime_tools.git
     version: jazzy
   moveit2:
     type: git
-    url: https://github.com/ros-planning/moveit2.git
+    url: https://github.com/moveit/moveit2.git
     version: main
   moveit_msgs:
     type: git
-    url: https://github.com/ros-planning/moveit_msgs.git
+    url: https://github.com/moveit/moveit_msgs.git
     version: ros2
   srdfdom:
     type: git

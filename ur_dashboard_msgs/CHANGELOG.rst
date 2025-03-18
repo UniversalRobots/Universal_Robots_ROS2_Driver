@@ -2,6 +2,9 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.1.1 (2025-03-17)
+------------------
+
 3.1.0 (2025-03-05)
 ------------------
 * Port robot_state_helper to ROS2 (`#933 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/933>`_)
