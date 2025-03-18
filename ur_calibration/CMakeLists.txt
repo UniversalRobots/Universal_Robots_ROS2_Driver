@@ -17,10 +17,8 @@ find_package(rclcpp REQUIRED)
 find_package(ur_robot_driver REQUIRED)
 
 find_package(Eigen3 REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(yaml_cpp_vendor REQUIRED)
 find_package(ur_client_library REQUIRED)
-
-set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
 
 ###########
 ## Build ##
@@ -34,10 +32,9 @@ target_include_directories(calibration
   PUBLIC
     include
     ${EIGEN3_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
 )
 target_link_libraries(calibration
-  ${YAML_CPP_LIBRARIES}
+  yaml-cpp
 )
 ament_target_dependencies(calibration
   rclcpp
