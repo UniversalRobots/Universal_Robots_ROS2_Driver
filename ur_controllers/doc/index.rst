@@ -391,7 +391,7 @@ motion, and retract to where it first sensed the contact.
 This controller can be used with any of the motion controllers.
 
 The controller is not a direct representation of the URScript function `tool_contact(direction)
-<https://www.universal-robots.com/manuals/EN/HTML/SW5_21/Content/prod-scriptmanual/all_scripts/tool_contact(direction).htm?Highlight=tool_contact>`_,
+<https://www.universal-robots.com/manuals/EN/HTML/SW5_21/Content/prod-scriptmanual/all_scripts/tool_contact%28direction%29.htm?Highlight=tool_contact>`_,
 as it does not allow for choosing the direction. The direction of tool contact will always be the
 current TCP direction of movement.
 
