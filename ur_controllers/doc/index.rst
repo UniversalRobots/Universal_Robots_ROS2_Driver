@@ -384,12 +384,16 @@ The controller provides the ``~/enable_freedrive_mode`` topic of type ``[std_msg
 
 ur_controllers/ToolContactController
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This controller can enable tool contact on the robot. When tool contact is enabled,
-and the robot senses that the tool has made contact with something, it will stop all motion,
-and retract to where it first sensed the contact.
+This controller can enable tool contact on the robot. When tool contact is enabled, and the robot
+senses whether the tool has made contact with something. When that happens, it will stop all
+motion, and retract to where it first sensed the contact.
+
 This controller can be used with any of the motion controllers.
-This is not a complete interface of the URScript function ``tool_contact(direction)``, as it does not allow for choosing the direction.
-The direction of tool contact will always be the current TCP direction of movement.
+
+The controller is not a direct representation of the URScript function `tool_contact(direction)
+<https://www.universal-robots.com/manuals/EN/HTML/SW5_21/Content/prod-scriptmanual/all_scripts/tool_contact(direction).htm?Highlight=tool_contact>`_,
+as it does not allow for choosing the direction. The direction of tool contact will always be the
+current TCP direction of movement.
 
 Parameters
 """"""""""
@@ -409,11 +413,12 @@ The controller provides one action for enabling tool contact. For the controller
 
 * ``~/detect_tool_contact [ur_msgs/action/ToolContact]``
 
-The action definition of ``ur_msgs/action/ToolContact`` has no fields, as a call to the action implicitly means that tool contact should be enabled.
-The result of the action is available through the status of the action itself. If the action succeeds it means that tool contact was detected, otherwise tool contact will remain active until it is either cancelled by the user, or aborted by the hardware.
-The action provides no feedback.
+  The action definition of ``ur_msgs/action/ToolContact`` has no fields, as a call to the action implicitly means that tool contact should be enabled.
+  The result of the action is available through the status of the action itself. If the action succeeds it means that tool contact was detected, otherwise tool contact will remain active until it is either cancelled by the user, or aborted by the hardware.
+  The action provides no feedback.
 
-The action can be called from the command line using the following command, when the controller is active:
-   .. code-block::
+  The action can be called from the command line using the following command, when the controller is active:
 
-      ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact
+  .. code-block::
+
+     ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact
