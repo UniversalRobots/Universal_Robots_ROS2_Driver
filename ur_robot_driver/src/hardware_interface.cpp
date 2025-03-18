@@ -933,7 +933,7 @@ void URPositionHardwareInterface::check_tool_contact_controller()
 
   if (ur_driver_ != nullptr) {
     if (cmd_state == 2.0) {
-      bool success = static_cast<double>(ur_driver_->startToolContact());
+      bool success = ur_driver_->startToolContact();
       if (success) {
         // TOOL_CONTACT_EXECUTING
         tool_contact_state_ = 3.0;
@@ -1131,7 +1131,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           return hardware_interface::return_type::ERROR;
         }
         start_modes_[i].push_back(FREEDRIVE_MODE_GPIO);
-      } else if (key == tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_status") {
+      } else if (key == tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state") {
         if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
               return item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO;
             })) {
@@ -1213,11 +1213,11 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                    [this](auto& item) {
                      return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                             item == FREEDRIVE_MODE_GPIO);
+                             item == FREEDRIVE_MODE_GPIO || item == TOOL_CONTACT_GPIO);
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
+                 item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO || item == TOOL_CONTACT_GPIO);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start force mode control while there is either position or "
                                "velocity mode running.");
@@ -1230,11 +1230,11 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                    [this](auto& item) {
                      return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                             item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
+                             item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == TOOL_CONTACT_GPIO);
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO);
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == TOOL_CONTACT_GPIO);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start force mode control while there is either position or "
                                "velocity mode running.");
