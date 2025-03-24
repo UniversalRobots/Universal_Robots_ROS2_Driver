@@ -174,6 +174,7 @@ private:
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> trajectory_size_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> transfer_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> time_from_start_command_interface_;
 
