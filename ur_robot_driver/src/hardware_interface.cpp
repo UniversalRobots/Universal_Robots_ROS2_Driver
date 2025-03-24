@@ -45,6 +45,7 @@
 #include "ur_client_library/exceptions.h"
 #include "ur_client_library/ur/tool_communication.h"
 #include "ur_client_library/ur/version_information.h"
+#include "ur_client_library/ur/robot_receive_timeout.h"
 
 #include <rclcpp/logging.hpp>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -93,9 +94,10 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
-  trajectory_joint_positions_.clear();
-  trajectory_joint_velocities_.clear();
-  trajectory_joint_accelerations_.clear();
+  passthrough_trajectory_size_ = 0.0;
+  trajectory_joint_positions_.reserve(32768);
+  trajectory_joint_velocities_.reserve(32768);
+  trajectory_joint_accelerations_.reserve(32768);
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -381,6 +383,9 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "abort", &passthrough_trajectory_abort_));
 
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "trajectory_size",
+                                                                       &passthrough_trajectory_size_));
+
   for (size_t i = 0; i < 6; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO,
                                                                          "setpoint_positions_" + std::to_string(i),
@@ -527,6 +532,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
         std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
         servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
+    if (ur_driver_->getControlFrequency() != info_.rw_rate) {
+      ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, info_.rw_rate);
+    }
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
@@ -773,7 +781,9 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
     } else if (passthrough_trajectory_controller_running_) {
-      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP);
+      ur_driver_->writeTrajectoryControlMessage(
+          urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
+          urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
       check_passthrough_trajectory_controller();
     } else {
       ur_driver_->writeKeepalive();
@@ -1309,59 +1319,87 @@ void URPositionHardwareInterface::stop_force_mode()
 void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 {
   static double last_time = 0.0;
+  static size_t point_index_received = 0;
+  static size_t point_index_sent = 0;
+  static bool trajectory_started = false;
   // See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
 
   // We should abort and are not in state IDLE
   if (passthrough_trajectory_abort_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+  } else if (passthrough_trajectory_transfer_state_ == 1.0) {
+    if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
+      RCLCPP_INFO(get_logger(), "Got a new trajectory with %lu points.",
+                  static_cast<size_t>(passthrough_trajectory_size_));
+      trajectory_joint_positions_.resize(passthrough_trajectory_size_);
+      trajectory_joint_velocities_.resize(passthrough_trajectory_size_);
+      trajectory_joint_accelerations_.resize(passthrough_trajectory_size_);
+      trajectory_times_.resize(passthrough_trajectory_size_);
+      point_index_received = 0;
+      point_index_sent = 0;
+      trajectory_started = false;
+      last_time = 0.0;
+    }
   } else if (passthrough_trajectory_transfer_state_ == 2.0) {
     passthrough_trajectory_abort_ = 0.0;
-    trajectory_joint_positions_.push_back(passthrough_trajectory_positions_);
+    trajectory_joint_positions_[point_index_received] = passthrough_trajectory_positions_;
 
-    trajectory_times_.push_back(passthrough_trajectory_time_from_start_ - last_time);
+    trajectory_times_[point_index_received] = passthrough_trajectory_time_from_start_ - last_time;
     last_time = passthrough_trajectory_time_from_start_;
 
-    if (!std::isnan(passthrough_trajectory_velocities_[0])) {
-      trajectory_joint_velocities_.push_back(passthrough_trajectory_velocities_);
-    }
-    if (!std::isnan(passthrough_trajectory_accelerations_[0])) {
-      trajectory_joint_accelerations_.push_back(passthrough_trajectory_accelerations_);
-    }
+    // if (!std::isnan(passthrough_trajectory_velocities_[0])) {
+    trajectory_joint_velocities_[point_index_received] = passthrough_trajectory_velocities_;
+    //}
+    // if (!std::isnan(passthrough_trajectory_accelerations_[0])) {
+    trajectory_joint_accelerations_[point_index_received] = passthrough_trajectory_accelerations_;
+    //}
+
+    point_index_received++;
     passthrough_trajectory_transfer_state_ = 1.0;
+
+    // Once we received enough points so we can move for at least 5 cycles, we start executing
+    if ((passthrough_trajectory_time_from_start_ > 5.0 / static_cast<double>(info_.rw_rate) ||
+         point_index_received == passthrough_trajectory_size_ - 1) &&
+        !trajectory_started) {
+      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
+                                                trajectory_joint_positions_.size());
+      trajectory_started = true;
+    }
     /* When all points have been read, write them to the physical robot controller.*/
   } else if (passthrough_trajectory_transfer_state_ == 3.0) {
-    /* Tell robot controller how many points are in the trajectory. */
-    ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
-                                              trajectory_joint_positions_.size());
+    passthrough_trajectory_abort_ = 0.0;
+    passthrough_trajectory_transfer_state_ = 4.0;
+  } else if (passthrough_trajectory_transfer_state_ == 4.0) {
+    if (point_index_sent == trajectory_joint_positions_.size()) {
+      trajectory_joint_positions_.clear();
+      trajectory_joint_accelerations_.clear();
+      trajectory_joint_velocities_.clear();
+      trajectory_times_.clear();
+      last_time = 0.0;
+    }
+  }
+
+  // We basically get a setpoint from the controller in each cycle. We send all the points that we
+  // already received down to the hardware.
+  if (trajectory_started && point_index_sent <= trajectory_joint_positions_.size() &&
+      point_index_sent < point_index_received) {
     /* Write the appropriate type of point depending on the combination of positions, velocities and accelerations. */
-    if (!has_velocities(trajectory_joint_velocities_) && !has_accelerations(trajectory_joint_accelerations_)) {
-      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+    for (size_t i = point_index_sent; i < point_index_received; i++) {
+      if (!has_velocities(trajectory_joint_velocities_) && !has_accelerations(trajectory_joint_accelerations_)) {
         ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], urcl::vector6d_t{ 0, 0, 0, 0, 0, 0 },
                                                trajectory_times_[i]);
-      }
-    } else if (has_velocities(trajectory_joint_velocities_) && !has_accelerations(trajectory_joint_accelerations_)) {
-      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+      } else if (has_velocities(trajectory_joint_velocities_) && !has_accelerations(trajectory_joint_accelerations_)) {
         ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
                                                trajectory_times_[i]);
-      }
-    } else if (!has_velocities(trajectory_joint_velocities_) && has_accelerations(trajectory_joint_accelerations_)) {
-      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+      } else if (!has_velocities(trajectory_joint_velocities_) && has_accelerations(trajectory_joint_accelerations_)) {
         ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_accelerations_[i],
                                                trajectory_times_[i]);
-      }
-    } else if (has_velocities(trajectory_joint_velocities_) && has_accelerations(trajectory_joint_accelerations_)) {
-      for (size_t i = 0; i < trajectory_joint_positions_.size(); i++) {
+      } else if (has_velocities(trajectory_joint_velocities_) && has_accelerations(trajectory_joint_accelerations_)) {
         ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
                                                trajectory_joint_accelerations_[i], trajectory_times_[i]);
       }
+      point_index_sent++;
     }
-    trajectory_joint_positions_.clear();
-    trajectory_joint_accelerations_.clear();
-    trajectory_joint_velocities_.clear();
-    trajectory_times_.clear();
-    last_time = 0.0;
-    passthrough_trajectory_abort_ = 0.0;
-    passthrough_trajectory_transfer_state_ = 4.0;
   }
 }
 
@@ -1378,12 +1416,12 @@ void URPositionHardwareInterface::trajectory_done_callback(urcl::control::Trajec
 
 bool URPositionHardwareInterface::has_velocities(std::vector<std::array<double, 6>> velocities)
 {
-  return (velocities.size() > 0);
+  return (velocities.size() > 0 && !std::isnan(velocities[0][0]));
 }
 
 bool URPositionHardwareInterface::has_accelerations(std::vector<std::array<double, 6>> accelerations)
 {
-  return (accelerations.size() > 0);
+  return (accelerations.size() > 0 && !std::isnan(accelerations[0][0]));
 }
 
 }  // namespace ur_robot_driver
