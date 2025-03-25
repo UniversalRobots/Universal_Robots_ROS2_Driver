@@ -12,7 +12,8 @@ on:
 
       upstream_workspace:
         description: 'UPSTREAM_WORKSPACE variable for industrial_ci. Usually path to local .repos file.'
-        required: true
+        required: false
+        default: ''
         type: string
       ros_distro:
         description: 'ROS_DISTRO variable for industrial_ci'
