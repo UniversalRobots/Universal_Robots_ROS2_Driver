@@ -952,6 +952,8 @@ void URPositionHardwareInterface::check_tool_contact_controller()
         // TOOL_CONTACT_FAILURE_END
         tool_contact_state_ = 7.0;
       }
+    } else {
+      tool_contact_state_ = cmd_state;
     }
   }
 }
