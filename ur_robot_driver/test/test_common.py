@@ -341,7 +341,7 @@ def generate_dashboard_test_description():
 
 
 def generate_driver_test_description(
-    tf_prefix="", controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL
+    tf_prefix="", controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL, use_mock_hardware="false"
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -354,6 +354,8 @@ def generate_driver_test_description(
         "headless_mode": "true",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
+        "use_mock_hardware": use_mock_hardware,
+        "mock_sensor_commands": use_mock_hardware,
     }
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
