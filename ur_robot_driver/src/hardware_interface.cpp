@@ -154,121 +154,169 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
 
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
 {
-  std::vector<hardware_interface::StateInterface> state_interfaces;
+  // std::vector<hardware_interface::StateInterface> state_interfaces;
+  // for (size_t i = 0; i < info_.joints.size(); ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
+
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
+
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
+  // }
+
+  // // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
+  // // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
+  // // state interface in info_ and match them accordingly
+  // const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
+  //                                                                  &speed_scaling_combined_));
+
+  // for (auto& sensor : info_.sensors) {
+  //   if (sensor.name == tf_prefix + "tcp_fts_sensor") {
+  //     const std::vector<std::string> fts_names = {
+  //       "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
+  //     };
+  //     for (uint j = 0; j < 6; ++j) {
+  //       state_interfaces.emplace_back(
+  //           hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
+  //     }
+  //   }
+  // }
+
+  // for (size_t i = 0; i < 18; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
+  // }
+
+  // for (size_t i = 0; i < 11; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]));
+  // }
+
+  // for (size_t i = 0; i < 4; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]));
+  // }
+
+  // for (size_t i = 0; i < 2; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
+
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
+
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
+
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
+  // }
+
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
+
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
+
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
+
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
+
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current_));
+
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
+
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized",
+  //                                                                  &system_interface_initialized_));
+
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
+
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
+
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
+
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
+
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
+
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
+
+  // return state_interfaces;
+
+  // extract joint names
+  std::vector<std::string> joint_names;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
+    joint_names.push_back(info_.joints[i].name);
   }
 
-  // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
-  // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
-  // state interface in info_ and match them accordingly
-  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
-                                                                   &speed_scaling_combined_));
-
-  for (auto& sensor : info_.sensors) {
-    if (sensor.name == tf_prefix + "tcp_fts_sensor") {
-      const std::vector<std::string> fts_names = {
-        "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
-      };
-      for (uint j = 0; j < 6; ++j) {
-        state_interfaces.emplace_back(
-            hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
-      }
-    }
+  // extract sensor names
+  std::vector<std::string> sensor_names;
+  for (size_t i = 0; i < info_.sensors.size(); ++i) {
+    sensor_names.push_back(info_.sensors[i].name);
   }
 
-  for (size_t i = 0; i < 18; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
-  }
-
-  for (size_t i = 0; i < 11; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]));
-  }
-
-  for (size_t i = 0; i < 4; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]));
-  }
-
-  for (size_t i = 0; i < 2; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
-  }
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
-
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
-
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized",
-                                                                   &system_interface_initialized_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
-
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
-
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
-
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
-
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
-
-  return state_interfaces;
+  return state_helper_.generate_state_interfaces(
+    joint_names, 
+    urcl_joint_positions_,
+    urcl_joint_velocities_,
+    urcl_joint_efforts_,
+    info_.hardware_parameters.at("tf_prefix"),
+    sensor_names,
+    urcl_ft_sensor_measurements_,
+    actual_dig_out_bits_copy_,
+    actual_dig_in_bits_copy_,
+    safety_status_bits_copy_,
+    analog_io_types_copy_,
+    robot_status_bits_copy_,
+    tool_analog_input_types_copy_,
+    tool_analog_input_,
+    standard_analog_input_,
+    standard_analog_output_,
+    tool_output_voltage_copy_,
+    robot_mode_copy_,
+    safety_mode_copy_,
+    tool_mode_copy_,
+    tool_output_current_,
+    tool_temperature_,
+    speed_scaling_combined_,
+    system_interface_initialized_,
+    robot_program_running_copy_,
+    urcl_tcp_pose_,
+    tcp_rotation_buffer.x,
+    tcp_rotation_buffer.y,
+    tcp_rotation_buffer.z,
+    tcp_rotation_buffer.w,
+    get_robot_software_version_major_,
+    get_robot_software_version_minor_,
+    get_robot_software_version_bugfix_,
+    get_robot_software_version_build_);
 }
 
 std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
