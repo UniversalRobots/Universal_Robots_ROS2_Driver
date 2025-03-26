@@ -51,7 +51,7 @@
 // UR client library
 #include "ur_client_library/ur/dashboard_client.h"
 #include "ur_client_library/exceptions.h"
-#include "ur_dashboard_msgs/msg/program_state.hpp"
+#include "ur_client_library/primary/primary_client.h"
 #include "ur_dashboard_msgs/srv/add_to_log.hpp"
 #include "ur_dashboard_msgs/srv/get_loaded_program.hpp"
 #include "ur_dashboard_msgs/srv/get_program_state.hpp"
@@ -119,6 +119,9 @@ private:
 
   std::shared_ptr<rclcpp::Node> node_;
   urcl::DashboardClient client_;
+
+  urcl::comm::INotifier notifier_;
+  urcl::primary_interface::PrimaryClient primary_client_;
 
   // Commanding services
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr brake_release_service_;
