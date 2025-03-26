@@ -127,7 +127,106 @@ public:
         return state_interfaces;
     }
 
-    void update_non_double_values(
+    static void process_state_data(
+        std::unique_ptr<rtde::DataPackage>& data_pkg,
+        urcl::vector6d_t& urcl_joint_positions,
+        urcl::vector6d_t& urcl_joint_velocities,
+        urcl::vector6d_t& urcl_joint_efforts,
+        double& target_speed_fraction,
+        double& speed_scaling,
+        uint32_t& runtime_state,
+        urcl::vector6d_t& urcl_ft_sensor_measurements,
+        urcl::vector6d_t& urcl_tcp_pose,
+        std::array<double, 2>& standard_analog_input,
+        std::array<double, 2>& standard_analog_output,
+        std::array<double, 2>& tool_analog_input,
+        double& tool_output_current,
+        double& tool_temperature,
+        std::bitset<4>& robot_status_bits,
+        std::array<double, 4>& robot_status_bits_copy,
+        std::bitset<11>& safety_status_bits,
+        std::array<double, 11>& safety_status_bits_copy,
+        std::bitset<18> actual_dig_in_bits,
+        std::array<double, 18>& actual_dig_in_bits_copy,
+        std::bitset<4>& analog_io_types,
+        std::array<double, 4>& analog_io_types_copy,
+        std::bitset<2>& tool_analog_input_types,
+        std::array<double, 2>& tool_analog_input_types_copy,
+        tf2::Quaternion& tcp_rotation_quat,
+        Quaternion& tcp_rotation_buffer,
+        tf2::Vector3& tcp_force,
+        tf2::Vector3& tcp_torque,
+        std::bitset<18> & actual_dig_out_bits,
+        std::array<double, 18>& actual_dig_out_bits_copy,
+        int32_t& tool_output_voltage,
+        double& tool_output_voltage_copy,
+        int32_t& robot_mode,
+        double& robot_mode_copy,
+        int32_t& safety_mode,
+        double& safety_mode_copy,
+        uint32_t& tool_mode,
+        double& tool_mode_copy,
+        bool& initialized,
+        double& system_interface_initialized,
+        bool& robot_program_running,
+        double& robot_program_running_copy)
+    {
+        if (!data_pkg) {
+            return;
+        }
+
+        std::cout<<"Processing state data"<<std::endl;
+        read_data(data_pkg, "actual_q", urcl_joint_positions);
+        read_data(data_pkg, "actual_qd", urcl_joint_velocities);
+        read_data(data_pkg, "actual_current", urcl_joint_efforts);
+        read_data(data_pkg, "target_speed_fraction", target_speed_fraction);
+        read_data(data_pkg, "speed_scaling", speed_scaling);
+        read_data(data_pkg, "runtime_state", runtime_state);
+        read_data(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements);
+        read_data(data_pkg, "actual_TCP_pose", urcl_tcp_pose);
+        read_data(data_pkg, "standard_analog_input0", standard_analog_input[0]);
+        read_data(data_pkg, "standard_analog_input1", standard_analog_input[1]);
+        read_data(data_pkg, "standard_analog_output0", standard_analog_output[0]);
+        read_data(data_pkg, "standard_analog_output1", standard_analog_output[1]);
+        read_data(data_pkg, "tool_mode", tool_mode);
+        read_data(data_pkg, "tool_analog_input0", tool_analog_input[0]);
+        read_data(data_pkg, "tool_analog_input1", tool_analog_input[1]);
+        read_data(data_pkg, "tool_output_voltage", tool_output_voltage);
+        read_data(data_pkg, "tool_output_current", tool_output_current);
+        read_data(data_pkg, "tool_temperature", tool_temperature);
+        read_data(data_pkg, "robot_mode", robot_mode);
+        read_data(data_pkg, "safety_mode", safety_mode);
+
+        std::cout<<"Reading bitset data"<<std::endl;
+        read_bitset_data<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits);
+        read_bitset_data<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits);
+        read_bitset_data<uint32_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits);
+        read_bitset_data<uint32_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits);
+        read_bitset_data<uint32_t>(data_pkg, "analog_io_types", analog_io_types);
+        read_bitset_data<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types);
+
+        std::cout<<"Extracting tool pose"<<std::endl;
+        extract_tool_pose(urcl_tcp_pose, tcp_rotation_quat, tcp_rotation_buffer);
+        std::cout<<"Transforming force torque"<<std::endl;
+        transform_force_torque(tcp_rotation_quat, tcp_force, tcp_torque, urcl_ft_sensor_measurements);
+        std::cout<<"Updating non double values"<<std::endl;
+        update_non_double_values(
+            actual_dig_out_bits, actual_dig_out_bits_copy,
+            actual_dig_in_bits, actual_dig_in_bits_copy,
+            safety_status_bits, safety_status_bits_copy,
+            analog_io_types, analog_io_types_copy,
+            robot_status_bits, robot_status_bits_copy,
+            tool_analog_input_types, tool_analog_input_types_copy,
+            tool_output_voltage, tool_output_voltage_copy,
+            robot_mode, robot_mode_copy,
+            safety_mode, safety_mode_copy,
+            tool_mode, tool_mode_copy,
+            initialized, system_interface_initialized,
+            robot_program_running, robot_program_running_copy);
+    }
+
+private:
+    static void update_non_double_values(
         const std::bitset<18>& actual_dig_out_bits, std::array<double, 18>& actual_dig_out_bits_copy,
         const std::bitset<18>& actual_dig_in_bits, std::array<double, 18>& actual_dig_in_bits_copy,
         const std::bitset<11>& safety_status_bits, std::array<double, 11>& safety_status_bits_copy,
