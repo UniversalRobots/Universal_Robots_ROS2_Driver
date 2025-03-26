@@ -579,17 +579,17 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
       return false;
     }
 
-    if (!active_joint_traj_.points.back().velocities.empty()) {
+    if (!active_joint_traj_.points.back().velocities.empty() && !joint_velocity_state_interface_.empty()) {
       const double joint_vel = joint_velocity_state_interface_[i].get().get_value();
       const auto& expected_vel = active_joint_traj_.points.back().velocities[joint_mapping->at(joint_name)];
       if (std::abs(joint_vel - expected_vel) > joint_tol.velocity) {
         return false;
       }
     }
-    if (!active_joint_traj_.points.back().accelerations.empty()) {
-      const double joint_vel = joint_acceleration_state_interface_[i].get().get_value();
-      const auto& expected_vel = active_joint_traj_.points.back().accelerations[joint_mapping->at(joint_name)];
-      if (std::abs(joint_vel - expected_vel) > joint_tol.acceleration) {
+    if (!active_joint_traj_.points.back().accelerations.empty() && !joint_acceleration_state_interface_.empty()) {
+      const double joint_acc = joint_acceleration_state_interface_[i].get().get_value();
+      const auto& expected_acc = active_joint_traj_.points.back().accelerations[joint_mapping->at(joint_name)];
+      if (std::abs(joint_acc - expected_acc) > joint_tol.acceleration) {
         return false;
       }
     }
