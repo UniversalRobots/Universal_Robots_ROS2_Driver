@@ -662,11 +662,12 @@ template <typename T>
 void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
                                            const std::string& var_name, T& data)
 {
-  if (!data_pkg->getData(var_name, data)) {
-    // This throwing should never happen unless misconfigured
-    std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
-    throw std::runtime_error(error_msg);
-  }
+  // if (!data_pkg->getData(var_name, data)) {
+  //   // This throwing should never happen unless misconfigured
+  //   std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+  //   throw std::runtime_error(error_msg);
+  // }
+  state_helper_.read_data(data_pkg, var_name, data);
 }
 
 template <typename T, size_t N>

@@ -5,6 +5,8 @@
 #include <vector>
 #include <array>
 
+namespace rtde = urcl::rtde_interface;
+
 namespace ur_robot_driver
 {
 
@@ -164,6 +166,18 @@ public:
         system_interface_initialized = initialized ? 1.0 : 0.0;
         robot_program_running_copy = robot_program_running ? 1.0 : 0.0;
     }
+
+
+    template <typename T>
+    static void read_data(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, T& data)
+    {
+        if (!data_pkg->getData(var_name, data)) {
+            // This throwing should never happen unless misconfigured
+            std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+            throw std::runtime_error(error_msg);
+        }
+    }
+
 };
 
 }  // namespace ur_robot_driver
