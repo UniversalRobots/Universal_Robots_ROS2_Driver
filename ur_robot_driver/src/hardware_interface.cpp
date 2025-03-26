@@ -759,7 +759,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     state_helper_.read_bitset_data<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
     // required transforms
-    extractToolPose();
+    // extractToolPose();
+    state_helper_.extract_tool_pose(urcl_tcp_pose_, tcp_rotation_quat_, tcp_rotation_buffer);
     transformForceTorque();
 
     // TODO(anyone): logic for sending other stuff to higher level interface
@@ -1024,20 +1025,20 @@ void URPositionHardwareInterface::transformForceTorque()
                                    tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
 }
 
-void URPositionHardwareInterface::extractToolPose()
-{
-  // imported from ROS1 driver hardware_interface.cpp#L911-L928
-  double tcp_angle =
-      std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
+// void URPositionHardwareInterface::extractToolPose()
+// {
+//   // imported from ROS1 driver hardware_interface.cpp#L911-L928
+//   double tcp_angle =
+//       std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
 
-  tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
-  if (tcp_angle > 1e-16) {
-    tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
-  } else {
-    tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
-  }
-  tcp_rotation_buffer.set(tcp_rotation_quat_);
-}
+//   tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
+//   if (tcp_angle > 1e-16) {
+//     tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
+//   } else {
+//     tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
+//   }
+//   tcp_rotation_buffer.set(tcp_rotation_quat_);
+// }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)

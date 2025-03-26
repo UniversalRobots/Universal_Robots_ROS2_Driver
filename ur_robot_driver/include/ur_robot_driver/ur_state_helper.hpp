@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ur_robot_driver/hardware_interface.hpp"
+#include "ur_robot_driver/quaternion.hpp"
 #include <bitset>
 #include <vector>
 #include <array>
@@ -187,6 +187,25 @@ public:
             throw std::runtime_error(error_msg);
         }
     }
+
+    static void extract_tool_pose(
+        urcl::vector6d_t& urcl_tcp_pose,
+        tf2::Quaternion& tcp_rotation_quat,
+        Quaternion& tcp_rotation_buffer)
+    {
+        // imported from ROS1 driver hardware_interface.cpp#L911-L928
+        double tcp_angle =
+            std::sqrt(std::pow(urcl_tcp_pose[3], 2) + std::pow(urcl_tcp_pose[4], 2) + std::pow(urcl_tcp_pose[5], 2));
+
+        tf2::Vector3 rotation_vec(urcl_tcp_pose[3], urcl_tcp_pose[4], urcl_tcp_pose[5]);
+        if (tcp_angle > 1e-16) {
+            tcp_rotation_quat.setRotation(rotation_vec.normalized(), tcp_angle);
+        } else {
+            tcp_rotation_quat.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
+        }
+        tcp_rotation_buffer.set(tcp_rotation_quat);
+    }
+
 };
 
 }  // namespace ur_robot_driver
