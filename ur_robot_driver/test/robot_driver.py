@@ -360,7 +360,7 @@ class RobotDriverTest(unittest.TestCase):
         )
         waypts = [
             [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
-            [-3, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
+            [-2.5, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
             [-1.58, -1.692, -1.4311, -0.0174, 1.5882, 0.0349],
         ]
         time_vec = [
@@ -392,7 +392,42 @@ class RobotDriverTest(unittest.TestCase):
                 goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
             )
             self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+        # Full quintic trajectory
+        test_trajectory = zip(time_vec, waypts)
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(
+                    positions=pos,
+                    time_from_start=times,
+                    velocities=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    accelerations=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                )
+                for (times, pos) in test_trajectory
+            ],
+            joint_names=[tf_prefix + ROBOT_JOINTS[i] for i in range(len(ROBOT_JOINTS))],
+        )
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
         # Test impossible goal tolerance, should fail.
+        test_trajectory = zip(time_vec, waypts)
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(positions=pos, time_from_start=times)
+                for (times, pos) in test_trajectory
+            ],
+            joint_names=[tf_prefix + ROBOT_JOINTS[i] for i in range(len(ROBOT_JOINTS))],
+        )
         goal_tolerance = [
             JointTolerance(position=0.000000001, name=tf_prefix + ROBOT_JOINTS[i])
             for i in range(len(ROBOT_JOINTS))
