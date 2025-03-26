@@ -658,28 +658,27 @@ URPositionHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-template <typename T>
-void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
-                                           const std::string& var_name, T& data)
-{
+// template <typename T>
+// void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
+//                                            const std::string& var_name, T& data)
+// {
   // if (!data_pkg->getData(var_name, data)) {
   //   // This throwing should never happen unless misconfigured
   //   std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
   //   throw std::runtime_error(error_msg);
   // }
-  state_helper_.read_data(data_pkg, var_name, data);
-}
+// }
 
-template <typename T, size_t N>
-void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
-                                                 const std::string& var_name, std::bitset<N>& data)
-{
-  if (!data_pkg->getData<T, N>(var_name, data)) {
-    // This throwing should never happen unless misconfigured
-    std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
-    throw std::runtime_error(error_msg);
-  }
-}
+// template <typename T, size_t N>
+// void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
+//                                                  const std::string& var_name, std::bitset<N>& data)
+// {
+//   if (!data_pkg->getData<T, N>(var_name, data)) {
+//     // This throwing should never happen unless misconfigured
+//     std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+//     throw std::runtime_error(error_msg);
+//   }
+// }
 
 void URPositionHardwareInterface::asyncThread()
 {
@@ -706,33 +705,58 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
   if (data_pkg) {
     packet_read_ = true;
-    readData(data_pkg, "actual_q", urcl_joint_positions_);
-    readData(data_pkg, "actual_qd", urcl_joint_velocities_);
-    readData(data_pkg, "actual_current", urcl_joint_efforts_);
-
-    readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
-    readData(data_pkg, "speed_scaling", speed_scaling_);
-    readData(data_pkg, "runtime_state", runtime_state_);
-    readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
-    readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
-    readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
-    readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
-    readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
-    readData(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
-    readData(data_pkg, "tool_mode", tool_mode_);
-    readData(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
-    readData(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
-    readData(data_pkg, "tool_output_voltage", tool_output_voltage_);
-    readData(data_pkg, "tool_output_current", tool_output_current_);
-    readData(data_pkg, "tool_temperature", tool_temperature_);
-    readData(data_pkg, "robot_mode", robot_mode_);
-    readData(data_pkg, "safety_mode", safety_mode_);
-    readBitsetData<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
-    readBitsetData<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
-    readBitsetData<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
-    readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
-    readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
-    readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+    // readData(data_pkg, "actual_q", urcl_joint_positions_);
+    // readData(data_pkg, "actual_qd", urcl_joint_velocities_);
+    // readData(data_pkg, "actual_current", urcl_joint_efforts_);
+    // readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
+    // readData(data_pkg, "speed_scaling", speed_scaling_);
+    // readData(data_pkg, "runtime_state", runtime_state_);
+    // readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
+    // readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+    // readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
+    // readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
+    // readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
+    // readData(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
+    // readData(data_pkg, "tool_mode", tool_mode_);
+    // readData(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
+    // readData(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
+    // readData(data_pkg, "tool_output_voltage", tool_output_voltage_);
+    // readData(data_pkg, "tool_output_current", tool_output_current_);
+    // readData(data_pkg, "tool_temperature", tool_temperature_);
+    // readData(data_pkg, "robot_mode", robot_mode_);
+    // readData(data_pkg, "safety_mode", safety_mode_);
+    // readBitsetData<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
+    // readBitsetData<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
+    // readBitsetData<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
+    // readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
+    // readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
+    // readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+    state_helper_.read_data(data_pkg, "actual_q", urcl_joint_positions_);
+    state_helper_.read_data(data_pkg, "actual_qd", urcl_joint_velocities_);
+    state_helper_.read_data(data_pkg, "actual_current", urcl_joint_efforts_);
+    state_helper_.read_data(data_pkg, "target_speed_fraction", target_speed_fraction_);
+    state_helper_.read_data(data_pkg, "speed_scaling", speed_scaling_);
+    state_helper_.read_data(data_pkg, "runtime_state", runtime_state_);
+    state_helper_.read_data(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
+    state_helper_.read_data(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+    state_helper_.read_data(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
+    state_helper_.read_data(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
+    state_helper_.read_data(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
+    state_helper_.read_data(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
+    state_helper_.read_data(data_pkg, "tool_mode", tool_mode_);
+    state_helper_.read_data(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
+    state_helper_.read_data(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
+    state_helper_.read_data(data_pkg, "tool_output_voltage", tool_output_voltage_);
+    state_helper_.read_data(data_pkg, "tool_output_current", tool_output_current_);
+    state_helper_.read_data(data_pkg, "tool_temperature", tool_temperature_);
+    state_helper_.read_data(data_pkg, "robot_mode", robot_mode_);
+    state_helper_.read_data(data_pkg, "safety_mode", safety_mode_);
+    state_helper_.read_bitset_data<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
+    state_helper_.read_bitset_data<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
+    state_helper_.read_bitset_data<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
+    state_helper_.read_bitset_data<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
+    state_helper_.read_bitset_data<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
+    state_helper_.read_bitset_data<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
     // required transforms
     extractToolPose();

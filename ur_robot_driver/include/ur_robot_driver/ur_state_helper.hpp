@@ -171,13 +171,22 @@ public:
     template <typename T>
     static void read_data(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, T& data)
     {
-        if (!data_pkg->getData(var_name, data)) {
+    if (!data_pkg->getData(var_name, data)) {
+        // This throwing should never happen unless misconfigured
+        std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+        throw std::runtime_error(error_msg);
+    }
+    }
+
+    template <typename T, size_t N>
+    static void read_bitset_data(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, std::bitset<N>& data)
+    {
+        if (!data_pkg->getData<T, N>(var_name, data)) {
             // This throwing should never happen unless misconfigured
             std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
             throw std::runtime_error(error_msg);
         }
     }
-
 };
 
 }  // namespace ur_robot_driver
