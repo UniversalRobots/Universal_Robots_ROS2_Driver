@@ -65,6 +65,7 @@
 
 // Helper class to outsource state interface stuff
 #include "ur_robot_driver/ur_state_helper.hpp"
+#include "ur_robot_driver/quaternion.hpp"
 
 namespace ur_robot_driver
 {
@@ -87,25 +88,25 @@ enum StoppingInterface
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
 // interfaces.
-struct Quaternion
-{
-  Quaternion() : x(0), y(0), z(0), w(0)
-  {
-  }
+// struct Quaternion
+// {
+//   Quaternion() : x(0), y(0), z(0), w(0)
+//   {
+//   }
 
-  void set(const tf2::Quaternion& q)
-  {
-    x = q.x();
-    y = q.y();
-    z = q.z();
-    w = q.w();
-  }
+//   void set(const tf2::Quaternion& q)
+//   {
+//     x = q.x();
+//     y = q.y();
+//     z = q.z();
+//     w = q.w();
+//   }
 
-  double x;
-  double y;
-  double z;
-  double w;
-};
+//   double x;
+//   double y;
+//   double z;
+//   double w;
+// };
 
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
