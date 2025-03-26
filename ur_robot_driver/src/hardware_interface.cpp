@@ -896,30 +896,44 @@ void URPositionHardwareInterface::checkAsyncIO()
 
 void URPositionHardwareInterface::updateNonDoubleValues()
 {
-  for (size_t i = 0; i < 18; ++i) {
-    actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
-    actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
-  }
+  // for (size_t i = 0; i < 18; ++i) {
+  //   actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+  //   actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
+  // }
 
-  for (size_t i = 0; i < 11; ++i) {
-    safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
-  }
+  // for (size_t i = 0; i < 11; ++i) {
+  //   safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
+  // }
 
-  for (size_t i = 0; i < 4; ++i) {
-    analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
-    robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
-  }
+  // for (size_t i = 0; i < 4; ++i) {
+  //   analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
+  //   robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
+  // }
 
-  for (size_t i = 0; i < 2; ++i) {
-    tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
-  }
+  // for (size_t i = 0; i < 2; ++i) {
+  //   tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
+  // }
 
-  tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
-  robot_mode_copy_ = static_cast<double>(robot_mode_);
-  safety_mode_copy_ = static_cast<double>(safety_mode_);
-  tool_mode_copy_ = static_cast<double>(tool_mode_);
-  system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
-  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
+  // tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
+  // robot_mode_copy_ = static_cast<double>(robot_mode_);
+  // safety_mode_copy_ = static_cast<double>(safety_mode_);
+  // tool_mode_copy_ = static_cast<double>(tool_mode_);
+  // system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+  // robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
+
+  state_helper_.update_non_double_values(
+        actual_dig_out_bits_, actual_dig_out_bits_copy_,
+        actual_dig_in_bits_, actual_dig_in_bits_copy_,
+        safety_status_bits_, safety_status_bits_copy_,
+        analog_io_types_, analog_io_types_copy_,
+        robot_status_bits_, robot_status_bits_copy_,
+        tool_analog_input_types_, tool_analog_input_types_copy_,
+        tool_output_voltage_, tool_output_voltage_copy_,
+        robot_mode_, robot_mode_copy_,
+        safety_mode_, safety_mode_copy_,
+        tool_mode_, tool_mode_copy_,
+        initialized_, system_interface_initialized_,
+        robot_program_running_, robot_program_running_copy_);
 }
 
 void URPositionHardwareInterface::transformForceTorque()

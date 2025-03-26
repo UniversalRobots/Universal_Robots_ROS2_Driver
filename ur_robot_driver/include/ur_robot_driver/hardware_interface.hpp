@@ -63,6 +63,9 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
+// Helper class to outsource state interface stuff
+#include "ur_robot_driver/ur_state_helper.hpp"
+
 namespace ur_robot_driver
 {
 enum class PausingState
@@ -304,6 +307,8 @@ protected:
   const std::string PASSTHROUGH_GPIO = "trajectory_passthrough";
   const std::string FORCE_MODE_GPIO = "force_mode";
   const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
+
+  URStateHelper state_helper_; // Helper class to handle state interface stuff
 };
 }  // namespace ur_robot_driver
 
