@@ -206,6 +206,24 @@ public:
         tcp_rotation_buffer.set(tcp_rotation_quat);
     }
 
+    static void transform_force_torque(
+        tf2::Quaternion& tcp_rotation_quat,
+        tf2::Vector3& tcp_force,
+        tf2::Vector3& tcp_torque,
+        urcl::vector6d_t& urcl_ft_sensor_measurements)
+    {
+        // imported from ROS1 driver - hardware_interface.cpp#L867-L876
+        tcp_force.setValue(urcl_ft_sensor_measurements[0], urcl_ft_sensor_measurements[1],
+                            urcl_ft_sensor_measurements[2]);
+        tcp_torque.setValue(urcl_ft_sensor_measurements[3], urcl_ft_sensor_measurements[4],
+                            urcl_ft_sensor_measurements[5]);
+
+        tcp_force = tf2::quatRotate(tcp_rotation_quat.inverse(), tcp_force);
+        tcp_torque = tf2::quatRotate(tcp_rotation_quat.inverse(), tcp_torque);
+
+        urcl_ft_sensor_measurements = { tcp_force.x(),  tcp_force.y(),  tcp_force.z(),
+                                        tcp_torque.x(), tcp_torque.y(), tcp_torque.z() };
+    }
 };
 
 }  // namespace ur_robot_driver

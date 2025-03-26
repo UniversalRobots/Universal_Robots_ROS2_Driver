@@ -761,7 +761,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     // required transforms
     // extractToolPose();
     state_helper_.extract_tool_pose(urcl_tcp_pose_, tcp_rotation_quat_, tcp_rotation_buffer);
-    transformForceTorque();
+    // transformForceTorque();
+    state_helper_.transform_force_torque(tcp_rotation_quat_, tcp_force_, tcp_torque_, urcl_ft_sensor_measurements_);
 
     // TODO(anyone): logic for sending other stuff to higher level interface
 
@@ -806,7 +807,20 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       initialized_ = true;
     }
 
-    updateNonDoubleValues();
+    // updateNonDoubleValues();
+    state_helper_.update_non_double_values(
+      actual_dig_out_bits_, actual_dig_out_bits_copy_,
+      actual_dig_in_bits_, actual_dig_in_bits_copy_,
+      safety_status_bits_, safety_status_bits_copy_,
+      analog_io_types_, analog_io_types_copy_,
+      robot_status_bits_, robot_status_bits_copy_,
+      tool_analog_input_types_, tool_analog_input_types_copy_,
+      tool_output_voltage_, tool_output_voltage_copy_,
+      robot_mode_, robot_mode_copy_,
+      safety_mode_, safety_mode_copy_,
+      tool_mode_, tool_mode_copy_,
+      initialized_, system_interface_initialized_,
+      robot_program_running_, robot_program_running_copy_);
 
     return hardware_interface::return_type::OK;
   }
@@ -968,8 +982,8 @@ void URPositionHardwareInterface::checkAsyncIO()
   }
 }
 
-void URPositionHardwareInterface::updateNonDoubleValues()
-{
+// void URPositionHardwareInterface::updateNonDoubleValues()
+// {
   // for (size_t i = 0; i < 18; ++i) {
   //   actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
   //   actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
@@ -995,35 +1009,22 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   // system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
   // robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 
-  state_helper_.update_non_double_values(
-        actual_dig_out_bits_, actual_dig_out_bits_copy_,
-        actual_dig_in_bits_, actual_dig_in_bits_copy_,
-        safety_status_bits_, safety_status_bits_copy_,
-        analog_io_types_, analog_io_types_copy_,
-        robot_status_bits_, robot_status_bits_copy_,
-        tool_analog_input_types_, tool_analog_input_types_copy_,
-        tool_output_voltage_, tool_output_voltage_copy_,
-        robot_mode_, robot_mode_copy_,
-        safety_mode_, safety_mode_copy_,
-        tool_mode_, tool_mode_copy_,
-        initialized_, system_interface_initialized_,
-        robot_program_running_, robot_program_running_copy_);
-}
+// }
 
-void URPositionHardwareInterface::transformForceTorque()
-{
-  // imported from ROS1 driver - hardware_interface.cpp#L867-L876
-  tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
-                      urcl_ft_sensor_measurements_[2]);
-  tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
-                       urcl_ft_sensor_measurements_[5]);
+// void URPositionHardwareInterface::transformForceTorque()
+// {
+//   // imported from ROS1 driver - hardware_interface.cpp#L867-L876
+//   tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
+//                       urcl_ft_sensor_measurements_[2]);
+//   tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
+//                        urcl_ft_sensor_measurements_[5]);
 
-  tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
-  tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
+//   tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
+//   tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
 
-  urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
-                                   tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
-}
+//   urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
+//                                    tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
+// }
 
 // void URPositionHardwareInterface::extractToolPose()
 // {
