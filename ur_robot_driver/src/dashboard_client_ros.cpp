@@ -51,7 +51,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 {
   node_->declare_parameter<double>("receive_timeout", 1);
 
-  primary_client_.start(10, std::chrono::seconds(2));
+  primary_client_.start(10, std::chrono::seconds(10));
   auto robot_version = primary_client_.getRobotVersion();
 
   if (robot_version->major > 5) {
