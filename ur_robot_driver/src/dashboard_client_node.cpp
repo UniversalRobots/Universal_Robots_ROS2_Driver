@@ -53,7 +53,14 @@ int main(int argc, char** argv)
 
   ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
 
-  ur_robot_driver::DashboardClientROS client(node, robot_ip);
+  try {
+    ur_robot_driver::DashboardClientROS client(node, robot_ip);
+  } catch (const urcl::UrException& e) {
+    RCLCPP_WARN(rclcpp::get_logger("Dashboard_Client"),
+                "%s This warning is expected on a PolyScopeX robot. If you don't want to see this warning, "
+                "please don't start the dashboard client. Exiting dashboard client now.",
+                e.what());
+  }
 
   rclcpp::spin(node);
 
