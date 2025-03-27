@@ -42,10 +42,7 @@ public:
         double& system_interface_initialized,
         double& robot_program_running_copy,
         urcl::vector6d_t& urcl_tcp_pose,
-        double& tcp_rotation_buffer_x,
-        double& tcp_rotation_buffer_y,
-        double& tcp_rotation_buffer_z,
-        double& tcp_rotation_buffer_w,
+        Quaternion& tcp_rotation_buffer,
         double& get_robot_software_version_major,
         double& get_robot_software_version_minor,
         double& get_robot_software_version_bugfix,
@@ -113,10 +110,10 @@ public:
         state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose[2]));
 
         // TCP rotation
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer_x));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer_y));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer_z));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer_w));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
 
         // Software version
         state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major));
