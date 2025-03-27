@@ -1182,7 +1182,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                                               [&](const std::string& item) { return item == FREEDRIVE_MODE_GPIO; }),
                                control_modes[i].end());
       }
-      if (key == tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_status") {
+      if (key == tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state") {
         stop_modes_[i].push_back(StoppingInterface::STOP_TOOL_CONTACT);
         control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
                                               [&](const std::string& item) { return item == TOOL_CONTACT_GPIO; }),
