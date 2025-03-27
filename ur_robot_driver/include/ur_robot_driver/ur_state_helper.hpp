@@ -23,24 +23,24 @@ public:
         std::string& tf_prefix,
         std::vector<std::string>& sensor_names,
         urcl::vector6d_t& urcl_ft_sensor_measurements,
-        std::array<double, 18>& actual_dig_out_bits,
-        std::array<double, 18>& actual_dig_in_bits,
-        std::array<double, 11>& safety_status_bits,
-        std::array<double, 4>& analog_io_types,
-        std::array<double, 4>& robot_status_bits,
-        std::array<double, 2>& tool_analog_input_types,
+        std::array<double, 18>& actual_dig_out_bits_copy,
+        std::array<double, 18>& actual_dig_in_bits_copy,
+        std::array<double, 11>& safety_status_bits_copy,
+        std::array<double, 4>& analog_io_types_copy,
+        std::array<double, 4>& robot_status_bits_copy,
+        std::array<double, 2>& tool_analog_input_types_copy,
         std::array<double, 2>& tool_analog_input,
         std::array<double, 2>& standard_analog_input,
         std::array<double, 2>& standard_analog_output,
-        double& tool_output_voltage,
-        double& robot_mode,
-        double& safety_mode,
-        double& tool_mode,
+        double& tool_output_voltage_copy,
+        double& robot_mode_copy,
+        double& safety_mode_copy,
+        double& tool_mode_copy,
         double& tool_output_current,
         double& tool_temperature,
         double& speed_scaling_combined,
         double& system_interface_initialized,
-        double& robot_program_running,
+        double& robot_program_running_copy,
         urcl::vector6d_t& urcl_tcp_pose,
         double& tcp_rotation_buffer_x,
         double& tcp_rotation_buffer_y,
@@ -77,35 +77,35 @@ public:
 
         // GPIO
         for (size_t i = 0; i < 18; ++i) {
-            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits[i]));
-            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits[i]));
+            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy[i]));
+            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy[i]));
         }
 
         for (size_t i = 0; i < 11; ++i) {
-            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits[i]));
+            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy[i]));
         }
 
         for (size_t i = 0; i < 4; ++i) {
-            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types[i]));
-            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits[i]));
+            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy[i]));
+            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy[i]));
         }
        
         for (size_t i = 0; i < 2; ++i) {
-            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types[i]));
+            state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy[i]));
             state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input[i]));
             state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input[i]));
             state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output[i]));
         }
 
         // Other states
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy));
         state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current));
         state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature));
         state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized", &system_interface_initialized));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy));
 
         // TCP pose
         state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose[0]));
@@ -146,7 +146,7 @@ public:
         std::array<double, 4>& robot_status_bits_copy,
         std::bitset<11>& safety_status_bits,
         std::array<double, 11>& safety_status_bits_copy,
-        std::bitset<18> actual_dig_in_bits,
+        std::bitset<18>& actual_dig_in_bits,
         std::array<double, 18>& actual_dig_in_bits_copy,
         std::bitset<4>& analog_io_types,
         std::array<double, 4>& analog_io_types_copy,
@@ -156,7 +156,7 @@ public:
         Quaternion& tcp_rotation_buffer,
         tf2::Vector3& tcp_force,
         tf2::Vector3& tcp_torque,
-        std::bitset<18> & actual_dig_out_bits,
+        std::bitset<18>& actual_dig_out_bits,
         std::array<double, 18>& actual_dig_out_bits_copy,
         int32_t& tool_output_voltage,
         double& tool_output_voltage_copy,
@@ -171,11 +171,11 @@ public:
         bool& robot_program_running,
         double& robot_program_running_copy)
     {
+
         if (!data_pkg) {
             return;
         }
 
-        std::cout<<"Processing state data"<<std::endl;
         read_data(data_pkg, "actual_q", urcl_joint_positions);
         read_data(data_pkg, "actual_qd", urcl_joint_velocities);
         read_data(data_pkg, "actual_current", urcl_joint_efforts);
@@ -197,19 +197,15 @@ public:
         read_data(data_pkg, "robot_mode", robot_mode);
         read_data(data_pkg, "safety_mode", safety_mode);
 
-        std::cout<<"Reading bitset data"<<std::endl;
         read_bitset_data<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits);
         read_bitset_data<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits);
-        read_bitset_data<uint32_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits);
-        read_bitset_data<uint32_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits);
+        read_bitset_data<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits);
+        read_bitset_data<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits);
         read_bitset_data<uint32_t>(data_pkg, "analog_io_types", analog_io_types);
         read_bitset_data<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types);
 
-        std::cout<<"Extracting tool pose"<<std::endl;
         extract_tool_pose(urcl_tcp_pose, tcp_rotation_quat, tcp_rotation_buffer);
-        std::cout<<"Transforming force torque"<<std::endl;
         transform_force_torque(tcp_rotation_quat, tcp_force, tcp_torque, urcl_ft_sensor_measurements);
-        std::cout<<"Updating non double values"<<std::endl;
         update_non_double_values(
             actual_dig_out_bits, actual_dig_out_bits_copy,
             actual_dig_in_bits, actual_dig_in_bits_copy,
@@ -270,11 +266,11 @@ private:
     template <typename T>
     static void read_data(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, T& data)
     {
-    if (!data_pkg->getData(var_name, data)) {
-        // This throwing should never happen unless misconfigured
-        std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
-        throw std::runtime_error(error_msg);
-    }
+        if (!data_pkg->getData(var_name, data)) {
+            // This throwing should never happen unless misconfigured
+            std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+            throw std::runtime_error(error_msg);
+        }
     }
 
     template <typename T, size_t N>
