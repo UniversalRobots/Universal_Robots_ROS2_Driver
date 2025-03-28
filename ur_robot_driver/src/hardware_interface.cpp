@@ -1340,7 +1340,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   // We should abort and are not in state IDLE
   if (passthrough_trajectory_abort_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
-  } else if (passthrough_trajectory_transfer_state_ == 1.0) {
+  } else if (passthrough_trajectory_transfer_state_ == 6.0) {
     if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
       RCLCPP_INFO(get_logger(), "Got a new trajectory with %lu points.",
                   static_cast<size_t>(passthrough_trajectory_size_));
@@ -1352,6 +1352,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       point_index_sent = 0;
       trajectory_started = false;
       last_time = 0.0;
+      passthrough_trajectory_transfer_state_ = 1.0;
     }
   } else if (passthrough_trajectory_transfer_state_ == 2.0) {
     passthrough_trajectory_abort_ = 0.0;

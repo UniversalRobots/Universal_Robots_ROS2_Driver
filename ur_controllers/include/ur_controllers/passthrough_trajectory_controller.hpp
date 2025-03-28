@@ -81,6 +81,7 @@ namespace ur_controllers
  * 5.0: The robot finished executing the trajectory.
  */
 const double TRANSFER_STATE_IDLE = 0.0;
+const double TRANSFER_STATE_NEW_TRAJECTORY = 6.0;
 const double TRANSFER_STATE_WAITING_FOR_POINT = 1.0;
 const double TRANSFER_STATE_TRANSFERRING = 2.0;
 const double TRANSFER_STATE_TRANSFER_DONE = 3.0;
