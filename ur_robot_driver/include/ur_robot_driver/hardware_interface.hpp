@@ -240,6 +240,7 @@ protected:
   // Passthrough trajectory controller interface values
   double passthrough_trajectory_transfer_state_;
   double passthrough_trajectory_abort_;
+  double passthrough_trajectory_size_;
   bool passthrough_trajectory_controller_running_;
   urcl::vector6d_t passthrough_trajectory_positions_;
   urcl::vector6d_t passthrough_trajectory_velocities_;
