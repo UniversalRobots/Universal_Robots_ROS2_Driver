@@ -226,10 +226,10 @@ private:
         const std::bitset<4>& analog_io_types, std::array<double, 4>& analog_io_types_copy,
         const std::bitset<4>& robot_status_bits, std::array<double, 4>& robot_status_bits_copy,
         const std::bitset<2>& tool_analog_input_types, std::array<double, 2>& tool_analog_input_types_copy,
-        uint8_t tool_output_voltage, double& tool_output_voltage_copy,
-        uint8_t robot_mode, double& robot_mode_copy,
-        uint8_t safety_mode, double& safety_mode_copy,
-        uint8_t tool_mode, double& tool_mode_copy,
+        int32_t& tool_output_voltage, double& tool_output_voltage_copy,
+        int32_t& robot_mode, double& robot_mode_copy,
+        int32_t safety_mode, double& safety_mode_copy,
+        uint32_t tool_mode, double& tool_mode_copy,
         bool initialized, double& system_interface_initialized,
         bool robot_program_running, double& robot_program_running_copy)
     {
