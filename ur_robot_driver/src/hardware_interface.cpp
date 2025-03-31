@@ -1361,12 +1361,8 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     trajectory_times_[point_index_received] = passthrough_trajectory_time_from_start_ - last_time;
     last_time = passthrough_trajectory_time_from_start_;
 
-    // if (!std::isnan(passthrough_trajectory_velocities_[0])) {
     trajectory_joint_velocities_[point_index_received] = passthrough_trajectory_velocities_;
-    //}
-    // if (!std::isnan(passthrough_trajectory_accelerations_[0])) {
     trajectory_joint_accelerations_[point_index_received] = passthrough_trajectory_accelerations_;
-    //}
 
     point_index_received++;
     passthrough_trajectory_transfer_state_ = 1.0;
