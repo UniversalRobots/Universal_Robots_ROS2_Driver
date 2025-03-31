@@ -1392,19 +1392,41 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   // already received down to the hardware.
   if (trajectory_started && point_index_sent <= trajectory_joint_positions_.size() &&
       point_index_sent < point_index_received) {
+    bool error = false;
     /* Write the appropriate type of point depending on the combination of positions, velocities and accelerations. */
     for (size_t i = point_index_sent; i < point_index_received; i++) {
-      if (!has_velocities(trajectory_joint_velocities_) && !has_accelerations(trajectory_joint_accelerations_)) {
-        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], urcl::vector6d_t{ 0, 0, 0, 0, 0, 0 },
-                                               trajectory_times_[i]);
-      } else if (has_velocities(trajectory_joint_velocities_) && !has_accelerations(trajectory_joint_accelerations_)) {
-        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
-                                               trajectory_times_[i]);
-      } else if (has_velocities(trajectory_joint_velocities_) && has_accelerations(trajectory_joint_accelerations_)) {
-        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
-                                               trajectory_joint_accelerations_[i], trajectory_times_[i]);
+      if (is_valid_joint_information(trajectory_joint_positions_)) {
+        if (!is_valid_joint_information(trajectory_joint_velocities_) &&
+            !is_valid_joint_information(trajectory_joint_accelerations_)) {
+          ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], urcl::vector6d_t{ 0, 0, 0, 0, 0, 0 },
+                                                 trajectory_times_[i]);
+        } else if (is_valid_joint_information(trajectory_joint_velocities_) &&
+                   !is_valid_joint_information(trajectory_joint_accelerations_)) {
+          ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
+                                                 trajectory_times_[i]);
+        } else if (!is_valid_joint_information(trajectory_joint_velocities_) &&
+                   is_valid_joint_information(trajectory_joint_accelerations_)) {
+          RCLCPP_ERROR(get_logger(), "Accelerations but no velocities given. If you want to specify accelerations with "
+                                     "a 0 velocity, please do that explicitly.");
+          error = true;
+          break;
+
+        } else if (is_valid_joint_information(trajectory_joint_velocities_) &&
+                   is_valid_joint_information(trajectory_joint_accelerations_)) {
+          ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
+                                                 trajectory_joint_accelerations_[i], trajectory_times_[i]);
+        }
+      } else {
+        RCLCPP_ERROR(get_logger(), "Trajectory points without position information are not supported.");
+        error = true;
+        break;
       }
       point_index_sent++;
+    }
+    if (error) {
+      passthrough_trajectory_abort_ = 1.0;
+      passthrough_trajectory_transfer_state_ = 5.0;
+      return;
     }
   }
 }
@@ -1420,14 +1442,9 @@ void URPositionHardwareInterface::trajectory_done_callback(urcl::control::Trajec
   return;
 }
 
-bool URPositionHardwareInterface::has_velocities(std::vector<std::array<double, 6>> velocities)
+bool URPositionHardwareInterface::is_valid_joint_information(std::vector<std::array<double, 6>> data)
 {
-  return (velocities.size() > 0 && !std::isnan(velocities[0][0]));
-}
-
-bool URPositionHardwareInterface::has_accelerations(std::vector<std::array<double, 6>> accelerations)
-{
-  return (accelerations.size() > 0 && !std::isnan(accelerations[0][0]));
+  return (data.size() > 0 && !std::isnan(data[0][0]));
 }
 
 }  // namespace ur_robot_driver
