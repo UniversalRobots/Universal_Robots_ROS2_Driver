@@ -29,10 +29,6 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-main.yml/badge.svg?event=schedule"
               alt="Humble Semi-Binary Main"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-testing.yml?query=event%3Aschedule++">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/humble-semi-binary-testing.yml/badge.svg?event=schedule"
-              alt="Humble Semi-Binary Testing"/>
-      </a>
     </td>
     <td> <!-- jazzy -->
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-main.yml?query=branch%3Amain+">
@@ -47,10 +43,6 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-semi-binary-main.yml/badge.svg?branch=main"
               alt="Jazzy Semi-Binary Main"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-semi-binary-testing.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-semi-binary-testing.yml/badge.svg?branch=main"
-              alt="Jazzy Semi-Binary Testing"/>
-      </a>
     </td>
     <td> <!-- rolling -->
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-binary-main.yml?query=branch%3Amain+">
@@ -65,10 +57,6 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
          <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-main.yml/badge.svg?branch=main"
               alt="Rolling Semi-Binary Main"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-testing.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/rolling-semi-binary-testing.yml/badge.svg?branch=main"
-              alt="Rolling Semi-Binary Testing"/>
-      </a>
     </td>
   </tr>
   <tr>
@@ -103,7 +91,7 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
 
    Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.<ros-distro>.repos`
 
-1. Semi-binary builds - against released core ROS packages (main and testing), but the immediate dependencies are pulled from source.
+1. Semi-binary builds - against released core ROS packages, but the immediate dependencies are pulled from source.
    Shows that local build with dependencies is possible and if this fails we can expect that after the next package sync we will not be able to build.
 
    Uses repos file: `src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver.repos`
