@@ -1375,7 +1375,6 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
                                                 trajectory_joint_positions_.size());
       trajectory_started = true;
     }
-    /* When all points have been read, write them to the physical robot controller.*/
   } else if (passthrough_trajectory_transfer_state_ == 3.0) {
     passthrough_trajectory_abort_ = 0.0;
     passthrough_trajectory_transfer_state_ = 4.0;
