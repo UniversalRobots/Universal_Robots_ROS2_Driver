@@ -1400,9 +1400,6 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       } else if (has_velocities(trajectory_joint_velocities_) && !has_accelerations(trajectory_joint_accelerations_)) {
         ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
                                                trajectory_times_[i]);
-      } else if (!has_velocities(trajectory_joint_velocities_) && has_accelerations(trajectory_joint_accelerations_)) {
-        ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_accelerations_[i],
-                                               trajectory_times_[i]);
       } else if (has_velocities(trajectory_joint_velocities_) && has_accelerations(trajectory_joint_accelerations_)) {
         ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
                                                trajectory_joint_accelerations_[i], trajectory_times_[i]);
