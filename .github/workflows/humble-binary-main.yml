@@ -11,5 +11,4 @@ jobs:
     with:
       ros_distro: humble
       ros_repo: main
-      upstream_workspace: Universal_Robots_ROS2_Driver-not-released.humble.repos
       ref_for_scheduled_build: humble

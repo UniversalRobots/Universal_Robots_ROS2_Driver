@@ -12,7 +12,8 @@ on:
 
       upstream_workspace:
         description: 'UPSTREAM_WORKSPACE variable for industrial_ci. Usually path to local .repos file.'
-        required: true
+        required: false
+        default: ''
         type: string
       ros_distro:
         description: 'ROS_DISTRO variable for industrial_ci'
@@ -41,7 +42,7 @@ jobs:
     env:
       DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
-      CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}-${{ github.job }}
+      CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}
     steps:
       - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
