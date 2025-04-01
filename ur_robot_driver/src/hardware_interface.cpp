@@ -1302,28 +1302,34 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                               StoppingInterface::STOP_POSITION) != stop_modes_[0].end()) {
     position_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
-  } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                                     StoppingInterface::STOP_VELOCITY) != stop_modes_[0].end()) {
+  }
+  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                              StoppingInterface::STOP_VELOCITY) != stop_modes_[0].end()) {
     velocity_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                                     StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
+  }
+  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                              StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
     force_mode_controller_running_ = false;
     stop_force_mode();
-  } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                                     StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
+  }
+  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                              StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
+    RCLCPP_WARN(get_logger(), "Stopping passthrough trajectory controller.");
     passthrough_trajectory_controller_running_ = false;
     passthrough_trajectory_abort_ = 1.0;
     trajectory_joint_positions_.clear();
     trajectory_joint_accelerations_.clear();
     trajectory_joint_velocities_.clear();
-  } else if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                                  StoppingInterface::STOP_FREEDRIVE) != stop_modes_[0].end()) {
+  }
+  if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                           StoppingInterface::STOP_FREEDRIVE) != stop_modes_[0].end()) {
     freedrive_mode_controller_running_ = false;
     freedrive_activated_ = false;
     freedrive_mode_abort_ = 1.0;
-  } else if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                                  StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
+  }
+  if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                           StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
     tool_contact_controller_running_ = false;
     tool_contact_result_ = 3.0;
   }
@@ -1341,17 +1347,20 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     passthrough_trajectory_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
-  } else if (start_modes_[0].size() != 0 &&
-             std::find(start_modes_[0].begin(), start_modes_[0].end(), FORCE_MODE_GPIO) != start_modes_[0].end()) {
+  }
+  if (start_modes_[0].size() != 0 &&
+      std::find(start_modes_[0].begin(), start_modes_[0].end(), FORCE_MODE_GPIO) != start_modes_[0].end()) {
     force_mode_controller_running_ = true;
-  } else if (start_modes_[0].size() != 0 &&
-             std::find(start_modes_[0].begin(), start_modes_[0].end(), PASSTHROUGH_GPIO) != start_modes_[0].end()) {
+  }
+  if (start_modes_[0].size() != 0 &&
+      std::find(start_modes_[0].begin(), start_modes_[0].end(), PASSTHROUGH_GPIO) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
     passthrough_trajectory_abort_ = 0.0;
-  } else if (start_modes_[0].size() != 0 &&
-             std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
+  }
+  if (start_modes_[0].size() != 0 &&
+      std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
