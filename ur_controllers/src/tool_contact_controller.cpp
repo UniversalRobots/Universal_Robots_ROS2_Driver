@@ -151,7 +151,7 @@ ToolContactController::on_activate(const rclcpp_lifecycle::State& /* previous_st
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != state_interfaces_.end()) {
       major_version_state_interface_ = *it;
-      std::optional<double> major_version = tool_contact_result_interface_->get().get_optional();
+      std::optional<double> major_version = major_version_state_interface_->get().get_optional();
       if (!major_version) {
         RCLCPP_ERROR(get_node()->get_logger(),
                      "Failed to read '%s' state interface, aborting activation of controller.", interface_name.c_str());
