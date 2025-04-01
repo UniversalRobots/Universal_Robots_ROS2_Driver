@@ -37,7 +37,6 @@ import pytest
 import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
-from control_msgs.msg import JointTolerance
 from controller_manager_msgs.srv import SwitchController
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
@@ -53,9 +52,8 @@ from test_common import (  # noqa: E402
     ConfigurationInterface,
     generate_driver_test_description,
     ROBOT_JOINTS,
+    TIMEOUT_EXECUTE_TRAJECTORY,
 )
-
-TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 
 @pytest.mark.launch_test
@@ -123,22 +121,6 @@ class RobotDriverTest(unittest.TestCase):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-
-    def test_start_passthrough_controller(self):
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                deactivate_controllers=["passthrough_trajectory_controller"],
                 activate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
