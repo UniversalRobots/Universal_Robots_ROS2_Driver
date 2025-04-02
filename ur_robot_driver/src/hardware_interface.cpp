@@ -73,11 +73,11 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   info_ = system_info;
 
   // initialize
-  urcl_joint_positions_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_joint_velocities_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_joint_efforts_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_joint_positions_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_joint_velocities_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_joint_efforts_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
@@ -85,20 +85,23 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   velocity_controller_running_ = false;
   freedrive_mode_controller_running_ = false;
   passthrough_trajectory_controller_running_ = false;
-  runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
-  pausing_state_ = PausingState::RUNNING;
-  pausing_ramp_up_increment_ = 0.01;
+  // runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
+  // pausing_state_ = PausingState::RUNNING;
+  // pausing_ramp_up_increment_ = 0.01;
   controllers_initialized_ = false;
   first_pass_ = true;
   initialized_ = false;
   async_thread_shutdown_ = false;
-  system_interface_initialized_ = 0.0;
+  // system_interface_initialized_ = 0.0;
   freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
   trajectory_joint_positions_.clear();
   trajectory_joint_velocities_.clear();
   trajectory_joint_accelerations_.clear();
+
+  // initialize member variables of URStateHelper
+  state_helper_.initialize();
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -282,38 +285,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
     sensor_names.push_back(info_.sensors[i].name);
   }
 
-  return state_helper_.generate_state_interfaces(
-    joint_names, 
-    urcl_joint_positions_,
-    urcl_joint_velocities_,
-    urcl_joint_efforts_,
-    info_.hardware_parameters.at("tf_prefix"),
-    sensor_names,
-    urcl_ft_sensor_measurements_,
-    actual_dig_out_bits_copy_,
-    actual_dig_in_bits_copy_,
-    safety_status_bits_copy_,
-    analog_io_types_copy_,
-    robot_status_bits_copy_,
-    tool_analog_input_types_copy_,
-    tool_analog_input_,
-    standard_analog_input_,
-    standard_analog_output_,
-    tool_output_voltage_copy_,
-    robot_mode_copy_,
-    safety_mode_copy_,
-    tool_mode_copy_,
-    tool_output_current_,
-    tool_temperature_,
-    speed_scaling_combined_,
-    system_interface_initialized_,
-    robot_program_running_copy_,
-    urcl_tcp_pose_,
-    tcp_rotation_buffer,
-    get_robot_software_version_major_,
-    get_robot_software_version_minor_,
-    get_robot_software_version_bugfix_,
-    get_robot_software_version_build_);
+  return state_helper_.generate_state_interfaces(joint_names, info_.hardware_parameters.at("tf_prefix"), sensor_names);
 }
 
 std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
@@ -605,10 +577,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   // Export version information to state interfaces
   urcl::VersionInformation version_info = ur_driver_->getVersion();
-  get_robot_software_version_major_ = version_info.major;
-  get_robot_software_version_minor_ = version_info.minor;
-  get_robot_software_version_build_ = version_info.build;
-  get_robot_software_version_bugfix_ = version_info.bugfix;
+  state_helper_.set_robot_software_version(version_info);
+  // get_robot_software_version_major_ = version_info.major;
+  // get_robot_software_version_minor_ = version_info.minor;
+  // get_robot_software_version_build_ = version_info.build;
+  // get_robot_software_version_bugfix_ = version_info.bugfix;
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
@@ -703,50 +676,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   if (data_pkg) {
     packet_read_ = true;
 
-    state_helper_.process_state_data(
-      data_pkg,
-      urcl_joint_positions_,
-      urcl_joint_velocities_,
-      urcl_joint_efforts_,
-      target_speed_fraction_,
-      speed_scaling_,
-      runtime_state_,
-      urcl_ft_sensor_measurements_,
-      urcl_tcp_pose_,
-      standard_analog_input_,
-      standard_analog_output_,
-      tool_analog_input_,
-      tool_output_current_,
-      tool_temperature_,
-      robot_status_bits_,
-      robot_status_bits_copy_,
-      safety_status_bits_,
-      safety_status_bits_copy_,
-      actual_dig_in_bits_,
-      actual_dig_in_bits_copy_,
-      analog_io_types_,
-      analog_io_types_copy_,
-      tool_analog_input_types_, 
-      tool_analog_input_types_copy_, 
-      tcp_rotation_quat_,  
-      tcp_rotation_buffer,  
-      tcp_force_,  
-      tcp_torque_,   
-      actual_dig_out_bits_,  
-      actual_dig_out_bits_copy_,  
-      tool_output_voltage_,  
-      tool_output_voltage_copy_,  
-      robot_mode_,  
-      robot_mode_copy_,  
-      safety_mode_,  
-      safety_mode_copy_,  
-      tool_mode_,  
-      tool_mode_copy_,  
-      initialized_,  
-      system_interface_initialized_,  
-      robot_program_running_,  
-      robot_program_running_copy_ 
-  );
+    state_helper_.process_state_data(data_pkg, initialized_, robot_program_running_);
   
     // readData(data_pkg, "actual_q", urcl_joint_positions_);
     // readData(data_pkg, "actual_qd", urcl_joint_velocities_);
@@ -810,36 +740,36 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
     // TODO(anyone): logic for sending other stuff to higher level interface
 
-    // pausing state follows runtime state when pausing
-    if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED)) {
-      pausing_state_ = PausingState::PAUSED;
-    } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
-               pausing_state_ == PausingState::PAUSED) {
-      // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
-      speed_scaling_combined_ = 0.0;
-      pausing_state_ = PausingState::RAMPUP;
-    }
+    // // pausing state follows runtime state when pausing
+    // if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED)) {
+    //   pausing_state_ = PausingState::PAUSED;
+    // } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
+    //            pausing_state_ == PausingState::PAUSED) {
+    //   // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
+    //   speed_scaling_combined_ = 0.0;
+    //   pausing_state_ = PausingState::RAMPUP;
+    // }
 
-    if (pausing_state_ == PausingState::RAMPUP) {
-      double speed_scaling_ramp = speed_scaling_combined_ + pausing_ramp_up_increment_;
-      speed_scaling_combined_ = std::min(speed_scaling_ramp, speed_scaling_ * target_speed_fraction_);
+    // if (pausing_state_ == PausingState::RAMPUP) {
+    //   double speed_scaling_ramp = speed_scaling_combined_ + pausing_ramp_up_increment_;
+    //   speed_scaling_combined_ = std::min(speed_scaling_ramp, speed_scaling_ * target_speed_fraction_);
 
-      if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_) {
-        pausing_state_ = PausingState::RUNNING;
-      }
-    } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING)) {
-      // We have to keep speed scaling on ROS side at 0 during RESUMING to prevent controllers from
-      // continuing to interpolate
-      speed_scaling_combined_ = 0.0;
-    } else {
-      // Normal case
-      speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
-    }
+    //   if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_) {
+    //     pausing_state_ = PausingState::RUNNING;
+    //   }
+    // } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING)) {
+    //   // We have to keep speed scaling on ROS side at 0 during RESUMING to prevent controllers from
+    //   // continuing to interpolate
+    //   speed_scaling_combined_ = 0.0;
+    // } else {
+    //   // Normal case
+    //   speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
+    // }
 
     if (first_pass_ && !initialized_) {
       initAsyncIO();
       // initialize commands
-      urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+      urcl_position_commands_ = urcl_position_commands_old_ = state_helper_.urcl_joint_positions_;
       urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
       resend_robot_program_cmd_ = NO_NEW_CMD_;
@@ -880,8 +810,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   // If there is no interpreting program running on the robot, we do not want to send anything.
   // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
   // this was done externally using the controller_stopper.
-  if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
-       runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
+  if ((state_helper_.runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
+       state_helper_.runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
     if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
@@ -1306,7 +1236,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_POSITION) != stop_modes_[0].end()) {
     position_controller_running_ = false;
-    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+    urcl_position_commands_ = urcl_position_commands_old_ = state_helper_.urcl_joint_positions_;
   } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                                      StoppingInterface::STOP_VELOCITY) != stop_modes_[0].end()) {
     velocity_controller_running_ = false;
@@ -1333,7 +1263,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                             hardware_interface::HW_IF_POSITION) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
-    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+    urcl_position_commands_ = urcl_position_commands_old_ = state_helper_.urcl_joint_positions_;
     position_controller_running_ = true;
 
   } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
