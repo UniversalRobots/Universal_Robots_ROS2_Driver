@@ -522,11 +522,24 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   registerUrclLogHandler(tf_prefix);
   try {
     rtde_comm_has_been_started_ = false;
-    ur_driver_ = std::make_unique<urcl::UrDriver>(
-        robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
-        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
-        std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
-        servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
+    urcl::UrDriverConfiguration driver_config;
+    driver_config.robot_ip = robot_ip;
+    driver_config.script_file = script_filename;
+    driver_config.output_recipe_file = output_recipe_filename;
+    driver_config.input_recipe_file = input_recipe_filename;
+    driver_config.headless_mode = headless_mode;
+    driver_config.reverse_port = static_cast<uint32_t>(reverse_port);
+    driver_config.script_sender_port = static_cast<uint32_t>(script_sender_port);
+    driver_config.trajectory_port = static_cast<uint32_t>(trajectory_port);
+    driver_config.script_command_port = static_cast<uint32_t>(script_command_port);
+    driver_config.reverse_ip = reverse_ip;
+    driver_config.servoj_gain = static_cast<uint32_t>(servoj_gain);
+    driver_config.servoj_lookahead_time = servoj_lookahead_time;
+    driver_config.non_blocking_read = non_blocking_read_;
+    driver_config.tool_comm_setup = std::move(tool_comm_setup);
+    driver_config.handle_program_state =
+        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
+    ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
