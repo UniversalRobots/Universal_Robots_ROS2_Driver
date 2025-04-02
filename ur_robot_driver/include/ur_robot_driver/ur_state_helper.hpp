@@ -277,12 +277,10 @@ private:
     }
 
     // Private member variables
-    // urcl::vector6d_t urcl_joint_positions_;  //--> public
     urcl::vector6d_t urcl_joint_velocities_;
     urcl::vector6d_t urcl_joint_efforts_;
     double target_speed_fraction_;
     double speed_scaling_;
-    // uint32_t runtime_state_;  //--> public
     urcl::vector6d_t urcl_ft_sensor_measurements_;
     urcl::vector6d_t urcl_tcp_pose_;
     std::array<double, 2> standard_analog_input_;
@@ -314,20 +312,15 @@ private:
     double safety_mode_copy_;
     uint32_t tool_mode_;
     double tool_mode_copy_;
-    // bool initialized_;   // weiterhin als Referenz übergeben
     double system_interface_initialized_;
-    // bool robot_program_running_;     // weiterhin als Referenz übergeben
     double robot_program_running_copy_;
     double speed_scaling_combined_;
     double get_robot_software_version_major_;
     double get_robot_software_version_minor_;
     double get_robot_software_version_bugfix_;
     double get_robot_software_version_build_;
-
-
     PausingState pausing_state_;
     double pausing_ramp_up_increment_;
-
 };
 
 }  // namespace ur_robot_driver

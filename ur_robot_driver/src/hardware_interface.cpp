@@ -705,38 +705,9 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     // readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
     // readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
-    // state_helper_.read_data(data_pkg, "actual_q", urcl_joint_positions_);
-    // state_helper_.read_data(data_pkg, "actual_qd", urcl_joint_velocities_);
-    // state_helper_.read_data(data_pkg, "actual_current", urcl_joint_efforts_);
-    // state_helper_.read_data(data_pkg, "target_speed_fraction", target_speed_fraction_);
-    // state_helper_.read_data(data_pkg, "speed_scaling", speed_scaling_);
-    // state_helper_.read_data(data_pkg, "runtime_state", runtime_state_);
-    // state_helper_.read_data(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
-    // state_helper_.read_data(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
-    // state_helper_.read_data(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
-    // state_helper_.read_data(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
-    // state_helper_.read_data(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
-    // state_helper_.read_data(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
-    // state_helper_.read_data(data_pkg, "tool_mode", tool_mode_);
-    // state_helper_.read_data(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
-    // state_helper_.read_data(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
-    // state_helper_.read_data(data_pkg, "tool_output_voltage", tool_output_voltage_);
-    // state_helper_.read_data(data_pkg, "tool_output_current", tool_output_current_);
-    // state_helper_.read_data(data_pkg, "tool_temperature", tool_temperature_);
-    // state_helper_.read_data(data_pkg, "robot_mode", robot_mode_);
-    // state_helper_.read_data(data_pkg, "safety_mode", safety_mode_);
-    // state_helper_.read_bitset_data<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
-    // state_helper_.read_bitset_data<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
-    // state_helper_.read_bitset_data<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
-    // state_helper_.read_bitset_data<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
-    // state_helper_.read_bitset_data<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
-    // state_helper_.read_bitset_data<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
-
     // required transforms
     // extractToolPose();
-    // state_helper_.extract_tool_pose(urcl_tcp_pose_, tcp_rotation_quat_, tcp_rotation_buffer);
     // transformForceTorque();
-    // state_helper_.transform_force_torque(tcp_rotation_quat_, tcp_force_, tcp_torque_, urcl_ft_sensor_measurements_);
 
     // TODO(anyone): logic for sending other stuff to higher level interface
 
@@ -781,20 +752,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       initialized_ = true;
     }
 
-    // // updateNonDoubleValues();
-    // state_helper_.update_non_double_values(
-    //   actual_dig_out_bits_, actual_dig_out_bits_copy_,
-    //   actual_dig_in_bits_, actual_dig_in_bits_copy_,
-    //   safety_status_bits_, safety_status_bits_copy_,
-    //   analog_io_types_, analog_io_types_copy_,
-    //   robot_status_bits_, robot_status_bits_copy_,
-    //   tool_analog_input_types_, tool_analog_input_types_copy_,
-    //   tool_output_voltage_, tool_output_voltage_copy_,
-    //   robot_mode_, robot_mode_copy_,
-    //   safety_mode_, safety_mode_copy_,
-    //   tool_mode_, tool_mode_copy_,
-    //   initialized_, system_interface_initialized_,
-    //   robot_program_running_, robot_program_running_copy_);
+    // updateNonDoubleValues();
 
     return hardware_interface::return_type::OK;
   }
