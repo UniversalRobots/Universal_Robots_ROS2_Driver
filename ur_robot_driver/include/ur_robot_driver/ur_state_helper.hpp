@@ -268,7 +268,7 @@ private:
         KDL::Wrench ft(
             KDL::Vector(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1], urcl_ft_sensor_measurements_[2]),
             KDL::Vector(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4], urcl_ft_sensor_measurements_[5]));
-        if (ur_driver_->getVersion().major >= 5)  // e-Series   // TODO(mathias31415) ur_driver_ hier nicht verfügbar
+        if (get_robot_software_version_major_>= 5)  // e-Series
         {
             // Setup necessary frames
             KDL::Vector vec = KDL::Vector(tcp_offset_[3], tcp_offset_[4], tcp_offset_[5]);
