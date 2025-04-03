@@ -64,7 +64,7 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 // Helper class to outsource state interface stuff
-#include "ur_robot_driver/ur_state_helper.hpp"
+#include "ur_robot_driver/stateinterface_helper.hpp"
 #include "ur_robot_driver/quaternion.hpp"
 
 namespace ur_robot_driver
