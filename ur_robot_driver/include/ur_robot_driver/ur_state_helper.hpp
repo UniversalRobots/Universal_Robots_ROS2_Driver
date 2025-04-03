@@ -138,6 +138,7 @@ public:
         read_data(data_pkg, "runtime_state", runtime_state_);
         read_data(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
         read_data(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+        read_data(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_); //TODO(mathias31415) kam hinzu
         read_data(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
         read_data(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
         read_data(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
@@ -150,6 +151,7 @@ public:
         read_data(data_pkg, "tool_temperature", tool_temperature_);
         read_data(data_pkg, "robot_mode", robot_mode_);
         read_data(data_pkg, "safety_mode", safety_mode_);
+        read_data(data_pkg, "tcp_offset", tcp_offset_); // TODO(mathias31415) kam hinzu
 
         read_bitset_data<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
         read_bitset_data<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
@@ -263,17 +265,39 @@ private:
 
     void transform_force_torque()
     {
-        // imported from ROS1 driver - hardware_interface.cpp#L867-L876
-        tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
-                            urcl_ft_sensor_measurements_[2]);
-        tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
-                            urcl_ft_sensor_measurements_[5]);
+        KDL::Wrench ft(
+            KDL::Vector(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1], urcl_ft_sensor_measurements_[2]),
+            KDL::Vector(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4], urcl_ft_sensor_measurements_[5]));
+        if (ur_driver_->getVersion().major >= 5)  // e-Series   // TODO(mathias31415) ur_driver_ hier nicht verfügbar
+        {
+            // Setup necessary frames
+            KDL::Vector vec = KDL::Vector(tcp_offset_[3], tcp_offset_[4], tcp_offset_[5]);
+            double angle = vec.Normalize();
+            KDL::Rotation rotation = KDL::Rotation::Rot(vec, angle);
+            KDL::Frame flange_to_tcp = KDL::Frame(rotation, KDL::Vector(tcp_offset_[0], tcp_offset_[1], tcp_offset_[2]));
 
-        tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
-        tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
+            vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+            angle = vec.Normalize();
+            rotation = KDL::Rotation::Rot(vec, angle);
+            KDL::Frame base_to_tcp =
+                KDL::Frame(rotation, KDL::Vector(urcl_target_tcp_pose_[0], urcl_target_tcp_pose_[1], urcl_target_tcp_pose_[2]));
+            // Calculate transformation from base to flange, see calculation details below
+            // `base_to_tcp = base_to_flange*flange_to_tcp -> base_to_flange = base_to_tcp * inv(flange_to_tcp)`
+            KDL::Frame base_to_flange = base_to_tcp * flange_to_tcp.Inverse();
+            // rotate f/t sensor output back to the flange frame
+            ft = base_to_flange.M.Inverse() * ft;
 
-        urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
-                                        tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
+            // Transform the wrench to the tcp frame
+            ft = flange_to_tcp * ft;
+        } else {  // CB3
+            KDL::Vector vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+            double angle = vec.Normalize();
+            KDL::Rotation base_to_tcp_rot = KDL::Rotation::Rot(vec, angle);
+
+            // rotate f/t sensor output back to the tcp frame
+            ft = base_to_tcp_rot.Inverse() * ft;
+        }
+        urcl_ft_sensor_measurements_ = { ft[0], ft[1], ft[2], ft[3], ft[4], ft[5] };
     }
 
     // Private member variables
@@ -300,8 +324,8 @@ private:
     std::array<double, 2> tool_analog_input_types_copy_;
     tf2::Quaternion tcp_rotation_quat_;
     ur_robot_driver::Quaternion tcp_rotation_buffer_;
-    tf2::Vector3 tcp_force_;
-    tf2::Vector3 tcp_torque_;
+    // tf2::Vector3 tcp_force_;
+    // tf2::Vector3 tcp_torque_;
     std::bitset<18> actual_dig_out_bits_;
     std::array<double, 18> actual_dig_out_bits_copy_;
     int32_t tool_output_voltage_;
@@ -321,6 +345,8 @@ private:
     double get_robot_software_version_build_;
     PausingState pausing_state_;
     double pausing_ramp_up_increment_;
+    urcl::vector6d_t urcl_target_tcp_pose_;
+    urcl::vector6d_t tcp_offset_;
 };
 
 }  // namespace ur_robot_driver

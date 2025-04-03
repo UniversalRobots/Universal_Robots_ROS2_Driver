@@ -58,9 +58,6 @@ namespace ur_robot_driver
 
 URPositionHardwareInterface::~URPositionHardwareInterface()
 {
-  // If the controller manager is shutdown via Ctrl + C the on_deactivate methods won't be called.
-  // We therefore need to make sure to actually deactivate the communication
-  on_cleanup(rclcpp_lifecycle::State());
 }
 
 hardware_interface::CallbackReturn
@@ -273,19 +270,19 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   // return state_interfaces;
 
-  // extract joint names
-  std::vector<std::string> joint_names;
-  for (size_t i = 0; i < info_.joints.size(); ++i) {
-    joint_names.push_back(info_.joints[i].name);
-  }
-
-  // extract sensor names
-  std::vector<std::string> sensor_names;
-  for (size_t i = 0; i < info_.sensors.size(); ++i) {
-    sensor_names.push_back(info_.sensors[i].name);
-  }
-
-  return state_helper_.generate_state_interfaces(joint_names, info_.hardware_parameters.at("tf_prefix"), sensor_names);
+   // extract joint names
+   std::vector<std::string> joint_names;
+   for (size_t i = 0; i < info_.joints.size(); ++i) {
+     joint_names.push_back(info_.joints[i].name);
+   }
+ 
+   // extract sensor names
+   std::vector<std::string> sensor_names;
+   for (size_t i = 0; i < info_.sensors.size(); ++i) {
+     sensor_names.push_back(info_.sensors[i].name);
+   }
+ 
+   return state_helper_.generate_state_interfaces(joint_names, info_.hardware_parameters.at("tf_prefix"), sensor_names);
 }
 
 std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
@@ -542,11 +539,24 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   registerUrclLogHandler(tf_prefix);
   try {
     rtde_comm_has_been_started_ = false;
-    ur_driver_ = std::make_unique<urcl::UrDriver>(
-        robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
-        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
-        std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
-        servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
+    urcl::UrDriverConfiguration driver_config;
+    driver_config.robot_ip = robot_ip;
+    driver_config.script_file = script_filename;
+    driver_config.output_recipe_file = output_recipe_filename;
+    driver_config.input_recipe_file = input_recipe_filename;
+    driver_config.headless_mode = headless_mode;
+    driver_config.reverse_port = static_cast<uint32_t>(reverse_port);
+    driver_config.script_sender_port = static_cast<uint32_t>(script_sender_port);
+    driver_config.trajectory_port = static_cast<uint32_t>(trajectory_port);
+    driver_config.script_command_port = static_cast<uint32_t>(script_command_port);
+    driver_config.reverse_ip = reverse_ip;
+    driver_config.servoj_gain = static_cast<uint32_t>(servoj_gain);
+    driver_config.servoj_lookahead_time = servoj_lookahead_time;
+    driver_config.non_blocking_read = non_blocking_read_;
+    driver_config.tool_comm_setup = std::move(tool_comm_setup);
+    driver_config.handle_program_state =
+        std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
+    ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
@@ -611,6 +621,19 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
 hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_state)
 {
+  RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "on_cleanup");
+  return stop();
+}
+
+hardware_interface::CallbackReturn
+URPositionHardwareInterface::on_shutdown(const rclcpp_lifecycle::State& previous_state)
+{
+  RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "on_shutdown");
+  return stop();
+}
+
+hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
+{
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping ...please wait...");
 
   if (async_thread_) {
@@ -632,11 +655,11 @@ URPositionHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_
 // void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
 //                                            const std::string& var_name, T& data)
 // {
-  // if (!data_pkg->getData(var_name, data)) {
-  //   // This throwing should never happen unless misconfigured
-  //   std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
-  //   throw std::runtime_error(error_msg);
-  // }
+//   if (!data_pkg->getData(var_name, data)) {
+//     // This throwing should never happen unless misconfigured
+//     std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+//     throw std::runtime_error(error_msg);
+//   }
 // }
 
 // template <typename T, size_t N>
@@ -677,15 +700,17 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     packet_read_ = true;
 
     state_helper_.process_state_data(data_pkg, initialized_, robot_program_running_);
-  
+
     // readData(data_pkg, "actual_q", urcl_joint_positions_);
     // readData(data_pkg, "actual_qd", urcl_joint_velocities_);
     // readData(data_pkg, "actual_current", urcl_joint_efforts_);
+
     // readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
     // readData(data_pkg, "speed_scaling", speed_scaling_);
     // readData(data_pkg, "runtime_state", runtime_state_);
     // readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
     // readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+    readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_); //TODO(mathias31415) kam hinzu
     // readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
     // readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
     // readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
@@ -704,6 +729,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     // readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
     // readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
     // readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+    readData(data_pkg, "tcp_offset", tcp_offset_); // TODO(mathias31415) kam hinzu
 
     // required transforms
     // extractToolPose();
@@ -711,7 +737,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
     // TODO(anyone): logic for sending other stuff to higher level interface
 
-    // // pausing state follows runtime state when pausing
+    // pausing state follows runtime state when pausing
     // if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED)) {
     //   pausing_state_ = PausingState::PAUSED;
     // } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
@@ -769,7 +795,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
   // this was done externally using the controller_stopper.
   if ((state_helper_.runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
-       state_helper_.runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
+      state_helper_.runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
     if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
@@ -916,46 +942,67 @@ void URPositionHardwareInterface::checkAsyncIO()
 
 // void URPositionHardwareInterface::updateNonDoubleValues()
 // {
-  // for (size_t i = 0; i < 18; ++i) {
-  //   actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
-  //   actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
-  // }
+//   for (size_t i = 0; i < 18; ++i) {
+//     actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+//     actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
+//   }
 
-  // for (size_t i = 0; i < 11; ++i) {
-  //   safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
-  // }
+//   for (size_t i = 0; i < 11; ++i) {
+//     safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
+//   }
 
-  // for (size_t i = 0; i < 4; ++i) {
-  //   analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
-  //   robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
-  // }
+//   for (size_t i = 0; i < 4; ++i) {
+//     analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
+//     robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
+//   }
 
-  // for (size_t i = 0; i < 2; ++i) {
-  //   tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
-  // }
+//   for (size_t i = 0; i < 2; ++i) {
+//     tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
+//   }
 
-  // tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
-  // robot_mode_copy_ = static_cast<double>(robot_mode_);
-  // safety_mode_copy_ = static_cast<double>(safety_mode_);
-  // tool_mode_copy_ = static_cast<double>(tool_mode_);
-  // system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
-  // robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
-
+//   tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
+//   robot_mode_copy_ = static_cast<double>(robot_mode_);
+//   safety_mode_copy_ = static_cast<double>(safety_mode_);
+//   tool_mode_copy_ = static_cast<double>(tool_mode_);
+//   system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+//   robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
 // }
 
 // void URPositionHardwareInterface::transformForceTorque()
 // {
-//   // imported from ROS1 driver - hardware_interface.cpp#L867-L876
-//   tcp_force_.setValue(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1],
-//                       urcl_ft_sensor_measurements_[2]);
-//   tcp_torque_.setValue(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4],
-//                        urcl_ft_sensor_measurements_[5]);
+//   KDL::Wrench ft(
+//       KDL::Vector(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1], urcl_ft_sensor_measurements_[2]),
+//       KDL::Vector(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4], urcl_ft_sensor_measurements_[5]));
+//   if (ur_driver_->getVersion().major >= 5)  // e-Series
+//   {
+//     // Setup necessary frames
+//     KDL::Vector vec = KDL::Vector(tcp_offset_[3], tcp_offset_[4], tcp_offset_[5]);
+//     double angle = vec.Normalize();
+//     KDL::Rotation rotation = KDL::Rotation::Rot(vec, angle);
+//     KDL::Frame flange_to_tcp = KDL::Frame(rotation, KDL::Vector(tcp_offset_[0], tcp_offset_[1], tcp_offset_[2]));
 
-//   tcp_force_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_force_);
-//   tcp_torque_ = tf2::quatRotate(tcp_rotation_quat_.inverse(), tcp_torque_);
+//     vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+//     angle = vec.Normalize();
+//     rotation = KDL::Rotation::Rot(vec, angle);
+//     KDL::Frame base_to_tcp =
+//         KDL::Frame(rotation, KDL::Vector(urcl_target_tcp_pose_[0], urcl_target_tcp_pose_[1], urcl_target_tcp_pose_[2]));
+//     // Calculate transformation from base to flange, see calculation details below
+//     // `base_to_tcp = base_to_flange*flange_to_tcp -> base_to_flange = base_to_tcp * inv(flange_to_tcp)`
+//     KDL::Frame base_to_flange = base_to_tcp * flange_to_tcp.Inverse();
+//     // rotate f/t sensor output back to the flange frame
+//     ft = base_to_flange.M.Inverse() * ft;
 
-//   urcl_ft_sensor_measurements_ = { tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
-//                                    tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z() };
+//     // Transform the wrench to the tcp frame
+//     ft = flange_to_tcp * ft;
+//   } else {  // CB3
+//     KDL::Vector vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+//     double angle = vec.Normalize();
+//     KDL::Rotation base_to_tcp_rot = KDL::Rotation::Rot(vec, angle);
+
+//     // rotate f/t sensor output back to the tcp frame
+//     ft = base_to_tcp_rot.Inverse() * ft;
+//   }
+//   urcl_ft_sensor_measurements_ = { ft[0], ft[1], ft[2], ft[3], ft[4], ft[5] };
 // }
 
 // void URPositionHardwareInterface::extractToolPose()

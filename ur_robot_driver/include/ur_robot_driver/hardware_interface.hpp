@@ -128,6 +128,7 @@ public:
   hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
+  hardware_interface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& previous_state) final;
 
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) final;
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) final;
@@ -158,6 +159,9 @@ protected:
   void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
                       std::bitset<N>& data);
 
+  // stop function used by on_shutdown and on_cleanup
+  hardware_interface::CallbackReturn stop();
+
   void initAsyncIO();
   void checkAsyncIO();
   void updateNonDoubleValues();
@@ -178,6 +182,8 @@ protected:
   // urcl::vector6d_t urcl_joint_efforts_;
   // urcl::vector6d_t urcl_ft_sensor_measurements_;
   // urcl::vector6d_t urcl_tcp_pose_;
+  // urcl::vector6d_t urcl_target_tcp_pose_;
+  // urcl::vector6d_t tcp_offset_;
   // tf2::Quaternion tcp_rotation_quat_;
   // Quaternion tcp_rotation_buffer;
 
@@ -204,10 +210,6 @@ protected:
   // int32_t safety_mode_;
   // std::bitset<4> robot_status_bits_;
   // std::bitset<11> safety_status_bits_;
-
-  // transform stuff
-  // tf2::Vector3 tcp_force_;
-  // tf2::Vector3 tcp_torque_;
 
   // asynchronous commands
   std::array<double, 18> standard_dig_out_bits_cmd_;
