@@ -70,11 +70,11 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   info_ = system_info;
 
   // initialize
-  urcl_joint_positions_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_joint_velocities_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_joint_efforts_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_joint_positions_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_joint_velocities_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_joint_efforts_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  // urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
@@ -82,20 +82,23 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   velocity_controller_running_ = false;
   freedrive_mode_controller_running_ = false;
   passthrough_trajectory_controller_running_ = false;
-  runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
-  pausing_state_ = PausingState::RUNNING;
-  pausing_ramp_up_increment_ = 0.01;
+  // runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
+  // pausing_state_ = PausingState::RUNNING;
+  // pausing_ramp_up_increment_ = 0.01;
   controllers_initialized_ = false;
   first_pass_ = true;
   initialized_ = false;
   async_thread_shutdown_ = false;
-  system_interface_initialized_ = 0.0;
+  // system_interface_initialized_ = 0.0;
   freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
   trajectory_joint_positions_.clear();
   trajectory_joint_velocities_.clear();
   trajectory_joint_accelerations_.clear();
+
+  // initialize member variables of URStateHelper
+  state_helper_.initialize();
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -151,121 +154,135 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
 
 std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
 {
-  std::vector<hardware_interface::StateInterface> state_interfaces;
-  for (size_t i = 0; i < info_.joints.size(); ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
+  // std::vector<hardware_interface::StateInterface> state_interfaces;
+  // for (size_t i = 0; i < info_.joints.size(); ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
-  }
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
+  // }
 
-  // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
-  // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
-  // state interface in info_ and match them accordingly
-  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
-                                                                   &speed_scaling_combined_));
+  // // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
+  // // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
+  // // state interface in info_ and match them accordingly
+  // const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
+  //                                                                  &speed_scaling_combined_));
 
-  for (auto& sensor : info_.sensors) {
-    if (sensor.name == tf_prefix + "tcp_fts_sensor") {
-      const std::vector<std::string> fts_names = {
-        "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
-      };
-      for (uint j = 0; j < 6; ++j) {
-        state_interfaces.emplace_back(
-            hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
-      }
-    }
-  }
+  // for (auto& sensor : info_.sensors) {
+  //   if (sensor.name == tf_prefix + "tcp_fts_sensor") {
+  //     const std::vector<std::string> fts_names = {
+  //       "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
+  //     };
+  //     for (uint j = 0; j < 6; ++j) {
+  //       state_interfaces.emplace_back(
+  //           hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
+  //     }
+  //   }
+  // }
 
-  for (size_t i = 0; i < 18; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
-  }
+  // for (size_t i = 0; i < 18; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
+  // }
 
-  for (size_t i = 0; i < 11; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]));
-  }
+  // for (size_t i = 0; i < 11; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]));
+  // }
 
-  for (size_t i = 0; i < 4; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]));
-  }
+  // for (size_t i = 0; i < 4; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]));
+  // }
 
-  for (size_t i = 0; i < 2; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
+  // for (size_t i = 0; i < 2; ++i) {
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
-  }
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
+  // }
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current_));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized",
-                                                                   &system_interface_initialized_));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized",
+  //                                                                  &system_interface_initialized_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
+  // state_interfaces.emplace_back(
+  //     hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //     tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
 
-  return state_interfaces;
+  // return state_interfaces;
+
+   // extract joint names
+   std::vector<std::string> joint_names;
+   for (size_t i = 0; i < info_.joints.size(); ++i) {
+     joint_names.push_back(info_.joints[i].name);
+   }
+ 
+   // extract sensor names
+   std::vector<std::string> sensor_names;
+   for (size_t i = 0; i < info_.sensors.size(); ++i) {
+     sensor_names.push_back(info_.sensors[i].name);
+   }
+ 
+   return state_helper_.generate_state_interfaces(joint_names, info_.hardware_parameters.at("tf_prefix"), sensor_names);
 }
 
 std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
@@ -570,10 +587,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   // Export version information to state interfaces
   urcl::VersionInformation version_info = ur_driver_->getVersion();
-  get_robot_software_version_major_ = version_info.major;
-  get_robot_software_version_minor_ = version_info.minor;
-  get_robot_software_version_build_ = version_info.build;
-  get_robot_software_version_bugfix_ = version_info.bugfix;
+  state_helper_.set_robot_software_version(version_info);
+  // get_robot_software_version_major_ = version_info.major;
+  // get_robot_software_version_minor_ = version_info.minor;
+  // get_robot_software_version_build_ = version_info.build;
+  // get_robot_software_version_bugfix_ = version_info.bugfix;
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
@@ -633,27 +651,27 @@ hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-template <typename T>
-void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
-                                           const std::string& var_name, T& data)
-{
-  if (!data_pkg->getData(var_name, data)) {
-    // This throwing should never happen unless misconfigured
-    std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
-    throw std::runtime_error(error_msg);
-  }
-}
+// template <typename T>
+// void URPositionHardwareInterface::readData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
+//                                            const std::string& var_name, T& data)
+// {
+//   if (!data_pkg->getData(var_name, data)) {
+//     // This throwing should never happen unless misconfigured
+//     std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+//     throw std::runtime_error(error_msg);
+//   }
+// }
 
-template <typename T, size_t N>
-void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
-                                                 const std::string& var_name, std::bitset<N>& data)
-{
-  if (!data_pkg->getData<T, N>(var_name, data)) {
-    // This throwing should never happen unless misconfigured
-    std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
-    throw std::runtime_error(error_msg);
-  }
-}
+// template <typename T, size_t N>
+// void URPositionHardwareInterface::readBitsetData(const std::unique_ptr<rtde::DataPackage>& data_pkg,
+//                                                  const std::string& var_name, std::bitset<N>& data)
+// {
+//   if (!data_pkg->getData<T, N>(var_name, data)) {
+//     // This throwing should never happen unless misconfigured
+//     std::string error_msg = "Did not find '" + var_name + "' in data sent from robot. This should not happen!";
+//     throw std::runtime_error(error_msg);
+//   }
+// }
 
 void URPositionHardwareInterface::asyncThread()
 {
@@ -680,72 +698,75 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
   if (data_pkg) {
     packet_read_ = true;
-    readData(data_pkg, "actual_q", urcl_joint_positions_);
-    readData(data_pkg, "actual_qd", urcl_joint_velocities_);
-    readData(data_pkg, "actual_current", urcl_joint_efforts_);
 
-    readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
-    readData(data_pkg, "speed_scaling", speed_scaling_);
-    readData(data_pkg, "runtime_state", runtime_state_);
-    readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
-    readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
-    readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_);
-    readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
-    readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
-    readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
-    readData(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
-    readData(data_pkg, "tool_mode", tool_mode_);
-    readData(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
-    readData(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
-    readData(data_pkg, "tool_output_voltage", tool_output_voltage_);
-    readData(data_pkg, "tool_output_current", tool_output_current_);
-    readData(data_pkg, "tool_temperature", tool_temperature_);
-    readData(data_pkg, "robot_mode", robot_mode_);
-    readData(data_pkg, "safety_mode", safety_mode_);
-    readBitsetData<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
-    readBitsetData<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
-    readBitsetData<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
-    readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
-    readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
-    readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
-    readData(data_pkg, "tcp_offset", tcp_offset_);
+    state_helper_.process_state_data(data_pkg, initialized_, robot_program_running_);
+
+    // readData(data_pkg, "actual_q", urcl_joint_positions_);
+    // readData(data_pkg, "actual_qd", urcl_joint_velocities_);
+    // readData(data_pkg, "actual_current", urcl_joint_efforts_);
+
+    // readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
+    // readData(data_pkg, "speed_scaling", speed_scaling_);
+    // readData(data_pkg, "runtime_state", runtime_state_);
+    // readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
+    // readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+    // readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_); //TODO(mathias31415) kam hinzu
+    // readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
+    // readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
+    // readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
+    // readData(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
+    // readData(data_pkg, "tool_mode", tool_mode_);
+    // readData(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
+    // readData(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
+    // readData(data_pkg, "tool_output_voltage", tool_output_voltage_);
+    // readData(data_pkg, "tool_output_current", tool_output_current_);
+    // readData(data_pkg, "tool_temperature", tool_temperature_);
+    // readData(data_pkg, "robot_mode", robot_mode_);
+    // readData(data_pkg, "safety_mode", safety_mode_);
+    // readBitsetData<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
+    // readBitsetData<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
+    // readBitsetData<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
+    // readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
+    // readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
+    // readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+    // readData(data_pkg, "tcp_offset", tcp_offset_); // TODO(mathias31415) kam hinzu
 
     // required transforms
-    extractToolPose();
-    transformForceTorque();
+    // extractToolPose();
+    // transformForceTorque();
 
     // TODO(anyone): logic for sending other stuff to higher level interface
 
     // pausing state follows runtime state when pausing
-    if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED)) {
-      pausing_state_ = PausingState::PAUSED;
-    } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
-               pausing_state_ == PausingState::PAUSED) {
-      // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
-      speed_scaling_combined_ = 0.0;
-      pausing_state_ = PausingState::RAMPUP;
-    }
+    // if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED)) {
+    //   pausing_state_ = PausingState::PAUSED;
+    // } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) &&
+    //            pausing_state_ == PausingState::PAUSED) {
+    //   // When the robot resumed program execution and pausing state was PAUSED, we enter RAMPUP
+    //   speed_scaling_combined_ = 0.0;
+    //   pausing_state_ = PausingState::RAMPUP;
+    // }
 
-    if (pausing_state_ == PausingState::RAMPUP) {
-      double speed_scaling_ramp = speed_scaling_combined_ + pausing_ramp_up_increment_;
-      speed_scaling_combined_ = std::min(speed_scaling_ramp, speed_scaling_ * target_speed_fraction_);
+    // if (pausing_state_ == PausingState::RAMPUP) {
+    //   double speed_scaling_ramp = speed_scaling_combined_ + pausing_ramp_up_increment_;
+    //   speed_scaling_combined_ = std::min(speed_scaling_ramp, speed_scaling_ * target_speed_fraction_);
 
-      if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_) {
-        pausing_state_ = PausingState::RUNNING;
-      }
-    } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING)) {
-      // We have to keep speed scaling on ROS side at 0 during RESUMING to prevent controllers from
-      // continuing to interpolate
-      speed_scaling_combined_ = 0.0;
-    } else {
-      // Normal case
-      speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
-    }
+    //   if (speed_scaling_ramp > speed_scaling_ * target_speed_fraction_) {
+    //     pausing_state_ = PausingState::RUNNING;
+    //   }
+    // } else if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::RESUMING)) {
+    //   // We have to keep speed scaling on ROS side at 0 during RESUMING to prevent controllers from
+    //   // continuing to interpolate
+    //   speed_scaling_combined_ = 0.0;
+    // } else {
+    //   // Normal case
+    //   speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
+    // }
 
     if (first_pass_ && !initialized_) {
       initAsyncIO();
       // initialize commands
-      urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+      urcl_position_commands_ = urcl_position_commands_old_ = state_helper_.urcl_joint_positions_;
       urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
       resend_robot_program_cmd_ = NO_NEW_CMD_;
@@ -757,7 +778,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       initialized_ = true;
     }
 
-    updateNonDoubleValues();
+    // updateNonDoubleValues();
 
     return hardware_interface::return_type::OK;
   }
@@ -773,8 +794,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   // If there is no interpreting program running on the robot, we do not want to send anything.
   // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
   // this was done externally using the controller_stopper.
-  if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
-       runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
+  if ((state_helper_.runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
+      state_helper_.runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
     if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
@@ -919,85 +940,85 @@ void URPositionHardwareInterface::checkAsyncIO()
   }
 }
 
-void URPositionHardwareInterface::updateNonDoubleValues()
-{
-  for (size_t i = 0; i < 18; ++i) {
-    actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
-    actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
-  }
+// void URPositionHardwareInterface::updateNonDoubleValues()
+// {
+//   for (size_t i = 0; i < 18; ++i) {
+//     actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+//     actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
+//   }
 
-  for (size_t i = 0; i < 11; ++i) {
-    safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
-  }
+//   for (size_t i = 0; i < 11; ++i) {
+//     safety_status_bits_copy_[i] = static_cast<double>(safety_status_bits_[i]);
+//   }
 
-  for (size_t i = 0; i < 4; ++i) {
-    analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
-    robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
-  }
+//   for (size_t i = 0; i < 4; ++i) {
+//     analog_io_types_copy_[i] = static_cast<double>(analog_io_types_[i]);
+//     robot_status_bits_copy_[i] = static_cast<double>(robot_status_bits_[i]);
+//   }
 
-  for (size_t i = 0; i < 2; ++i) {
-    tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
-  }
+//   for (size_t i = 0; i < 2; ++i) {
+//     tool_analog_input_types_copy_[i] = static_cast<double>(tool_analog_input_types_[i]);
+//   }
 
-  tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
-  robot_mode_copy_ = static_cast<double>(robot_mode_);
-  safety_mode_copy_ = static_cast<double>(safety_mode_);
-  tool_mode_copy_ = static_cast<double>(tool_mode_);
-  system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
-  robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
-}
+//   tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
+//   robot_mode_copy_ = static_cast<double>(robot_mode_);
+//   safety_mode_copy_ = static_cast<double>(safety_mode_);
+//   tool_mode_copy_ = static_cast<double>(tool_mode_);
+//   system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
+//   robot_program_running_copy_ = robot_program_running_ ? 1.0 : 0.0;
+// }
 
-void URPositionHardwareInterface::transformForceTorque()
-{
-  KDL::Wrench ft(
-      KDL::Vector(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1], urcl_ft_sensor_measurements_[2]),
-      KDL::Vector(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4], urcl_ft_sensor_measurements_[5]));
-  if (ur_driver_->getVersion().major >= 5)  // e-Series
-  {
-    // Setup necessary frames
-    KDL::Vector vec = KDL::Vector(tcp_offset_[3], tcp_offset_[4], tcp_offset_[5]);
-    double angle = vec.Normalize();
-    KDL::Rotation rotation = KDL::Rotation::Rot(vec, angle);
-    KDL::Frame flange_to_tcp = KDL::Frame(rotation, KDL::Vector(tcp_offset_[0], tcp_offset_[1], tcp_offset_[2]));
+// void URPositionHardwareInterface::transformForceTorque()
+// {
+//   KDL::Wrench ft(
+//       KDL::Vector(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1], urcl_ft_sensor_measurements_[2]),
+//       KDL::Vector(urcl_ft_sensor_measurements_[3], urcl_ft_sensor_measurements_[4], urcl_ft_sensor_measurements_[5]));
+//   if (ur_driver_->getVersion().major >= 5)  // e-Series
+//   {
+//     // Setup necessary frames
+//     KDL::Vector vec = KDL::Vector(tcp_offset_[3], tcp_offset_[4], tcp_offset_[5]);
+//     double angle = vec.Normalize();
+//     KDL::Rotation rotation = KDL::Rotation::Rot(vec, angle);
+//     KDL::Frame flange_to_tcp = KDL::Frame(rotation, KDL::Vector(tcp_offset_[0], tcp_offset_[1], tcp_offset_[2]));
 
-    vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
-    angle = vec.Normalize();
-    rotation = KDL::Rotation::Rot(vec, angle);
-    KDL::Frame base_to_tcp =
-        KDL::Frame(rotation, KDL::Vector(urcl_target_tcp_pose_[0], urcl_target_tcp_pose_[1], urcl_target_tcp_pose_[2]));
-    // Calculate transformation from base to flange, see calculation details below
-    // `base_to_tcp = base_to_flange*flange_to_tcp -> base_to_flange = base_to_tcp * inv(flange_to_tcp)`
-    KDL::Frame base_to_flange = base_to_tcp * flange_to_tcp.Inverse();
-    // rotate f/t sensor output back to the flange frame
-    ft = base_to_flange.M.Inverse() * ft;
+//     vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+//     angle = vec.Normalize();
+//     rotation = KDL::Rotation::Rot(vec, angle);
+//     KDL::Frame base_to_tcp =
+//         KDL::Frame(rotation, KDL::Vector(urcl_target_tcp_pose_[0], urcl_target_tcp_pose_[1], urcl_target_tcp_pose_[2]));
+//     // Calculate transformation from base to flange, see calculation details below
+//     // `base_to_tcp = base_to_flange*flange_to_tcp -> base_to_flange = base_to_tcp * inv(flange_to_tcp)`
+//     KDL::Frame base_to_flange = base_to_tcp * flange_to_tcp.Inverse();
+//     // rotate f/t sensor output back to the flange frame
+//     ft = base_to_flange.M.Inverse() * ft;
 
-    // Transform the wrench to the tcp frame
-    ft = flange_to_tcp * ft;
-  } else {  // CB3
-    KDL::Vector vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
-    double angle = vec.Normalize();
-    KDL::Rotation base_to_tcp_rot = KDL::Rotation::Rot(vec, angle);
+//     // Transform the wrench to the tcp frame
+//     ft = flange_to_tcp * ft;
+//   } else {  // CB3
+//     KDL::Vector vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
+//     double angle = vec.Normalize();
+//     KDL::Rotation base_to_tcp_rot = KDL::Rotation::Rot(vec, angle);
 
-    // rotate f/t sensor output back to the tcp frame
-    ft = base_to_tcp_rot.Inverse() * ft;
-  }
-  urcl_ft_sensor_measurements_ = { ft[0], ft[1], ft[2], ft[3], ft[4], ft[5] };
-}
+//     // rotate f/t sensor output back to the tcp frame
+//     ft = base_to_tcp_rot.Inverse() * ft;
+//   }
+//   urcl_ft_sensor_measurements_ = { ft[0], ft[1], ft[2], ft[3], ft[4], ft[5] };
+// }
 
-void URPositionHardwareInterface::extractToolPose()
-{
-  // imported from ROS1 driver hardware_interface.cpp#L911-L928
-  double tcp_angle =
-      std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
+// void URPositionHardwareInterface::extractToolPose()
+// {
+//   // imported from ROS1 driver hardware_interface.cpp#L911-L928
+//   double tcp_angle =
+//       std::sqrt(std::pow(urcl_tcp_pose_[3], 2) + std::pow(urcl_tcp_pose_[4], 2) + std::pow(urcl_tcp_pose_[5], 2));
 
-  tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
-  if (tcp_angle > 1e-16) {
-    tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
-  } else {
-    tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
-  }
-  tcp_rotation_buffer.set(tcp_rotation_quat_);
-}
+//   tf2::Vector3 rotation_vec(urcl_tcp_pose_[3], urcl_tcp_pose_[4], urcl_tcp_pose_[5]);
+//   if (tcp_angle > 1e-16) {
+//     tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
+//   } else {
+//     tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
+//   }
+//   tcp_rotation_buffer.set(tcp_rotation_quat_);
+// }
 
 hardware_interface::return_type URPositionHardwareInterface::prepare_command_mode_switch(
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
@@ -1220,7 +1241,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_POSITION) != stop_modes_[0].end()) {
     position_controller_running_ = false;
-    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+    urcl_position_commands_ = urcl_position_commands_old_ = state_helper_.urcl_joint_positions_;
   } else if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                                      StoppingInterface::STOP_VELOCITY) != stop_modes_[0].end()) {
     velocity_controller_running_ = false;
@@ -1247,7 +1268,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                             hardware_interface::HW_IF_POSITION) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
-    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+    urcl_position_commands_ = urcl_position_commands_old_ = state_helper_.urcl_joint_positions_;
     position_controller_running_ = true;
 
   } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
