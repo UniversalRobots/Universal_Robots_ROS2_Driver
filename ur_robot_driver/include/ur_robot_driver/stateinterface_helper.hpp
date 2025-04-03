@@ -36,7 +36,7 @@ public:
         system_interface_initialized_ = 0.0;
     }
 
-    void set_robot_software_version(const urcl::VersionInformation& version_info) {
+    void setRobotSoftwareVersion(const urcl::VersionInformation& version_info) {
         get_robot_software_version_major_ = version_info.major;
         get_robot_software_version_minor_ = version_info.minor;
         get_robot_software_version_build_ = version_info.build;
@@ -124,44 +124,44 @@ public:
         return state_interfaces;
     }
 
-    void process_state_data(std::unique_ptr<rtde::DataPackage>& data_pkg, bool& initialized, bool& robot_program_running)
+    void processStateData(std::unique_ptr<rtde::DataPackage>& data_pkg, bool& initialized, bool& robot_program_running)
     {
         if (!data_pkg) {
             return;
         }
 
-        read_data(data_pkg, "actual_q", urcl_joint_positions_);
-        read_data(data_pkg, "actual_qd", urcl_joint_velocities_);
-        read_data(data_pkg, "actual_current", urcl_joint_efforts_);
-        read_data(data_pkg, "target_speed_fraction", target_speed_fraction_);
-        read_data(data_pkg, "speed_scaling", speed_scaling_);
-        read_data(data_pkg, "runtime_state", runtime_state_);
-        read_data(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
-        read_data(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
-        read_data(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_); //TODO(mathias31415) kam hinzu
-        read_data(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
-        read_data(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
-        read_data(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
-        read_data(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
-        read_data(data_pkg, "tool_mode", tool_mode_);
-        read_data(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
-        read_data(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
-        read_data(data_pkg, "tool_output_voltage", tool_output_voltage_);
-        read_data(data_pkg, "tool_output_current", tool_output_current_);
-        read_data(data_pkg, "tool_temperature", tool_temperature_);
-        read_data(data_pkg, "robot_mode", robot_mode_);
-        read_data(data_pkg, "safety_mode", safety_mode_);
-        read_data(data_pkg, "tcp_offset", tcp_offset_); // TODO(mathias31415) kam hinzu
+        readData(data_pkg, "actual_q", urcl_joint_positions_);
+        readData(data_pkg, "actual_qd", urcl_joint_velocities_);
+        readData(data_pkg, "actual_current", urcl_joint_efforts_);
+        readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
+        readData(data_pkg, "speed_scaling", speed_scaling_);
+        readData(data_pkg, "runtime_state", runtime_state_);
+        readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
+        readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
+        readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_); //TODO(mathias31415) kam hinzu
+        readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
+        readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
+        readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
+        readData(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
+        readData(data_pkg, "tool_mode", tool_mode_);
+        readData(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
+        readData(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
+        readData(data_pkg, "tool_output_voltage", tool_output_voltage_);
+        readData(data_pkg, "tool_output_current", tool_output_current_);
+        readData(data_pkg, "tool_temperature", tool_temperature_);
+        readData(data_pkg, "robot_mode", robot_mode_);
+        readData(data_pkg, "safety_mode", safety_mode_);
+        readData(data_pkg, "tcp_offset", tcp_offset_); // TODO(mathias31415) kam hinzu
 
-        read_bitset_data<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
-        read_bitset_data<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
-        read_bitset_data<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
-        read_bitset_data<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
-        read_bitset_data<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
-        read_bitset_data<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
+        readBitsetData<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
+        readBitsetData<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
+        readBitsetData<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
+        readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
+        readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
+        readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
 
-        extract_tool_pose();
-        transform_force_torque();
+        extractToolPose();
+        transformForceTorque();
 
         // pausing state follows runtime state when pausing
         if (runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSED)) {
@@ -189,7 +189,7 @@ public:
             speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
         }
 
-        update_non_double_values(initialized, robot_program_running);
+        updateNonDoubleValues(initialized, robot_program_running);
     
 
             
@@ -199,7 +199,7 @@ public:
     uint32_t runtime_state_;
 
 private:
-    void update_non_double_values(bool initialized, bool robot_program_running)
+    void updateNonDoubleValues(bool initialized, bool robot_program_running)
     {
         for (size_t i = 0; i < 18; ++i) {
             actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
@@ -229,7 +229,7 @@ private:
 
 
     template <typename T>
-    void read_data(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, T& data)
+    void readData(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, T& data)
     {
         if (!data_pkg->getData(var_name, data)) {
             // This throwing should never happen unless misconfigured
@@ -239,7 +239,7 @@ private:
     }
 
     template <typename T, size_t N>
-    void read_bitset_data(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, std::bitset<N>& data)
+    void readBitsetData(const std::unique_ptr<rtde::DataPackage>& data_pkg, const std::string& var_name, std::bitset<N>& data)
     {
         if (!data_pkg->getData<T, N>(var_name, data)) {
             // This throwing should never happen unless misconfigured
@@ -248,7 +248,7 @@ private:
         }
     }
 
-    void extract_tool_pose()
+    void extractToolPose()
     {
         // imported from ROS1 driver hardware_interface.cpp#L911-L928
         double tcp_angle =
@@ -263,7 +263,7 @@ private:
         tcp_rotation_buffer_.set(tcp_rotation_quat_);
     }
 
-    void transform_force_torque()
+    void transformForceTorque()
     {
         KDL::Wrench ft(
             KDL::Vector(urcl_ft_sensor_measurements_[0], urcl_ft_sensor_measurements_[1], urcl_ft_sensor_measurements_[2]),

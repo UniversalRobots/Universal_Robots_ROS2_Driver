@@ -587,7 +587,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   // Export version information to state interfaces
   urcl::VersionInformation version_info = ur_driver_->getVersion();
-  state_helper_.set_robot_software_version(version_info);
+  state_helper_.setRobotSoftwareVersion(version_info);
   // get_robot_software_version_major_ = version_info.major;
   // get_robot_software_version_minor_ = version_info.minor;
   // get_robot_software_version_build_ = version_info.build;
@@ -699,7 +699,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   if (data_pkg) {
     packet_read_ = true;
 
-    state_helper_.process_state_data(data_pkg, initialized_, robot_program_running_);
+    state_helper_.processStateData(data_pkg, initialized_, robot_program_running_);
 
     // readData(data_pkg, "actual_q", urcl_joint_positions_);
     // readData(data_pkg, "actual_qd", urcl_joint_velocities_);
