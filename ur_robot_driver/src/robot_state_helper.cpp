@@ -361,12 +361,12 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
       if (headless_mode_) {
         result_->success = safeDashboardTrigger(this->resend_robot_program_srv_);
       } else {
-        // The dashboard denies playing immediately after switching the mode to RUNNING
-        sleep(1);
         if (play_program_srv_ == nullptr) {
           result_->success = false;
           result_->message = "Play program service not available on this robot.";
         } else {
+          // The dashboard denies playing immediately after switching the mode to RUNNING
+          sleep(1);
           result_->success = safeDashboardTrigger(this->play_program_srv_);
         }
       }
