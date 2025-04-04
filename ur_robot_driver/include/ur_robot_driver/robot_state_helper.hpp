@@ -29,7 +29,7 @@
 #ifndef UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 #define UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 
-#include <chrono>
+#include <string>
 #include <memory>
 
 #include "rclcpp/rclcpp.hpp"
@@ -41,6 +41,7 @@
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_client_library/ur/datatypes.h"
+#include "ur_client_library/primary/primary_client.h"
 
 namespace ur_robot_driver
 {
@@ -90,6 +91,10 @@ private:
   std::atomic<bool> program_running_;
   std::mutex goal_mutex_;
 
+  std::string robot_ip_;
+  urcl::comm::INotifier notifier_;
+  std::shared_ptr<urcl::primary_interface::PrimaryClient> primary_client_;
+
   rclcpp_action::Server<ur_dashboard_msgs::action::SetMode>::SharedPtr set_mode_as_;
 
   rclcpp::CallbackGroup::SharedPtr robot_mode_sub_cb_;
@@ -100,12 +105,7 @@ private:
 
   rclcpp::CallbackGroup::SharedPtr service_cb_grp_;
 
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr unlock_protective_stop_srv_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr restart_safety_srv_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr power_on_srv_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr power_off_srv_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr brake_release_srv_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr stop_program_srv_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr play_program_srv_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr resend_robot_program_srv_;
 };
