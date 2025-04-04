@@ -167,8 +167,7 @@ protected:
   void stop_force_mode();
   void check_passthrough_trajectory_controller();
   void trajectory_done_callback(urcl::control::TrajectoryResult result);
-  bool has_accelerations(std::vector<std::array<double, 6>> accelerations);
-  bool has_velocities(std::vector<std::array<double, 6>> velocities);
+  bool is_valid_joint_information(std::vector<std::array<double, 6>> data);
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -240,6 +239,7 @@ protected:
   // Passthrough trajectory controller interface values
   double passthrough_trajectory_transfer_state_;
   double passthrough_trajectory_abort_;
+  double passthrough_trajectory_size_;
   bool passthrough_trajectory_controller_running_;
   urcl::vector6d_t passthrough_trajectory_positions_;
   urcl::vector6d_t passthrough_trajectory_velocities_;
