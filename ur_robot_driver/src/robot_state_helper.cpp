@@ -79,7 +79,7 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
   if (robot_version->major > 5) {
     RCLCPP_WARN(rclcpp::get_logger("robot_state_helper"), "Running on a PolyScopeX robot. The dashboard server is not "
                                                           "available, therefore the robot_state_helper cannot start "
-                                                          "PolyScope programs.");
+                                                          "PolyScope programs and restart the safety.");
   } else {
     // Service to restart safety
     restart_safety_srv_ = node_->create_client<std_srvs::srv::Trigger>(
