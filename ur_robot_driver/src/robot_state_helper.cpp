@@ -27,6 +27,8 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <mutex>
+#include <rclcpp/logger.hpp>
+#include <rclcpp/logging.hpp>
 #include <ur_robot_driver/robot_state_helper.hpp>
 
 #include "rclcpp/rclcpp.hpp"
@@ -66,28 +68,27 @@ RobotStateHelper::RobotStateHelper(const rclcpp::Node::SharedPtr& node)
   node->declare_parameter("headless_mode", false);
   headless_mode_ = node->get_parameter("headless_mode").as_bool();
 
-  // Service to unlock protective stop
-  unlock_protective_stop_srv_ = node_->create_client<std_srvs::srv::Trigger>(
-      "dashboard_client/unlock_protective_stop", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
-  // Service to restart safety
-  restart_safety_srv_ = node_->create_client<std_srvs::srv::Trigger>(
-      "dashboard_client/restart_safety", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
-  // Service to power on the robot
-  power_on_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/power_on",
-                                                               rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
-  // Service to power off the robot
-  power_off_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/power_off",
-                                                                rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
-  // Service to release the robot's brakes
-  brake_release_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/brake_release",
-                                                                    rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
-  // Service to stop UR program execution on the robot
-  stop_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/stop",
-                                                                   rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
-  // Service to start UR program execution on the robot
-  play_program_srv_ = node_->create_client<std_srvs::srv::Trigger>("dashboard_client/play",
-                                                                   rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
-  play_program_srv_->wait_for_service();
+  node->declare_parameter("robot_ip", "192.168.56.101");
+  robot_ip_ = node->get_parameter("robot_ip").as_string();
+
+  primary_client_ = std::make_shared<urcl::primary_interface::PrimaryClient>(robot_ip_, notifier_);
+
+  primary_client_->start(0, std::chrono::seconds(10));
+  auto robot_version = primary_client_->getRobotVersion();
+
+  if (robot_version->major > 5) {
+    RCLCPP_WARN(rclcpp::get_logger("robot_state_helper"), "Running on a PolyScopeX robot. The dashboard server is not "
+                                                          "available, therefore the robot_state_helper cannot start "
+                                                          "PolyScope programs and restart the safety.");
+  } else {
+    // Service to restart safety
+    restart_safety_srv_ = node_->create_client<std_srvs::srv::Trigger>(
+        "dashboard_client/restart_safety", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+    // Service to start UR program execution on the robot
+    play_program_srv_ = node_->create_client<std_srvs::srv::Trigger>(
+        "dashboard_client/play", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+    play_program_srv_->wait_for_service();
+  }
 
   resend_robot_program_srv_ = node_->create_client<std_srvs::srv::Trigger>(
       "io_and_status_controller/resend_robot_program", rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
@@ -136,7 +137,13 @@ bool RobotStateHelper::recoverFromSafety()
 {
   switch (safety_mode_) {
     case urcl::SafetyMode::PROTECTIVE_STOP:
-      return safeDashboardTrigger(this->unlock_protective_stop_srv_);
+      try {
+        primary_client_->commandUnlockProtectiveStop();
+      } catch (const urcl::UrException& e) {
+        RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), e.what());
+        return false;
+      }
+      return true;
     case urcl::SafetyMode::SYSTEM_EMERGENCY_STOP:;
     case urcl::SafetyMode::ROBOT_EMERGENCY_STOP:
       RCLCPP_WARN_STREAM(rclcpp::get_logger("robot_state_helper"), "The robot is currently in safety mode."
@@ -145,7 +152,11 @@ bool RobotStateHelper::recoverFromSafety()
       return false;
     case urcl::SafetyMode::VIOLATION:;
     case urcl::SafetyMode::FAULT:
-      return safeDashboardTrigger(this->restart_safety_srv_);
+      if (restart_safety_srv_ != nullptr) {
+        return safeDashboardTrigger(this->restart_safety_srv_);
+      } else {
+        return false;
+      }
     default:
       // nothing to do
       RCLCPP_DEBUG_STREAM(rclcpp::get_logger("robot_state_helper"), "No safety recovery needed.");
@@ -155,15 +166,22 @@ bool RobotStateHelper::recoverFromSafety()
 
 bool RobotStateHelper::jumpToRobotMode(const urcl::RobotMode target_mode)
 {
-  switch (target_mode) {
-    case urcl::RobotMode::POWER_OFF:
-      return safeDashboardTrigger(this->power_off_srv_);
-    case urcl::RobotMode::IDLE:
-      return safeDashboardTrigger(this->power_on_srv_);
-    case urcl::RobotMode::RUNNING:
-      return safeDashboardTrigger(this->brake_release_srv_);
-    default:
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("robot_state_helper"), "Unreachable target robot mode.");
+  try {
+    switch (target_mode) {
+      case urcl::RobotMode::POWER_OFF:
+        primary_client_->commandPowerOff();
+        return true;
+      case urcl::RobotMode::IDLE:
+        primary_client_->commandPowerOn();
+        return true;
+      case urcl::RobotMode::RUNNING:
+        primary_client_->commandBrakeRelease();
+        return true;
+      default:
+        RCLCPP_ERROR_STREAM(rclcpp::get_logger("robot_state_helper"), "Unreachable target robot mode.");
+    }
+  } catch (const urcl::UrException& e) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("robot_state_helper"), e.what());
   }
   return false;
 }
@@ -247,14 +265,13 @@ void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHel
 
 bool RobotStateHelper::stopProgram()
 {
-  if (safeDashboardTrigger(this->stop_program_srv_)) {
-    auto start = std::chrono::steady_clock::now();
-    while (program_running_ && std::chrono::steady_clock::now() - start < std::chrono::seconds(1)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
-      return true;
-    }
+  try {
+    primary_client_->commandStop();
+  } catch (const urcl::UrException& e) {
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("robot_state_helper"), e.what());
+    return false;
   }
-  return false;
+  return true;
 }
 
 void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
@@ -344,9 +361,14 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
       if (headless_mode_) {
         result_->success = safeDashboardTrigger(this->resend_robot_program_srv_);
       } else {
-        // The dashboard denies playing immediately after switching the mode to RUNNING
-        sleep(1);
-        result_->success = safeDashboardTrigger(this->play_program_srv_);
+        if (play_program_srv_ == nullptr) {
+          result_->success = false;
+          result_->message = "Play program service not available on this robot.";
+        } else {
+          // The dashboard denies playing immediately after switching the mode to RUNNING
+          sleep(1);
+          result_->success = safeDashboardTrigger(this->play_program_srv_);
+        }
       }
     }
     if (result_->success) {
