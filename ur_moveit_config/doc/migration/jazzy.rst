@@ -1,3 +1,5 @@
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_moveit_config/doc/migration/jazzy.rst
+
 ur_moveit_config
 ^^^^^^^^^^^^^^^^
 

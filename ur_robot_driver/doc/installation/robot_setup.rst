@@ -1,3 +1,5 @@
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/installation/robot_setup.rst
+
 Setting up a UR robot for ur_robot_driver
 =========================================
 

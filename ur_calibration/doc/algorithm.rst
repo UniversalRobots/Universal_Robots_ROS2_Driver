@@ -1,3 +1,5 @@
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/doc/algorithm.rst
+
 Calibration correction algorithm
 ================================
 

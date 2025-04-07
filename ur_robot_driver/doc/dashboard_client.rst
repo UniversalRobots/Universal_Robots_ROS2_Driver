@@ -1,3 +1,5 @@
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/dashboard_client.rst
+
 .. _dashboard_client_ros2:
 
 Dashboard client
