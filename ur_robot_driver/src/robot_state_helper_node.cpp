@@ -27,12 +27,19 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include "ur_robot_driver/robot_state_helper.hpp"
+#include "ur_robot_driver/urcl_log_handler.hpp"
 
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("robot_state_helper");
-  ur_robot_driver::RobotStateHelper state_helper(node);
+  ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
+  std::shared_ptr<ur_robot_driver::RobotStateHelper> robot_state_helper;
+  try {
+    robot_state_helper = std::make_shared<ur_robot_driver::RobotStateHelper>(node);
+  } catch (const urcl::UrException& e) {
+    RCLCPP_ERROR(rclcpp::get_logger("robot_state_helper"), "%s", e.what());
+  }
 
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(node);

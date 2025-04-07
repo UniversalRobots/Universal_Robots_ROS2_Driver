@@ -262,8 +262,10 @@ def launch_setup(context, *args, **kwargs):
         executable="robot_state_helper",
         name="ur_robot_state_helper",
         output="screen",
+        condition=UnlessCondition(use_fake_hardware),
         parameters=[
             {"headless_mode": headless_mode},
+            {"robot_ip": robot_ip},
         ],
     )
 
