@@ -375,7 +375,8 @@ def generate_dashboard_test_description():
 def generate_driver_test_description(
     tf_prefix="",
     initial_joint_controller="scaled_joint_trajectory_controller",
-    controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL, use_mock_hardware="false",
+    controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+    use_mock_hardware="false",
 ):
     ur_type = LaunchConfiguration("ur_type")
 
