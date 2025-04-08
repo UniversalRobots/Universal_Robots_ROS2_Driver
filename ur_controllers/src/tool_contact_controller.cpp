@@ -186,10 +186,6 @@ ToolContactController::on_deactivate(const rclcpp_lifecycle::State& /* previous_
   }
   if (tool_contact_active_) {
     tool_contact_active_ = false;
-    if (!tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END)) {
-      RCLCPP_FATAL(get_node()->get_logger(), "Controller failed to update command interface.");
-      return controller_interface::CallbackReturn::ERROR;
-    }
   }
 
   return controller_interface::CallbackReturn::SUCCESS;
