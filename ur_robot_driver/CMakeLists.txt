@@ -243,7 +243,7 @@ if(BUILD_TESTING)
       TIMEOUT
         180
     )
-    add_launch_test(test/robot_driver.py
+    add_launch_test(test/integration_test_scaled_joint_controller.py
       TIMEOUT
         800
     )
@@ -258,6 +258,18 @@ if(BUILD_TESTING)
     add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
+    )
+    add_launch_test(test/integration_test_config_controller.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_passthrough_controller.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_io_controller.py
+      TIMEOUT
+        800
     )
     add_launch_test(test/integration_test_tool_contact.py
       TIMEOUT
