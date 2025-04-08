@@ -1,0 +1,310 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find ur_description)/urdf/inc/ur_joint_control.xacro" />
+  <xacro:include filename="$(find ur_description)/urdf/inc/ur_sensors.xacro" />
+
+  <xacro:macro name="ur_ros2_control" params="
+    name
+    tf_prefix
+    kinematics_parameters_file
+    robot_ip
+    script_filename
+    input_recipe_filename
+    output_recipe_filename
+    transmission_hw_interface:=hardware_interface/PositionJointInterface
+    use_mock_hardware:=false mock_sensor_commands:=false
+    headless_mode:=false
+    initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
+    use_tool_communication:=false
+    tool_voltage:=0 tool_parity:=0 tool_baud_rate:=115200 tool_stop_bits:=1
+    tool_rx_idle_chars:=1.5 tool_tx_idle_chars:=3.5 tool_device_name:=/tmp/ttyUR tool_tcp_port:=54321
+    reverse_port:=50001
+    script_sender_port:=50002
+    reverse_ip:=0.0.0.0
+    script_command_port:=50004
+    trajectory_port:=50003
+    non_blocking_read:=true
+    robot_receive_timeout:=0.04
+    ">
+
+    <xacro:property name="config_kinematics_parameters" value="${xacro.load_yaml(kinematics_parameters_file)}"/>
+    <xacro:property name="sec_kinematics" value="${config_kinematics_parameters['kinematics']}" />
+    <xacro:property name="kinematics_hash" value="${sec_kinematics['hash']}" scope="parent"/>
+
+    <!-- Add URDF transmission elements (for ros_control) -->
+    <!--<xacro:ur_arm_transmission prefix="${prefix}" hw_interface="${transmission_hw_interface}" />-->
+    <!-- Placeholder for ros2_control transmission which don't yet exist -->
+
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <xacro:if value="${use_mock_hardware}">
+          <plugin>mock_components/GenericSystem</plugin>
+          <param name="mock_sensor_commands">${mock_sensor_commands}</param>
+          <param name="state_following_offset">0.0</param>
+          <param name="calculate_dynamics">true</param>
+        </xacro:if>
+        <xacro:unless value="${use_mock_hardware}">
+          <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
+          <param name="robot_ip">${robot_ip}</param>
+          <param name="script_filename">${script_filename}</param>
+          <param name="output_recipe_filename">${output_recipe_filename}</param>
+          <param name="input_recipe_filename">${input_recipe_filename}</param>
+          <param name="headless_mode">${headless_mode}</param>
+          <param name="reverse_port">${reverse_port}</param>
+          <param name="script_sender_port">${script_sender_port}</param>
+          <param name="reverse_ip">${reverse_ip}</param>
+          <param name="script_command_port">${script_command_port}</param>
+          <param name="trajectory_port">${trajectory_port}</param>
+          <param name="tf_prefix">${tf_prefix}</param>
+          <param name="non_blocking_read">${non_blocking_read}</param>
+          <param name="servoj_gain">2000</param>
+          <param name="servoj_lookahead_time">0.03</param>
+          <param name="use_tool_communication">${use_tool_communication}</param>
+          <param name="kinematics/hash">${kinematics_hash}</param>
+          <param name="tool_voltage">${tool_voltage}</param>
+          <param name="tool_parity">${tool_parity}</param>
+          <param name="tool_baud_rate">${tool_baud_rate}</param>
+          <param name="tool_stop_bits">${tool_stop_bits}</param>
+          <param name="tool_rx_idle_chars">${tool_rx_idle_chars}</param>
+          <param name="tool_tx_idle_chars">${tool_tx_idle_chars}</param>
+          <param name="tool_device_name">${tool_device_name}</param>
+          <param name="tool_tcp_port">${tool_tcp_port}</param>
+          <param name="robot_receive_timeout">${robot_receive_timeout}</param>
+        </xacro:unless>
+      </hardware>
+
+      <xacro:ur_joint_control_description
+        tf_prefix="${tf_prefix}"
+        initial_positions="${initial_positions}"
+      />
+
+      <xacro:ur_sensors
+        tf_prefix="${tf_prefix}"
+      />
+
+      <!-- NOTE The following are joints used only for testing with mock hardware and will change in the future -->
+      <gpio name="${tf_prefix}speed_scaling">
+        <state_interface name="speed_scaling_factor">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <command_interface name="target_speed_fraction_cmd"/>
+        <command_interface name="target_speed_fraction_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}gpio">
+        <command_interface name="standard_digital_output_cmd_0"/>
+        <command_interface name="standard_digital_output_cmd_1"/>
+        <command_interface name="standard_digital_output_cmd_2"/>
+        <command_interface name="standard_digital_output_cmd_3"/>
+        <command_interface name="standard_digital_output_cmd_4"/>
+        <command_interface name="standard_digital_output_cmd_5"/>
+        <command_interface name="standard_digital_output_cmd_6"/>
+        <command_interface name="standard_digital_output_cmd_7"/>
+        <command_interface name="standard_digital_output_cmd_8"/>
+        <command_interface name="standard_digital_output_cmd_9"/>
+        <command_interface name="standard_digital_output_cmd_10"/>
+        <command_interface name="standard_digital_output_cmd_11"/>
+        <command_interface name="standard_digital_output_cmd_12"/>
+        <command_interface name="standard_digital_output_cmd_13"/>
+        <command_interface name="standard_digital_output_cmd_14"/>
+        <command_interface name="standard_digital_output_cmd_15"/>
+        <command_interface name="standard_digital_output_cmd_16"/>
+        <command_interface name="standard_digital_output_cmd_17"/>
+
+        <command_interface name="standard_analog_output_cmd_0"/>
+        <command_interface name="standard_analog_output_cmd_1"/>
+        <command_interface name="analog_output_domain_cmd"/>
+
+        <command_interface name="tool_voltage_cmd"/>
+
+        <command_interface name="io_async_success"/>
+
+        <state_interface name="digital_output_0"/>
+        <state_interface name="digital_output_1"/>
+        <state_interface name="digital_output_2"/>
+        <state_interface name="digital_output_3"/>
+        <state_interface name="digital_output_4"/>
+        <state_interface name="digital_output_5"/>
+        <state_interface name="digital_output_6"/>
+        <state_interface name="digital_output_7"/>
+        <state_interface name="digital_output_8"/>
+        <state_interface name="digital_output_9"/>
+        <state_interface name="digital_output_10"/>
+        <state_interface name="digital_output_11"/>
+        <state_interface name="digital_output_12"/>
+        <state_interface name="digital_output_13"/>
+        <state_interface name="digital_output_14"/>
+        <state_interface name="digital_output_15"/>
+        <state_interface name="digital_output_16"/>
+        <state_interface name="digital_output_17"/>
+
+        <state_interface name="digital_input_0"/>
+        <state_interface name="digital_input_1"/>
+        <state_interface name="digital_input_2"/>
+        <state_interface name="digital_input_3"/>
+        <state_interface name="digital_input_4"/>
+        <state_interface name="digital_input_5"/>
+        <state_interface name="digital_input_6"/>
+        <state_interface name="digital_input_7"/>
+        <state_interface name="digital_input_8"/>
+        <state_interface name="digital_input_9"/>
+        <state_interface name="digital_input_10"/>
+        <state_interface name="digital_input_11"/>
+        <state_interface name="digital_input_12"/>
+        <state_interface name="digital_input_13"/>
+        <state_interface name="digital_input_14"/>
+        <state_interface name="digital_input_15"/>
+        <state_interface name="digital_input_16"/>
+        <state_interface name="digital_input_17"/>
+
+        <state_interface name="standard_analog_output_0"/>
+        <state_interface name="standard_analog_output_1"/>
+
+        <state_interface name="standard_analog_input_0"/>
+        <state_interface name="standard_analog_input_1"/>
+
+        <state_interface name="analog_io_type_0"/>
+        <state_interface name="analog_io_type_1"/>
+        <state_interface name="analog_io_type_2"/>
+        <state_interface name="analog_io_type_3"/>
+
+        <state_interface name="tool_mode"/>
+        <state_interface name="tool_output_voltage"/>
+        <state_interface name="tool_output_current"/>
+        <state_interface name="tool_temperature"/>
+
+        <state_interface name="tool_analog_input_0"/>
+        <state_interface name="tool_analog_input_1"/>
+
+        <state_interface name="tool_analog_input_type_0"/>
+        <state_interface name="tool_analog_input_type_1"/>
+
+        <state_interface name="robot_mode"/>
+        <state_interface name="robot_status_bit_0"/>
+        <state_interface name="robot_status_bit_1"/>
+        <state_interface name="robot_status_bit_2"/>
+        <state_interface name="robot_status_bit_3"/>
+
+        <state_interface name="safety_mode"/>
+        <state_interface name="safety_status_bit_0"/>
+        <state_interface name="safety_status_bit_1"/>
+        <state_interface name="safety_status_bit_2"/>
+        <state_interface name="safety_status_bit_3"/>
+        <state_interface name="safety_status_bit_4"/>
+        <state_interface name="safety_status_bit_5"/>
+        <state_interface name="safety_status_bit_6"/>
+        <state_interface name="safety_status_bit_7"/>
+        <state_interface name="safety_status_bit_8"/>
+        <state_interface name="safety_status_bit_9"/>
+        <state_interface name="safety_status_bit_10"/>
+
+        <state_interface name="program_running"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}payload">
+        <command_interface name="mass"/>
+        <command_interface name="cog.x"/>
+        <command_interface name="cog.y"/>
+        <command_interface name="cog.z"/>
+        <command_interface name="payload_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}resend_robot_program">
+        <command_interface name="resend_robot_program_cmd"/>
+        <command_interface name="resend_robot_program_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}hand_back_control">
+        <command_interface name="hand_back_control_cmd"/>
+        <command_interface name="hand_back_control_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}zero_ftsensor">
+        <command_interface name="zero_ftsensor_cmd"/>
+        <command_interface name="zero_ftsensor_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}freedrive_mode">
+        <command_interface name="async_success"/>
+        <command_interface name="enable"/>
+        <command_interface name="abort"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}tool_contact">
+        <command_interface name="tool_contact_set_state"/>
+        <state_interface name="tool_contact_result"/>
+        <state_interface name="tool_contact_state"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}system_interface">
+        <state_interface name="initialized"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}force_mode">
+        <command_interface name="task_frame_x"/>
+        <command_interface name="task_frame_y"/>
+        <command_interface name="task_frame_z"/>
+        <command_interface name="task_frame_rx"/>
+        <command_interface name="task_frame_ry"/>
+        <command_interface name="task_frame_rz"/>
+        <command_interface name="selection_vector_x"/>
+        <command_interface name="selection_vector_y"/>
+        <command_interface name="selection_vector_z"/>
+        <command_interface name="selection_vector_rx"/>
+        <command_interface name="selection_vector_ry"/>
+        <command_interface name="selection_vector_rz"/>
+        <command_interface name="wrench_x"/>
+        <command_interface name="wrench_y"/>
+        <command_interface name="wrench_z"/>
+        <command_interface name="wrench_rx"/>
+        <command_interface name="wrench_ry"/>
+        <command_interface name="wrench_rz"/>
+        <command_interface name="limits_x"/>
+        <command_interface name="limits_y"/>
+        <command_interface name="limits_z"/>
+        <command_interface name="limits_rx"/>
+        <command_interface name="limits_ry"/>
+        <command_interface name="limits_rz"/>
+        <command_interface name="type"/>
+        <command_interface name="damping"/>
+        <command_interface name="gain_scaling"/>
+        <command_interface name="disable_cmd"/>
+        <command_interface name="force_mode_async_success"/>
+      </gpio>
+
+      <gpio name="${tf_prefix}trajectory_passthrough">
+        <command_interface name="setpoint_positions_0"/>
+        <command_interface name="setpoint_positions_1"/>
+        <command_interface name="setpoint_positions_2"/>
+        <command_interface name="setpoint_positions_3"/>
+        <command_interface name="setpoint_positions_4"/>
+        <command_interface name="setpoint_positions_5"/>
+        <command_interface name="setpoint_velocities_0"/>
+        <command_interface name="setpoint_velocities_1"/>
+        <command_interface name="setpoint_velocities_2"/>
+        <command_interface name="setpoint_velocities_3"/>
+        <command_interface name="setpoint_velocities_4"/>
+        <command_interface name="setpoint_velocities_5"/>
+        <command_interface name="setpoint_accelerations_0"/>
+        <command_interface name="setpoint_accelerations_1"/>
+        <command_interface name="setpoint_accelerations_2"/>
+        <command_interface name="setpoint_accelerations_3"/>
+        <command_interface name="setpoint_accelerations_4"/>
+        <command_interface name="setpoint_accelerations_5"/>
+        <command_interface name="transfer_state"/>
+        <command_interface name="time_from_start"/>
+        <command_interface name="abort"/>
+        <command_interface name="trajectory_size"/>
+      </gpio>
+
+
+      <gpio name="${tf_prefix}get_robot_software_version">
+        <state_interface name="get_version_major"/>
+        <state_interface name="get_version_minor"/>
+        <state_interface name="get_version_build"/>
+        <state_interface name="get_version_bugfix"/>
+      </gpio>
+    </ros2_control>
+  </xacro:macro>
+</robot>
