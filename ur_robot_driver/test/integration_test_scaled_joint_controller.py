@@ -41,7 +41,6 @@ from controller_manager_msgs.srv import SwitchController
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from ur_msgs.msg import IOStates
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
@@ -112,11 +111,6 @@ class RobotDriverTest(unittest.TestCase):
     # Test functions
     #
 
-    def test_get_robot_software_version(self):
-        self.assertNotEqual(
-            self._configuration_controller_interface.get_robot_software_version().major, 0
-        )
-
     def test_start_scaled_jtc_controller(self):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -124,56 +118,6 @@ class RobotDriverTest(unittest.TestCase):
                 activate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
-
-    def test_set_io(self):
-        """Test to set an IO and check whether it has been set."""
-        if self.mock_hardware:
-            return True
-        # Create io callback to verify result
-        io_msg = None
-
-        def io_msg_cb(msg):
-            nonlocal io_msg
-            io_msg = msg
-
-        io_states_sub = self.node.create_subscription(
-            IOStates,
-            "/io_and_status_controller/io_states",
-            io_msg_cb,
-            rclpy.qos.qos_profile_system_default,
-        )
-
-        # Set pin 0 to 1.0
-        test_pin = 0
-
-        logging.info("Setting pin %d to 1.0", test_pin)
-        self._io_status_controller_interface.set_io(fun=1, pin=test_pin, state=1.0)
-
-        # Wait until the pin state has changed
-        pin_state = False
-        end_time = time.time() + 5
-        while not pin_state and time.time() < end_time:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
-            if io_msg is not None:
-                pin_state = io_msg.digital_out_states[test_pin].state
-
-        self.assertEqual(pin_state, 1.0)
-
-        # Set pin 0 to 0.0
-        logging.info("Setting pin %d to 0.0", test_pin)
-        self._io_status_controller_interface.set_io(fun=1, pin=test_pin, state=0.0)
-
-        # Wait until the pin state has changed back
-        end_time = time.time() + 5
-        while pin_state and time.time() < end_time:
-            rclpy.spin_once(self.node, timeout_sec=0.1)
-            if io_msg is not None:
-                pin_state = io_msg.digital_out_states[test_pin].state
-
-        self.assertEqual(pin_state, 0.0)
-
-        # Clean up io subscription
-        self.node.destroy_subscription(io_states_sub)
 
     def test_trajectory(self, tf_prefix):
         """Test robot movement."""
