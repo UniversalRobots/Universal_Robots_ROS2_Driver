@@ -53,6 +53,7 @@ controller_interface::CallbackReturn ToolContactController::on_init()
 {
   tool_contact_param_listener_ = std::make_shared<tool_contact_controller::ParamListener>(get_node());
   tool_contact_params_ = tool_contact_param_listener_->get_params();
+  feedback_ = std::make_shared<ur_msgs::action::ToolContact::Feedback>();
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -258,7 +259,7 @@ rclcpp_action::CancelResponse ToolContactController::goal_canceled_callback(
     // Mark the current goal as canceled
     auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
     active_goal->setCanceled(result);
-    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+    should_reset_goal = true;
     tool_contact_abort_ = true;
     tool_contact_enable_ = false;
   }
@@ -341,10 +342,12 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
 
     case static_cast<int>(TOOL_CONTACT_SUCCESS_END):
     {
-      RCLCPP_INFO(get_node()->get_logger(), "Tool contact disabled successfully.");
-      tool_contact_active_ = false;
+      if (tool_contact_active_) {
+        RCLCPP_INFO(get_node()->get_logger(), "Tool contact disabled successfully.");
+        tool_contact_active_ = false;
 
-      write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
+        write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
+      }
     } break;
 
     case static_cast<int>(TOOL_CONTACT_FAILURE_END):
@@ -364,6 +367,9 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
       break;
     default:
       break;
+  }
+  if (active_goal) {
+    active_goal->setFeedback(feedback_);
   }
 
   if (!write_success) {
