@@ -11,6 +11,7 @@ robot family. Currently this contains:
   but it uses the speed scaling reported to align progress of the trajectory between the robot and controller.
 * A **io_and_status_controller** that allows setting I/O ports, controlling some UR-specific
   functionality and publishes status information about the robot.
+* A **tool_contact_controller** that exposes an action to enable the tool contact function on the robot.
 
 About this package
 ------------------
@@ -378,3 +379,46 @@ The controller provides the ``~/enable_freedrive_mode`` topic of type ``[std_msg
 * to deactivate freedrive mode is enough to publish a ``False`` msg on the indicated topic or
   to deactivate the controller or to stop publishing ``True`` on the enable topic and wait for the
   controller timeout.
+
+.. _tool_contact_controller:
+
+ur_controllers/ToolContactController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This controller can enable tool contact on the robot. When tool contact is enabled, and the robot
+senses whether the tool has made contact with something. When that happens, it will stop all
+motion, and retract to where it first sensed the contact.
+
+This controller can be used with any of the motion controllers.
+
+The controller is not a direct representation of the URScript function `tool_contact(direction)
+<https://www.universal-robots.com/manuals/EN/HTML/SW5_21/Content/prod-scriptmanual/all_scripts/tool_contact%28direction%29.htm?Highlight=tool_contact>`_,
+as it does not allow for choosing the direction. The direction of tool contact will always be the
+current TCP direction of movement.
+
+Parameters
+""""""""""
+
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name          | Type   | Default value | Description                                                                           |
+|                         |        |               |                                                                                       |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``           | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``action_monitor_rate`` | double | 20.0          | The rate at which the action should be monitored in Hz.                               |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+
+Action interface / usage
+""""""""""""""""""""""""
+The controller provides one action for enabling tool contact. For the controller to accept action goals it needs to be in ``active`` state.
+
+* ``~/detect_tool_contact [ur_msgs/action/ToolContact]``
+
+  The action definition of ``ur_msgs/action/ToolContact`` has no fields, as a call to the action implicitly means that tool contact should be enabled.
+  The result of the action is available through the status of the action itself. If the action succeeds it means that tool contact was detected, otherwise tool contact will remain active until it is either cancelled by the user, or aborted by the hardware.
+  The action provides no feedback.
+
+  The action can be called from the command line using the following command, when the controller is active:
+
+  .. code-block::
+
+     ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact

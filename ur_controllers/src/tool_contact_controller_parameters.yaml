@@ -1,0 +1,11 @@
+tool_contact_controller:
+  tf_prefix: {
+    type: string,
+    default_value: "",
+    description: "Urdf prefix of the corresponding arm"
+  }
+  action_monitor_rate: {
+    type: double,
+    default_value: 20.0,
+    description: "The rate at which the action should be monitored in Hz."
+  }

@@ -52,6 +52,11 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 include_directories(include)
 
 generate_parameter_library(
+  tool_contact_controller_parameters
+  src/tool_contact_controller_parameters.yaml
+)
+
+generate_parameter_library(
   force_mode_controller_parameters
   src/force_mode_controller_parameters.yaml
 )
@@ -87,6 +92,7 @@ generate_parameter_library(
 )
 
 add_library(${PROJECT_NAME} SHARED
+  src/tool_contact_controller.cpp
   src/force_mode_controller.cpp
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
@@ -99,6 +105,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
 target_link_libraries(${PROJECT_NAME}
+  tool_contact_controller_parameters
   force_mode_controller_parameters
   gpio_controller_parameters
   speed_scaling_state_broadcaster_parameters
@@ -107,6 +114,7 @@ target_link_libraries(${PROJECT_NAME}
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters
 )
+
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
