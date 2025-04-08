@@ -62,7 +62,7 @@ ToolContactController::on_configure(const rclcpp_lifecycle::State& /* previous_s
   tool_contact_action_server_ = rclcpp_action::create_server<ur_msgs::action::ToolContact>(
       get_node(), std::string(get_node()->get_name()) + "/detect_tool_contact",
       std::bind(&ToolContactController::goal_received_callback, this, std::placeholders::_1, std::placeholders::_2),
-      std::bind(&ToolContactController::goal_cancelled_callback, this, std::placeholders::_1),
+      std::bind(&ToolContactController::goal_canceled_callback, this, std::placeholders::_1),
       std::bind(&ToolContactController::goal_accepted_callback, this, std::placeholders::_1));
 
   return controller_interface::CallbackReturn::SUCCESS;
@@ -251,7 +251,7 @@ void ToolContactController::action_handler()
   }
 }
 
-rclcpp_action::CancelResponse ToolContactController::goal_cancelled_callback(
+rclcpp_action::CancelResponse ToolContactController::goal_canceled_callback(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle)
 {
   // Check that cancel request refers to currently active goal (if any)
