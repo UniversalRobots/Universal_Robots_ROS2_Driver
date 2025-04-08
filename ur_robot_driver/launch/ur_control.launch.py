@@ -96,8 +96,10 @@ def launch_setup(context):
         executable="robot_state_helper",
         name="ur_robot_state_helper",
         output="screen",
+        condition=UnlessCondition(use_mock_hardware),
         parameters=[
             {"headless_mode": headless_mode},
+            {"robot_ip": robot_ip},
         ],
     )
 
@@ -236,8 +238,10 @@ def generate_launch_description():
                 "ur3e",
                 "ur5",
                 "ur5e",
+                "ur7e",
                 "ur10",
                 "ur10e",
+                "ur12e",
                 "ur16e",
                 "ur20",
                 "ur30",

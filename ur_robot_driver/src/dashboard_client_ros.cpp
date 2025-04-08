@@ -37,16 +37,27 @@
  */
 //----------------------------------------------------------------------
 
-#include <ur_robot_driver/dashboard_client_ros.hpp>
+#include <ur_client_library/exceptions.h>
+#include <ur_client_library/primary/primary_client.h>
 
 #include <string>
+
+#include <ur_robot_driver/dashboard_client_ros.hpp>
 
 namespace ur_robot_driver
 {
 DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
-  : node_(node), client_(robot_ip)
+  : node_(node), client_(robot_ip), primary_client_(robot_ip, notifier_)
 {
   node_->declare_parameter<double>("receive_timeout", 1);
+
+  primary_client_.start(10, std::chrono::seconds(10));
+  auto robot_version = primary_client_.getRobotVersion();
+
+  if (robot_version->major > 5) {
+    throw(urcl::UrException("The dashboard server is only available for CB3 and e-Series robots."));
+  }
+
   connect();
 
   // Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
