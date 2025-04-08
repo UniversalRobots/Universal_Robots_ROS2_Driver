@@ -944,7 +944,7 @@ void URPositionHardwareInterface::check_tool_contact_controller()
       }
 
     } else if (cmd_state == 5.0) {
-      bool success = static_cast<double>(ur_driver_->endToolContact());
+      bool success = ur_driver_->endToolContact();
       if (success) {
         // TOOL_CONTACT_SUCCESS_END
         tool_contact_state_ = 6.0;
@@ -1332,6 +1332,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
     tool_contact_controller_running_ = false;
     tool_contact_result_ = 3.0;
+    ur_driver_->endToolContact();
   }
 
   if (start_modes_.size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),

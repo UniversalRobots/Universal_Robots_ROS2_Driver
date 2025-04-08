@@ -101,7 +101,7 @@ class RobotDriverTest(unittest.TestCase):
             ).ok
         )
 
-    def test_goal_can_be_cancelled(self):
+    def test_goal_can_be_canceled(self):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,

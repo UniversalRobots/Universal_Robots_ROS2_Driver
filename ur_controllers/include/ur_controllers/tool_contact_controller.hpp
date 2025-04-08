@@ -90,8 +90,9 @@ private:
 
   RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
-  rclcpp::Duration action_monitor_period_ = rclcpp::Duration::from_seconds(0.05);
 
+  // non-rt function that will be called with action_monitor_period to monitor the rt action
+  rclcpp::Duration action_monitor_period_ = rclcpp::Duration::from_seconds(0.05);
   void action_handler();
 
   rclcpp_action::GoalResponse goal_received_callback(const rclcpp_action::GoalUUID& /*uuid*/,
@@ -100,7 +101,7 @@ private:
   void
   goal_accepted_callback(std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
 
-  rclcpp_action::CancelResponse goal_cancelled_callback(
+  rclcpp_action::CancelResponse goal_canceled_callback(
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle);
 
   std::atomic<bool> tool_contact_enable_ = false;
