@@ -1,0 +1,212 @@
+controller_manager:
+  ros__parameters:
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    io_and_status_controller:
+      type: ur_controllers/GPIOController
+
+    speed_scaling_state_broadcaster:
+      type: ur_controllers/SpeedScalingStateBroadcaster
+
+    force_torque_sensor_broadcaster:
+      type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
+
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    scaled_joint_trajectory_controller:
+      type: ur_controllers/ScaledJointTrajectoryController
+
+    forward_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+    forward_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+    force_mode_controller:
+      type: ur_controllers/ForceModeController
+
+    freedrive_mode_controller:
+      type: ur_controllers/FreedriveModeController
+
+    passthrough_trajectory_controller:
+      type: ur_controllers/PassthroughTrajectoryController
+
+    tcp_pose_broadcaster:
+      type: pose_broadcaster/PoseBroadcaster
+
+    ur_configuration_controller:
+      type: ur_controllers/URConfigurationController
+
+    motion_primitive_controller:
+      type: motion_primitives_forward_controller/MotionPrimitivesForwardController
+
+speed_scaling_state_broadcaster:
+  ros__parameters:
+    state_publish_rate: 100.0
+    tf_prefix: "$(var tf_prefix)"
+
+io_and_status_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+ur_configuration_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+force_torque_sensor_broadcaster:
+  ros__parameters:
+    sensor_name: $(var tf_prefix)tcp_fts_sensor
+    state_interface_names:
+      - force.x
+      - force.y
+      - force.z
+      - torque.x
+      - torque.y
+      - torque.z
+    frame_id: $(var tf_prefix)tool0
+    topic_name: ft_data
+
+
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    state_publish_rate: 100.0
+    action_monitor_rate: 20.0
+    allow_partial_joints_goal: false
+    constraints:
+      stopped_velocity_tolerance: 0.2
+      goal_time: 0.0
+      $(var tf_prefix)shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)elbow_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
+
+
+scaled_joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    state_publish_rate: 100.0
+    action_monitor_rate: 20.0
+    allow_partial_joints_goal: false
+    constraints:
+      stopped_velocity_tolerance: 0.2
+      goal_time: 0.0
+      $(var tf_prefix)shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)elbow_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
+      $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
+    speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
+
+passthrough_trajectory_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+    state_interfaces:
+      - position
+      - velocity
+    speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
+
+forward_velocity_controller:
+  ros__parameters:
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+    interface_name: velocity
+
+forward_position_controller:
+  ros__parameters:
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+
+force_mode_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+freedrive_mode_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+tcp_pose_broadcaster:
+  ros__parameters:
+    frame_id: $(var tf_prefix)base
+    pose_name: $(var tf_prefix)tcp_pose
+    tf:
+      child_frame_id: $(var tf_prefix)tool0_controller
+
+
+
+motion_primitive_controller:
+  ros__parameters:
+    name: motion_primitive
+    command_interfaces:
+      - motion_type
+      - q1
+      - q2
+      - q3
+      - q4
+      - q5
+      - q6
+      - pos_x
+      - pos_y
+      - pos_z
+      - pos_qx
+      - pos_qy
+      - pos_qz
+      - pos_qw
+      - pos_via_x
+      - pos_via_y
+      - pos_via_z
+      - pos_via_qx
+      - pos_via_qy
+      - pos_via_qz
+      - pos_via_qw
+      - blend_radius
+      - velocity
+      - acceleration
+      - move_time
+    state_interfaces:
+      - execution_status
+    queue_size: 10    # queue size to buffer incoming commands

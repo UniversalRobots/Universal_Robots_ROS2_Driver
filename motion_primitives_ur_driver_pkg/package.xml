@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>motion_primitives_ur_driver_pkg</name>
+  <version>0.0.0</version>
+  <description>Driver package to control ur robot using motion primitives like PTP, LIN and CIRC</description>
+  <maintainer email="mathias31415@gmx.de">mathias31415</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_gmock</buildtool_depend> 
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>hardware_interface</depend>
+
+  <depend>pluginlib</depend>
+
+  <depend>rclcpp</depend>
+
+  <exec_depend>rclpy</exec_depend>
+
+  <depend>rclcpp_lifecycle</depend>
+
+  <depend>ros2_control_test_assets</depend>
+
+  <depend>motion_primitives_forward_controller</depend>
+
+  <depend>urcl</depend>
+
+  <depend>ur_robot_driver</depend>
+
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
