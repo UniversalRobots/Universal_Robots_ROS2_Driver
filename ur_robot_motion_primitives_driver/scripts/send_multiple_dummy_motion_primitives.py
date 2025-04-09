@@ -88,6 +88,12 @@ msg6.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=1.0),
     MotionArgument(argument_name="acceleration", argument_value=1.0)]
 
+msg_start_sequence = MotionPrimitive()
+msg_start_sequence.type = MotionPrimitive.MOTION_SEQUENCE_START
+
+msg_end_sequence = MotionPrimitive()
+msg_end_sequence.type = MotionPrimitive.MOTION_SEQUENCE_END
+
 class MotionPublisher(Node):
     def __init__(self):
         super().__init__('motion_publisher')
@@ -96,7 +102,9 @@ class MotionPublisher(Node):
         self.publisher_ = self.create_publisher(MotionPrimitive, '/motion_primitive_controller/reference', 10)
 
         # Nachrichten vorbereiten
-        self.messages = [msg1, msg2, msg3, msg4, msg5, msg6]
+        # self.messages = [msg_start_sequence, msg1, msg2, msg3, msg4, msg5, msg_end_sequence]
+        self.messages = [msg1, msg2, msg3, msg4, msg5, msg_start_sequence, msg1, msg2, msg3, msg4, msg5, msg_end_sequence, msg_start_sequence, msg1, msg2, msg_end_sequence, msg1, msg2]
+        # self.messages = [msg1, msg2, msg3, msg4, msg5, msg6]
         # self.messages = [msg1, msg2, msg3, msg4, msg1, msg2, msg3, msg4]
         self.get_logger().info(f"Number of messages: {len(self.messages)}")
 

@@ -122,6 +122,9 @@ private:
   bool robot_program_running_;
 
   bool non_blocking_read_;
+
+  std::atomic_bool build_motion_sequence_{false};   // flag to put all following primitives into a motion sequence instead of sending single primitives
+  std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> motion_sequence_;
 };
 
 }  // namespace ur_robot_motion_primitives_driver

@@ -363,6 +363,11 @@ void MotionPrimitivesUrDriver::processStopCommand()
 {
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received STOP command");
   // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Trajectory running: %d", instruction_executor_->isTrajectoryRunning());
+  
+  // delete motion sequence
+  build_motion_sequence_ = false;
+  motion_sequence_.clear();
+
   if (instruction_executor_->isTrajectoryRunning()) {
     RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Stopping motion ...");
     if(!instruction_executor_->cancelMotion()) {
@@ -419,6 +424,25 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
 
   try {
     switch (static_cast<uint8_t>(motion_type)) {
+      case MotionType::MOTION_SEQUENCE_START: {
+        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received motion type: MOTION_SEQUENCE_START");
+        build_motion_sequence_ = true;  // set flag to put all following commands into the motion sequence
+        motion_sequence_.clear();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        current_execution_status_ = ExecutionState::IDLE;   // set to IDLE to allow controller to send new commands
+        break;
+      }
+
+      case MotionType::MOTION_SEQUENCE_END: {
+        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received motion type: MOTION_SEQUENCE_END");
+        build_motion_sequence_ = false;
+        bool success = instruction_executor_->executeMotion(motion_sequence_);
+        current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
+        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing motion sequence: current_execution_status_ = %d", current_execution_status_.load());
+        motion_sequence_.clear();
+        break;
+      }
+
       case MotionType::LINEAR_JOINT: { // moveJ
         // Check if joint positions are valid
         for (int i = 1; i <= 6; ++i) {
@@ -437,15 +461,30 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
           return;
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
+        
+        // Check if the command is part of a motion sequence or a single command
+        if (build_motion_sequence_) {   // Add command to motion sequence
+          motion_sequence_.emplace_back(
+            std::make_shared<urcl::control::MoveJPrimitive>(
+                joint_positions, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration, velocity));        
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
+                "Added moveJ to motion sequence with joint positions: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
+                joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3], joint_positions[4], joint_positions[5],
+                velocity, acceleration, move_time, blend_radius);
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+          current_execution_status_ = ExecutionState::IDLE;   // set to IDLE to allow controller to send new commands
+          return;
+        }
+        else{ // execute single primitive directly
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
                 "Executing moveJ with joint positions: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
-                joint_positions[0], joint_positions[1], joint_positions[2],
-                joint_positions[3], joint_positions[4], joint_positions[5]
+                joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3], joint_positions[4], joint_positions[5]
                 , velocity, acceleration, move_time, blend_radius);
-
-        bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
-        current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveJ: current_execution_status_ = %d", current_execution_status_.load());
+          bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
+          current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveJ: current_execution_status_ = %d", current_execution_status_.load());
+          return;
+        }
         break;
       }
 
@@ -469,14 +508,27 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
           return;
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-                "Executing moveL with pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
-                pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz,
-                velocity, acceleration, move_time, blend_radius);
-
-        bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
-        current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveL: current_execution_status_ = %d", current_execution_status_.load());
+        // Check if the command is part of a motion sequence or a single command
+        if (build_motion_sequence_) {   // Add command to motion sequence
+          motion_sequence_.emplace_back(
+            std::make_shared<urcl::control::MoveLPrimitive>(
+                pose, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration, velocity));
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
+                "Added  moveL to motion sequence with pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
+                pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time, blend_radius);
+          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+          current_execution_status_ = ExecutionState::IDLE;   // set to IDLE to allow controller to send new commands
+          return;
+        } 
+        else{ // execute single primitive directly
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
+                  "Executing moveL with pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
+                  pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time, blend_radius);
+          bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
+          current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveL: current_execution_status_ = %d", current_execution_status_.load());
+          return;
+        }
         break;
       }
 
@@ -506,16 +558,31 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
         double goal_rx, goal_ry, goal_rz;
         quaternionToEuler(command[10], command[11], command[12], command[13], goal_rx, goal_ry, goal_rz);
         urcl::Pose goal_pose = { command[7], command[8], command[9], goal_rx, goal_ry, goal_rz };
-
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-          "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f], goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, blend_radius: %f, mode: %d", 
-          via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz,
-          goal_pose.x, goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz,
-          velocity, acceleration, blend_radius, mode);
-
-        bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
-        current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveC: current_execution_status_ = %d", current_execution_status_.load());
+        
+        // Check if the command is part of a motion sequence or a single command
+        if (build_motion_sequence_) {   // Add command to motion sequence
+          motion_sequence_.emplace_back(
+            std::make_shared<urcl::control::MoveCPrimitive>(
+                via_pose, goal_pose, blend_radius, acceleration, velocity, mode));
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
+                "Added  moveC to motion sequence with via_pose: [%f, %f, %f, %f, %f, %f], goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, blend_radius: %f, mode: %d", 
+                via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz,
+                goal_pose.x, goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz,
+                velocity, acceleration, blend_radius, mode); 
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        current_execution_status_ = ExecutionState::IDLE;   // set to IDLE to allow controller to send new commands
+          return;
+        } 
+        else{ // execute single primitive directly
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
+                "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f], goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, blend_radius: %f, mode: %d", 
+                via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz,
+                goal_pose.x, goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz,
+                velocity, acceleration, blend_radius, mode);          
+          bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
+          current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveC: current_execution_status_ = %d", current_execution_status_.load());return;
+        }
         break;
       }
 
