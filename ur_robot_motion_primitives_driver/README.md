@@ -7,10 +7,12 @@ Driver package to control ur robot using motion primitives like MOVEJ (PTP), MOV
 
 # Other packages needed
 - [generate_parameter_library](https://github.com/PickNikRobotics/generate_parameter_library)
-- [industrial_robot_motion_interfaces](https://github.com/UniversalRobots/industrial_robot_motion_interfaces)
+- ~~[industrial_robot_motion_interfaces](https://github.com/UniversalRobots/industrial_robot_motion_interfaces)~~
+- [industrial_robot_motion_interfaces](https://github.com/StoglRobotics-forks/industrial_robot_motion_interfaces/tree/helper-types)
 - ~~[motion_primitives_controller_pkg](https://github.com/mathias31415/ros2_motion_primitives_controller_pkg)~~
 - [motion_primitives_forward_controller from StoglRobotics-forks/ros2_controllers](https://github.com/StoglRobotics-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
-- [Universal_Robots_ROS2_Driver](https://github.com/mathias31415/Universal_Robots_ROS2_Driver)
+- ~~[Universal_Robots_ROS2_Driver](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver)~~
+- [Universal_Robots_ROS2_Driver](https://github.com/StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
 - ~~[Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library)~~
 - [Universal_Robots_Client_Library with movec from urfeex](https://github.com/urfeex/Universal_Robots_Client_Library/tree/movec_movep)
  
