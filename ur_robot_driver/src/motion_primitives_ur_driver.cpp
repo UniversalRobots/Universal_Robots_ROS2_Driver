@@ -24,7 +24,7 @@
 
 #include "motion_primitives_forward_controller/motion_type.hpp"
 
-namespace ur_robot_motion_primitives_driver
+namespace ur_robot_driver
 {
 
 MotionPrimitivesUrDriver::~MotionPrimitivesUrDriver()
@@ -686,9 +686,9 @@ bool MotionPrimitivesUrDriver::getVelocityAndAcceleration(const std::vector<doub
   }
 }
 
-}  // namespace ur_robot_motion_primitives_driver
+}  // namespace ur_robot_driver
 
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  ur_robot_motion_primitives_driver::MotionPrimitivesUrDriver, hardware_interface::SystemInterface)
+  ur_robot_driver::MotionPrimitivesUrDriver, hardware_interface::SystemInterface)

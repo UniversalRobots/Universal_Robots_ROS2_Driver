@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UR_ROBOT_MOTION_PRIMITIVES_DRIVER__VISIBILITY_CONTROL_H_
-#define UR_ROBOT_MOTION_PRIMITIVES_DRIVER__VISIBILITY_CONTROL_H_
+#ifndef UR_ROBOT_DRIVER__VISIBILITY_CONTROL_H_
+#define UR_ROBOT_DRIVER__VISIBILITY_CONTROL_H_
 
 // This logic was borrowed (then namespaced) from the examples on the gcc wiki:
 //     https://gcc.gnu.org/wiki/Visibility
@@ -46,4 +46,4 @@
 #define TEMPLATES__ROS2_CONTROL__VISIBILITY_PUBLIC_TYPE
 #endif
 
-#endif  // UR_ROBOT_MOTION_PRIMITIVES_DRIVER__VISIBILITY_CONTROL_H_
+#endif  // UR_ROBOT_DRIVER__VISIBILITY_CONTROL_H_
