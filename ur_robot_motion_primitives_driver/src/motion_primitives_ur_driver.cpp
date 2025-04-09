@@ -439,7 +439,7 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
       }
 
       case MotionType::MOTION_SEQUENCE_END: {
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received MOTION_SEQUENCE_END: executing motion sequence with %zu commands", motion_sequence_.size());
+        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received MOTION_SEQUENCE_END: executing motion sequence with %zu motion primitives", motion_sequence_.size());
         build_motion_sequence_ = false;
         current_execution_status_ = ExecutionState::EXECUTING;
         bool success = instruction_executor_->executeMotion(motion_sequence_);
@@ -607,42 +607,6 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
         break;
       }
 
-      case 33: { 
-        // TODO(mathias31415): remove case 33 block with hardcoded motion sequence, only for testing
-        current_execution_status_ = ExecutionState::EXECUTING;
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Sending hardcoded motion sequence");
-        std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> motion_sequence{
-          std::make_shared<urcl::control::MoveJPrimitive>(urcl::vector6d_t{ -1.57, -1.57, 0, 0, 0, 0 }, 0.1, std::chrono::seconds(0), 1.0, 1.0),
-          std::make_shared<urcl::control::MoveJPrimitive>(urcl::vector6d_t{ -1.57, -1.6, 1.6, -0.7, 0.7, 0.2 }, 0.1, std::chrono::seconds(2)),
-          std::make_shared<urcl::control::MoveLPrimitive>(urcl::Pose(-0.203, 0.263, 0.559, 0.68, -1.083, -2.076), 0.1, std::chrono::seconds(0), 0.5, 2.0),
-          std::make_shared<urcl::control::MoveLPrimitive>(urcl::Pose{ -0.203, 0.463, 0.559, 0.68, -1.083, -2.076 }, 0.1, std::chrono::seconds(2)),
-          std::make_shared<urcl::control::MoveCPrimitive>(
-            urcl::Pose(-0.150, 0.350, 0.550, 0.68, -1.0, -2.0),  // via (Zwischenpose)
-            urcl::Pose(-0.100, 0.400, 0.550, 0.68, -1.0, -2.0),  // target (Zielpose)
-            0.05,  // acceleration
-            0.2,  // velocity
-            0.0, // blend_radius
-            0),    // mode
-          std::make_shared<urcl::control::MoveJPrimitive>(urcl::vector6d_t{ -1.57, -1.57, 0, 0, 0, 0 }, 0.1, std::chrono::seconds(0), 1.0, 1.0),
-          std::make_shared<urcl::control::MoveJPrimitive>(urcl::vector6d_t{ -1.57, -1.6, 1.6, -0.7, 0.7, 0.2 }, 0.1, std::chrono::seconds(2)),
-          std::make_shared<urcl::control::MoveLPrimitive>(urcl::Pose(-0.203, 0.263, 0.559, 0.68, -1.083, -2.076), 0.1, std::chrono::seconds(0), 0.5, 2.0),
-          std::make_shared<urcl::control::MoveLPrimitive>(urcl::Pose{ -0.203, 0.463, 0.559, 0.68, -1.083, -2.076 }, 0.1, std::chrono::seconds(2)),
-          std::make_shared<urcl::control::MoveCPrimitive>(
-            urcl::Pose(-0.150, 0.350, 0.550, 0.68, -1.0, -2.0),  // via (Zwischenpose)
-            urcl::Pose(-0.100, 0.400, 0.550, 0.68, -1.0, -2.0),  // target (Zielpose)
-            0.05,  // acceleration
-            0.2,  // velocity
-            0.0, // blend_radius
-            0)  
-        };
-        bool success = instruction_executor_->executeMotion(motion_sequence);
-        current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing motion sequence: current_execution_status_ = %d", current_execution_status_.load());
-        if(success){
-          ready_for_new_primitive_ = true; // set to true to allow sending new commands
-        }break;
-      }
-      
       default: {
         RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: motion type %f is not supported", motion_type);
         current_execution_status_ = ExecutionState::ERROR;
