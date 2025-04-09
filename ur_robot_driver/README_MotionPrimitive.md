@@ -24,20 +24,22 @@ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=172.20.
 ```
 ## Launch motion_primitives_ur_driver
 ```
-ros2 launch ur_robot_motion_primitives_driver motion_primitive_controller_ur.launch.py ur_type:=ur5e robot_ip:=172.20.0.2 launch_rviz:=true
+~~ros2 launch ur_robot_motion_primitives_driver motion_primitive_controller_ur.launch.py ur_type:=ur5e robot_ip:=172.20.0.2 launch_rviz:=true~~
+ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur5e robot_ip:=172.20.0.2 launch_rviz:=true
 ```
 ## Publish dummy commands
 ### Single motion primitive
 ```
-ros2 run ur_robot_motion_primitives_driver send_single_dummy_motion_primitive.py
+~~ros2 run ur_robot_motion_primitives_driver send_single_dummy_motion_primitive.py~~
 ```
 ### Multiple motion primitives after checking status=2 (success)
 ```
-ros2 run ur_robot_motion_primitives_driver send_multiple_dummy_motion_primitives_after_checking_status.py
+~~ros2 run ur_robot_motion_primitives_driver send_multiple_dummy_motion_primitives_after_checking_status.py~~
 ```
 ### Multiple motion primitives without checking status
 ```
-ros2 run ur_robot_motion_primitives_driver send_multiple_dummy_motion_primitives.py
+~~ros2 run ur_robot_motion_primitives_driver send_multiple_dummy_motion_primitives.py~~
+ros2 run ur_robot_driver send_multiple_dummy_motion_primitives.py
 ```
 ## Publish stop motion command 
 ```
@@ -58,7 +60,6 @@ https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.
 
 # TODO's
 - if trajectory is finished while instruction_executer->cancelMotion() is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call instruction_executer->cancelMotion() a second time
-- motion sequence instead of single primitives?
 
 ## Useful sources
 - https://rtw.b-robotized.com/master/use-cases/ros_workspaces/aliases.html

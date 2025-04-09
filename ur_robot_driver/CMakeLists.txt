@@ -34,6 +34,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
+find_package(motion_primitives_forward_controller REQUIRED)
 
 include_directories(include)
 
@@ -60,12 +61,25 @@ add_library(ur_robot_driver_plugin
   src/urcl_log_handler.cpp
   src/robot_state_helper.cpp
 )
+add_library(ur_robot_motion_primitives_driver_plugin
+  SHARED
+  src/motion_primitives_ur_driver.cpp
+)
 target_link_libraries(
   ur_robot_driver_plugin
   ur_client_library::urcl
 )
+target_link_libraries(
+  ur_robot_motion_primitives_driver_plugin
+  ur_client_library::urcl
+)
 target_include_directories(
   ur_robot_driver_plugin
+  PRIVATE
+  include
+)
+target_include_directories(
+  ur_robot_motion_primitives_driver_plugin
   PRIVATE
   include
 )
@@ -74,7 +88,20 @@ ament_target_dependencies(
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+# TODO(mathias31415): wie bei ur_robot_driver_plugin machen?
+ament_target_dependencies(
+  ur_robot_motion_primitives_driver_plugin
+  hardware_interface
+  rclcpp
+  rclcpp_lifecycle
+  motion_primitives_forward_controller
+  ur_client_library
+  tf2
+  tf2_geometry_msgs
+)
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
+
+pluginlib_export_plugin_description_file(hardware_interface motion_primitive_hardware_interface_plugin.xml)
 
 #
 # dashboard_client
@@ -122,6 +149,10 @@ install(
   DESTINATION lib
 )
 install(
+  TARGETS ur_robot_motion_primitives_driver_plugin
+  DESTINATION lib
+)
+install(
   DIRECTORY include/
   DESTINATION include
 )
@@ -132,6 +163,7 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   ur_robot_driver_plugin
+  ur_robot_motion_primitives_driver_plugin
 )
 
 install(DIRECTORY resources
@@ -139,10 +171,6 @@ install(DIRECTORY resources
   REGEX "/ursim/" EXCLUDE
 )
 
-
-install(DIRECTORY include/
-  DESTINATION include
-)
 
 ament_export_dependencies(
   hardware_interface
@@ -163,6 +191,7 @@ install(PROGRAMS
   scripts/start_ursim.sh
   examples/examples.py
   examples/force_mode.py
+  examples/send_dummy_motion_primitives.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

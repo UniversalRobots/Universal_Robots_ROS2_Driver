@@ -19,7 +19,7 @@
 #include <vector>
 #include <memory>
 
-#include "ur_robot_motion_primitives_driver/visibility_control.h"
+#include "ur_robot_driver/visibility_control.h"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"

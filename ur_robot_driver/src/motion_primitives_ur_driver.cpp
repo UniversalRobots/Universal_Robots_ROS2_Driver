@@ -18,7 +18,7 @@
 #include <thread>
 #include <atomic>
 
-#include "ur_robot_motion_primitives_driver/motion_primitives_ur_driver.hpp"
+#include "ur_robot_driver/motion_primitives_ur_driver.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 

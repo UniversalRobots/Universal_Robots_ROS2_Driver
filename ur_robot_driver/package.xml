@@ -46,6 +46,7 @@
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_description</depend>
   <depend>ur_msgs</depend>
+  <depend>motion_primitives_forward_controller</depend>
 
   <exec_depend>force_torque_sensor_broadcaster</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>

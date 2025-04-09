@@ -3,13 +3,11 @@
   <!-- robot name parameter -->
   <xacro:arg name="name" default="ur"/>
 
-  <!-- <xacro:arg name="motion_primitive_name" default="motion_primitive_control_ur"/> -->
-
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
   <!-- ros2 control include -->
   <!-- <xacro:include filename="$(find ur_robot_driver)/urdf/ur.ros2_control.xacro" /> -->
+  <xacro:include filename="$(find ur_robot_driver)/urdf/motion_primitive_ur.ros2_control.xacro"/>
   <xacro:include filename="$(find ur_description)/urdf/inc/ur_transmissions.xacro" />
-  <xacro:include filename="$(find ur_robot_motion_primitives_driver)/urdf/motion_primitive_ur.ros2_control.xacro"/>
 
   <!-- possible 'ur_type' values: ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20 -->
   <!-- the default value should raise an error in case this was called without defining the type -->
@@ -105,8 +103,4 @@
     script_sender_port="$(arg script_sender_port)"
     trajectory_port="$(arg trajectory_port)"
   />
-
-  <!-- Include motion primitive control -->
-  <!-- <xacro:motion_primitive_ur_ros2_control name="$(arg motion_primitive_name)"/> -->
-
 </robot>
