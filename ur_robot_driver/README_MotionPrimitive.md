@@ -39,7 +39,7 @@ ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur
 ### Multiple motion primitives without checking status
 ```
 ~~ros2 run ur_robot_motion_primitives_driver send_multiple_dummy_motion_primitives.py~~
-ros2 run ur_robot_driver send_multiple_dummy_motion_primitives.py
+ros2 run ur_robot_driver send_dummy_motion_primitives.py
 ```
 ## Publish stop motion command 
 ```
