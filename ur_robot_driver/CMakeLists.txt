@@ -222,5 +222,9 @@ if(BUILD_TESTING)
       TIMEOUT
         500
     )
+    add_launch_test(test/integration_test_tool_contact.py
+      TIMEOUT
+        800
+    )
   endif()
 endif()
