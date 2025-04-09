@@ -30,7 +30,7 @@
 //       R"(
 //         <ros2_control name="MotionPrimitivesUrDriver2dof" type="system">
 //           <hardware>
-//             <plugin>motion_primitives_ur_driver_pkg/MotionPrimitivesUrDriver</plugin>
+//             <plugin>ur_robot_motion_primitives_driver/MotionPrimitivesUrDriver</plugin>
 //           </hardware>
 //           <joint name="joint1">
 //             <command_interface name="position"/>

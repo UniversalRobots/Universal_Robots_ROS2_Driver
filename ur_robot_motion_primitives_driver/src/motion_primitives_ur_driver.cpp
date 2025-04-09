@@ -18,13 +18,13 @@
 #include <thread>
 #include <atomic>
 
-#include "motion_primitives_ur_driver_pkg/motion_primitives_ur_driver.hpp"
+#include "ur_robot_motion_primitives_driver/motion_primitives_ur_driver.hpp"
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "motion_primitives_forward_controller/motion_type.hpp"
 
-namespace motion_primitives_ur_driver_pkg
+namespace ur_robot_motion_primitives_driver
 {
 
 MotionPrimitivesUrDriver::~MotionPrimitivesUrDriver()
@@ -631,9 +631,9 @@ bool MotionPrimitivesUrDriver::getVelocityAndAcceleration(const std::vector<doub
   }
 }
 
-}  // namespace motion_primitives_ur_driver_pkg
+}  // namespace ur_robot_motion_primitives_driver
 
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  motion_primitives_ur_driver_pkg::MotionPrimitivesUrDriver, hardware_interface::SystemInterface)
+  ur_robot_motion_primitives_driver::MotionPrimitivesUrDriver, hardware_interface::SystemInterface)

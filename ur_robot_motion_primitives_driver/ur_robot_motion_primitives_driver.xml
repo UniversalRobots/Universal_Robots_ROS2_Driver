@@ -1,0 +1,9 @@
+<library path="ur_robot_motion_primitives_driver">
+  <class name="ur_robot_motion_primitives_driver/MotionPrimitivesUrDriver"
+         type="ur_robot_motion_primitives_driver::MotionPrimitivesUrDriver"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      ros2_control hardware interface.
+    </description>
+  </class>
+</library>

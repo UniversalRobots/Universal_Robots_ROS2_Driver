@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(motion_primitives_ur_driver_pkg)
+project(ur_robot_motion_primitives_driver)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wall -Wextra -Werror=conversion -Werror=unused-but-set-variable -Werror=return-type -Werror=shadow)
@@ -31,17 +31,17 @@ include_directories(
   )
 
 add_library(
-  motion_primitives_ur_driver_pkg
+  ur_robot_motion_primitives_driver
   SHARED
   src/motion_primitives_ur_driver.cpp
 )
 target_include_directories(
-  motion_primitives_ur_driver_pkg
+  ur_robot_motion_primitives_driver
   PUBLIC
   include
 )
 ament_target_dependencies(
-  motion_primitives_ur_driver_pkg
+  ur_robot_motion_primitives_driver
   hardware_interface
   rclcpp
   rclcpp_lifecycle
@@ -51,14 +51,14 @@ ament_target_dependencies(
   tf2_geometry_msgs
 )
 # prevent pluginlib from using boost
-target_compile_definitions(motion_primitives_ur_driver_pkg PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+target_compile_definitions(ur_robot_motion_primitives_driver PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 pluginlib_export_plugin_description_file(
-  hardware_interface motion_primitives_ur_driver_pkg.xml)
+  hardware_interface ur_robot_motion_primitives_driver.xml)
 
 install(
   TARGETS
-  motion_primitives_ur_driver_pkg
+  ur_robot_motion_primitives_driver
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -111,7 +111,7 @@ ament_export_include_directories(
   include
 )
 ament_export_libraries(
-  motion_primitives_ur_driver_pkg
+  ur_robot_motion_primitives_driver
 )
 ament_export_dependencies(
   hardware_interface

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>motion_primitives_ur_driver_pkg</name>
+  <name>ur_robot_motion_primitives_driver</name>
   <version>0.0.0</version>
   <description>Driver package to control ur robot using motion primitives like PTP, LIN and CIRC</description>
   <maintainer email="mathias31415@gmx.de">mathias31415</maintainer>

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MOTION_PRIMITIVES_UR_DRIVER_PKG__MOTION_PRIMITIVES_UR_DRIVER_HPP_
-#define MOTION_PRIMITIVES_UR_DRIVER_PKG__MOTION_PRIMITIVES_UR_DRIVER_HPP_
+#ifndef UR_ROBOT_MOTION_PRIMITIVES_DRIVER__MOTION_PRIMITIVES_UR_DRIVER_HPP_
+#define UR_ROBOT_MOTION_PRIMITIVES_DRIVER__MOTION_PRIMITIVES_UR_DRIVER_HPP_
 
 #include <string>
 #include <vector>
 #include <memory>
 
-#include "motion_primitives_ur_driver_pkg/visibility_control.h"
+#include "ur_robot_motion_primitives_driver/visibility_control.h"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -34,7 +34,7 @@
 
 #include "motion_primitives_forward_controller/execution_state.hpp"
 
-namespace motion_primitives_ur_driver_pkg
+namespace ur_robot_motion_primitives_driver
 {
 class MotionPrimitivesUrDriver : public hardware_interface::SystemInterface
 {
@@ -124,6 +124,6 @@ private:
   bool non_blocking_read_;
 };
 
-}  // namespace motion_primitives_ur_driver_pkg
+}  // namespace ur_robot_motion_primitives_driver
 
-#endif  // MOTION_PRIMITIVES_UR_DRIVER_PKG__MOTION_PRIMITIVES_UR_DRIVER_HPP_
+#endif  // UR_ROBOT_MOTION_PRIMITIVES_DRIVER__MOTION_PRIMITIVES_UR_DRIVER_HPP_
