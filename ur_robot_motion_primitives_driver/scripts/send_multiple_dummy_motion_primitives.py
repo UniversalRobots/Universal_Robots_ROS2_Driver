@@ -24,7 +24,7 @@ msg_moveJ_2.additional_arguments = [
 
 msg_moveL_1 = MotionPrimitive()
 msg_moveL_1.type = MotionPrimitive.LINEAR_CARTESIAN
-msg_moveL_1.blend_radius = 0.1
+msg_moveL_1.blend_radius = 0.05
 msg_moveL_1.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=2.0),
     MotionArgument(argument_name="acceleration", argument_value=0.5),
@@ -41,7 +41,7 @@ msg_moveL_1.poses = [pose_L1]
 
 msg_moveL_2 = MotionPrimitive()
 msg_moveL_2.type = MotionPrimitive.LINEAR_CARTESIAN
-msg_moveL_2.blend_radius = 0.1
+msg_moveL_2.blend_radius = 0.05
 msg_moveL_2.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=1.0),
     MotionArgument(argument_name="acceleration", argument_value=0.5),
