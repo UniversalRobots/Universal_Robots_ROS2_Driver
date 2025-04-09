@@ -105,6 +105,7 @@ private:
   
   // Execution status
   std::atomic<int8_t> current_execution_status_{ExecutionState::IDLE};
+  std::atomic_bool ready_for_new_primitive_{false}; // Flag to indicate if the hw-interface is ready for a new motion primitive
 
 
   std::vector<double> hw_mo_prim_commands_;   // Command interfaces for the motion primitives

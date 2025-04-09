@@ -209,4 +209,5 @@ motion_primitive_controller:
       - move_time
     state_interfaces:
       - execution_status
+      - ready_for_new_primitive
     queue_size: 20    # queue size to buffer incoming commands

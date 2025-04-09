@@ -328,6 +328,7 @@
         <command_interface name="move_time"/>
         
         <state_interface name="execution_status"/>
+        <state_interface name="ready_for_new_primitive"/>
       </gpio>
 
     </ros2_control>
