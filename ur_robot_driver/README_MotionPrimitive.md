@@ -44,7 +44,8 @@ https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.
 
 
 # TODO's
-- if trajectory is finished while instruction_executer->cancelMotion() is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call instruction_executer->cancelMotion() a second time
+- if trajectory is finished while `instruction_executer->cancelMotion()` is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call `instruction_executer->cancelMotion()` a second time
+- for the motion primitive driver `ur_joint_control.xacro` without command interfaces is needed: `motion_primitive_ur_joint_control.xacro` --> is there a better way than a copy of the file with commented command interfaces?
 
 # Useful sources
 - https://rtw.b-robotized.com/master/use-cases/ros_workspaces/aliases.html
