@@ -276,7 +276,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "controllers_file",
             default_value=PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "config", "ur_controllers_motion_primitive.yaml"]
+                [FindPackageShare("ur_robot_driver"), "config", "ur_controllers.yaml"]
             ),
             description="YAML file with the controllers configuration.",
         )
