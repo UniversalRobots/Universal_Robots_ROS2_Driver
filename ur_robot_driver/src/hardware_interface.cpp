@@ -710,7 +710,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     // readData(data_pkg, "runtime_state", runtime_state_);
     // readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
     // readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
-    // readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_); //TODO(mathias31415) kam hinzu
+    // readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_);
     // readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
     // readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
     // readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
@@ -729,7 +729,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     // readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
     // readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
     // readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
-    // readData(data_pkg, "tcp_offset", tcp_offset_); // TODO(mathias31415) kam hinzu
+    // readData(data_pkg, "tcp_offset", tcp_offset_);
 
     // required transforms
     // extractToolPose();

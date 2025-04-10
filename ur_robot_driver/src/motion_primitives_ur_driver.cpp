@@ -64,7 +64,6 @@ hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_init(
   rtde_comm_has_been_started_ = false;
 
   // Resize hardware state and command vectors, initializing them with NaN values.
-  // TODO (mathias31415): is there a better way than hardcoding the size of the vectors? --> read the number of state and command interfaces somehow?
   hw_mo_prim_states_.resize(2, std::numeric_limits<double>::quiet_NaN());     // execution_status, ready_for_new_primitive
   hw_mo_prim_commands_.resize(25, std::numeric_limits<double>::quiet_NaN());  // motion_type + 6 joints + 2*7 positions + blend_radius + velocity + acceleration + move_time
 
@@ -420,12 +419,8 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
   if (command.empty() || std::isnan(command[0])) {
     return;
   }
-
-  double motion_type = command[0];
-  
-  double velocity, acceleration, move_time; 
-
-  // TODO (mathias31415): check if nan needs to be handeled
+  double velocity, acceleration, move_time;
+  double motion_type = command[0]; 
   double blend_radius = command[21];
 
   try {
@@ -597,10 +592,8 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
           bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
           current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
           RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveC: current_execution_status_ = %d", current_execution_status_.load());
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " success: %d", success);
           if(success){
             ready_for_new_primitive_ = true; // set to true to allow sending new commands
-            RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "ready_for_new_primitive_ = true");
           }
           return;
         }
@@ -625,7 +618,6 @@ void MotionPrimitivesUrDriver::handleRobotProgramState(bool program_running)
   robot_program_running_ = program_running;
 }
 
-// TODO (mathias31415): check if this is correct with known values (XYZ-Order?)
 // Convert quaternion to Euler angles (roll, pitch, yaw) 
 // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 void MotionPrimitivesUrDriver::quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz) {
