@@ -52,6 +52,7 @@ def launch_setup(context):
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
+    driver_type = LaunchConfiguration("driver_type")
     # General arguments
     controllers_file = LaunchConfiguration("controllers_file")
     description_launchfile = LaunchConfiguration("description_launchfile")
@@ -206,6 +207,7 @@ def launch_setup(context):
         launch_arguments={
             "robot_ip": robot_ip,
             "ur_type": ur_type,
+            "driver_type": driver_type,
         }.items(),
     )
 
@@ -246,6 +248,14 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip", description="IP address by which the robot can be reached."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "driver_type", 
+            default_value="standard",
+            description="Type of driver to use: standard (standard ur_driver) or motion_primitive.",
+            choices=["standard", "motion_primitive"],
         )
     )
     declared_arguments.append(

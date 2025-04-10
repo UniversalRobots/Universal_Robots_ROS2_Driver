@@ -3,9 +3,19 @@
   <!-- robot name parameter -->
   <xacro:arg name="name" default="ur"/>
 
+  <xacro:arg name="driver_type" default="standard" />
+
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+
   <!-- ros2 control include -->
-  <xacro:include filename="$(find ur_robot_driver)/urdf/ur.ros2_control.xacro" />
+  <xacro:property name="driver_type" value="$(arg driver_type)" />
+  <xacro:if value="${driver_type == 'standard'}">
+    <xacro:include filename="$(find ur_robot_driver)/urdf/ur.ros2_control.xacro" />
+  </xacro:if>
+  <xacro:if value="${driver_type == 'motion_primitive'}">
+    <xacro:include filename="$(find ur_robot_driver)/urdf/motion_primitive_ur.ros2_control.xacro" />
+  </xacro:if>
+
   <xacro:include filename="$(find ur_description)/urdf/inc/ur_transmissions.xacro" />
 
   <!-- possible 'ur_type' values: ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20 -->

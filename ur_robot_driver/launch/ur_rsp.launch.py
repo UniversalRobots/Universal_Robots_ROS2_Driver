@@ -46,6 +46,7 @@ from launch.substitutions import (
 def generate_launch_description():
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
+    driver_type = LaunchConfiguration("driver_type")
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
@@ -96,6 +97,9 @@ def generate_launch_description():
             " ",
             "robot_ip:=",
             robot_ip,
+            " ", 
+            "driver_type:=",
+            driver_type,
             " ",
             "joint_limit_params:=",
             joint_limit_params_file,
@@ -212,6 +216,14 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip", description="IP address by which the robot can be reached."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "driver_type", 
+            default_value="standard",
+            description="Type of driver to use: standard (standard ur_driver) or motion_primitive.",
+            choices=["standard", "motion_primitive"],
         )
     )
     declared_arguments.append(
