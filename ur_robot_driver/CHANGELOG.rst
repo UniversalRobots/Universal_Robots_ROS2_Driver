@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.7.0 (2025-04-10)
+------------------
 * Start executing passthrough trajectories earlier than all points are transferred. (backport of `#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_) (`#1335 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1335>`_)
 * Support PolyScopeX robots (backport of `#1318 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1318>`_) (`#1333 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1333>`_)
 * Add support for UR7e and UR12e (`#1332 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1332>`_)
