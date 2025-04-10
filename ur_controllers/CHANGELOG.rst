@@ -2,6 +2,14 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added controller to enable and disable tool contact (`#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_)
+* Start executing passthrough trajectories earlier than all points are transferred. (`#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_)
+* Update ci (`#1315 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1315>`_)
+* Fix passthrough controller to not read non-existing state_interfaces (`#1314 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1314>`_)
+* Contributors: Felix Exner, URJala
+
 3.1.1 (2025-03-17)
 ------------------
 * Update ros2_control API to get_optional (`#1289 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1289>`_)
