@@ -1,3 +1,14 @@
+Forthcoming
+-----------
+* Added controller to enable and disable tool contact (`#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_)
+* Start executing passthrough trajectories earlier than all points are transferred. (`#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_)
+* Support PolyScopeX robots (`#1318 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1318>`_)
+* Add support for UR7e and UR12e (`#1320 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1320>`_)
+* Use UrDriverConfig struct to initialize UrDriver (`#1328 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1328>`_)
+* Fix passthrough controller to not read non-existing state_interfaces (`#1314 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1314>`_)
+* Fix links to forward command controllers (`#1303 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1303>`_)
+* Contributors: Felix Exner, URJala
+
 3.1.1 (2025-03-17)
 ------------------
 * Update transformForceTorque to handle whether it is a cb3 or an e-Series robot (`#1287 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1287>`_)
