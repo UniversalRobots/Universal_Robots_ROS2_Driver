@@ -52,6 +52,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   ur_client_library
   ur_dashboard_msgs
   ur_msgs
+  motion_primitives_forward_controller
 )
 
 add_library(ur_robot_driver_plugin
@@ -88,17 +89,13 @@ ament_target_dependencies(
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
-# TODO(mathias31415): wie bei ur_robot_driver_plugin machen?
+
 ament_target_dependencies(
   ur_robot_motion_primitives_driver_plugin
-  hardware_interface
-  rclcpp
-  rclcpp_lifecycle
-  motion_primitives_forward_controller
-  ur_client_library
-  tf2
-  tf2_geometry_msgs
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
 
 pluginlib_export_plugin_description_file(hardware_interface motion_primitive_hardware_interface_plugin.xml)
