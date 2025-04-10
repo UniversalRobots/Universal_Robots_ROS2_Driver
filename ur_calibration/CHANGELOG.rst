@@ -2,6 +2,11 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use modern CMake to link against yaml-cpp (backport of `#1295 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1295>`_) (`#1304 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1304>`_)
+* Contributors: mergify[bot]
+
 2.6.0 (2025-03-17)
 ------------------
 
