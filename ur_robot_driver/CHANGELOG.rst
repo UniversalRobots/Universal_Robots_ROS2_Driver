@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.2.0 (2025-04-10)
+------------------
 * Added controller to enable and disable tool contact (`#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_)
 * Start executing passthrough trajectories earlier than all points are transferred. (`#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_)
 * Support PolyScopeX robots (`#1318 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1318>`_)
