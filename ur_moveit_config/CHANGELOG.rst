@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.7.0 (2025-04-10)
+------------------
 * Add support for UR7e and UR12e (`#1332 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1332>`_)
 * Contributors: mergify[bot]
 
