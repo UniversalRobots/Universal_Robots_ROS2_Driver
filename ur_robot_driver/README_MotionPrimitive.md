@@ -1,7 +1,7 @@
 motion_primitives_ur_driver
 ==========================================
 
-Hardware interface for executing motion primitives on a UR robot using the ROS 2 control framework. It allows the controller to execute linear (LINEAR_CARTESIAN LIN/ MOVEL), circular (CIRCULAR_CARTESIAN, CIRC/ MOVEC), and joint-based (LINEAR_JOINT, PTP/ MOVEJ) motion commands asynchronously and supports motion sequences for smooth trajectory execution.
+Hardware interface for executing motion primitives on a UR robot using the ROS 2 control framework. It allows the controller to execute linear (LINEAR_CARTESIAN/ LIN/ MOVEL), circular (CIRCULAR_CARTESIAN/ CIRC/ MOVEC), and joint-based (LINEAR_JOINT/ PTP/ MOVEJ) motion commands asynchronously and supports motion sequences for smooth trajectory execution.
 
 ![Licence](https://img.shields.io/badge/License-BSD-3-Clause-blue.svg)
 
@@ -76,7 +76,8 @@ This approach offers two key advantages:
 The `write()` method checks whether a new motion primitive command has been received from the controller via the command interfaces. If a new command is present:
 
 1. If the command is `STOP_MOTION`, a flag is set which leads to interrupting the current motion inside the `asyncStopMotionThread()`.
-2. For other commands, they are passed to the `asyncCommandThread()` and executed asynchronously.
+2. For other commands, they are passed to the `asyncCommandThread()` and executed asynchronously. Individual primitives are executed directly via the Instruction Executor.
+If a `MOTION_SEQUENCE_START` command is received, all subsequent primitives are added to a motion sequence. Once `MOTION_SEQUENCE_END` is received, the entire sequence is executed via the Instruction Executor.
 
 Threading is required since calls to the Instruction Executor are blocking. Offloading these to separate threads ensures the control loop remains responsive during motion execution. The stopping functionality is also threaded to allow interrupting a primitive even during execution or in a motion sequence.
 
@@ -132,6 +133,8 @@ https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.
 - for the motion primitive driver `ur_joint_control.xacro` without command interfaces is needed: `motion_primitive_ur_joint_control.xacro` --> is there a better way than a copy of the file with commented command interfaces?
 
 # Useful sources
+- https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/doc/ur_client_library/doc/architecture/instruction_executor.html
+- https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/doc/ur_client_library/doc/examples/instruction_executor.html
 - https://rtw.b-robotized.com/master/use-cases/ros_workspaces/aliases.html
 - https://control.ros.org/master/doc/ros2_control/ros2controlcli/doc/userdoc.html
 - ...
