@@ -1,3 +1,5 @@
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/setup_tool_communication.rst
+
 .. _setup-tool-communication:
 
 Setting up the tool communication on an e-Series robot

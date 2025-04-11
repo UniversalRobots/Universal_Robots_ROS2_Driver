@@ -1,3 +1,5 @@
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/usage/startup.rst
+
 .. _ur_robot_driver_startup:
 
 Startup the driver
