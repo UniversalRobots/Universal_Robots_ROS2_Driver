@@ -65,7 +65,6 @@
 
 // Helper class to outsource state interface stuff
 #include "ur_robot_driver/stateinterface_helper.hpp"
-#include "ur_robot_driver/quaternion.hpp"
 
 namespace ur_robot_driver
 {

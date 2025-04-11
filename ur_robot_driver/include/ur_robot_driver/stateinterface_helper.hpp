@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ur_robot_driver/quaternion.hpp"
 #include <bitset>
 #include <vector>
 #include <array>
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 namespace rtde = urcl::rtde_interface;
 
@@ -15,6 +15,28 @@ enum class PausingState
     PAUSED,
     RUNNING,
     RAMPUP
+};
+
+// We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
+// interfaces.
+struct Quaternion
+{
+  Quaternion() : x(0), y(0), z(0), w(0)
+  {
+  }
+
+  void set(const tf2::Quaternion& q)
+  {
+    x = q.x();
+    y = q.y();
+    z = q.z();
+    w = q.w();
+  }
+
+  double x;
+  double y;
+  double z;
+  double w;
 };
       
 
