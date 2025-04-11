@@ -34,6 +34,9 @@
  * \author  Marvin Große Besselmann grosse@fzi.de
  * \date    2019-04-11
  *
+ * \author  Mathias Fuhrer
+ * \date    2025-04-11
+ *
  */
 //----------------------------------------------------------------------
 #ifndef UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_

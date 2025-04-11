@@ -34,6 +34,9 @@
  * \author  Marvin Große Besselmann grosse@fzi.de
  * \date    2020-11-9
  *
+ * \author  Mathias Fuhrer
+ * \date    2025-04-11
+ *
  */
 //----------------------------------------------------------------------
 #include <algorithm>
