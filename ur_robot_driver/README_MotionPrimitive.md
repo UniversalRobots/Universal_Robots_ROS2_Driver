@@ -1,7 +1,7 @@
-ur_robot_motion_primitives_driver
+motion_primitives_ur_driver
 ==========================================
 
-Driver package to control ur robot using motion primitives like LINEAR_JOINT (PTP/ MOVEJ), LINEAR_CARTESIAN (LIN/ MOVEL) and CIRCULAR_CARTESIAN (CIRC/ MOVEC)
+Hardware interface for executing motion primitives on a UR robot using the ROS 2 control framework. It allows the controller to execute linear (LINEAR_CARTESIAN LIN/ MOVEL), circular (CIRCULAR_CARTESIAN, CIRC/ MOVEC), and joint-based (LINEAR_JOINT, PTP/ MOVEJ) motion commands asynchronously and supports motion sequences for smooth trajectory execution.
 
 ![Licence](https://img.shields.io/badge/License-BSD-3-Clause-blue.svg)
 
@@ -12,17 +12,57 @@ Driver package to control ur robot using motion primitives like LINEAR_JOINT (PT
 - [Universal_Robots_ROS2_Driver from StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive](https://github.com/StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
 - [Universal_Robots_Client_Library with movec from urfeex](https://github.com/urfeex/Universal_Robots_Client_Library/tree/movec_movep)
  
-# Motion Primitives UR Driver
 
-This repository provides a hardware interface for executing motion primitives on a UR robot using the ROS 2 control framework. It allows the controller to execute linear, circular, and joint-based motion commands asynchronously and supports motion sequences for smooth trajectory execution.
-
-## Architecture
+# Architecture
 
 ![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_ur.drawio.png)
 
-## Overview
+# Command and State Interfaces
 
-## Overview
+The `motion_primitives_ur_driver` hardware interface defines a set of **command interfaces** and **state interfaces** used for communication between the controller and the robot hardware.
+
+## Command Interfaces
+
+These interfaces are used to send motion primitive data to the hardware interface:
+
+- `motion_type`: Type of motion primitive (e.g., LINEAR_JOINT, LINEAR_CARTESIAN, CIRCULAR_CARTESIAN, etc.)
+- `q1` – `q6`: Target joint positions for joint-based motion
+- `pos_x`, `pos_y`, `pos_z`: Target Cartesian position
+- `pos_qx`, `pos_qy`, `pos_qz`, `pos_qw`: Orientation quaternion of the target pose
+- `pos_via_x`, `pos_via_y`, `pos_via_z`: Intermediate via-point position for circular motion
+- `pos_via_qx`, `pos_via_qy`, `pos_via_qz`, `pos_via_qw`: Orientation quaternion of via-point
+- `blend_radius`: Blending radius for smooth transitions
+- `velocity`: Desired motion velocity
+- `acceleration`: Desired motion acceleration
+- `move_time`: Optional duration for time-based execution (For LINEAR_JOINT and LINEAR_CARTESIAN. If move_time > 0, velocity and acceleration are ignored)
+
+## State Interfaces
+
+These interfaces are used to communicate the internal status of the hardware interface back to the controller:
+
+- `execution_status`: Indicates the current execution state of the primitive. Possible values are:
+  - `IDLE`: No motion in progress
+  - `EXECUTING`: Currently executing a primitive
+  - `SUCCESS`: Last command finished successfully
+  - `ERROR`: An error occurred during execution
+- `ready_for_new_primitive`: Boolean flag indicating whether the interface is ready to receive a new motion primitive
+
+In addition to these, the driver also provides all standard state interfaces from the original UR hardware interface (e.g., joint positions, velocities). These are used by components like the `joint_state_broadcaster` and allow tools like RViz to visualize the current robot state.
+
+
+# Supported Motion Primitives
+
+- Support for basic motion primitives:
+  - `LINEAR_JOINT`
+  - `LINEAR_CARTESIAN`
+  - `CIRCULAR_CARTESIAN`
+- Additional helper types:
+  - `STOP_MOTION`: Immediately stops the current robot motion and clears all pending primitives in the controller's queue.
+  - `MOTION_SEQUENCE_START` / `MOTION_SEQUENCE_END`: Define a motion sequence block. All primitives between these two markers will be executed as a single, continuous sequence. This allows seamless transitions (blending) between primitives.
+
+![MotionPrimitiveExecutionWithHelperTypes](doc/motion_primitive_ur_driver/MotionPrimitiveExecutionWithHelperTypes.drawio.png)
+
+# Overview
 
 In contrast to the standard UR hardware interface, this driver does not compute or execute trajectories on the ROS 2 side. Instead, it passes high-level motion primitives directly to the robot controller, which then computes and executes the trajectory internally.
 
@@ -31,17 +71,6 @@ This approach offers two key advantages:
 - **Reduced real-time requirements** on the ROS 2 side, since trajectory planning and execution are offloaded to the robot.
 - **Improved motion quality**, as the robot controller has better knowledge of the robot's kinematics and dynamics, leading to more optimized and accurate motion execution.
 
-
-### Supported Motion Primitives
-
-- `LINEAR_JOINT` (PTP / MOVEJ)
-- `LINEAR_CARTESIAN` (LIN / MOVEL)
-- `CIRCULAR_CARTESIAN` (CIRC / MOVEC)
-- `MOTION_SEQUENCE_START` and `MOTION_SEQUENCE_END` for motion sequences
-
-Using motion sequences enables blending between multiple primitives for smoother motion profiles.
-
-![MotionPrimitiveExecutionWithHelperTypes](doc/motion_primitive_ur_driver/MotionPrimitiveExecutionWithHelperTypes.drawio.png)
 
 ## write() Method
 
