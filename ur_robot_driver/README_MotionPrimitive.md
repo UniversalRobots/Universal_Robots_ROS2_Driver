@@ -15,7 +15,7 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 
 # Architecture
 
-![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_ur.drawio.png)
+![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_ur_whiteBackground.drawio.png)
 
 # Command and State Interfaces
 
@@ -60,7 +60,7 @@ In addition to these, the driver also provides all standard state interfaces fro
   - `STOP_MOTION`: Immediately stops the current robot motion and clears all pending primitives in the controller's queue.
   - `MOTION_SEQUENCE_START` / `MOTION_SEQUENCE_END`: Define a motion sequence block. All primitives between these two markers will be executed as a single, continuous sequence. This allows seamless transitions (blending) between primitives.
 
-![MotionPrimitiveExecutionWithHelperTypes](doc/motion_primitive_ur_driver/MotionPrimitiveExecutionWithHelperTypes.drawio.png)
+![MotionPrimitiveExecutionWithHelperTypes](doc/motion_primitive_ur_driver/MotionPrimitiveExecutionWithHelperTypes_whiteBackground.drawio.png)
 
 # Overview
 
