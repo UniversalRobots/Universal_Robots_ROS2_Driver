@@ -6,10 +6,9 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 ![Licence](https://img.shields.io/badge/License-BSD-3-Clause-blue.svg)
 
 # Related packages/ repos
-- [generate_parameter_library](https://github.com/PickNikRobotics/generate_parameter_library)
 - [industrial_robot_motion_interfaces (with additional helper types for stop and motion sequence)](https://github.com/StoglRobotics-forks/industrial_robot_motion_interfaces/tree/helper-types)
-- [motion_primitives_forward_controller from StoglRobotics-forks/ros2_controllers](https://github.com/StoglRobotics-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
-- [Universal_Robots_ROS2_Driver from StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive](https://github.com/StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
+- [ros2_controllers with motion_primitives_forward_controller](https://github.com/StoglRobotics-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
+- [Universal_Robots_ROS2_Driver with motion_primitive_ur_driver](https://github.com/StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
 - [Universal_Robots_Client_Library with movec from urfeex](https://github.com/urfeex/Universal_Robots_Client_Library/tree/movec_movep)
  
 
