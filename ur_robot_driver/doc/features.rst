@@ -21,7 +21,7 @@ Feature list and roadmap
    * - Cartesian twist-based control
      - no
    * - Trajectory forwarding for execution on robot
-     - no
+     - yes
    * - reporting of tcp wrench
      - yes
    * - pausing of programs
@@ -49,6 +49,6 @@ Feature list and roadmap
    * - extract calibration from robot
      - yes
    * - send custom script commands to robot
-     - no
+     - yes
    * - Reconnect on a disconnected robot
      - yes
