@@ -63,6 +63,8 @@ TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
 TIMEOUT_WAIT_ACTION = 10
 
+TIMEOUT_EXECUTE_TRAJECTORY = 30
+
 ROBOT_JOINTS = [
     "elbow_joint",
     "shoulder_lift_joint",
@@ -368,6 +370,7 @@ def generate_driver_test_description(
     tf_prefix="",
     initial_joint_controller="scaled_joint_trajectory_controller",
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+    use_mock_hardware="false",
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -380,6 +383,8 @@ def generate_driver_test_description(
         "headless_mode": "true",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
+        "use_mock_hardware": use_mock_hardware,
+        "mock_sensor_commands": use_mock_hardware,
     }
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
