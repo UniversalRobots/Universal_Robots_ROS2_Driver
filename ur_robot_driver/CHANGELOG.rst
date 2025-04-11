@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.2.1 (2025-04-11)
+------------------
 * Disable enforcing command limits (`#1342 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1342>`_)
 * Contributors: Felix Exner
 
