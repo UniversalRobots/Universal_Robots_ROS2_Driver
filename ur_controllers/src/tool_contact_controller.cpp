@@ -267,10 +267,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         logged_once_ = true;
       }
       double result = tool_contact_result_interface_->get().get_value();
-      if (!result) {
-        RCLCPP_FATAL(get_node()->get_logger(), "Controller failed to read result interface, aborting.");
-        return controller_interface::return_type::ERROR;
-      }
       if (result == 0.0) {
         tool_contact_active_ = false;
         RCLCPP_INFO(get_node()->get_logger(), "Tool contact finished successfully.");
