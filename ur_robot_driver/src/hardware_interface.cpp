@@ -1094,12 +1094,6 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     }
   }
 
-  if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
-                   [&](const std::vector<std::string>& other) { return other == start_modes_[0]; })) {
-    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Start modes of all joints have to be the same.");
-    return hardware_interface::return_type::ERROR;
-  }
-
   // Starting interfaces
   // If a joint has been reserved already, raise an error.
   // Modes that are not directly mapped to a single joint such as force_mode reserve all joints.
@@ -1115,7 +1109,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                                                                           "requested.");
           return hardware_interface::return_type::ERROR;
         }
-        start_modes_[i] = { hardware_interface::HW_IF_POSITION };
+        start_modes_[i].push_back(hardware_interface::HW_IF_POSITION);
       } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
         if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
               return item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO ||
@@ -1126,7 +1120,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                                                                           "requested.");
           return hardware_interface::return_type::ERROR;
         }
-        start_modes_[i] = { hardware_interface::HW_IF_VELOCITY };
+        start_modes_[i].push_back(hardware_interface::HW_IF_VELOCITY);
       } else if (key == tf_prefix + FORCE_MODE_GPIO + "/type") {
         if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
               return item == hardware_interface::HW_IF_POSITION || item == hardware_interface::HW_IF_VELOCITY;
@@ -1169,6 +1163,12 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         start_modes_[i].push_back(TOOL_CONTACT_GPIO);
       }
     }
+  }
+
+  if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
+                   [&](const std::vector<std::string>& other) { return other == start_modes_[0]; })) {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Start modes of all joints have to be the same.");
+    return hardware_interface::return_type::ERROR;
   }
 
   // Stopping interfaces
