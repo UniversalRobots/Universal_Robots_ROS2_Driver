@@ -31,6 +31,7 @@ import os
 import sys
 import time
 import unittest
+import logging
 
 import pytest
 
@@ -131,10 +132,20 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["tool_contact_controller"],
             ).ok
         )
-        # Wait for action to finish
-        self._tool_contact_interface.get_result(goal_handle, 5)
-        # Check status of goal handle, as result does not contain information about the status of the action. Only the empty result definition.
-        self.assertEqual(goal_handle._status, GoalStatus.STATUS_ABORTED)
+        future_res = goal_handle.get_result_async()
+
+        timeout = 5.0
+        logging.info("Waiting for action result from controller with timeout %fs", timeout)
+        rclpy.spin_until_future_complete(self.node, future_res, timeout_sec=timeout)
+
+        if future_res.result() is not None:
+            logging.info("  Received result: %s", future_res.result().result)
+            # Check status of goal handle, as result does not contain information about the status of the action. Only the empty result definition.
+            self.assertEqual(future_res.result().status, GoalStatus.STATUS_ABORTED)
+        else:
+            raise Exception(
+                f"Exception while calling action '{self.__action_name}': {future_res.exception()}"
+            )
 
     def test_inactive_controller_rejects_actions(self):
         self.assertTrue(
