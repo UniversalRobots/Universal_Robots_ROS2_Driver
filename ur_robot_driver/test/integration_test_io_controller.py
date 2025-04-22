@@ -52,23 +52,18 @@ from test_common import (  # noqa: E402
 
 
 @pytest.mark.launch_test
-@launch_testing.parametrize(
-    "tf_prefix, use_mock_hardware", [("", "false"), ("my_ur_", "false"), ("", "true")]
-)
-def generate_test_description(tf_prefix, use_mock_hardware):
-    return generate_driver_test_description(
-        tf_prefix=tf_prefix, use_mock_hardware=use_mock_hardware
-    )
+@launch_testing.parametrize("tf_prefix", [(""), ("my_ur_")])
+def generate_test_description(tf_prefix):
+    return generate_driver_test_description(tf_prefix=tf_prefix)
 
 
 class RobotDriverTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls, use_mock_hardware):
+    def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("robot_driver_test")
         time.sleep(1)
-        cls.mock_hardware = use_mock_hardware == "true"
         cls.init_robot(cls)
 
     @classmethod
@@ -78,10 +73,7 @@ class RobotDriverTest(unittest.TestCase):
         rclpy.shutdown()
 
     def init_robot(self):
-        if not self.mock_hardware:
-            self._dashboard_interface = DashboardInterface(self.node)
-        else:
-            self._dashboard_interface = None
+        self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._configuration_controller_interface = ConfigurationInterface(self.node)
@@ -98,8 +90,7 @@ class RobotDriverTest(unittest.TestCase):
         )
 
     def setUp(self):
-        if self._dashboard_interface:
-            self._dashboard_interface.start_robot()
+        self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
@@ -109,8 +100,6 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_set_io(self):
         """Test to set an IO and check whether it has been set."""
-        if self.mock_hardware:
-            return True
         # Create io callback to verify result
         io_msg = None
 
