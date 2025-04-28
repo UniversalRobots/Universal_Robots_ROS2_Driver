@@ -78,6 +78,7 @@ def declare_arguments():
                     "ur10e",
                     "ur12e",
                     "ur16e",
+                    "ur15",
                     "ur20",
                     "ur30",
                 ],
