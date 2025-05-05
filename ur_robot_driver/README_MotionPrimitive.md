@@ -5,11 +5,14 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 
 ![Licence](https://img.shields.io/badge/License-BSD-3-Clause-blue.svg)
 
+# Demo Video with URSim
+[![Play Video](doc/motion_primitive_ur_driver/motion_primitive_demo_video_preview.png)](https://www.youtube.com/watch?v=htUJtfkgr6Q)
+
 # Related packages/ repos
 - [industrial_robot_motion_interfaces (with additional helper types for stop and motion sequence)](https://github.com/StoglRobotics-forks/industrial_robot_motion_interfaces/tree/helper-types)
 - [ros2_controllers with motion_primitives_forward_controller](https://github.com/StoglRobotics-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
 - [Universal_Robots_ROS2_Driver with motion_primitive_ur_driver](https://github.com/StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
-- [Universal_Robots_Client_Library with movec from urfeex](https://github.com/urfeex/Universal_Robots_Client_Library/tree/movec_movep)
+- [Universal_Robots_Client_Library](hhttps://github.com/UniversalRobots/Universal_Robots_Client_Library)
  
 
 # Architecture
