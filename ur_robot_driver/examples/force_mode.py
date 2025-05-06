@@ -48,20 +48,15 @@ from geometry_msgs.msg import (
 
 from ur_msgs.srv import SetForceMode
 
-from examples import Robot
+from robot_class import Robot
 
 if __name__ == "__main__":
     rclpy.init()
     node = Node("robot_driver_test")
     robot = Robot(node)
 
-    # Add force mode service to service interfaces and re-init robot
-    robot.service_interfaces.update({"/force_mode_controller/start_force_mode": SetForceMode})
-    robot.service_interfaces.update({"/force_mode_controller/stop_force_mode": Trigger})
-    robot.init_robot()
-    time.sleep(0.5)
     # Press play on the robot
-    robot.call_service("/dashboard_client/play", Trigger.Request())
+    robot.play()
 
     time.sleep(0.5)
     # Start controllers
@@ -75,11 +70,9 @@ if __name__ == "__main__":
     )
 
     # Move robot in to position
-    robot.send_trajectory(
+    robot.passthrough_trajectory(
         waypts=[[-1.5707, -1.5707, -1.5707, -1.5707, 1.5707, 0]],
-        time_vec=[Duration(sec=5, nanosec=0)],
-        action_client=robot.passthrough_trajectory_action_client,
-    )
+        time_vec=[Duration(sec=5, nanosec=0)])
 
     # Finished moving
     # Create task frame for force mode
@@ -130,13 +123,12 @@ if __name__ == "__main__":
 
     # Send request to controller
     node.get_logger().info(f"Starting force mode with {req}")
-    robot.call_service("/force_mode_controller/start_force_mode", req)
-    robot.send_trajectory(
+    robot.start_force_mode(req)
+    robot.passthrough_trajectory(
         waypts=[[1.5707, -1.5707, -1.5707, -1.5707, 1.5707, 0]],
-        time_vec=[Duration(sec=5, nanosec=0)],
-        action_client=robot.passthrough_trajectory_action_client,
+        time_vec=[Duration(sec=5, nanosec=0)]
     )
 
     time.sleep(3)
     node.get_logger().info("Deactivating force mode controller.")
-    robot.call_service("/force_mode_controller/stop_force_mode", Trigger.Request())
+    robot.stop_force_mode()
