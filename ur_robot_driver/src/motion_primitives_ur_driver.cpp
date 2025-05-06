@@ -175,14 +175,18 @@ MotionPrimitivesUrDriver::on_configure(const rclcpp_lifecycle::State& /*previous
   if (ur_driver_->checkCalibration(calibration_checksum)) {
     RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Calibration checked successfully.");
   } else {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-
-                        "The calibration parameters of the connected robot don't match the ones from the given "
-                        "kinematics config file. Please be aware that this can lead to critical inaccuracies of tcp "
-                        "positions. Use the ur_calibration tool to extract the correct calibration from the robot and "
-                        "pass that into the description. See "
-                        "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
-                        "README.md] for details.");
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("MotionPrimitivesUrDriver"), "The calibration parameters of the connected "
+                                                                        "robot don't match the ones from the given "
+                                                                        "kinematics config file. Please be aware that "
+                                                                        "this can lead to critical inaccuracies of tcp "
+                                                                        "positions. Use the ur_calibration tool to "
+                                                                        "extract the correct calibration from the "
+                                                                        "robot and "
+                                                                        "pass that into the description. See "
+                                                                        "[https://github.com/UniversalRobots/"
+                                                                        "Universal_Robots_ROS2_Driver/blob/main/"
+                                                                        "ur_calibration/"
+                                                                        "README.md] for details.");
   }
 
   // set rtde frequency to 125 Hz
@@ -511,16 +515,16 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
               joint_positions, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)),
               acceleration, velocity));
           RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-                      "Added moveJ to motion sequence with joint positions: [%f, %f, %f, %f, %f, %f]",
-                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", joint_positions[0],
-                      joint_positions[1], joint_positions[2], joint_positions[3], joint_positions[4],
-                      joint_positions[5], velocity, acceleration, move_time, blend_radius);
+                      "Added moveJ to motion sequence with joint positions: [%f, %f, %f, %f, %f, %f], "
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
+                      joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
           ready_for_new_primitive_ = true;  // set to true to allow sending new commands
           return;
         } else {  // execute single primitive directly
           current_execution_status_ = ExecutionState::EXECUTING;
           RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-                      "Executing moveJ with joint positions: [%f, %f, %f, %f, %f, %f],"
+                      "Executing moveJ with joint positions: [%f, %f, %f, %f, %f, %f], "
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
                       joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
                       joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
@@ -566,7 +570,7 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
               pose, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration,
               velocity));
           RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-                      "Added  moveL to motion sequence with pose: [%f, %f, %f, %f, %f, %f],"
+                      "Added  moveL to motion sequence with pose: [%f, %f, %f, %f, %f, %f], "
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
                       pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
                       blend_radius);
@@ -575,7 +579,7 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
         } else {  // execute single primitive directly
           current_execution_status_ = ExecutionState::EXECUTING;
           RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-                      "Executing moveL with pose: [%f, %f, %f, %f, %f, %f],"
+                      "Executing moveL with pose: [%f, %f, %f, %f, %f, %f], "
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
                       pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
                       blend_radius);
@@ -629,7 +633,7 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
           motion_sequence_.emplace_back(std::make_shared<urcl::control::MoveCPrimitive>(
               via_pose, goal_pose, blend_radius, acceleration, velocity, mode));
           RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-                      "Added  moveC to motion sequence with via_pose: [%f, %f, %f, %f, %f, %f],"
+                      "Added  moveC to motion sequence with via_pose: [%f, %f, %f, %f, %f, %f], "
                       "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
                       "acceleration: %f, blend_radius: %f, mode: %d",
                       via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
@@ -640,7 +644,7 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
         } else {  // execute single primitive directly
           current_execution_status_ = ExecutionState::EXECUTING;
           RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-                      "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f],"
+                      "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f], "
                       "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
                       "acceleration: %f, blend_radius: %f, mode: %d",
                       via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
