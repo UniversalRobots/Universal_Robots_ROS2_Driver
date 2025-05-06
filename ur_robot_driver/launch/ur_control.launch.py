@@ -252,7 +252,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "driver_type", 
+            "driver_type",
             default_value="standard",
             description="Type of driver to use: standard (standard ur_driver) or motion_primitive.",
             choices=["standard", "motion_primitive"],

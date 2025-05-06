@@ -1,6 +1,5 @@
 // Copyright (c) 2025, b»robotized
-
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -45,12 +44,10 @@ MotionPrimitivesUrDriver::~MotionPrimitivesUrDriver()
   ur_driver_.reset();
 }
 
-hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_init(
-  const hardware_interface::HardwareInfo & info)
+hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_init(const hardware_interface::HardwareInfo& info)
 {
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Initializing Hardware Interface");
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
-  {
+  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS) {
     RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Failed to initialize SystemInterface");
     return CallbackReturn::ERROR;
   }
@@ -67,34 +64,37 @@ hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_init(
   rtde_comm_has_been_started_ = false;
 
   // Resize hardware state and command vectors, initializing them with NaN values.
-  hw_mo_prim_states_.resize(2, std::numeric_limits<double>::quiet_NaN());     // execution_status, ready_for_new_primitive
-  hw_mo_prim_commands_.resize(25, std::numeric_limits<double>::quiet_NaN());  // motion_type + 6 joints + 2*7 positions + blend_radius + velocity + acceleration + move_time
+  // States: execution_status, ready_for_new_primitive
+  hw_mo_prim_states_.resize(2, std::numeric_limits<double>::quiet_NaN());
+  // Commands: // motion_type + 6 joints + 2*7 positions + blend_radius + velocity + acceleration + move_time
+  hw_mo_prim_commands_.resize(25, std::numeric_limits<double>::quiet_NaN());
 
   return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_configure(
-  const rclcpp_lifecycle::State & /*previous_state*/)
+hardware_interface::CallbackReturn
+MotionPrimitivesUrDriver::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Configuring Hardware Interface");
 
   // The robot's IP address.
   const std::string robot_ip = info_.hardware_parameters["robot_ip"];
-  
+
   // Path to the urscript code that will be sent to the robot
   const std::string script_filename = info_.hardware_parameters["script_filename"];
-  
+
   // Path to the file containing the recipe used for requesting RTDE outputs.
   const std::string output_recipe_filename = info_.hardware_parameters["output_recipe_filename"];
-  
+
   // Path to the file containing the recipe used for requesting RTDE inputs.
   const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
-  
+
   // Start robot in headless mode. This does not require the 'External Control' URCap to be running
   // on the robot, but this will send the URScript to the robot directly. On e-Series robots this
   // requires the robot to run in 'remote-control' mode.
-  const bool headless_mode = (info_.hardware_parameters["headless_mode"] == "true") || (info_.hardware_parameters["headless_mode"] == "True");
-  
+  const bool headless_mode =
+      (info_.hardware_parameters["headless_mode"] == "true") || (info_.hardware_parameters["headless_mode"] == "True");
+
   // Port that will be opened to communicate between the driver and the robot controller.
   const int reverse_port = stoi(info_.hardware_parameters["reverse_port"]);
 
@@ -185,7 +185,8 @@ hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_configure(
                         "README.md] for details.");
   }
 
-  // ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, 125.0, false);  // set rtde frequency to 125 Hz
+  // set rtde frequency to 125 Hz
+  // ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, 125.0, false);
 
   // Export version information to state interfaces
   urcl::VersionInformation version_info = ur_driver_->getVersion();
@@ -221,15 +222,17 @@ std::vector<hardware_interface::StateInterface> MotionPrimitivesUrDriver::export
     sensor_names.push_back(info_.sensors[i].name);
   }
   // state interfaces from the URPositionHardwareInterface
-  state_interfaces = state_helper_.generate_state_interfaces(joint_names, info_.hardware_parameters.at("tf_prefix"), sensor_names);
+  state_interfaces =
+      state_helper_.generate_state_interfaces(joint_names, info_.hardware_parameters.at("tf_prefix"), sensor_names);
 
-  // State for execution_status
-  state_interfaces.emplace_back(hardware_interface::StateInterface("motion_primitive", "execution_status", &hw_mo_prim_states_[0]));
-  state_interfaces.emplace_back(hardware_interface::StateInterface("motion_primitive", "ready_for_new_primitive", &hw_mo_prim_states_[1]));
+  // State for execution_status and ready_for_new_primitive
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("motion_primitive", "execution_status", &hw_mo_prim_states_[0]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("motion_primitive", "ready_for_new_primitive", &hw_mo_prim_states_[1]));
 
   return state_interfaces;
 }
-
 
 std::vector<hardware_interface::CommandInterface> MotionPrimitivesUrDriver::export_command_interfaces()
 {
@@ -238,58 +241,82 @@ std::vector<hardware_interface::CommandInterface> MotionPrimitivesUrDriver::expo
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Exporting Command Interfaces");
 
   // Command for motion type (motion_type)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "motion_type", &hw_mo_prim_commands_[0]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "motion_type", &hw_mo_prim_commands_[0]));
   // Joint position commands (q1, q2, ..., q6)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "q1", &hw_mo_prim_commands_[1]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "q2", &hw_mo_prim_commands_[2]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "q3", &hw_mo_prim_commands_[3]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "q4", &hw_mo_prim_commands_[4]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "q5", &hw_mo_prim_commands_[5]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "q6", &hw_mo_prim_commands_[6]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "q1", &hw_mo_prim_commands_[1]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "q2", &hw_mo_prim_commands_[2]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "q3", &hw_mo_prim_commands_[3]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "q4", &hw_mo_prim_commands_[4]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "q5", &hw_mo_prim_commands_[5]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "q6", &hw_mo_prim_commands_[6]));
   // Position commands (pos_x, pos_y, pos_z, pos_qx, pos_qy, pos_qz, pos_qz)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_x", &hw_mo_prim_commands_[7]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_y", &hw_mo_prim_commands_[8]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_z", &hw_mo_prim_commands_[9]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_qx", &hw_mo_prim_commands_[10]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_qy", &hw_mo_prim_commands_[11]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_qz", &hw_mo_prim_commands_[12]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_qw", &hw_mo_prim_commands_[13]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_x", &hw_mo_prim_commands_[7]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_y", &hw_mo_prim_commands_[8]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_z", &hw_mo_prim_commands_[9]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_qx", &hw_mo_prim_commands_[10]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_qy", &hw_mo_prim_commands_[11]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_qz", &hw_mo_prim_commands_[12]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_qw", &hw_mo_prim_commands_[13]));
   // Via Position commands for circula motion
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_via_x", &hw_mo_prim_commands_[14]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_via_y", &hw_mo_prim_commands_[15]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_via_z", &hw_mo_prim_commands_[16]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_via_qx", &hw_mo_prim_commands_[17]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_via_qy", &hw_mo_prim_commands_[18]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_via_qz", &hw_mo_prim_commands_[19]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "pos_via_qw", &hw_mo_prim_commands_[20]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_via_x", &hw_mo_prim_commands_[14]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_via_y", &hw_mo_prim_commands_[15]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_via_z", &hw_mo_prim_commands_[16]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_via_qx", &hw_mo_prim_commands_[17]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_via_qy", &hw_mo_prim_commands_[18]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_via_qz", &hw_mo_prim_commands_[19]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "pos_via_qw", &hw_mo_prim_commands_[20]));
   // Other command parameters (blend_radius, velocity, acceleration, move_time)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "blend_radius", &hw_mo_prim_commands_[21]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "velocity", &hw_mo_prim_commands_[22]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "acceleration", &hw_mo_prim_commands_[23]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface("motion_primitive", "move_time", &hw_mo_prim_commands_[24]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "blend_radius", &hw_mo_prim_commands_[21]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "velocity", &hw_mo_prim_commands_[22]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "acceleration", &hw_mo_prim_commands_[23]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface("motion_primitive", "move_time", &hw_mo_prim_commands_[24]));
 
   return command_interfaces;
 }
 
-
-hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_activate(
-  const rclcpp_lifecycle::State & /*previous_state*/)
+hardware_interface::CallbackReturn
+MotionPrimitivesUrDriver::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Activating Hardware Interface");
-  ready_for_new_primitive_ = true; // set to true to allow sending new commands
+  ready_for_new_primitive_ = true;  // set to true to allow sending new commands
   return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn MotionPrimitivesUrDriver::on_deactivate(
-  const rclcpp_lifecycle::State & /*previous_state*/)
+hardware_interface::CallbackReturn
+MotionPrimitivesUrDriver::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Deactivating Hardware Interface");
   ur_driver_.reset();
   return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type MotionPrimitivesUrDriver::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+hardware_interface::return_type MotionPrimitivesUrDriver::read(const rclcpp::Time& /*time*/,
+                                                               const rclcpp::Duration& /*period*/)
 {
   if (!rtde_comm_has_been_started_) {
     ur_driver_->startRTDECommunication();
@@ -303,20 +330,18 @@ hardware_interface::return_type MotionPrimitivesUrDriver::read(
   }
 
   // Update the state interfaces
-  hw_mo_prim_states_[0] = current_execution_status_;    // 0=idle, 1=executing, 2=success, 3=error
+  hw_mo_prim_states_[0] = current_execution_status_;  // 0=idle, 1=executing, 2=success, 3=error
   hw_mo_prim_states_[1] = static_cast<double>(ready_for_new_primitive_);
-
 
   return hardware_interface::return_type::OK;
 }
 
-
-hardware_interface::return_type MotionPrimitivesUrDriver::write(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+hardware_interface::return_type MotionPrimitivesUrDriver::write(const rclcpp::Time& /*time*/,
+                                                                const rclcpp::Duration& /*period*/)
 {
   // Check if we have a new command
   if (!std::isnan(hw_mo_prim_commands_[0])) {
-    ready_for_new_primitive_ = false; // set to false to indicate that the driver is busy handeling a command
+    ready_for_new_primitive_ = false;  // set to false to indicate that the driver is busy handling a command
     if (hw_mo_prim_commands_[0] == MotionType::STOP_MOTION) {
       // Stop command received
       std::lock_guard<std::mutex> guard(stop_mutex_);
@@ -326,7 +351,8 @@ hardware_interface::return_type MotionPrimitivesUrDriver::write(
         std::fill(hw_mo_prim_commands_.begin(), hw_mo_prim_commands_.end(), std::numeric_limits<double>::quiet_NaN());
       }
     } else {
-      // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Command of type: %f recived", hw_mo_prim_commands_[0]);
+      // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+      //       "Command of type: %f received", hw_mo_prim_commands_[0]);
       std::lock_guard<std::mutex> guard(command_mutex_);
       if (!new_command_available_) {
         // Copy command to thread-safe buffer
@@ -343,7 +369,6 @@ hardware_interface::return_type MotionPrimitivesUrDriver::write(
     ur_driver_->writeKeepalive();
   }
 
-
   return hardware_interface::return_type::OK;
 }
 
@@ -355,8 +380,8 @@ void MotionPrimitivesUrDriver::asyncStopMotionThread()
         std::lock_guard<std::mutex> guard(stop_mutex_);
         new_stop_available_ = false;
       }
-      // Stop the motion
-      // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "[asyncStopMotionThread] New stop command available");
+      // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+      //       "[asyncStopMotionThread] New stop command available");
       processStopCommand();
     }
 
@@ -369,29 +394,31 @@ void MotionPrimitivesUrDriver::asyncStopMotionThread()
 void MotionPrimitivesUrDriver::processStopCommand()
 {
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received STOP command");
-  // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Trajectory running: %d", instruction_executor_->isTrajectoryRunning());
-  
+  // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Trajectory running: %d",
+  //       instruction_executor_->isTrajectoryRunning());
+
   // delete motion sequence
   build_motion_sequence_ = false;
   motion_sequence_.clear();
 
   if (instruction_executor_->isTrajectoryRunning()) {
     RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Stopping motion ...");
-    if(!instruction_executor_->cancelMotion()) {
+    if (!instruction_executor_->cancelMotion()) {
       RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Failed to stop motion");
       current_execution_status_ = ExecutionState::ERROR;
     } else {
       RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Motion stopped successfully");
       current_execution_status_ = ExecutionState::IDLE;
-      ready_for_new_primitive_ = true; // set to true to allow sending new commands
+      ready_for_new_primitive_ = true;  // set to true to allow sending new commands
     }
-  }
-  else {
+  } else {
     RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "No motion to stop");
     current_execution_status_ = ExecutionState::IDLE;
-    ready_for_new_primitive_ = true; // set to true to allow sending new commands
+    ready_for_new_primitive_ = true;  // set to true to allow sending new commands
   }
-  RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processStopCommand] After executing stop: current_execution_status_ = %d", current_execution_status_.load());
+  RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+              " [processStopCommand] After executing stop: current_execution_status_ = %d",
+              current_execution_status_.load());
 }
 
 void MotionPrimitivesUrDriver::asyncCommandThread()
@@ -423,143 +450,168 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
     return;
   }
   double velocity, acceleration, move_time;
-  double motion_type = command[0]; 
+  double motion_type = command[0];
   double blend_radius = command[21];
 
   try {
     switch (static_cast<uint8_t>(motion_type)) {
-      case MotionType::MOTION_SEQUENCE_START: {
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received MOTION_SEQUENCE_START: add all following commands to the motion sequence.");
+      case MotionType::MOTION_SEQUENCE_START:
+      {
+        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received MOTION_SEQUENCE_START: add all following "
+                                                                    "commands to the motion sequence.");
         build_motion_sequence_ = true;  // set flag to put all following commands into the motion sequence
         motion_sequence_.clear();
-        ready_for_new_primitive_ = true; // set to true to allow sending new commands
+        ready_for_new_primitive_ = true;  // set to true to allow sending new commands
         return;
       }
 
-      case MotionType::MOTION_SEQUENCE_END: {
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received MOTION_SEQUENCE_END: executing motion sequence with %zu motion primitives", motion_sequence_.size());
+      case MotionType::MOTION_SEQUENCE_END:
+      {
+        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                    "Received MOTION_SEQUENCE_END: executing motion sequence with %zu motion primitives",
+                    motion_sequence_.size());
         build_motion_sequence_ = false;
         current_execution_status_ = ExecutionState::EXECUTING;
         bool success = instruction_executor_->executeMotion(motion_sequence_);
         current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing motion sequence: current_execution_status_ = %d", current_execution_status_.load());
+        RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                    " [processMotionCommand] After executing motion sequence: current_execution_status_ = %d",
+                    current_execution_status_.load());
         motion_sequence_.clear();
-        if(success){
-          ready_for_new_primitive_ = true; // set to true to allow sending new commands
+        if (success) {
+          ready_for_new_primitive_ = true;  // set to true to allow sending new commands
         }
         return;
       }
 
-      case MotionType::LINEAR_JOINT: { // moveJ
+      case MotionType::LINEAR_JOINT:
+      {  // moveJ
         // Check if joint positions are valid
         for (int i = 1; i <= 6; ++i) {
-            if (std::isnan(command[i])) {
-                RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: joint positions contain NaN values");
-                current_execution_status_ = ExecutionState::ERROR;
-                return;
-            }
+          if (std::isnan(command[i])) {
+            RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: joint positions "
+                                                                         "contain NaN values");
+            current_execution_status_ = ExecutionState::ERROR;
+            return;
+          }
         }
-        urcl::vector6d_t joint_positions = {command[1], command[2], command[3], command[4], command[5], command[6]};
-        
+        urcl::vector6d_t joint_positions = { command[1], command[2], command[3], command[4], command[5], command[6] };
+
         // Get move_time OR (velocity AND acceleration)
         if (!getMovetimeOrVelocityAndAcceleration(command, velocity, acceleration, move_time)) {
-          RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid move_time, velocity or acceleration values");
+          RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid move_time, velocity or acceleration "
+                                                                       "values");
           current_execution_status_ = ExecutionState::ERROR;
           return;
         }
 
-        
         // Check if the command is part of a motion sequence or a single command
-        if (build_motion_sequence_) {   // Add command to motion sequence
-          motion_sequence_.emplace_back(
-            std::make_shared<urcl::control::MoveJPrimitive>(
-                joint_positions, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration, velocity));        
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-                "Added moveJ to motion sequence with joint positions: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
-                joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3], joint_positions[4], joint_positions[5],
-                velocity, acceleration, move_time, blend_radius);
-          ready_for_new_primitive_ = true; // set to true to allow sending new commands
+        if (build_motion_sequence_) {  // Add command to motion sequence
+          motion_sequence_.emplace_back(std::make_shared<urcl::control::MoveJPrimitive>(
+              joint_positions, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)),
+              acceleration, velocity));
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      "Added moveJ to motion sequence with joint positions: [%f, %f, %f, %f, %f, %f]",
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", joint_positions[0],
+                      joint_positions[1], joint_positions[2], joint_positions[3], joint_positions[4],
+                      joint_positions[5], velocity, acceleration, move_time, blend_radius);
+          ready_for_new_primitive_ = true;  // set to true to allow sending new commands
           return;
-        }
-        else{ // execute single primitive directly
+        } else {  // execute single primitive directly
           current_execution_status_ = ExecutionState::EXECUTING;
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-                "Executing moveJ with joint positions: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
-                joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3], joint_positions[4], joint_positions[5]
-                , velocity, acceleration, move_time, blend_radius);
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      "Executing moveJ with joint positions: [%f, %f, %f, %f, %f, %f],"
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
+                      joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
           bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
           current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveJ: current_execution_status_ = %d", current_execution_status_.load());
-          if(success){
-            ready_for_new_primitive_ = true; // set to true to allow sending new commands
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      " [processMotionCommand] After executing moveJ: current_execution_status_ = %d",
+                      current_execution_status_.load());
+          if (success) {
+            ready_for_new_primitive_ = true;  // set to true to allow sending new commands
           }
           return;
         }
         break;
       }
 
-      case MotionType::LINEAR_CARTESIAN: { // moveL
+      case MotionType::LINEAR_CARTESIAN:
+      {  // moveL
         // Check if pose values (position and quaternion) are valid
         for (int i = 7; i <= 13; ++i) {
-            if (std::isnan(command[i])) {
-                RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: pose contains NaN values");
-                current_execution_status_ = ExecutionState::ERROR;
-                return;
-            }
+          if (std::isnan(command[i])) {
+            RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: pose contains NaN "
+                                                                         "values");
+            current_execution_status_ = ExecutionState::ERROR;
+            return;
+          }
         }
         double rx, ry, rz;
         quaternionToEuler(command[10], command[11], command[12], command[13], rx, ry, rz);
-        urcl::Pose pose = { command[7], command[8], command[9], rx, ry, rz};
+        urcl::Pose pose = { command[7], command[8], command[9], rx, ry, rz };
 
         // Get move_time OR (velocity AND acceleration)
         if (!getMovetimeOrVelocityAndAcceleration(command, velocity, acceleration, move_time)) {
-          RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid move_time, velocity or acceleration values");
+          RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid move_time, velocity or acceleration "
+                                                                       "values");
           current_execution_status_ = ExecutionState::ERROR;
           return;
         }
 
         // Check if the command is part of a motion sequence or a single command
-        if (build_motion_sequence_) {   // Add command to motion sequence
-          motion_sequence_.emplace_back(
-            std::make_shared<urcl::control::MoveLPrimitive>(
-                pose, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration, velocity));
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-                "Added  moveL to motion sequence with pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
-                pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time, blend_radius);
-          ready_for_new_primitive_ = true; // set to true to allow sending new commands
+        if (build_motion_sequence_) {  // Add command to motion sequence
+          motion_sequence_.emplace_back(std::make_shared<urcl::control::MoveLPrimitive>(
+              pose, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration,
+              velocity));
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      "Added  moveL to motion sequence with pose: [%f, %f, %f, %f, %f, %f],"
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
+                      blend_radius);
+          ready_for_new_primitive_ = true;  // set to true to allow sending new commands
           return;
-        } 
-        else{ // execute single primitive directly
+        } else {  // execute single primitive directly
           current_execution_status_ = ExecutionState::EXECUTING;
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-                  "Executing moveL with pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f", 
-                  pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time, blend_radius);
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      "Executing moveL with pose: [%f, %f, %f, %f, %f, %f],"
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
+                      blend_radius);
           bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
           current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveL: current_execution_status_ = %d", current_execution_status_.load());
-          if(success){
-            ready_for_new_primitive_ = true; // set to true to allow sending new commands
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      " [processMotionCommand] After executing moveL: current_execution_status_ = %d",
+                      current_execution_status_.load());
+          if (success) {
+            ready_for_new_primitive_ = true;  // set to true to allow sending new commands
           }
           return;
         }
         break;
       }
 
-      case MotionType::CIRCULAR_CARTESIAN: { //CIRC
+      case MotionType::CIRCULAR_CARTESIAN:
+      {  // CIRC
         // Check if pose values (position and quaternion) are valid
         for (int i = 7; i <= 20; ++i) {
           if (std::isnan(command[i])) {
-              RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: pose contains NaN values");
-              current_execution_status_ = ExecutionState::ERROR;
-              return;
+            RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: pose contains NaN "
+                                                                         "values");
+            current_execution_status_ = ExecutionState::ERROR;
+            return;
           }
         }
 
-        int32_t mode = 0; // 0: Unconstrained mode, 1: Fixed mode (https://tools.pages.cba.mit.edu/Universal_Robotics_UR10_Robot_Arm/scriptManual-3.5.4.pdf )
+        // 0: Unconstrained mode, 1: Fixed mode
+        // (https://tools.pages.cba.mit.edu/Universal_Robotics_UR10_Robot_Arm/scriptManual-3.5.4.pdf)
+        int32_t mode = 0;
 
         // Get velocity and acceleration)
         if (!getMovetimeOrVelocityAndAcceleration(command, velocity, acceleration, move_time)) {
-          RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid move_time, velocity or acceleration values");
+          RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid move_time, velocity or acceleration "
+                                                                       "values");
           current_execution_status_ = ExecutionState::ERROR;
           return;
         }
@@ -571,48 +623,53 @@ void MotionPrimitivesUrDriver::processMotionCommand(const std::vector<double>& c
         double goal_rx, goal_ry, goal_rz;
         quaternionToEuler(command[10], command[11], command[12], command[13], goal_rx, goal_ry, goal_rz);
         urcl::Pose goal_pose = { command[7], command[8], command[9], goal_rx, goal_ry, goal_rz };
-        
+
         // Check if the command is part of a motion sequence or a single command
-        if (build_motion_sequence_) {   // Add command to motion sequence
-          motion_sequence_.emplace_back(
-            std::make_shared<urcl::control::MoveCPrimitive>(
-                via_pose, goal_pose, blend_radius, acceleration, velocity, mode));
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-                "Added  moveC to motion sequence with via_pose: [%f, %f, %f, %f, %f, %f], goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, blend_radius: %f, mode: %d", 
-                via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz,
-                goal_pose.x, goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz,
-                velocity, acceleration, blend_radius, mode); 
-          ready_for_new_primitive_ = true; // set to true to allow sending new commands
+        if (build_motion_sequence_) {  // Add command to motion sequence
+          motion_sequence_.emplace_back(std::make_shared<urcl::control::MoveCPrimitive>(
+              via_pose, goal_pose, blend_radius, acceleration, velocity, mode));
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      "Added  moveC to motion sequence with via_pose: [%f, %f, %f, %f, %f, %f],"
+                      "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
+                      "acceleration: %f, blend_radius: %f, mode: %d",
+                      via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
+                      goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
+                      blend_radius, mode);
+          ready_for_new_primitive_ = true;  // set to true to allow sending new commands
           return;
-        } 
-        else{ // execute single primitive directly
+        } else {  // execute single primitive directly
           current_execution_status_ = ExecutionState::EXECUTING;
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), 
-                "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f], goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f, acceleration: %f, blend_radius: %f, mode: %d", 
-                via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz,
-                goal_pose.x, goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz,
-                velocity, acceleration, blend_radius, mode);          
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f],"
+                      "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
+                      "acceleration: %f, blend_radius: %f, mode: %d",
+                      via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
+                      goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
+                      blend_radius, mode);
           bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
           current_execution_status_ = success ? ExecutionState::SUCCESS : ExecutionState::ERROR;
-          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), " [processMotionCommand] After executing moveC: current_execution_status_ = %d", current_execution_status_.load());
-          if(success){
-            ready_for_new_primitive_ = true; // set to true to allow sending new commands
+          RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                      " [processMotionCommand] After executing moveC: current_execution_status_ = %d",
+                      current_execution_status_.load());
+          if (success) {
+            ready_for_new_primitive_ = true;  // set to true to allow sending new commands
           }
           return;
         }
         break;
       }
 
-      default: {
-        RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Invalid motion command: motion type %f is not supported", motion_type);
+      default:
+      {
+        RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+                     "Invalid motion command: motion type %f is not supported", motion_type);
         current_execution_status_ = ExecutionState::ERROR;
         return;
       }
     }
-
   } catch (const std::exception& e) {
-      RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Failed to execute motion command: %s", e.what());
-      current_execution_status_ = ExecutionState::ERROR;
+    RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Failed to execute motion command: %s", e.what());
+    current_execution_status_ = ExecutionState::ERROR;
   }
 }
 
@@ -621,9 +678,11 @@ void MotionPrimitivesUrDriver::handleRobotProgramState(bool program_running)
   robot_program_running_ = program_running;
 }
 
-// Convert quaternion to Euler angles (roll, pitch, yaw) 
+// Convert quaternion to Euler angles (roll, pitch, yaw)
 // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-void MotionPrimitivesUrDriver::quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz) {
+void MotionPrimitivesUrDriver::quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry,
+                                                 double& rz)
+{
   // roll (x-axis rotation)
   double sinr_cosp = 2 * (qw * qx + qy * qz);
   double cosr_cosp = 1 - 2 * (qx * qx + qy * qy);
@@ -639,43 +698,45 @@ void MotionPrimitivesUrDriver::quaternionToEuler(double qx, double qy, double qz
   double cosy_cosp = 1 - 2 * (qy * qy + qz * qz);
   rz = std::atan2(siny_cosp, cosy_cosp);
 
-  // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Converted quaternion [%f, %f, %f, %f] to Euler angles: [%f, %f, %f]",qx, qy, qz, qw, rx, ry, rz);
+  // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
+  //       "Converted quaternion [%f, %f, %f, %f] to Euler angles: [%f, %f, %f]",
+  //       qx, qy, qz, qw, rx, ry, rz);
 }
 
-bool MotionPrimitivesUrDriver::getMovetimeOrVelocityAndAcceleration(const std::vector<double>& command, double& velocity, double& acceleration, double& move_time) {
+bool MotionPrimitivesUrDriver::getMovetimeOrVelocityAndAcceleration(const std::vector<double>& command,
+                                                                    double& velocity, double& acceleration,
+                                                                    double& move_time)
+{
   // Check if move_time is valid
   if (!std::isnan(command[24]) && command[24] > 0.0) {
     move_time = command[24];
-    velocity = 1.0;        // If move_time is valid, velocity and acceleration are ignored in moveJ and moveL, but must be > 0.0
-    acceleration = 1.0;   
+    // If move_time is valid, velocity and acceleration are ignored in moveJ and moveL, but must be > 0.0
+    velocity = 1.0;
+    acceleration = 1.0;
     return true;
-  }
-  // If no valid move_time, check if velocity and acceleration are valid
-  else if (!std::isnan(command[22]) && command[22] > 0.0 &&
-           !std::isnan(command[23]) && command[23] > 0.0) {
+  } else if (!std::isnan(command[22]) && command[22] > 0.0 && !std::isnan(command[23]) && command[23] > 0.0) {
+    // If no valid move_time, check if velocity and acceleration are valid
     velocity = command[22];
     acceleration = command[23];
     move_time = 0.0;
     return true;
-  }
-  // Invalid values
-  else {
-    RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "move_time, velocity and acceleration are all invalid");
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "move_time, velocity and acceleration are all "
+                                                                 "invalid");
     return false;
   }
 }
 
-bool MotionPrimitivesUrDriver::getVelocityAndAcceleration(const std::vector<double>& command, double& velocity, double& acceleration, double& move_time) {
+bool MotionPrimitivesUrDriver::getVelocityAndAcceleration(const std::vector<double>& command, double& velocity,
+                                                          double& acceleration, double& move_time)
+{
   // Check if velocity and acceleration are valid
-  if (!std::isnan(command[22]) && command[22] > 0.0 &&
-           !std::isnan(command[23]) && command[23] > 0.0) {
+  if (!std::isnan(command[22]) && command[22] > 0.0 && !std::isnan(command[23]) && command[23] > 0.0) {
     velocity = command[22];
     acceleration = command[23];
     move_time = 0.0;
     return true;
-  }
-  // Invalid values
-  else {
+  } else {
     RCLCPP_ERROR(rclcpp::get_logger("MotionPrimitivesUrDriver"), "velocity or acceleration is invalid");
     return false;
   }
@@ -685,5 +746,4 @@ bool MotionPrimitivesUrDriver::getVelocityAndAcceleration(const std::vector<doub
 
 #include "pluginlib/class_list_macros.hpp"
 
-PLUGINLIB_EXPORT_CLASS(
-  ur_robot_driver::MotionPrimitivesUrDriver, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(ur_robot_driver::MotionPrimitivesUrDriver, hardware_interface::SystemInterface)

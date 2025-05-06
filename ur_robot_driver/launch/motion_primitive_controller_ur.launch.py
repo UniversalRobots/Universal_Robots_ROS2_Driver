@@ -109,13 +109,13 @@ def launch_setup(context):
         ],
     )
 
-    urscript_interface = Node(
-        package="ur_robot_driver",
-        executable="urscript_interface",
-        parameters=[{"robot_ip": robot_ip}],
-        output="screen",
-        condition=UnlessCondition(use_mock_hardware),
-    )
+    # urscript_interface = Node(
+    #     package="ur_robot_driver",
+    #     executable="urscript_interface",
+    #     parameters=[{"robot_ip": robot_ip}],
+    #     output="screen",
+    #     condition=UnlessCondition(use_mock_hardware),
+    # )
 
     controller_stopper_node = Node(
         package="ur_robot_driver",
@@ -169,23 +169,21 @@ def launch_setup(context):
         "joint_state_broadcaster",
         "motion_primitive_controller",
     ]
-        # "io_and_status_controller",
-        # "speed_scaling_state_broadcaster",
-        # "force_torque_sensor_broadcaster",
-        # "tcp_pose_broadcaster",
-        # "ur_configuration_controller",
+    # "io_and_status_controller",
+    # "speed_scaling_state_broadcaster",
+    # "force_torque_sensor_broadcaster",
+    # "tcp_pose_broadcaster",
+    # "ur_configuration_controller",
 
-    controllers_inactive = [
-        
-    ]
-        # "scaled_joint_trajectory_controller",
-        # "joint_trajectory_controller",
-        # "forward_velocity_controller",
-        # "forward_position_controller",
-        # "force_mode_controller",
-        # "passthrough_trajectory_controller",
-        # "freedrive_mode_controller",
-    
+    controllers_inactive = []
+    # "scaled_joint_trajectory_controller",
+    # "joint_trajectory_controller",
+    # "forward_velocity_controller",
+    # "forward_position_controller",
+    # "force_mode_controller",
+    # "passthrough_trajectory_controller",
+    # "freedrive_mode_controller",
+
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
         controllers_inactive.remove(initial_joint_controller.perform(context))
@@ -204,7 +202,6 @@ def launch_setup(context):
 
     if controllers_inactive:  # Check if controllers_inactive is not empty
         controller_spawners.append(controller_spawner(controllers_inactive, active=False))
-
 
     rsp = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(description_launchfile),
@@ -256,7 +253,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "driver_type", 
+            "driver_type",
             default_value="motion_primitive",
             description="Type of driver to use: standard (standard ur_driver) or motion_primitive.",
             choices=["standard", "motion_primitive"],
