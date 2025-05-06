@@ -117,3 +117,29 @@ On the e-Series the robot has to be in :ref:`remote control mode <operation_mode
 .. |play_button| image:: ../resources/play_button.svg
                  :height: 20px
                  :width: 20px
+
+When I start the driver, I get a symbol lookup error
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This error can show for example like this:
+
+.. code-block:: text
+
+   [ros2_control_node-1] /opt/ros/rolling/lib/controller_manager/ros2_control_node: symbol lookup error: /opt/ros/rolling/lib/libpal_statistics_msgs__rosidl_typesupport_fastrtps_cpp.so: undefined symbol: _ZN8eprosima7fastcdr3Cdr9serializeEj
+   [ERROR] [ros2_control_node-1]: process has died [pid 251, exit code 127, cmd '/opt/ros/rolling/lib/controller_manager/ros2_control_node --ros-args --params-file /opt/ros/rolling/share/ur_robot_driver/config/ur5e_update_rate.yaml --params-file /tmp/launch_params_cdtxg1uh'].
+
+
+When an upstream package introduces an ABI break, you may see this error. This can happen in two
+situations:
+
+- You have installed ROS a longer time ago and you have installed the driver package recently.
+- You have compiled the driver from source and you have updated your system, so the upstream
+  libraries are there in a newer (ABI incompatible) version.
+
+When this happens, it is best to update your complete system using
+
+.. code-block:: console
+
+   $ sudo apt update && sudo apt dist-upgrade
+
+and then recompile your workspace if you have built things from source.
