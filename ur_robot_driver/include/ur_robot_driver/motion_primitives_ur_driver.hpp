@@ -73,9 +73,9 @@ private:
   void asyncStopMotionThread();
   void processMotionCommand(const std::vector<double>& command);
   void processStopCommand();
+  void processResetStopCommand();
   bool getMovetimeOrVelocityAndAcceleration(const std::vector<double>& command, double& velocity, double& acceleration,
                                             double& move_time);
-
   bool getVelocityAndAcceleration(const std::vector<double>& command, double& velocity, double& acceleration,
                                   double& move_time);
 
@@ -90,10 +90,10 @@ private:
   std::vector<double> pending_command_;
   std::atomic_bool new_command_available_{ false };
   std::atomic_bool new_stop_available_{ false };
-
-  // Execution status
+  std::atomic_bool new_reset_stop_available_{ false };
+  
+  // Status for communication with controller
   std::atomic<int8_t> current_execution_status_{ ExecutionState::IDLE };
-  // Flag to indicate if the hw-interface is ready for a new motion primitive
   std::atomic_bool ready_for_new_primitive_{ false };
 
   // Command and state interfaces for the motion primitives
@@ -101,7 +101,6 @@ private:
   std::vector<double> hw_mo_prim_states_;
 
   std::shared_ptr<urcl::UrDriver> ur_driver_;
-  // Shared pointer to the InstructionExecutor, which is responsible for executing motion commands.
   std::shared_ptr<urcl::InstructionExecutor> instruction_executor_;
 
   // Helper class to handle state interface stuff from the URPositionHardwareInterface

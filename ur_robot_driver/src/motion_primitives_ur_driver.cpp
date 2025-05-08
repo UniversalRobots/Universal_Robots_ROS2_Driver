@@ -347,13 +347,19 @@ hardware_interface::return_type MotionPrimitivesUrDriver::write(const rclcpp::Ti
   if (!std::isnan(hw_mo_prim_commands_[0])) {
     ready_for_new_primitive_ = false;  // set to false to indicate that the driver is busy handling a command
     if (hw_mo_prim_commands_[0] == MotionType::STOP_MOTION) {
-      // Stop command received
       std::lock_guard<std::mutex> guard(stop_mutex_);
       if (!new_stop_available_) {
         new_stop_available_ = true;
         // Reset command interfaces
         std::fill(hw_mo_prim_commands_.begin(), hw_mo_prim_commands_.end(), std::numeric_limits<double>::quiet_NaN());
       }
+    }else if (hw_mo_prim_commands_[0] == MotionType::RESET_STOP) {
+        std::lock_guard<std::mutex> guard(stop_mutex_);
+        if (!new_reset_stop_available_) {
+          new_reset_stop_available_ = true;
+          // Reset command interfaces
+          std::fill(hw_mo_prim_commands_.begin(), hw_mo_prim_commands_.end(), std::numeric_limits<double>::quiet_NaN());
+        }
     } else {
       // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
       //       "Command of type: %f received", hw_mo_prim_commands_[0]);
@@ -368,7 +374,7 @@ hardware_interface::return_type MotionPrimitivesUrDriver::write(const rclcpp::Ti
     }
   }
 
-  // Send keepalive if current_execution_status_ in not EXECUTING
+  // Send keepalive if current_execution_status_ is not EXECUTING
   if (ur_driver_ && current_execution_status_ != ExecutionState::EXECUTING) {
     ur_driver_->writeKeepalive();
   }
@@ -380,15 +386,14 @@ void MotionPrimitivesUrDriver::asyncStopMotionThread()
 {
   while (!async_thread_shutdown_) {
     if (new_stop_available_) {
-      {
-        std::lock_guard<std::mutex> guard(stop_mutex_);
-        new_stop_available_ = false;
-      }
-      // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
-      //       "[asyncStopMotionThread] New stop command available");
+      std::lock_guard<std::mutex> guard(stop_mutex_);
+      new_stop_available_ = false;
       processStopCommand();
+    } else if (new_reset_stop_available_) {
+      std::lock_guard<std::mutex> guard(stop_mutex_);
+      new_reset_stop_available_ = false;
+      processResetStopCommand();
     }
-
     // Small sleep to prevent busy waiting
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
@@ -398,9 +403,6 @@ void MotionPrimitivesUrDriver::asyncStopMotionThread()
 void MotionPrimitivesUrDriver::processStopCommand()
 {
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received STOP command");
-  // RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Trajectory running: %d",
-  //       instruction_executor_->isTrajectoryRunning());
-
   // delete motion sequence
   build_motion_sequence_ = false;
   motion_sequence_.clear();
@@ -412,17 +414,24 @@ void MotionPrimitivesUrDriver::processStopCommand()
       current_execution_status_ = ExecutionState::ERROR;
     } else {
       RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Motion stopped successfully");
-      current_execution_status_ = ExecutionState::IDLE;
-      ready_for_new_primitive_ = true;  // set to true to allow sending new commands
+      current_execution_status_ = ExecutionState::STOPPED;
+      ready_for_new_primitive_ = false;
     }
   } else {
     RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "No motion to stop");
-    current_execution_status_ = ExecutionState::IDLE;
-    ready_for_new_primitive_ = true;  // set to true to allow sending new commands
+    current_execution_status_ = ExecutionState::STOPPED;
+    ready_for_new_primitive_ = false; 
   }
   RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"),
               " [processStopCommand] After executing stop: current_execution_status_ = %d",
               current_execution_status_.load());
+}
+
+void MotionPrimitivesUrDriver::processResetStopCommand()
+{
+  RCLCPP_INFO(rclcpp::get_logger("MotionPrimitivesUrDriver"), "Received RESET_STOP command");
+  current_execution_status_ = ExecutionState::IDLE;
+  ready_for_new_primitive_ = true;  // set to true to allow sending new commands
 }
 
 void MotionPrimitivesUrDriver::asyncCommandThread()

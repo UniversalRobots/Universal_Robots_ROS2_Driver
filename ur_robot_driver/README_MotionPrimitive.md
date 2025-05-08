@@ -117,7 +117,10 @@ ros2 run ur_robot_driver send_dummy_motion_primitives.py
 ## Publish stop motion command
 ```
 ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_interfaces/msg/MotionPrimitive "{type: 66, blend_radius: 0.0, additional_arguments: [], poses: [], joint_positions: []}" --once
-
+```
+## Reset stop motion command
+```
+ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_interfaces/msg/MotionPrimitive "{type: 67, blend_radius: 0.0, additional_arguments: [], poses: [], joint_positions: []}" --once
 ```
 
 ## Start UR-Sim
