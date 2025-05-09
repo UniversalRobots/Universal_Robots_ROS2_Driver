@@ -30,6 +30,7 @@ jobs:
             --cache-exclude-status 429
             --max-cache-age 2d
             './**/*.md' './**/*.html' './**/*.rst' './**/*.cpp' './**/*.h' './**/*.py'
+            --exclude '^http://192\.168\.56\.101'
       - name: Save lychee cache
         uses: actions/cache/save@v4
         if: always()
