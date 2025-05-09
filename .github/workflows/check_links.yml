@@ -12,7 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Restore lychee cache
-        uses: actions/cache@v4
+        id: restore-cache
+        uses: actions/cache/restore@v4
         with:
           path: .lycheecache
           key: cache-lychee
@@ -29,3 +30,9 @@ jobs:
             --cache-exclude-status 429
             --max-cache-age 2d
             './**/*.md' './**/*.html' './**/*.rst' './**/*.cpp' './**/*.h' './**/*.py'
+      - name: Save lychee cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .lycheecache
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
