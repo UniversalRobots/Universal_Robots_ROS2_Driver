@@ -16,7 +16,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .lycheecache
-          key: cache-lychee
+          key: cache-lychee-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: cache-lychee
       - name: Link Checker
         id: lychee
