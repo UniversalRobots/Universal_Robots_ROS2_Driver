@@ -17,7 +17,7 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 
 # Architecture
 
-![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_ur_whiteBackground.drawio.png)
+![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_ur.drawio.png)
 
 # Command and State Interfaces
 
@@ -47,6 +47,7 @@ These interfaces are used to communicate the internal status of the hardware int
   - `EXECUTING`: Currently executing a primitive
   - `SUCCESS`: Last command finished successfully
   - `ERROR`: An error occurred during execution
+  - `STOPPED`: The robot was stopped using the `STOP_MOTION` command and must be reset with the `RESET_STOP` command before executing new commands.
 - `ready_for_new_primitive`: Boolean flag indicating whether the interface is ready to receive a new motion primitive
 
 In addition to these, the driver also provides all standard state interfaces from the original UR hardware interface (e.g., joint positions, velocities). These are used by components like the `joint_state_broadcaster` and allow tools like RViz to visualize the current robot state.
@@ -60,6 +61,7 @@ In addition to these, the driver also provides all standard state interfaces fro
   - `CIRCULAR_CARTESIAN`
 - Additional helper types:
   - `STOP_MOTION`: Immediately stops the current robot motion and clears all pending primitives in the controller's queue.
+  - `RESET_STOP`: After `RESET_STOP`, new commands can get handled.
   - `MOTION_SEQUENCE_START` / `MOTION_SEQUENCE_END`: Define a motion sequence block. All primitives between these two markers will be executed as a single, continuous sequence. This allows seamless transitions (blending) between primitives.
 
 ![MotionPrimitiveExecutionWithHelperTypes](doc/motion_primitive_ur_driver/MotionPrimitiveExecutionWithHelperTypes_whiteBackground.drawio.png)
@@ -78,7 +80,7 @@ This approach offers two key advantages:
 
 The `write()` method checks whether a new motion primitive command has been received from the controller via the command interfaces. If a new command is present:
 
-1. If the command is `STOP_MOTION`, a flag is set which leads to interrupting the current motion inside the `asyncStopMotionThread()`.
+1. If the command is `STOP_MOTION`, a flag is set which leads to interrupting the current motion inside the `asyncStopMotionThread()`. If the command is `RESET_STOP`, the flag is reset, and new motion primitives can be received and executed.
 2. For other commands, they are passed to the `asyncCommandThread()` and executed asynchronously. Individual primitives are executed directly via the Instruction Executor.
 If a `MOTION_SEQUENCE_START` command is received, all subsequent primitives are added to a motion sequence. Once `MOTION_SEQUENCE_END` is received, the entire sequence is executed via the Instruction Executor.
 
@@ -88,7 +90,7 @@ Threading is required since calls to the Instruction Executor are blocking. Offl
 
 The `read()` method:
 
-- Publishes the `execution_status` over a state interface with possible values: `IDLE`, `EXECUTING`, `SUCCESS`, `ERROR`.
+- Publishes the `execution_status` over a state interface with possible values: `IDLE`, `EXECUTING`, `SUCCESS`, `ERROR`, `STOPPED`.
 - Publishes `ready_for_new_primitive` over a state interface to signal whether the interface is ready to receive a new primitive.
 - Handles additional state interfaces adopted from the UR driver, such as joint states, enabling RViz to visualize the current robot pose.
 
@@ -102,10 +104,6 @@ The standard UR hardware interface cannot run in parallel with this motion primi
 
 
 # Usage notes
-## Launch "normal" ur driver
-```
-ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=172.20.0.2 launch_rviz:=true
-```
 ## Launch motion_primitives_ur_driver
 ```
 ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur5e robot_ip:=172.20.0.2 launch_rviz:=true
