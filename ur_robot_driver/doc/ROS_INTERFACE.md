@@ -102,103 +102,103 @@ Should the tool's RS485 interface be forwarded to the ROS machine? This is only 
 
 #### Advertised Services
 
-##### add_to_log ([ur_dashboard_msgs/AddToLog](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/AddToLog.html))
+##### add_to_log ([ur_dashboard_msgs/AddToLog](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/AddToLog.html))
 
 Service to add a message to the robot's log
 
-##### brake_release ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### brake_release ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
 
-##### clear_operational_mode ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### clear_operational_mode ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 If this service is called the operational mode can again be changed from PolyScope, and the user password is enabled.
 
-##### close_popup ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### close_popup ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Close a (non-safety) popup on the teach pendant.
 
-##### close_safety_popup ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### close_safety_popup ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Close a safety popup on the teach pendant.
 
-##### connect ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### connect ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Service to reconnect to the dashboard server
 
-##### get_loaded_program ([ur_dashboard_msgs/GetLoadedProgram](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/GetLoadedProgram.html))
+##### get_loaded_program ([ur_dashboard_msgs/GetLoadedProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetLoadedProgram.html))
 
 Load a robot installation from a file
 
-##### get_robot_mode ([ur_dashboard_msgs/GetRobotMode](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/GetRobotMode.html))
+##### get_robot_mode ([ur_dashboard_msgs/GetRobotMode](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetRobotMode.html))
 
 Service to query the current robot mode
 
-##### get_safety_mode ([ur_dashboard_msgs/GetSafetyMode](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/GetSafetyMode.html))
+##### get_safety_mode ([ur_dashboard_msgs/GetSafetyMode](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetSafetyMode.html))
 
 Service to query the current safety mode
 
-##### load_installation ([ur_dashboard_msgs/Load](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/Load.html))
+##### load_installation ([ur_dashboard_msgs/Load](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/Load.html))
 
 Load a robot installation from a file
 
-##### load_program ([ur_dashboard_msgs/Load](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/Load.html))
+##### load_program ([ur_dashboard_msgs/Load](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/Load.html))
 
 Load a robot program from a file
 
-##### pause ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### pause ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Pause a running program.
 
-##### play ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### play ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Start execution of a previously loaded program
 
-##### popup ([ur_dashboard_msgs/Popup](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/Popup.html))
+##### popup ([ur_dashboard_msgs/Popup](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/Popup.html))
 
 Service to show a popup on the UR Teach pendant.
 
-##### power_off ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### power_off ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Power off the robot motors
 
-##### power_on ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### power_on ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Power on the robot motors. To fully start the robot, call 'brake_release' afterwards.
 
-##### program_running ([ur_dashboard_msgs/IsProgramRunning](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/IsProgramRunning.html))
+##### program_running ([ur_dashboard_msgs/IsProgramRunning](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/IsProgramRunning.html))
 
 Query whether there is currently a program running
 
-##### program_saved ([ur_dashboard_msgs/IsProgramSaved](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/IsProgramSaved.html))
+##### program_saved ([ur_dashboard_msgs/IsProgramSaved](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/IsProgramSaved.html))
 
 Query whether the current program is saved
 
-##### program_state ([ur_dashboard_msgs/GetProgramState](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/GetProgramState.html))
+##### program_state ([ur_dashboard_msgs/GetProgramState](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetProgramState.html))
 
 Service to query the current program state
 
-##### quit ([ur_dashboard_msgs/GetLoadedProgram](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/GetLoadedProgram.html))
+##### quit ([ur_dashboard_msgs/GetLoadedProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetLoadedProgram.html))
 
 Disconnect from the dashboard service.
 
-##### raw_request ([ur_dashboard_msgs/RawRequest](http://docs.ros.org/api/ur_dashboard_msgs/html/srv/RawRequest.html))
+##### raw_request ([ur_dashboard_msgs/RawRequest](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/RawRequest.html))
 
 General purpose service to send arbitrary messages to the dashboard server
 
-##### restart_safety ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### restart_safety ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Used when robot gets a safety fault or violation to restart the safety. After safety has been rebooted the robot will be in Power Off. NOTE: You should always ensure it is okay to restart the system. It is highly recommended to check the error log before using this command (either via PolyScope or e.g. ssh connection).
 
-##### shutdown ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### shutdown ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Shutdown the robot controller
 
-##### stop ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### stop ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Stop program execution on the robot
 
-##### unlock_protective_stop ([std_srvs/Trigger](http://docs.ros.org/api/std_srvs/html/srv/Trigger.html))
+##### unlock_protective_stop ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the cause of the protective stop is resolved before calling this service.
 
