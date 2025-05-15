@@ -64,7 +64,7 @@ In addition to these, the driver also provides all standard state interfaces fro
   - `RESET_STOP`: After `RESET_STOP`, new commands can get handled.
   - `MOTION_SEQUENCE_START` / `MOTION_SEQUENCE_END`: Define a motion sequence block. All primitives between these two markers will be executed as a single, continuous sequence. This allows seamless transitions (blending) between primitives.
 
-![MotionPrimitiveExecutionWithHelperTypes](doc/motion_primitive_ur_driver/MotionPrimitiveExecutionWithHelperTypes_whiteBackground.drawio.png)
+![MotionPrimitiveExecutionWithHelperTypes](doc/motion_primitive_ur_driver/MotionPrimitiveExecutionWithHelperTypes_UR.drawio.png)
 
 # Overview
 
