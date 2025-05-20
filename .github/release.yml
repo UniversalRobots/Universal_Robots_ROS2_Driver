@@ -1,0 +1,23 @@
+---
+changelog:
+  exclude:
+    labels:
+      - release
+  categories:
+    - title: Bugfixes
+      labels:
+        - bugfix
+    - title: New features
+      labels:
+        - enhancement
+    - title: Documentation
+      labels:
+        - documentation
+    - title: CI/ Repo / Packages
+      labels:
+        - CI
+        - package
+        - dependencies
+    - title: Other
+      labels:
+        - "*"
