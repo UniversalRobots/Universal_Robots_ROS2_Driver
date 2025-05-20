@@ -13,7 +13,7 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
   </tr>
   <tr>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/jazzy">jazzy</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
   </tr>
@@ -33,16 +33,16 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
       </a> <br />
     </td>
     <td> <!-- jazzy -->
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-main.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-main.yml/badge.svg?branch=main"
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-main.yml?query=event%3Aschedule+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-main.yml/badge.svg?event=schedule"
               alt="Jazzy Binary Main"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-testing.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-testing.yml/badge.svg?branch=main"
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-testing.yml?query=event%3Aschedule+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-binary-testing.yml/badge.svg?event=schedule"
               alt="Jazzy Binary Testing"/>
       </a> <br />
-      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-semi-binary-main.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-semi-binary-main.yml/badge.svg?branch=main"
+      <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-semi-binary-main.yml?query=event%3Aschedule+">
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/jazzy-semi-binary-main.yml/badge.svg?event=schedule"
               alt="Jazzy Semi-Binary Main"/>
       </a> <br />
     </td>
