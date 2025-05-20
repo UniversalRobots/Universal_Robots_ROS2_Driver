@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added controller to enable and disable tool contact (backport of `#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_) (`#1337 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1337>`_)
+* Contributors: mergify[bot]
+
 2.7.0 (2025-04-10)
 ------------------
 * Start executing passthrough trajectories earlier than all points are transferred. (backport of `#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_) (`#1335 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1335>`_)

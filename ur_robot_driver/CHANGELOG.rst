@@ -1,3 +1,11 @@
+Forthcoming
+-----------
+* [CI] Check links using lychee instead of a custom script (backport `#1355 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1355>`_) (`#1361 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1361>`_)
+* Add support for launching a UR15 robot (`#1359 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1359>`_)
+* tool_contact_test: Check result status directly (backport of `#1345 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1345>`_) (`#1353 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1353>`_)
+* Added controller to enable and disable tool contact (backport of `#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_) (`#1337 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1337>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 2.7.0 (2025-04-10)
 ------------------
 * Start executing passthrough trajectories earlier than all points are transferred. (backport of `#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_) (`#1335 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1335>`_)
