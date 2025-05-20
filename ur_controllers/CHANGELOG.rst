@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove deprecated code from sjtc (`#1362 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1362>`_)
+* SJTC: Update to latest upstream JTC API (`#1351 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1351>`_)
+* Contributors: Felix Exner
+
 3.2.1 (2025-04-11)
 ------------------
 
