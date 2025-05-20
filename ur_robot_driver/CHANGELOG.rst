@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.8.0 (2025-05-20)
+------------------
 * [CI] Check links using lychee instead of a custom script (backport `#1355 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1355>`_) (`#1361 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1361>`_)
 * Add support for launching a UR15 robot (`#1359 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1359>`_)
 * tool_contact_test: Check result status directly (backport of `#1345 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1345>`_) (`#1353 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1353>`_)

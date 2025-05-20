@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.8.0 (2025-05-20)
+------------------
 * Added controller to enable and disable tool contact (backport of `#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_) (`#1337 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1337>`_)
 * Contributors: mergify[bot]
 
