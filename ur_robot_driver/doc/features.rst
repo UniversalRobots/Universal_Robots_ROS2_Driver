@@ -54,3 +54,11 @@ Feature list and roadmap
      - yes
    * - Reconnect on a disconnected robot
      - yes
+   * - Freedrive Mode
+     - yes
+   * - Tool Contact mode
+     - yes
+   * - Force Mode
+     - yes
+
+:raw-html-m2r:`<sup>1</sup>` Velocity-based joint control is implemented in the driver, the velocity-based joint trajectory controller would need tweaking of the gain parameters for each model.
