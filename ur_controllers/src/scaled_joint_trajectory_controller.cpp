@@ -133,7 +133,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     // if sampling the first time, set the point before you sample
     if (!current_trajectory_->is_sampled_already()) {
       first_sample = true;
-      if (params_.interpolate_from_desired_state || params_.open_loop_control) {
+      if (params_.interpolate_from_desired_state) {
         if (std::abs(last_commanded_time_.seconds()) < std::numeric_limits<float>::epsilon()) {
           last_commanded_time_ = time;
         }
