@@ -56,7 +56,6 @@
 
 #include "ur_robot_driver/urcl_log_handler.hpp"
 
-#include "ament_index_cpp/get_package_share_directory.hpp"
 #include "rclcpp/exceptions/exceptions.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "tf2_ros/transform_listener.h"
