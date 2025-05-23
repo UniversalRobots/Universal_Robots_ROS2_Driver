@@ -128,7 +128,7 @@ target_link_libraries(robot_state_helper PUBLIC
 add_executable(urscript_interface
   src/urscript_interface.cpp
 )
-target_link_libraries(urscript_interface
+target_link_libraries(urscript_interface PUBLIC
   rclcpp::rclcpp
   ${std_msgs_TARGETS}
   ur_client_library::urcl
