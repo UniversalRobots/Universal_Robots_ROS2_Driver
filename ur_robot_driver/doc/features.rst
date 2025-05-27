@@ -21,11 +21,7 @@ Feature list and roadmap
    * - Cartesian twist-based control
      - no
    * - Trajectory forwarding for execution on robot
-<<<<<<< HEAD
-     - no
-=======
      - yes (:ref:`passthrough_trajectory_controller`)
->>>>>>> c8a44a6 (Update feature list (#1372))
    * - reporting of tcp wrench
      - yes
    * - pausing of programs
@@ -53,14 +49,6 @@ Feature list and roadmap
    * - extract calibration from robot
      - yes (:ref:`ur_calibration`)
    * - send custom script commands to robot
-<<<<<<< HEAD
-     - no
-   * - Reconnect on a disconnected robot
-     - yes
-
-
-:raw-html-m2r:`<sup>1</sup>` Velocity-based joint control is implemented in the driver, but the current version of ros2_control do not yet support Velocity-based joint trajectory control
-=======
      - yes (:ref:`io_and_status_controller`)
    * - Reconnect on a disconnected robot
      - yes
@@ -72,4 +60,3 @@ Feature list and roadmap
      - yes (:ref:`force_mode_controller`)
 
 :raw-html-m2r:`<sup>1</sup>` Velocity-based joint control is implemented in the driver, the velocity-based joint trajectory controller would need tweaking of the gain parameters for each model.
->>>>>>> c8a44a6 (Update feature list (#1372))
