@@ -1,3 +1,10 @@
+Forthcoming
+-----------
+* [force mode controller] Fix the task frame orientation (`#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_)
+* Replace ament_target_dependencies calls (`#1373 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1373>`_)
+* Update feature list (`#1372 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1372>`_)
+* Contributors: Felix Exner
+
 4.0.0 (2025-05-20)
 ------------------
 * Add support for UR15 (`#1358 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1358>`_)
