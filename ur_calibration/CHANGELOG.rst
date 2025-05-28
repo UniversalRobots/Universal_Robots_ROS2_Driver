@@ -2,8 +2,8 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.0.1 (2025-05-28)
+------------------
 * Replace ament_target_dependencies calls (`#1373 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1373>`_)
 * Update feature list (`#1372 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1372>`_)
 * Contributors: Felix Exner
