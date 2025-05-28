@@ -188,7 +188,9 @@ install(PROGRAMS
   scripts/start_ursim.sh
   examples/examples.py
   examples/force_mode.py
-  examples/send_dummy_motion_primitives.py
+  examples/send_dummy_motion_primitives_ur5e.py
+  examples/send_dummy_motion_primitives_hka_ur10e.py
+  examples/send_joint_positions.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

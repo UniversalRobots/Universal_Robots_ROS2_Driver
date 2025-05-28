@@ -103,14 +103,29 @@ The standard UR hardware interface cannot run in parallel with this motion primi
 
 
 
-# Usage notes
-## Launch motion_primitives_ur_driver
+# Example usage notes with UR10e
+## (optional) URSim
+Start UR-Sim according to the [Universal Robots ROS 2 Driver Documentation](https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_client_library/doc/setup/ursim_docker.html) or the [Documentation for universalrobots/ursim_e-series docker container](https://hub.docker.com/r/universalrobots/ursim_e-series)
 ```
-ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur5e robot_ip:=172.20.0.2 launch_rviz:=true
+ros2 run ur_client_library start_ursim.sh -m ur10e
+```
+Remote control needs to be enabled:
+https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.html
+
+## Launch motion_primitives_ur_driver
+With URSim:
+```
+ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true
+```
+With H-KA UR10e:
+```
+ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true
 ```
 ## Publish dummy commands
+> [!WARNING]  
+> Ensure that the robot in your configuration is able to execute these motion primitives without any risk of collision.
 ```
-ros2 run ur_robot_driver send_dummy_motion_primitives.py
+ros2 run ur_robot_driver send_dummy_motion_primitives_ur10e.py
 ```
 ## Publish stop motion command
 ```
@@ -120,17 +135,6 @@ ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_in
 ```
 ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_interfaces/msg/MotionPrimitive "{type: 67, blend_radius: 0.0, additional_arguments: [], poses: [], joint_positions: []}" --once
 ```
-
-## Start UR-Sim
-```
-docker run --rm -it universalrobots/ursim_e-series
-```
-
-## Enable Remote Control on UR
-Remote control needs to be enabled:
-https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.html
-
-
 
 # TODO's
 - if trajectory is finished while `instruction_executer->cancelMotion()` is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call `instruction_executer->cancelMotion()` a second time
@@ -142,3 +146,25 @@ https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.
 - https://rtw.b-robotized.com/master/use-cases/ros_workspaces/aliases.html
 - https://control.ros.org/master/doc/ros2_control/ros2controlcli/doc/userdoc.html
 - ...
+
+
+
+# With MoveIt and Pilz-Planner
+**Mock Hardware**
+```
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=172.20.0.2  use_mock_hardware:=true initial_joint_controller:=scaled_joint_trajectory_controller launch_rviz:=false
+```
+**Simulation**
+```
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 initial_joint_controller:=scaled_joint_trajectory_controller launch_rviz:=true
+```
+**H-KA UR10e**
+```
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 initial_joint_controller:=scaled_joint_trajectory_controller launch_rviz:=false
+```
+**Using MoveIt**
+https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/move.html#start-hardware-simulator-or-mockup
+```
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
+```
+
