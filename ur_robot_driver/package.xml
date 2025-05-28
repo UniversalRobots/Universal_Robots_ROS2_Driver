@@ -25,6 +25,8 @@
   <author>Felix Exner</author>
   <author>Lea Steffen</author>
   <author>Tristan Schnell</author>
+  <author email="mathias.fuhrer@b-robotized.de">Mathias Fuhrer</author>
+
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>

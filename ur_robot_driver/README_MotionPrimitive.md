@@ -1,6 +1,8 @@
 motion_primitives_ur_driver
 ==========================================
 
+# TODO(mathias31415): Readme anpassen --> motion_primitive_ur_driver wurde in hardware_interface integriert
+
 Hardware interface for executing motion primitives on a UR robot using the ROS 2 control framework. It allows the controller to execute linear (LINEAR_CARTESIAN/ LIN/ MOVEL), circular (CIRCULAR_CARTESIAN/ CIRC/ MOVEC), and joint-based (LINEAR_JOINT/ PTP/ MOVEJ) motion commands asynchronously and supports motion sequences for smooth trajectory execution.
 
 ![Licence](https://img.shields.io/badge/License-BSD-3-Clause-blue.svg)
@@ -112,20 +114,20 @@ ros2 run ur_client_library start_ursim.sh -m ur10e
 Remote control needs to be enabled:
 https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.html
 
-## Launch motion_primitives_ur_driver
+## Launch hardware_interface with motion_primitives_ur_driver
 With URSim:
 ```
-ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true
 ```
 With H-KA UR10e:
 ```
-ros2 launch ur_robot_driver motion_primitive_controller_ur.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true
 ```
 ## Publish dummy commands
 > [!WARNING]  
 > Ensure that the robot in your configuration is able to execute these motion primitives without any risk of collision.
 ```
-ros2 run ur_robot_driver send_dummy_motion_primitives_ur10e.py
+ros2 run ur_robot_driver send_dummy_motion_primitives_hka_ur10e.py
 ```
 ## Publish stop motion command
 ```

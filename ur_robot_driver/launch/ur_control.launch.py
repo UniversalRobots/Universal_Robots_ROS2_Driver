@@ -28,6 +28,8 @@
 
 #
 # Author: Denis Stogl
+#
+# Author modifications: Mathias Fuhrer
 
 from launch import LaunchDescription
 from launch.actions import (
@@ -52,7 +54,6 @@ def launch_setup(context):
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
-    driver_type = LaunchConfiguration("driver_type")
     # General arguments
     controllers_file = LaunchConfiguration("controllers_file")
     description_launchfile = LaunchConfiguration("description_launchfile")
@@ -97,8 +98,10 @@ def launch_setup(context):
         executable="robot_state_helper",
         name="ur_robot_state_helper",
         output="screen",
+        condition=UnlessCondition(use_mock_hardware),
         parameters=[
             {"headless_mode": headless_mode},
+            {"robot_ip": robot_ip},
         ],
     )
 
@@ -176,6 +179,7 @@ def launch_setup(context):
     controllers_active = [
         "joint_state_broadcaster",
         "io_and_status_controller",
+        "motion_primitive_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
         "tcp_pose_broadcaster",
@@ -189,6 +193,7 @@ def launch_setup(context):
         "force_mode_controller",
         "passthrough_trajectory_controller",
         "freedrive_mode_controller",
+        "tool_contact_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
@@ -207,7 +212,6 @@ def launch_setup(context):
         launch_arguments={
             "robot_ip": robot_ip,
             "ur_type": ur_type,
-            "driver_type": driver_type,
         }.items(),
     )
 
@@ -237,9 +241,12 @@ def generate_launch_description():
                 "ur3e",
                 "ur5",
                 "ur5e",
+                "ur7e",
                 "ur10",
                 "ur10e",
+                "ur12e",
                 "ur16e",
+                "ur15",
                 "ur20",
                 "ur30",
             ],
@@ -248,14 +255,6 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_ip", description="IP address by which the robot can be reached."
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "driver_type",
-            default_value="standard",
-            description="Type of driver to use: standard (standard ur_driver) or motion_primitive.",
-            choices=["standard", "motion_primitive"],
         )
     )
     declared_arguments.append(

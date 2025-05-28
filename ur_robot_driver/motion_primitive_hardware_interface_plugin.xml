@@ -1,9 +1,0 @@
-<library path="ur_robot_motion_primitives_driver_plugin">
-  <class name="ur_robot_driver/MotionPrimitivesUrDriver"
-         type="ur_robot_driver::MotionPrimitivesUrDriver"
-         base_class_type="hardware_interface::SystemInterface">
-    <description>
-      ros2_control hardware interface for motion primitives.
-    </description>
-  </class>
-</library>

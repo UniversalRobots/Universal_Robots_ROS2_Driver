@@ -62,16 +62,8 @@ add_library(ur_robot_driver_plugin
   src/urcl_log_handler.cpp
   src/robot_state_helper.cpp
 )
-add_library(ur_robot_motion_primitives_driver_plugin
-  SHARED
-  src/motion_primitives_ur_driver.cpp
-)
 target_link_libraries(
   ur_robot_driver_plugin
-  ur_client_library::urcl
-)
-target_link_libraries(
-  ur_robot_motion_primitives_driver_plugin
   ur_client_library::urcl
 )
 target_include_directories(
@@ -79,26 +71,13 @@ target_include_directories(
   PRIVATE
   include
 )
-target_include_directories(
-  ur_robot_motion_primitives_driver_plugin
-  PRIVATE
-  include
-)
 ament_target_dependencies(
   ur_robot_driver_plugin
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
-)
-
-ament_target_dependencies(
-  ur_robot_motion_primitives_driver_plugin
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
-
-pluginlib_export_plugin_description_file(hardware_interface motion_primitive_hardware_interface_plugin.xml)
 
 #
 # dashboard_client
@@ -146,10 +125,6 @@ install(
   DESTINATION lib
 )
 install(
-  TARGETS ur_robot_motion_primitives_driver_plugin
-  DESTINATION lib
-)
-install(
   DIRECTORY include/
   DESTINATION include
 )
@@ -160,7 +135,6 @@ ament_export_include_directories(
 )
 ament_export_libraries(
   ur_robot_driver_plugin
-  ur_robot_motion_primitives_driver_plugin
 )
 
 install(DIRECTORY resources
