@@ -1,7 +1,5 @@
-motion_primitives_ur_driver
+hardware_interface in motion primitives mode
 ==========================================
-
-# TODO(mathias31415): Readme anpassen --> motion_primitive_ur_driver wurde in hardware_interface integriert
 
 Hardware interface for executing motion primitives on a UR robot using the ROS 2 control framework. It allows the controller to execute linear (LINEAR_CARTESIAN/ LIN/ MOVEL), circular (CIRCULAR_CARTESIAN/ CIRC/ MOVEC), and joint-based (LINEAR_JOINT/ PTP/ MOVEJ) motion commands asynchronously and supports motion sequences for smooth trajectory execution.
 
@@ -12,7 +10,7 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 
 # Related packages/ repos
 - [industrial_robot_motion_interfaces (with additional helper types for stop and motion sequence)](https://github.com/StoglRobotics-forks/industrial_robot_motion_interfaces/tree/helper-types)
-- [ros2_controllers with motion_primitives_forward_controller](https://github.com/StoglRobotics-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
+- [ros2_controllers with motion_primitives_forward_controller](https://github.com/b-robotized-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
 - [Universal_Robots_ROS2_Driver with motion_primitive_ur_driver](https://github.com/StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
 - [Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library)
 
@@ -23,7 +21,7 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 
 # Command and State Interfaces
 
-The `motion_primitives_ur_driver` hardware interface defines a set of **command interfaces** and **state interfaces** used for communication between the controller and the robot hardware.
+In motion primitives mode, the following state and command interfaces are used to enable communication between the controller and the hardware interface.
 
 ## Command Interfaces
 
@@ -42,7 +40,7 @@ These interfaces are used to send motion primitive data to the hardware interfac
 
 ## State Interfaces
 
-These interfaces are used to communicate the internal status of the hardware interface back to the controller:
+These interfaces are used to communicate the internal status of the hardware interface back to the [`motion_primitives_forward_controller`](https://github.com/b-robotized-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller):
 
 - `execution_status`: Indicates the current execution state of the primitive. Possible values are:
   - `IDLE`: No motion in progress
@@ -80,7 +78,7 @@ This approach offers two key advantages:
 
 ## write() Method
 
-The `write()` method checks whether a new motion primitive command has been received from the controller via the command interfaces. If a new command is present:
+In motion primitives mode, the `write()` method checks whether a new motion primitive command has been received from the controller via the command interfaces. If a new command is present:
 
 1. If the command is `STOP_MOTION`, a flag is set which leads to interrupting the current motion inside the `asyncStopMotionThread()`. If the command is `RESET_STOP`, the flag is reset, and new motion primitives can be received and executed.
 2. For other commands, they are passed to the `asyncCommandThread()` and executed asynchronously. Individual primitives are executed directly via the Instruction Executor.
@@ -94,15 +92,7 @@ The `read()` method:
 
 - Publishes the `execution_status` over a state interface with possible values: `IDLE`, `EXECUTING`, `SUCCESS`, `ERROR`, `STOPPED`.
 - Publishes `ready_for_new_primitive` over a state interface to signal whether the interface is ready to receive a new primitive.
-- Handles additional state interfaces adopted from the UR driver, such as joint states, enabling RViz to visualize the current robot pose.
-
-## UR Driver Conflict
-
-The standard UR hardware interface cannot run in parallel with this motion primitives interface due to connection conflicts. To resolve this:
-
-- The state interface functionality from the UR hardware interface was refactored into a helper header: `ur_state_helper.hpp`.
-- This helper enables code reuse between the standard hardware interface and the `motion_primitives_ur_driver`, ensuring robot state data is still available.
-
+- Handles additional state interfaces from the UR driver, such as joint states, enabling RViz to visualize the current robot pose.
 
 
 # Example usage notes with UR10e
@@ -127,7 +117,7 @@ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.16
 ```
 ros2 control switch_controllers --activate motion_primitive_controller --deactivate scaled_joint_trajectory_controller
 ```
-## Publish dummy commands
+## Publish motion primitives
 > [!WARNING]
 > Ensure that the robot in your configuration is able to execute these motion primitives without any risk of collision.
 ```
@@ -144,7 +134,15 @@ ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_in
 
 # TODO's
 - if trajectory is finished while `instruction_executer->cancelMotion()` is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call `instruction_executer->cancelMotion()` a second time
-- for the motion primitive driver `ur_joint_control.xacro` without command interfaces is needed: `motion_primitive_ur_joint_control.xacro` --> is there a better way than a copy of the file with commented command interfaces?
+- The default `hardware_interface` implementation and the `InstructionExecutor` used to execute motion primitives both rely on a callback function that is triggered when a trajectory is completed. In the current implementation, the callback function of the `ur_driver` is overwritten, meaning that only one of the callback functions can be active at a time. This issue has been addressed by registering the `InstructionExecutor`'s callback when motion primitives mode is activated, and restoring the `hardware_interface`'s callback when the mode is deactivated. To enable this, a method `registerTrajDoneCallback()` was added to the `InstructionExecutor` in the `ur_client_library`:
+```cpp
+  void urcl::InstructionExecutor::registerTrajDoneCallback()
+  {
+    driver_->registerTrajectoryDoneCallback(
+        std::bind(&InstructionExecutor::trajDoneCallback, this, std::placeholders::_1));
+  }
+```
+--> Is there a better solution for this?
 
 # Useful sources
 - https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/doc/ur_client_library/doc/architecture/instruction_executor.html
@@ -152,8 +150,6 @@ ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_in
 - https://rtw.b-robotized.com/master/use-cases/ros_workspaces/aliases.html
 - https://control.ros.org/master/doc/ros2_control/ros2controlcli/doc/userdoc.html
 - ...
-
-
 
 # With MoveIt and Pilz-Planner
 **Mock Hardware**
@@ -173,7 +169,7 @@ https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_rob
 ```
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
 ```
-
+**Publishing joint positions for `scaled_joint_trajectory_controller`**
 ```
 ros2 run ur_robot_driver send_joint_positions.py
 ```
