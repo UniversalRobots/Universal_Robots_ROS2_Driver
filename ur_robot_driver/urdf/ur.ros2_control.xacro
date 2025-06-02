@@ -299,7 +299,7 @@
         <state_interface name="get_version_bugfix"/>
       </gpio>
 
-      <gpio name="motion_primitive">
+      <gpio name="${tf_prefix}motion_primitive">
         <command_interface name="motion_type"/>
         <command_interface name="q1"/>
         <command_interface name="q2"/>

@@ -117,11 +117,15 @@ https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.
 ## Launch hardware_interface with motion_primitives_ur_driver
 With URSim:
 ```
-ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_controller
 ```
 With H-KA UR10e:
 ```
-ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_controller
+```
+## Switching control mode
+```
+ros2 control switch_controllers --activate motion_primitive_controller --deactivate scaled_joint_trajectory_controller
 ```
 ## Publish dummy commands
 > [!WARNING]  
@@ -168,5 +172,9 @@ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.16
 https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_robot_driver/ur_robot_driver/doc/usage/move.html#start-hardware-simulator-or-mockup
 ```
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur5e launch_rviz:=true
+```
+
+```
+ros2 run ur_robot_driver send_joint_positions.py
 ```
 

@@ -179,7 +179,6 @@ def launch_setup(context):
     controllers_active = [
         "joint_state_broadcaster",
         "io_and_status_controller",
-        "motion_primitive_controller",
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
         "tcp_pose_broadcaster",
@@ -193,7 +192,7 @@ def launch_setup(context):
         "force_mode_controller",
         "passthrough_trajectory_controller",
         "freedrive_mode_controller",
-        "tool_contact_controller",
+        "motion_primitive_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
@@ -326,7 +325,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "headless_mode",
-            default_value="false",
+            default_value="true",
             description="Enable headless mode for robot control",
         )
     )
@@ -348,6 +347,7 @@ def generate_launch_description():
                 "forward_position_controller",
                 "freedrive_mode_controller",
                 "passthrough_trajectory_controller",
+                "motion_primitive_controller",
             ],
             description="Initially loaded robot controller.",
         )

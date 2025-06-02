@@ -87,6 +87,7 @@ enum StoppingInterface
   STOP_PASSTHROUGH,
   STOP_FORCE_MODE,
   STOP_FREEDRIVE,
+  STOP_MOTION_PRIMITIVES,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -309,6 +310,8 @@ protected:
   bool getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration, double& move_time);
   bool getMoprimVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration, double& move_time);
   void quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz);
+
+  const std::string HW_IF_MOTION_PRIMITIVES = "motion_primitive";
   //*************** End Motion primitives stuff ***************
 
   // copy of non double values
