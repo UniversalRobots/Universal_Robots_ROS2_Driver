@@ -41,7 +41,11 @@ from rclpy.node import Node
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+import tf2_geometry_msgs  # noqa: F401 # pylint: disable=unused-import
 
+from builtin_interfaces.msg import Duration
+from control_msgs.action import FollowJointTrajectory
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import std_msgs
 from controller_manager_msgs.srv import SwitchController
 from geometry_msgs.msg import (
@@ -52,16 +56,19 @@ from geometry_msgs.msg import (
     Twist,
     Wrench,
     Vector3,
+    Vector3Stamped,
 )
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    ActionInterface,
     ControllerManagerInterface,
     DashboardInterface,
     ForceModeInterface,
     IoStatusInterface,
     ConfigurationInterface,
     generate_driver_test_description,
+    ROBOT_JOINTS,
 )
 
 TIMEOUT_EXECUTE_TRAJECTORY = 30
@@ -101,6 +108,11 @@ class RobotDriverTest(unittest.TestCase):
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._configuration_controller_interface = ConfigurationInterface(self.node)
+        self._passthrough_forward_joint_trajectory = ActionInterface(
+            self.node,
+            "/passthrough_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
 
     def setUp(self):
         self._dashboard_interface.start_robot()
@@ -121,30 +133,18 @@ class RobotDriverTest(unittest.TestCase):
                 pass
         return trans
 
-    def test_force_mode_controller(self, tf_prefix):
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=[
-                    "force_mode_controller",
-                ],
-                deactivate_controllers=[
-                    "scaled_joint_trajectory_controller",
-                    "joint_trajectory_controller",
-                ],
-            ).ok
-        )
+    # Implementation of force mode test to be reused
+    # todo: If we move to pytest this could be done using parametrization
+    def run_force_mode(self, tf_prefix):
         self._force_mode_controller_interface = ForceModeInterface(self.node)
 
         # Create task frame for force mode
-        point = Point(x=0.8, y=0.8, z=0.8)
+        point = Point(x=0.0, y=0.0, z=0.0)
         orientation = Quaternion(x=0.7071, y=0.0, z=0.0, w=0.7071)
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-        header = std_msgs.msg.Header(frame_id=tf_prefix + "base")
-        header.stamp.sec = int(time.time()) + 1
-        header.stamp.nanosec = 0
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "tool0_controller")
         frame_stamp = PoseStamped()
         frame_stamp.header = header
         frame_stamp.pose = task_frame_pose
@@ -154,7 +154,7 @@ class RobotDriverTest(unittest.TestCase):
 
         # Create Wrench message for force mode
         wrench = Wrench()
-        wrench.force = Vector3(x=0.0, y=0.0, z=5.0)
+        wrench.force = Vector3(x=0.0, y=0.0, z=10.0)
         wrench.torque = Vector3(x=0.0, y=0.0, z=0.0)
 
         # Specify interpretation of task frame (no transform)
@@ -193,27 +193,46 @@ class RobotDriverTest(unittest.TestCase):
         time.sleep(5.0)
 
         trans_after = self.lookup_tcp_in_base(tf_prefix, self.node.get_clock().now())
+        diff = Vector3Stamped(
+            vector=Vector3(
+                x=(trans_after.transform.translation.x - trans_before.transform.translation.x),
+                y=(trans_after.transform.translation.y - trans_before.transform.translation.y),
+                z=(trans_after.transform.translation.z - trans_before.transform.translation.z),
+            ),
+            header=trans_after.header,
+        )
+        diff_in_tool0_controller = self.tf_buffer.transform(
+            diff,
+            tf_prefix + "tool0_controller",
+            timeout=rclpy.time.Duration(seconds=1.0),
+        )
 
         # task frame and wrench determines the expected motion
         # In the example we used
-        #   - a task frame rotated pi/2 deg around the base frame's x axis
+        #   - a task frame rotated pi/2 deg around the tcp frame's x axis
         #   - a wrench with a positive z component for the force
-        # => we should expect a motion in negative y of the base frame
-        self.assertTrue(trans_after.transform.translation.y < trans_before.transform.translation.y)
-        self.assertAlmostEqual(
-            trans_after.transform.translation.x,
-            trans_before.transform.translation.x,
-            delta=0.001,
+        # => we should expect a motion in negative y of the tcp frame, since we didn't to any
+        # rotation
+        self.assertTrue(
+            diff_in_tool0_controller.vector.y < -0.03,
         )
         self.assertAlmostEqual(
-            trans_after.transform.translation.z,
-            trans_before.transform.translation.z,
+            diff_in_tool0_controller.vector.x,
+            0.0,
             delta=0.001,
+            msg="X translation should not change",
+        )
+        self.assertAlmostEqual(
+            diff_in_tool0_controller.vector.z,
+            0.0,
+            delta=0.001,
+            msg="Z translation should not change",
         )
         self.assertTrue(
             are_quaternions_same(
                 trans_after.transform.rotation, trans_before.transform.rotation, 0.001
-            )
+            ),
+            msg="Rotation should not change",
         )
 
         res = self._force_mode_controller_interface.stop_force_mode()
@@ -226,6 +245,83 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["force_mode_controller"],
             ).ok
         )
+
+    def test_force_mode_controller(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "passthrough_trajectory_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                    "force_mode_controller",
+                ],
+            ).ok
+        )
+        waypts = [[-1.6, -1.55, -1.7, -1.0, 2.05, 0.5]]
+        time_vec = [Duration(sec=5, nanosec=0)]
+        test_trajectory = zip(time_vec, waypts)
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(positions=pos, time_from_start=times)
+                for (times, pos) in test_trajectory
+            ],
+            joint_names=[tf_prefix + ROBOT_JOINTS[i] for i in range(len(ROBOT_JOINTS))],
+        )
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                    "passthrough_trajectory_controller",
+                ],
+            ).ok
+        )
+        self.run_force_mode(tf_prefix)
+
+    def test_force_mode_controller_with_passthrough_controller(self, tf_prefix):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "passthrough_trajectory_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        time.sleep(1)
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                ],
+            ).ok
+        )
+        self.run_force_mode(tf_prefix)
 
     def test_illegal_force_mode_types(self, tf_prefix):
         self.assertTrue(
