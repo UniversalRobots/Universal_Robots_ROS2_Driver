@@ -137,11 +137,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   auto current_external_msg = traj_external_point_ptr_->get_trajectory_msg();
   auto new_external_msg = traj_msg_external_point_ptr_.readFromRT();
   // Discard, if a goal is pending but still not active (somewhere stuck in goal_handle_timer_)
-<<<<<<< HEAD
-  if (current_external_msg != *new_external_msg && (*(rt_has_pending_goal_.readFromRT()) && !active_goal) == false) {
-=======
-  if (current_trajectory_msg != *new_external_msg && (rt_has_pending_goal_ && !active_goal) == false) {
->>>>>>> 6a3be3f (Use std_atomic<bool> in SJTC (#1385))
+  if (current_external_msg != *new_external_msg && (rt_has_pending_goal_ && !active_goal) == false) {
     fill_partial_goal(*new_external_msg);
     sort_to_local_joint_order(*new_external_msg);
     // TODO(denis): Add here integration of position and velocity
@@ -343,15 +339,9 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
         // we need to ensure that there is no pending goal -> we get a race condition otherwise
         RCLCPP_ERROR(logger, "Holding position due to state tolerance violation");
 
-<<<<<<< HEAD
         traj_msg_external_point_ptr_.reset();
         traj_msg_external_point_ptr_.initRT(set_hold_position());
-      } else if (!before_last_point && !within_goal_time && *(rt_has_pending_goal_.readFromRT()) == false) {
-=======
-        new_trajectory_msg_.reset();
-        new_trajectory_msg_.initRT(set_hold_position());
       } else if (!before_last_point && !within_goal_time && !rt_has_pending_goal_) {
->>>>>>> 6a3be3f (Use std_atomic<bool> in SJTC (#1385))
         RCLCPP_ERROR(logger, "Exceeded goal_time_tolerance: holding position...");
 
         traj_msg_external_point_ptr_.reset();
