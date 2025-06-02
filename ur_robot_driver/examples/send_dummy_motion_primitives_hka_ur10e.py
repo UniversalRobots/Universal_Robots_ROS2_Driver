@@ -34,7 +34,7 @@ msg_moveJ_1.blend_radius = 0.1
 msg_moveJ_1.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=joint_velocity),
     MotionArgument(argument_name="acceleration", argument_value=joint_acceleration),
-]   # MotionArgument(argument_name="move_time", argument_value=0.0),
+]  # MotionArgument(argument_name="move_time", argument_value=0.0),
 
 # Linear movement down
 msg_moveL_1 = MotionPrimitive()
@@ -43,7 +43,7 @@ msg_moveL_1.blend_radius = 0.05
 msg_moveL_1.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=cart_velocity),
     MotionArgument(argument_name="acceleration", argument_value=cart_acceleration),
-]   
+]
 pose_L1 = PoseStamped()
 pose_L1.pose.position.x = 0.174
 pose_L1.pose.position.y = -0.692
@@ -76,11 +76,11 @@ msg_moveL_2.poses = [pose_L2]
 msg_moveJ_2 = MotionPrimitive()
 msg_moveJ_2.type = MotionPrimitive.LINEAR_JOINT
 msg_moveJ_2.blend_radius = 0.1
-msg_moveJ_2.joint_positions = [0.9, -1.57, 1.57, -1.57, -1.57, -1.57] # xyz = 0.294, 0.650, 0.677
+msg_moveJ_2.joint_positions = [0.9, -1.57, 1.57, -1.57, -1.57, -1.57]  # xyz = 0.294, 0.650, 0.677
 msg_moveJ_2.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=joint_velocity),
     MotionArgument(argument_name="acceleration", argument_value=joint_acceleration),
-]   
+]
 
 # Circular movement
 msg_moveC_1 = MotionPrimitive()
@@ -124,6 +124,7 @@ msg_moveL_3.additional_arguments = [
 ]
 msg_moveL_3.poses = [pose_C1_goal]
 
+
 class MotionPublisher(Node):
     def __init__(self):
         super().__init__("motion_publisher")
@@ -134,7 +135,20 @@ class MotionPublisher(Node):
 
         # self.messages = [msg_moveJ_1, msg_moveL_1, msg_moveL_2, msg_moveJ_2, msg_moveC_1]
         # self.messages = [msg_start_sequence, msg_moveJ_1, msg_moveL_1, msg_moveL_2, msg_moveJ_2, msg_moveC_1, msg_end_sequence]
-        self.messages = [msg_moveJ_1, msg_moveL_1, msg_moveL_2, msg_moveJ_2, msg_moveC_1, msg_start_sequence, msg_moveJ_1, msg_moveL_1, msg_moveL_2, msg_moveJ_2, msg_moveC_1, msg_end_sequence]
+        self.messages = [
+            msg_moveJ_1,
+            msg_moveL_1,
+            msg_moveL_2,
+            msg_moveJ_2,
+            msg_moveC_1,
+            msg_start_sequence,
+            msg_moveJ_1,
+            msg_moveL_1,
+            msg_moveL_2,
+            msg_moveJ_2,
+            msg_moveC_1,
+            msg_end_sequence,
+        ]
 
         self.get_logger().info(f"Number of messages: {len(self.messages)}")
 

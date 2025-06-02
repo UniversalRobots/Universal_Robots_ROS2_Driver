@@ -36,7 +36,7 @@
  *
  * \author  Mathias Fuhrer mathias.fuhrer@b-robotized.de
  * \date    2025-05-28 – Added support for usage with motion_primitives_forward_controller
- * 
+ *
  */
 //----------------------------------------------------------------------
 #ifndef UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
@@ -286,7 +286,7 @@ protected:
   std::atomic_bool new_moprim_cmd_available_;
   std::atomic_bool new_moprim_stop_available_;
   std::atomic_bool new_moprim_reset_available_;
-  
+
   // Status for communication with controller
   bool motion_primitives_forward_controller_running_;
   std::atomic<int8_t> current_moprim_execution_status_;
@@ -307,8 +307,10 @@ protected:
   void processMoprimMotionCmd(const std::vector<double>& command);
   void processMoprimStopCmd();
   void processMoprimResetCmd();
-  bool getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration, double& move_time);
-  bool getMoprimVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration, double& move_time);
+  bool getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration,
+                                double& move_time);
+  bool getMoprimVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration,
+                          double& move_time);
   void quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz);
 
   const std::string HW_IF_MOTION_PRIMITIVES = "motion_primitive";
@@ -347,7 +349,7 @@ protected:
   bool velocity_controller_running_;
   bool force_mode_controller_running_ = false;
 
-  std::shared_ptr<urcl::UrDriver> ur_driver_;   // cahnged to shared_ptr for instruction_executer
+  std::shared_ptr<urcl::UrDriver> ur_driver_;  // changed to shared_ptr for instruction_executer
   std::shared_ptr<std::thread> async_thread_;
 
   std::atomic_bool rtde_comm_has_been_started_ = false;

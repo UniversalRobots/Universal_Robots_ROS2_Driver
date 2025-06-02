@@ -36,7 +36,7 @@
  *
  * \author  Mathias Fuhrer mathias.fuhrer@b-robotized.de
  * \date    2025-05-28 – Added support for usage with motion_primitives_forward_controller
- * 
+ *
  */
 //----------------------------------------------------------------------
 #include <algorithm>
@@ -110,7 +110,8 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   motion_primitives_forward_controller_running_ = false;
   // 2 States: execution_status, ready_for_new_primitive
   hw_moprim_states_.resize(2, std::numeric_limits<double>::quiet_NaN());
-  // 25 Commands: // motion_type + 6 joints + 2*7 positions (goal and via) + blend_radius + velocity + acceleration + move_time
+  // 25 Commands: // motion_type + 6 joints + 2*7 positions (goal and via) + blend_radius + velocity + acceleration +
+  // move_time
   hw_moprim_commands_.resize(25, std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
@@ -286,7 +287,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       hardware_interface::StateInterface(HW_IF_MOTION_PRIMITIVES, "execution_status", &hw_moprim_states_[0]));
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(HW_IF_MOTION_PRIMITIVES, "ready_for_new_primitive", &hw_moprim_states_[1]));
-
 
   return state_interfaces;
 }
@@ -674,7 +674,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
   ur_driver_->registerTrajectoryDoneCallback(
-      std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1)); //conflict with instruction_executor_ --> callback function needs to get changed when using instruction executor
+      std::bind(&URPositionHardwareInterface::trajectory_done_callback, this,
+                std::placeholders::_1));  // conflict with instruction_executor_ --> callback function needs to get
+                                          // changed when using instruction executor
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -1314,7 +1316,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO || item == HW_IF_MOTION_PRIMITIVES);
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO ||
+                 item == HW_IF_MOTION_PRIMITIVES);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start position control while there is either trajectory passthrough or "
                                "velocity mode or motion primitives moder or force_mode or freedrive mode running.");
@@ -1331,14 +1334,15 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                    }) ||
        std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
          return (item == hardware_interface::HW_IF_VELOCITY || item == hardware_interface::HW_IF_POSITION ||
-                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO || item == HW_IF_MOTION_PRIMITIVES);
+                 item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO ||
+                 item == HW_IF_MOTION_PRIMITIVES);
        }))) {
     RCLCPP_ERROR(get_logger(), "Attempting to start velocity control while there is either trajectory passthrough or "
                                "position mode or motion primitives mode or force_mode or freedrive mode running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
 
-    // Motion primitives mode requested to start
+  // Motion primitives mode requested to start
   if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [this](auto& item) { return (item == HW_IF_MOTION_PRIMITIVES); }) &&
       (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
@@ -1351,7 +1355,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                  item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO ||
                  item == HW_IF_MOTION_PRIMITIVES);
        }))) {
-    RCLCPP_ERROR(get_logger(), "Attempting to start motion primitives control while there is either trajectory passthrough or "
+    RCLCPP_ERROR(get_logger(), "Attempting to start motion primitives control while there is either trajectory "
+                               "passthrough or "
                                "position mode or velocity mode or force_mode or freedrive mode running.");
     ret_val = hardware_interface::return_type::ERROR;
   }
@@ -1395,10 +1400,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     resetMoprimCmdInterfaces();
     current_moprim_execution_status_ = ExecutionState::IDLE;
     ready_for_new_moprim_ = false;
-    
+
     // use the callback from the hardware_interface implementation (not the one of the instruction_executor_)
     ur_driver_->registerTrajectoryDoneCallback(
-      std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
+        std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
 
     RCLCPP_INFO(get_logger(), "Motion primitives mode stopped.");
   }
@@ -1420,7 +1425,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     velocity_controller_running_ = true;
   } else if (start_modes_[0].size() != 0 &&
              std::find(start_modes_[0].begin(), start_modes_[0].end(), FORCE_MODE_GPIO) != start_modes_[0].end()) {
-              motion_primitives_forward_controller_running_ = false;
+    motion_primitives_forward_controller_running_ = false;
     force_mode_controller_running_ = true;
   } else if (start_modes_[0].size() != 0 &&
              std::find(start_modes_[0].begin(), start_modes_[0].end(), PASSTHROUGH_GPIO) != start_modes_[0].end()) {
@@ -1436,14 +1441,14 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     motion_primitives_forward_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
     freedrive_activated_ = false;
-  } else if (start_modes_[0].size() != 0 && 
-             std::find(start_modes_[0].begin(), start_modes_[0].end(), HW_IF_MOTION_PRIMITIVES) != start_modes_[0].end()) {
+  } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
+                                                      HW_IF_MOTION_PRIMITIVES) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
     freedrive_mode_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
     force_mode_controller_running_ = false;
-    
+
     // use the callback from the instruction_executor_ (not the one of the hardware_interface implementation)
     instruction_executor_->registerTrajDoneCallback();
     resetMoprimCmdInterfaces();
@@ -1580,7 +1585,6 @@ bool URPositionHardwareInterface::has_accelerations(std::vector<std::array<doubl
   return (accelerations.size() > 0);
 }
 
-
 void URPositionHardwareInterface::handleMoprimCommands()
 {
   // Check if we have a new command
@@ -1592,12 +1596,12 @@ void URPositionHardwareInterface::handleMoprimCommands()
         new_moprim_stop_available_ = true;
         resetMoprimCmdInterfaces();
       }
-    }else if (hw_moprim_commands_[0] == MotionType::RESET_STOP) {
-        std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
-        if (!new_moprim_reset_available_) {
-          new_moprim_reset_available_ = true;
-          resetMoprimCmdInterfaces();
-        }
+    } else if (hw_moprim_commands_[0] == MotionType::RESET_STOP) {
+      std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
+      if (!new_moprim_reset_available_) {
+        new_moprim_reset_available_ = true;
+        resetMoprimCmdInterfaces();
+      }
     } else {
       std::lock_guard<std::mutex> guard(moprim_cmd_mutex_);
       if (!new_moprim_cmd_available_) {
@@ -1658,7 +1662,7 @@ void URPositionHardwareInterface::processMoprimStopCmd()
   } else {
     RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "No motion to stop");
     current_moprim_execution_status_ = ExecutionState::STOPPED;
-    ready_for_new_moprim_ = false; 
+    ready_for_new_moprim_ = false;
   }
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
               " [processMoprimStopCmd] After executing stop: current_moprim_execution_status_ = %d",
@@ -1708,8 +1712,9 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
     switch (static_cast<uint8_t>(motion_type)) {
       case MotionType::MOTION_SEQUENCE_START:
       {
-        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received MOTION_SEQUENCE_START: add all following "
-                                                                    "commands to the motion sequence.");
+        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received MOTION_SEQUENCE_START: add all "
+                                                                       "following "
+                                                                       "commands to the motion sequence.");
         build_moprim_sequence_ = true;  // set flag to put all following commands into the motion sequence
         moprim_sequence_.clear();
         ready_for_new_moprim_ = true;  // set to true to allow sending new commands
@@ -1741,7 +1746,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         for (int i = 1; i <= 6; ++i) {
           if (std::isnan(command[i])) {
             RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: joint positions "
-                                                                         "contain NaN values");
+                                                                            "contain NaN values");
             current_moprim_execution_status_ = ExecutionState::ERROR;
             return;
           }
@@ -1751,7 +1756,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         // Get move_time OR (velocity AND acceleration)
         if (!getMoprimTimeOrVelAndAcc(command, velocity, acceleration, move_time)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid move_time, velocity or acceleration "
-                                                                       "values");
+                                                                          "values");
           current_moprim_execution_status_ = ExecutionState::ERROR;
           return;
         }
@@ -1794,7 +1799,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         for (int i = 7; i <= 13; ++i) {
           if (std::isnan(command[i])) {
             RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: pose contains NaN "
-                                                                         "values");
+                                                                            "values");
             current_moprim_execution_status_ = ExecutionState::ERROR;
             return;
           }
@@ -1806,7 +1811,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         // Get move_time OR (velocity AND acceleration)
         if (!getMoprimTimeOrVelAndAcc(command, velocity, acceleration, move_time)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid move_time, velocity or acceleration "
-                                                                       "values");
+                                                                          "values");
           current_moprim_execution_status_ = ExecutionState::ERROR;
           return;
         }
@@ -1849,7 +1854,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         for (int i = 7; i <= 20; ++i) {
           if (std::isnan(command[i])) {
             RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: pose contains NaN "
-                                                                         "values");
+                                                                            "values");
             current_moprim_execution_status_ = ExecutionState::ERROR;
             return;
           }
@@ -1926,7 +1931,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
 // Convert quaternion to Euler angles (roll, pitch, yaw)
 // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 void URPositionHardwareInterface::quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry,
-                                                 double& rz)
+                                                    double& rz)
 {
   // roll (x-axis rotation)
   double sinr_cosp = 2 * (qw * qx + qy * qz);
@@ -1948,9 +1953,8 @@ void URPositionHardwareInterface::quaternionToEuler(double qx, double qy, double
   //       qx, qy, qz, qw, rx, ry, rz);
 }
 
-bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<double>& command,
-                                                                    double& velocity, double& acceleration,
-                                                                    double& move_time)
+bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity,
+                                                           double& acceleration, double& move_time)
 {
   // Check if move_time is valid
   if (!std::isnan(command[24]) && command[24] > 0.0) {
@@ -1967,13 +1971,13 @@ bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<dou
     return true;
   } else {
     RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "move_time, velocity and acceleration are all "
-                                                                 "invalid");
+                                                                    "invalid");
     return false;
   }
 }
 
 bool URPositionHardwareInterface::getMoprimVelAndAcc(const std::vector<double>& command, double& velocity,
-                                                          double& acceleration, double& move_time)
+                                                     double& acceleration, double& move_time)
 {
   // Check if velocity and acceleration are valid
   if (!std::isnan(command[22]) && command[22] > 0.0 && !std::isnan(command[23]) && command[23] > 0.0) {
