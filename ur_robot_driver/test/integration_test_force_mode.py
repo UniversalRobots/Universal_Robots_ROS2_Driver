@@ -133,19 +133,9 @@ class RobotDriverTest(unittest.TestCase):
                 pass
         return trans
 
-    def test_force_mode_controller(self, tf_prefix):
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=[
-                    "force_mode_controller",
-                ],
-                deactivate_controllers=[
-                    "scaled_joint_trajectory_controller",
-                    "joint_trajectory_controller",
-                ],
-            ).ok
-        )
+    # Implementation of force mode test to be reused
+    # todo: If we move to pytest this could be done using parametrization
+    def run_force_mode(self, tf_prefix):
         self._force_mode_controller_interface = ForceModeInterface(self.node)
 
         # Create task frame for force mode
@@ -154,13 +144,7 @@ class RobotDriverTest(unittest.TestCase):
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-<<<<<<< HEAD
-        header = std_msgs.msg.Header(frame_id=tf_prefix + "base")
-        header.stamp.sec = int(time.time()) + 1
-        header.stamp.nanosec = 0
-=======
-        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "tool0_controller")
->>>>>>> 8eb4288 ([force mode controller] Fix the task frame orientation (#1379))
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "tool0_controller")
         frame_stamp = PoseStamped()
         frame_stamp.header = header
         frame_stamp.pose = task_frame_pose
@@ -262,8 +246,6 @@ class RobotDriverTest(unittest.TestCase):
             ).ok
         )
 
-<<<<<<< HEAD
-=======
     def test_force_mode_controller(self, tf_prefix):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -341,7 +323,6 @@ class RobotDriverTest(unittest.TestCase):
         )
         self.run_force_mode(tf_prefix)
 
->>>>>>> 8eb4288 ([force mode controller] Fix the task frame orientation (#1379))
     def test_illegal_force_mode_types(self, tf_prefix):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
