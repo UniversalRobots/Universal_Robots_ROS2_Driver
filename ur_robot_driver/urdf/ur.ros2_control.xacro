@@ -212,6 +212,13 @@
         <command_interface name="payload_async_success"/>
       </gpio>
 
+      <gpio name="${tf_prefix}gravity">
+        <command_interface name="x"/>
+        <command_interface name="y"/>
+        <command_interface name="z"/>
+        <command_interface name="gravity_async_success"/>
+      </gpio>
+
       <gpio name="${tf_prefix}resend_robot_program">
         <command_interface name="resend_robot_program_cmd"/>
         <command_interface name="resend_robot_program_async_success"/>
