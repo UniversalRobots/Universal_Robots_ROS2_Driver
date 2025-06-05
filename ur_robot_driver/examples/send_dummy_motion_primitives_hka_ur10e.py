@@ -18,29 +18,35 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 from geometry_msgs.msg import PoseStamped
-from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionArgument
+from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionArgument, MotionSequence
+from industrial_robot_motion_interfaces.action import ExecuteMotion
+from action_msgs.srv import CancelGoal
+import threading
+import sys
 
 joint_velocity = 1.0
 joint_acceleration = 1.0
 cart_velocity = 0.5
 cart_acceleration = 0.5
+move_time = 0.0  # if move_time=0 vel and acc are used, otherwise move_time is used
 
 # Joint movement to home position
-msg_moveJ_1 = MotionPrimitive()
-msg_moveJ_1.type = MotionPrimitive.LINEAR_JOINT
-msg_moveJ_1.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
-msg_moveJ_1.blend_radius = 0.1
-msg_moveJ_1.additional_arguments = [
+moveJ_1 = MotionPrimitive()
+moveJ_1.type = MotionPrimitive.LINEAR_JOINT
+moveJ_1.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
+moveJ_1.blend_radius = 0.1
+moveJ_1.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=joint_velocity),
     MotionArgument(argument_name="acceleration", argument_value=joint_acceleration),
-]  # MotionArgument(argument_name="move_time", argument_value=0.0),
-
+    MotionArgument(argument_name="move_time", argument_value=move_time),
+]
 # Linear movement down
-msg_moveL_1 = MotionPrimitive()
-msg_moveL_1.type = MotionPrimitive.LINEAR_CARTESIAN
-msg_moveL_1.blend_radius = 0.05
-msg_moveL_1.additional_arguments = [
+moveL_1 = MotionPrimitive()
+moveL_1.type = MotionPrimitive.LINEAR_CARTESIAN
+moveL_1.blend_radius = 0.05
+moveL_1.additional_arguments = [
     MotionArgument(argument_name="velocity", argument_value=cart_velocity),
     MotionArgument(argument_name="acceleration", argument_value=cart_acceleration),
 ]
@@ -52,16 +58,13 @@ pose_L1.pose.orientation.x = 1.0
 pose_L1.pose.orientation.y = 0.0
 pose_L1.pose.orientation.z = 0.0
 pose_L1.pose.orientation.w = 0.0
-msg_moveL_1.poses = [pose_L1]
+moveL_1.poses = [pose_L1]
 
 # Linear movement up
-msg_moveL_2 = MotionPrimitive()
-msg_moveL_2.type = MotionPrimitive.LINEAR_CARTESIAN
-msg_moveL_2.blend_radius = 0.05
-msg_moveL_2.additional_arguments = [
-    MotionArgument(argument_name="velocity", argument_value=cart_velocity),
-    MotionArgument(argument_name="acceleration", argument_value=cart_acceleration),
-]
+moveL_2 = MotionPrimitive()
+moveL_2.type = MotionPrimitive.LINEAR_CARTESIAN
+moveL_2.blend_radius = 0.05
+moveL_2.additional_arguments = moveL_1.additional_arguments.copy()
 pose_L2 = PoseStamped()
 pose_L2.pose.position.x = 0.174
 pose_L2.pose.position.y = -0.692
@@ -70,26 +73,20 @@ pose_L2.pose.orientation.x = 1.0
 pose_L2.pose.orientation.y = 0.0
 pose_L2.pose.orientation.z = 0.0
 pose_L2.pose.orientation.w = 0.0
-msg_moveL_2.poses = [pose_L2]
+moveL_2.poses = [pose_L2]
 
 # Joint movement
-msg_moveJ_2 = MotionPrimitive()
-msg_moveJ_2.type = MotionPrimitive.LINEAR_JOINT
-msg_moveJ_2.blend_radius = 0.1
-msg_moveJ_2.joint_positions = [0.9, -1.57, 1.57, -1.57, -1.57, -1.57]  # xyz = 0.294, 0.650, 0.677
-msg_moveJ_2.additional_arguments = [
-    MotionArgument(argument_name="velocity", argument_value=joint_velocity),
-    MotionArgument(argument_name="acceleration", argument_value=joint_acceleration),
-]
+moveJ_2 = MotionPrimitive()
+moveJ_2.type = MotionPrimitive.LINEAR_JOINT
+moveJ_2.blend_radius = 0.1
+moveJ_2.joint_positions = [0.9, -1.57, 1.57, -1.57, -1.57, -1.57]
+moveJ_2.additional_arguments = moveJ_1.additional_arguments.copy()
 
 # Circular movement
-msg_moveC_1 = MotionPrimitive()
-msg_moveC_1.type = MotionPrimitive.CIRCULAR_CARTESIAN
-msg_moveC_1.blend_radius = 0.0
-msg_moveC_1.additional_arguments = [
-    MotionArgument(argument_name="velocity", argument_value=cart_velocity),
-    MotionArgument(argument_name="acceleration", argument_value=cart_acceleration),
-]
+moveC_1 = MotionPrimitive()
+moveC_1.type = MotionPrimitive.CIRCULAR_CARTESIAN
+moveC_1.blend_radius = 0.0
+moveC_1.additional_arguments = moveL_1.additional_arguments.copy()
 pose_C1_via = PoseStamped()
 pose_C1_via.pose.position.x = 0.174
 pose_C1_via.pose.position.y = -0.9
@@ -106,69 +103,210 @@ pose_C1_goal.pose.orientation.x = 1.0
 pose_C1_goal.pose.orientation.y = 0.0
 pose_C1_goal.pose.orientation.z = 0.0
 pose_C1_goal.pose.orientation.w = 0.0
-msg_moveC_1.poses = [pose_C1_goal, pose_C1_via]  # first pose is goal, second is via point
+moveC_1.poses = [pose_C1_goal, pose_C1_via]  # first pose is goal, second is via point
 
-msg_start_sequence = MotionPrimitive()
-msg_start_sequence.type = MotionPrimitive.MOTION_SEQUENCE_START
+# Motions to compare moprim and jtc mode (send_joint_positions.py for jtc mode)
+eval_blend_radius = 0.1
+eval_move_time = 1.0
 
-msg_end_sequence = MotionPrimitive()
-msg_end_sequence.type = MotionPrimitive.MOTION_SEQUENCE_END
-
-
-msg_moveL_3 = MotionPrimitive()
-msg_moveL_3.type = MotionPrimitive.LINEAR_CARTESIAN
-msg_moveL_3.blend_radius = 0.05
-msg_moveL_3.additional_arguments = [
-    MotionArgument(argument_name="velocity", argument_value=cart_velocity),
-    MotionArgument(argument_name="acceleration", argument_value=cart_acceleration),
+moveJ_eval_0 = MotionPrimitive()
+moveJ_eval_0.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_0.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
+moveJ_eval_0.blend_radius = eval_blend_radius
+moveJ_eval_0.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
 ]
-msg_moveL_3.poses = [pose_C1_goal]
+moveJ_eval_1 = MotionPrimitive()
+moveJ_eval_1.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_1.joint_positions = [1.57, -1.1, 1.0, -1.57, -1.57, -1.57]
+moveJ_eval_1.blend_radius = eval_blend_radius
+moveJ_eval_1.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
+moveJ_eval_2 = MotionPrimitive()
+moveJ_eval_2.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_2.joint_positions = [2.0, -0.9, 0.7, -1.57, -1.57, -1.57]
+moveJ_eval_2.blend_radius = eval_blend_radius
+moveJ_eval_2.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
+moveJ_eval_3 = MotionPrimitive()
+moveJ_eval_3.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_3.joint_positions = [2.4, -1.57, 1.57, -1.57, -1.57, -1.57]
+moveJ_eval_3.blend_radius = eval_blend_radius
+moveJ_eval_3.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
+moveJ_eval_4 = MotionPrimitive()
+moveJ_eval_4.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_4.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
+moveJ_eval_4.blend_radius = eval_blend_radius
+moveJ_eval_4.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
+moveJ_eval_5 = MotionPrimitive()
+moveJ_eval_5.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_5.joint_positions = [1.57, -1.1, 1.0, -1.57, -1.57, -1.57]
+moveJ_eval_5.blend_radius = eval_blend_radius
+moveJ_eval_5.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
+moveJ_eval_6 = MotionPrimitive()
+moveJ_eval_6.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_6.joint_positions = [1.1, -0.9, 0.7, -1.57, -1.57, -1.57]
+moveJ_eval_6.blend_radius = eval_blend_radius
+moveJ_eval_6.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
+moveJ_eval_7 = MotionPrimitive()
+moveJ_eval_7.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_7.joint_positions = [0.7, -1.57, 1.57, -1.57, -1.57, -1.57]
+moveJ_eval_7.blend_radius = eval_blend_radius
+moveJ_eval_7.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
+moveJ_eval_8 = MotionPrimitive()
+moveJ_eval_8.type = MotionPrimitive.LINEAR_JOINT
+moveJ_eval_8.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
+moveJ_eval_8.blend_radius = eval_blend_radius
+moveJ_eval_8.additional_arguments = [
+    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+]
 
 
-class MotionPublisher(Node):
+class ExecuteMotionClient(Node):
     def __init__(self):
-        super().__init__("motion_publisher")
+        super().__init__("motion_sequence_client")
 
-        self.publisher_ = self.create_publisher(
-            MotionPrimitive, "/motion_primitive_controller/reference", 10
+        # Initialize action client for ExecuteMotion action
+        self._client = ActionClient(
+            self, ExecuteMotion, "/motion_primitive_controller/motion_sequence"
         )
 
-        # self.messages = [msg_moveJ_1, msg_moveL_1, msg_moveL_2, msg_moveJ_2, msg_moveC_1]
-        # self.messages = [msg_start_sequence, msg_moveJ_1, msg_moveL_1, msg_moveL_2, msg_moveJ_2, msg_moveC_1, msg_end_sequence]
-        self.messages = [
-            msg_moveJ_1,
-            msg_moveL_1,
-            msg_moveL_2,
-            msg_moveJ_2,
-            msg_moveC_1,
-            msg_start_sequence,
-            msg_moveJ_1,
-            msg_moveL_1,
-            msg_moveL_2,
-            msg_moveJ_2,
-            msg_moveC_1,
-            msg_end_sequence,
+        # Initialize client for cancel_goal service
+        self._cancel_client = self.create_client(
+            CancelGoal, "/motion_primitive_controller/motion_sequence/_action/cancel_goal"
+        )
+
+        self._goal_id = None  # To store the goal ID for cancellation
+
+        # Send the motion goal
+        self._send_goal()
+
+        # Start a thread to listen for ENTER key press to cancel the goal
+        thread = threading.Thread(target=self._wait_for_keypress, daemon=True)
+        thread.start()
+
+    def _send_goal(self):
+        """Send the motion sequence goal to the action server."""
+        self.get_logger().info("Waiting for action server...")
+        self._client.wait_for_server()
+
+        goal_msg = ExecuteMotion.Goal()
+        goal_msg.trajectory = MotionSequence()
+
+        # "pick" sequence with moveC in the end
+        # goal_msg.trajectory.motions = [moveJ_1, moveL_1, moveL_2, moveJ_2, moveC_1]
+
+        # evaluation sequence with moveJ movements
+        goal_msg.trajectory.motions = [
+            moveJ_eval_0,
+            moveJ_eval_1,
+            moveJ_eval_2,
+            moveJ_eval_3,
+            moveJ_eval_4,
+            moveJ_eval_5,
+            moveJ_eval_6,
+            moveJ_eval_7,
+            moveJ_eval_8,
         ]
 
-        self.get_logger().info(f"Number of messages: {len(self.messages)}")
+        self.get_logger().info(
+            f"Sending {len(goal_msg.trajectory.motions)} motion primitives as a sequence..."
+        )
+        send_goal_future = self._client.send_goal_async(
+            goal_msg, feedback_callback=self.feedback_callback
+        )
+        send_goal_future.add_done_callback(self.goal_response_callback)
 
-        self.send_all_messages()
+    def goal_response_callback(self, future):
+        """Callback called when the action server accepts or rejects the goal."""
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().error("Goal rejected")
+            return
 
-    def send_all_messages(self):
-        for i, msg in enumerate(self.messages):
-            self.get_logger().info(f"Sending message {i + 1} of {len(self.messages)}")
-            self.publisher_.publish(msg)
-            self.get_logger().info(f"Sent message {i + 1}: {msg}")
+        self.get_logger().info("Goal accepted")
+        self._goal_id = goal_handle.goal_id  # Store goal ID for cancellation
+
+        # Wait for result asynchronously
+        get_result_future = goal_handle.get_result_async()
+        get_result_future.add_done_callback(self.result_callback)
+
+    def feedback_callback(self, feedback_msg):
+        """Receive feedback about the current motion primitive being executed."""
+        current_index = feedback_msg.feedback.current_primitive_index
+        self.get_logger().info(f"Executing primitive index: {current_index}")
+
+    def result_callback(self, future):
+        """Handle the result from the action server after goal finishes or is canceled."""
+        result = future.result().result
+        if result.error_code == ExecuteMotion.Result.SUCCESSFUL:
+            self.get_logger().info("Motion sequence executed successfully!")
+        elif result.error_code == ExecuteMotion.Result.CANCELED:
+            self.get_logger().info("Motion sequence was canceled.")
+        elif result.error_code == ExecuteMotion.Result.FAILED:
+            self.get_logger().error("Motion sequence execution failed.")
+        else:
+            self.get_logger().error(
+                f"Execution failed: {result.error_code} - {result.error_string}"
+            )
+        rclpy.shutdown()
+
+    def _wait_for_keypress(self):
+        """Wait for the user to press ENTER key to cancel the motion sequence."""
+        print("Press ENTER to cancel the motion sequence...")
+        while True:
+            input_str = sys.stdin.readline().strip()
+            if input_str == "":
+                self.get_logger().info("ENTER key pressed: sending cancel request.")
+                self.cancel_goal()
+                break
+
+    def cancel_goal(self):
+        """Send a cancel request for the currently running goal."""
+        if self._goal_id is None:
+            self.get_logger().warn("No goal to cancel (goal_id not set yet).")
+            return
+
+        if not self._cancel_client.wait_for_service(timeout_sec=2.0):
+            self.get_logger().error("Cancel service is not available.")
+            return
+
+        request = CancelGoal.Request()
+        request.goal_info.goal_id = self._goal_id
+
+        future = self._cancel_client.call_async(request)
+        future.add_done_callback(self.cancel_response_callback)
+
+    def cancel_response_callback(self, future):
+        """Handle the response from the cancel service call."""
+        try:
+            response = future.result()
+            if response.return_code == 0:
+                self.get_logger().info("Cancel request accepted.")
+            elif response.return_code == 1:
+                self.get_logger().warn("Cancel request rejected.")
+            else:
+                self.get_logger().warn(f"Cancel returned code: {response.return_code}")
+        except Exception as e:
+            self.get_logger().error(f"Failed to call cancel service: {e}")
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = MotionPublisher()
-    rclpy.spin_once(node, timeout_sec=1)
-
-    # Cleanup
-    node.destroy_node()
-    rclpy.shutdown()
+    node = ExecuteMotionClient()
+    rclpy.spin(node)
 
 
 if __name__ == "__main__":

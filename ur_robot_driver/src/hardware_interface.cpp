@@ -600,13 +600,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   registerUrclLogHandler(tf_prefix);
-  // try {
-  //   rtde_comm_has_been_started_ = false;
-  //   ur_driver_ = std::make_unique<urcl::UrDriver>(
-  //       robot_ip, script_filename, output_recipe_filename, input_recipe_filename,
-  //       std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1), headless_mode,
-  //       std::move(tool_comm_setup), (uint32_t)reverse_port, (uint32_t)script_sender_port, servoj_gain,
-  //       servoj_lookahead_time, non_blocking_read_, reverse_ip, trajectory_port, script_command_port);
   try {
     rtde_comm_has_been_started_ = false;
     urcl::UrDriverConfiguration driver_config;
@@ -1590,6 +1583,9 @@ void URPositionHardwareInterface::handleMoprimCommands()
   // Check if we have a new command
   if (!std::isnan(hw_moprim_commands_[0])) {
     ready_for_new_moprim_ = false;  // set to false to indicate that the driver is busy handling a command
+    // set state interface immediately
+    // --> if waiting for next read() cycle it happens sometimes that a command is overwritten
+    hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
     if (hw_moprim_commands_[0] == MotionType::STOP_MOTION) {
       std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
       if (!new_moprim_stop_available_) {

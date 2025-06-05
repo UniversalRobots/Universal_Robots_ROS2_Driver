@@ -9,9 +9,9 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 [![Play Video](doc/motion_primitive_ur_driver/motion_primitive_demo_video_preview.png)](https://www.youtube.com/watch?v=htUJtfkgr6Q)
 
 # Related packages/ repos
-- [industrial_robot_motion_interfaces (with additional helper types for stop and motion sequence)](https://github.com/StoglRobotics-forks/industrial_robot_motion_interfaces/tree/helper-types)
+- [industrial_robot_motion_interfaces](https://github.com/b-robotized-forks/industrial_robot_motion_interfaces/tree/helper-types)
 - [ros2_controllers with motion_primitives_forward_controller](https://github.com/b-robotized-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
-- [Universal_Robots_ROS2_Driver with motion_primitive_ur_driver](https://github.com/StoglRobotics-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
+- [Universal_Robots_ROS2_Driver with motion_primitive_ur_driver](https://github.com/b-robotized-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
 - [Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library)
 
 
@@ -113,7 +113,7 @@ With H-KA UR10e:
 ```
 ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_controller
 ```
-## Switching control mode
+## (optional) switching control mode
 ```
 ros2 control switch_controllers --activate motion_primitive_controller --deactivate scaled_joint_trajectory_controller
 ```
@@ -123,14 +123,7 @@ ros2 control switch_controllers --activate motion_primitive_controller --deactiv
 ```
 ros2 run ur_robot_driver send_dummy_motion_primitives_hka_ur10e.py
 ```
-## Publish stop motion command
-```
-ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_interfaces/msg/MotionPrimitive "{type: 66, blend_radius: 0.0, additional_arguments: [], poses: [], joint_positions: []}" --once
-```
-## Reset stop motion command
-```
-ros2 topic pub /motion_primitive_controller/reference industrial_robot_motion_interfaces/msg/MotionPrimitive "{type: 67, blend_radius: 0.0, additional_arguments: [], poses: [], joint_positions: []}" --once
-```
+During the execution of the motion primitives, the movement can be stopped by pressing the Enter key in the terminal.
 
 # TODO's
 - if trajectory is finished while `instruction_executer->cancelMotion()` is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call `instruction_executer->cancelMotion()` a second time
