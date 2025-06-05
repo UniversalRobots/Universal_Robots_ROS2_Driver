@@ -137,7 +137,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   auto current_external_msg = traj_external_point_ptr_->get_trajectory_msg();
   auto new_external_msg = traj_msg_external_point_ptr_.readFromRT();
   // Discard, if a goal is pending but still not active (somewhere stuck in goal_handle_timer_)
-  if (current_external_msg != *new_external_msg && (*(rt_has_pending_goal_.readFromRT()) && !active_goal) == false) {
+  if (current_external_msg != *new_external_msg && (rt_has_pending_goal_ && !active_goal) == false) {
     fill_partial_goal(*new_external_msg);
     sort_to_local_joint_order(*new_external_msg);
     // TODO(denis): Add here integration of position and velocity
@@ -204,8 +204,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
 
       // have we reached the end, are not holding position, and is a timeout configured?
       // Check independently of other tolerances
-      if (!before_last_point && *(rt_is_holding_.readFromRT()) == false && cmd_timeout_ > 0.0 &&
-          time_difference > cmd_timeout_) {
+      if (!before_last_point && !rt_is_holding_ && cmd_timeout_ > 0.0 && time_difference > cmd_timeout_) {
         RCLCPP_WARN(logger, "Aborted due to command timeout");
 
         traj_msg_external_point_ptr_.reset();
@@ -219,13 +218,13 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
         // Always check the state tolerance on the first sample in case the first sample
         // is the last point
         // print output per default, goal will be aborted afterwards
-        if ((before_last_point || first_sample) && *(rt_is_holding_.readFromRT()) == false &&
+        if ((before_last_point || first_sample) && !rt_is_holding_ &&
             !check_state_tolerance_per_joint(state_error_, index, active_tol->state_tolerance[index],
                                              true /* show_errors */)) {
           tolerance_violated_while_moving = true;
         }
         // past the final point, check that we end up inside goal tolerance
-        if (!before_last_point && *(rt_is_holding_.readFromRT()) == false &&
+        if (!before_last_point && !rt_is_holding_ &&
             !check_state_tolerance_per_joint(state_error_, index, active_tol->goal_state_tolerance[index],
                                              false /* show_errors */)) {
           outside_goal_tolerance = true;
@@ -295,7 +294,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
           // TODO(matthew-reynolds): Need a lock-free write here
           // See https://github.com/ros-controls/ros2_controllers/issues/168
           rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-          rt_has_pending_goal_.writeFromNonRT(false);
+          rt_has_pending_goal_ = false;
 
           RCLCPP_WARN(logger, "Aborted due to state tolerance violation");
 
@@ -311,7 +310,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
             // TODO(matthew-reynolds): Need a lock-free write here
             // See https://github.com/ros-controls/ros2_controllers/issues/168
             rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-            rt_has_pending_goal_.writeFromNonRT(false);
+            rt_has_pending_goal_ = false;
 
             RCLCPP_INFO(logger, "Goal reached, success!");
 
@@ -328,7 +327,7 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
             // TODO(matthew-reynolds): Need a lock-free write here
             // See https://github.com/ros-controls/ros2_controllers/issues/168
             rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
-            rt_has_pending_goal_.writeFromNonRT(false);
+            rt_has_pending_goal_ = false;
 
             RCLCPP_WARN(logger, error_string.c_str());
 
@@ -336,13 +335,13 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
             traj_msg_external_point_ptr_.initRT(set_hold_position());
           }
         }
-      } else if (tolerance_violated_while_moving && *(rt_has_pending_goal_.readFromRT()) == false) {
+      } else if (tolerance_violated_while_moving && !rt_has_pending_goal_) {
         // we need to ensure that there is no pending goal -> we get a race condition otherwise
         RCLCPP_ERROR(logger, "Holding position due to state tolerance violation");
 
         traj_msg_external_point_ptr_.reset();
         traj_msg_external_point_ptr_.initRT(set_hold_position());
-      } else if (!before_last_point && !within_goal_time && *(rt_has_pending_goal_.readFromRT()) == false) {
+      } else if (!before_last_point && !within_goal_time && !rt_has_pending_goal_) {
         RCLCPP_ERROR(logger, "Exceeded goal_time_tolerance: holding position...");
 
         traj_msg_external_point_ptr_.reset();
