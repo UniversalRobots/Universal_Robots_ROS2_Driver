@@ -27,7 +27,7 @@ In motion primitives mode, the following state and command interfaces are used t
 
 These interfaces are used to send motion primitive data to the hardware interface:
 
-- `motion_type`: Type of motion primitive (e.g., LINEAR_JOINT, LINEAR_CARTESIAN, CIRCULAR_CARTESIAN, etc.)
+- `motion_type`: Type of motion primitive (LINEAR_JOINT, LINEAR_CARTESIAN, CIRCULAR_CARTESIAN)
 - `q1` – `q6`: Target joint positions for joint-based motion
 - `pos_x`, `pos_y`, `pos_z`: Target Cartesian position
 - `pos_qx`, `pos_qy`, `pos_qz`, `pos_qw`: Orientation quaternion of the target pose
@@ -125,7 +125,7 @@ ros2 run ur_robot_driver send_dummy_motion_primitives_hka_ur10e.py
 ```
 During the execution of the motion primitives, the movement can be stopped by pressing the Enter key in the terminal.
 
-# TODO's
+# TODOs/ Improvements
 - if trajectory is finished while `instruction_executer->cancelMotion()` is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call `instruction_executer->cancelMotion()` a second time
 - The default `hardware_interface` implementation and the `InstructionExecutor` used to execute motion primitives both rely on a callback function that is triggered when a trajectory is completed. In the current implementation, the callback function of the `ur_driver` is overwritten, meaning that only one of the callback functions can be active at a time. This issue has been addressed by registering the `InstructionExecutor`'s callback when motion primitives mode is activated, and restoring the `hardware_interface`'s callback when the mode is deactivated. To enable this, a method `registerTrajDoneCallback()` was added to the `InstructionExecutor` in the `ur_client_library`:
 ```cpp
