@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+* Remove unnecessary arguments. (backport of `#1389 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1389>`_) (`#1390 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1390>`_)
+* Contributors: mergify[bot]
+
 3.3.1 (2025-05-28)
 ------------------
 * [force mode controller] Fix the task frame orientation (backport of `#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_) (`#1381 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1381>`_)
