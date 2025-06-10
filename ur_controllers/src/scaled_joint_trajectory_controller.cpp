@@ -354,7 +354,10 @@ void ScaledJointTrajectoryController::update_pids()
     const auto& gains = params_.gains.joints_map.at(params_.joints.at(map_cmd_to_joints_[i]));
     if (pids_[i]) {
       // update PIDs with gains from ROS parameters
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
       pids_[i]->set_gains(gains.p, gains.i, gains.d, gains.i_clamp, -gains.i_clamp);
+#pragma GCC diagnostic pop
     } else {
       // Init PIDs with gains from ROS parameters
       pids_[i] = std::make_shared<control_toolbox::Pid>(gains.p, gains.i, gains.d, gains.i_clamp, -gains.i_clamp);
