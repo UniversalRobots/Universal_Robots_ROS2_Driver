@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.3.2 (2025-06-10)
+------------------
 * Use std_atomic<bool> in SJTC (backport of `#1385 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1385>`_) (`#1387 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1387>`_)
 * Contributors: mergify[bot]
 
