@@ -336,30 +336,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "initial_joint_controller",
-            default_value="scaled_joint_trajectory_controller",
-            description="Initially loaded robot controller.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "activate_joint_controller",
-            default_value="true",
-            description="Activate loaded joint controller.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "launch_dashboard_client",
-            default_value="true",
-            description="Launch Dashboard Client?",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "use_tool_communication",
             default_value="false",
             description="Only available for e series!",
