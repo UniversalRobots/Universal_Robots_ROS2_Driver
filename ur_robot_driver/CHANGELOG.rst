@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.3.2 (2025-06-10)
+------------------
 * Remove unnecessary arguments. (backport of `#1389 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1389>`_) (`#1390 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1390>`_)
 * Contributors: mergify[bot]
 
