@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.8.1 (2025-06-11)
+------------------
 * [force mode controller] Fix the task frame orientation (backport `#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_) (`#1380 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1380>`_)
 * Update feature list (backport of `#1372 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1372>`_) (`#1374 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1374>`_)
 * Contributors: mergify[bot]
