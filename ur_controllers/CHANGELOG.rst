@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use std_atomic<bool> in SJTC (backport of `#1385 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1385>`_) (`#1386 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1386>`_)
+* [force mode controller] Fix the task frame orientation (backport `#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_) (`#1380 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1380>`_)
+* Contributors: mergify[bot]
+
 2.8.0 (2025-05-20)
 ------------------
 * Added controller to enable and disable tool contact (backport of `#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_) (`#1337 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1337>`_)

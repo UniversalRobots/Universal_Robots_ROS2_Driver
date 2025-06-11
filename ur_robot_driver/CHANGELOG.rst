@@ -1,3 +1,9 @@
+Forthcoming
+-----------
+* [force mode controller] Fix the task frame orientation (backport `#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_) (`#1380 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1380>`_)
+* Update feature list (backport of `#1372 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1372>`_) (`#1374 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1374>`_)
+* Contributors: mergify[bot]
+
 2.8.0 (2025-05-20)
 ------------------
 * [CI] Check links using lychee instead of a custom script (backport `#1355 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1355>`_) (`#1361 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1361>`_)
