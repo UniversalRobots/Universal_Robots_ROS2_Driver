@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.5)
 project(ur_calibration)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
-add_compile_options(-Wno-unused-parameter)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   message("${PROJECT_NAME}: You did not request a specific build type: selecting 'RelWithDebInfo'.")
