@@ -106,7 +106,7 @@ pose_C1_goal.pose.orientation.w = 0.0
 moveC_1.poses = [pose_C1_goal, pose_C1_via]  # first pose is goal, second is via point
 
 # Motions to compare moprim and jtc mode (send_joint_positions.py for jtc mode)
-eval_blend_radius = 0.1
+eval_blend_radius = 0.0
 eval_move_time = 1.0
 
 moveJ_eval_0 = MotionPrimitive()
@@ -206,20 +206,20 @@ class ExecuteMotionClient(Node):
         goal_msg.trajectory = MotionSequence()
 
         # "pick" sequence with moveC in the end
-        # goal_msg.trajectory.motions = [moveJ_1, moveL_1, moveL_2, moveJ_2, moveC_1]
+        goal_msg.trajectory.motions = [moveJ_1, moveL_1, moveL_2, moveJ_2, moveC_1]
 
         # evaluation sequence with moveJ movements
-        goal_msg.trajectory.motions = [
-            moveJ_eval_0,
-            moveJ_eval_1,
-            moveJ_eval_2,
-            moveJ_eval_3,
-            moveJ_eval_4,
-            moveJ_eval_5,
-            moveJ_eval_6,
-            moveJ_eval_7,
-            moveJ_eval_8,
-        ]
+        # goal_msg.trajectory.motions = [
+        #     moveJ_eval_0,
+        #     moveJ_eval_1,
+        #     moveJ_eval_2,
+        #     moveJ_eval_3,
+        #     moveJ_eval_4,
+        #     moveJ_eval_5,
+        #     moveJ_eval_6,
+        #     moveJ_eval_7,
+        #     moveJ_eval_8,
+        # ]
 
         self.get_logger().info(
             f"Sending {len(goal_msg.trajectory.motions)} motion primitives as a sequence..."
