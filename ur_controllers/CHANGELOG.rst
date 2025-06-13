@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.0.2 (2025-06-13)
+------------------
 * Ignore deprecation warning for set_gains for now (`#1392 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1392>`_)
 * Use std_atomic<bool> in SJTC (`#1385 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1385>`_)
 * Contributors: Felix Exner
