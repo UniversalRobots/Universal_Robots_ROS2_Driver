@@ -4,6 +4,7 @@ project(ur_controllers)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 find_package(ament_cmake REQUIRED)
 find_package(angles REQUIRED)
@@ -133,7 +134,9 @@ target_link_libraries(${PROJECT_NAME}
   tf2_ros::tf2_ros
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror)
+endif()
 
 # prevent pluginlib from using boost
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
