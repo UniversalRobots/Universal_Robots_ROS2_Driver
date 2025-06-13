@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ignore deprecation warning for set_gains for now (`#1392 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1392>`_)
+* Use std_atomic<bool> in SJTC (`#1385 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1385>`_)
+* Contributors: Felix Exner
+
 4.0.1 (2025-05-28)
 ------------------
 * [force mode controller] Fix the task frame orientation (`#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_)
