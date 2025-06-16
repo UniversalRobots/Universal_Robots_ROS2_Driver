@@ -1,3 +1,6 @@
+Forthcoming
+-----------
+
 4.0.2 (2025-06-13)
 ------------------
 * Remove unnecessary arguments. (`#1389 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1389>`_)
