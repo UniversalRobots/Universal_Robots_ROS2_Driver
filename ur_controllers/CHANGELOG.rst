@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.0.3 (2025-06-16)
+------------------
 * Ignore RT-Tools deprecation warning about trylock
 * Contributors: Felix Exner
 
