@@ -366,7 +366,8 @@ void ScaledJointTrajectoryController::update_pids()
       pids_[i]->set_gains(gains.p, gains.i, gains.d, gains.u_clamp_max, gains.u_clamp_min, antiwindup_strat);
     } else {
       // Init PIDs with gains from ROS parameters
-      pids_[i] = std::make_shared<control_toolbox::Pid>(gains.p, gains.i, gains.d, gains.u_clamp_max, gains.u_clamp_min, antiwindup_strat);
+      pids_[i] = std::make_shared<control_toolbox::Pid>(gains.p, gains.i, gains.d, gains.u_clamp_max, gains.u_clamp_min,
+                                                        antiwindup_strat);
     }
     ff_velocity_scale_[i] = gains.ff_velocity_scale;
   }
