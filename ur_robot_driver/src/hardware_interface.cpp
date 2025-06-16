@@ -81,6 +81,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   position_controller_running_ = false;
   velocity_controller_running_ = false;
+  torque_controller_running_ = false;
   freedrive_mode_controller_running_ = false;
   passthrough_trajectory_controller_running_ = false;
   tool_contact_controller_running_ = false;
@@ -104,9 +105,9 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   trajectory_joint_accelerations_.reserve(32768);
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
-    if (joint.command_interfaces.size() != 2) {
+    if (joint.command_interfaces.size() != 3) {
       RCLCPP_FATAL(rclcpp::get_logger("URPositionHardwareInterface"),
-                   "Joint '%s' has %zu command interfaces found. 2 expected.", joint.name.c_str(),
+                   "Joint '%s' has %zu command interfaces found. 3 expected.", joint.name.c_str(),
                    joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
@@ -289,6 +290,9 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_torque_commands_[i]));
   }
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
@@ -771,6 +775,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
       urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+      urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
       target_speed_fraction_cmd_ = NO_NEW_CMD_;
       resend_robot_program_cmd_ = NO_NEW_CMD_;
       zero_ftsensor_cmd_ = NO_NEW_CMD_;
@@ -805,7 +810,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
-
+    } else if (torque_controller_running_) {
+      ur_driver_->writeJointCommand(urcl_torque_commands_, urcl::comm::ControlMode::MODE_TORQUE, receive_timeout_);
     } else if (freedrive_mode_controller_running_ && freedrive_activated_) {
       ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
@@ -1085,6 +1091,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     if (velocity_controller_running_) {
       control_modes[i] = { hardware_interface::HW_IF_VELOCITY };
     }
+    if (torque_controller_running_) {
+      control_modes[i] = { hardware_interface::HW_IF_EFFORT };
+    }
     if (force_mode_controller_running_) {
       control_modes[i].push_back(FORCE_MODE_GPIO);
     }
@@ -1124,6 +1133,16 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           return hardware_interface::return_type::ERROR;
         }
         start_modes_[i].push_back(hardware_interface::HW_IF_VELOCITY);
+      } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT) {
+        if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
+              return item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO ||
+                     item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO;
+            })) {
+          RCLCPP_ERROR(get_logger(), "Attempting to start effort control while there is another control mode already "
+                                     "requested.");
+          return hardware_interface::return_type::ERROR;
+        }
+        start_modes_[i].push_back(hardware_interface::HW_IF_EFFORT);
       } else if (key == tf_prefix + FORCE_MODE_GPIO + "/type") {
         if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
               return item == hardware_interface::HW_IF_POSITION || item == hardware_interface::HW_IF_VELOCITY;
@@ -1185,6 +1204,13 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         control_modes[i].erase(
             std::remove_if(control_modes[i].begin(), control_modes[i].end(),
                            [](const std::string& item) { return item == hardware_interface::HW_IF_VELOCITY; }),
+            control_modes[i].end());
+      }
+      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT) {
+        stop_modes_[i].push_back(StoppingInterface::STOP_TORQUE);
+        control_modes[i].erase(
+            std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                           [](const std::string& item) { return item == hardware_interface::HW_IF_EFFORT; }),
             control_modes[i].end());
       }
       if (key == tf_prefix + FORCE_MODE_GPIO + "/disable_cmd") {
@@ -1312,6 +1338,24 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     ret_val = hardware_interface::return_type::ERROR;
   }
 
+  // Effort mode requested to start
+  if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                  [](auto& item) { return (item == hardware_interface::HW_IF_EFFORT); }) &&
+      (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
+                   [this](auto& item) {
+                     return (item == hardware_interface::HW_IF_POSITION || item == hardware_interface::HW_IF_VELOCITY ||
+                             item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO || item == FREEDRIVE_MODE_GPIO);
+                   }) ||
+       std::any_of(control_modes[0].begin(), control_modes[0].end(), [this](auto& item) {
+         return (item == hardware_interface::HW_IF_EFFORT || item == hardware_interface::HW_IF_VELOCITY ||
+                 item == hardware_interface::HW_IF_POSITION || item == PASSTHROUGH_GPIO || item == FORCE_MODE_GPIO ||
+                 item == FREEDRIVE_MODE_GPIO);
+       }))) {
+    RCLCPP_ERROR(get_logger(), "Attempting to start velosity control while there is either trajectory passthrough or "
+                               "position mode or force_mode or freedrive mode running.");
+    ret_val = hardware_interface::return_type::ERROR;
+  }
+
   controllers_initialized_ = true;
   return ret_val;
 }
@@ -1330,6 +1374,11 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                               StoppingInterface::STOP_VELOCITY) != stop_modes_[0].end()) {
     velocity_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  }
+  if (stop_modes_[0].size() != 0 &&
+      std::find(stop_modes_[0].begin(), stop_modes_[0].end(), StoppingInterface::STOP_TORQUE) != stop_modes_[0].end()) {
+    torque_controller_running_ = false;
+    urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   }
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
@@ -1361,6 +1410,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (start_modes_.size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
                                             hardware_interface::HW_IF_POSITION) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
+    torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
@@ -1368,9 +1418,17 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
                                                       hardware_interface::HW_IF_VELOCITY) != start_modes_[0].end()) {
     position_controller_running_ = false;
+    torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
+  } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
+                                                      hardware_interface::HW_IF_EFFORT) != start_modes_[0].end()) {
+    position_controller_running_ = false;
+    velocity_controller_running_ = false;
+    torque_controller_running_ = true;
+    passthrough_trajectory_controller_running_ = false;
+    urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), FORCE_MODE_GPIO) != start_modes_[0].end()) {
@@ -1380,6 +1438,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
       std::find(start_modes_[0].begin(), start_modes_[0].end(), PASSTHROUGH_GPIO) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
+    torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
     passthrough_trajectory_abort_ = 0.0;
   }
@@ -1387,6 +1446,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
       std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
+    torque_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
     freedrive_activated_ = false;
   }
