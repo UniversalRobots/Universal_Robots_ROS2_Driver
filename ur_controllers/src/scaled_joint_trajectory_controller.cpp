@@ -336,10 +336,14 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
   }
 
   // TODO(fmauch): Remove once merged upstream
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   if (state_publisher_->trylock()) {
     state_publisher_->msg_.speed_scaling_factor = scaling_factor_;
     state_publisher_->unlock();
   }
+#pragma GCC diagnostic pop
   // end remove once merged upstream
 
   publish_state(time, state_desired_, state_current_, state_error_);
