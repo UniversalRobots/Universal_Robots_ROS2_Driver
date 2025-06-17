@@ -42,6 +42,7 @@
 #define UR_ROBOT_DRIVER__TRAJECTORY_UNTIL_NODE_HPP_
 
 #include <memory>
+#include <variant>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
@@ -62,6 +63,8 @@ private:
   rclcpp_action::Server<ur_msgs::action::TrajectoryUntil>::SharedPtr action_server_;
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr trajectory_action_client_;
   rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr until_action_client_;
+  // Add new until types here, when available
+  std::variant<rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr> until_action_client_variant;
 
   rclcpp::CallbackGroup::SharedPtr server_callback_group;
   rclcpp::CallbackGroup::SharedPtr clients_callback_group;
