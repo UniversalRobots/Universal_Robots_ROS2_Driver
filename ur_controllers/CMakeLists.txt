@@ -116,17 +116,13 @@ target_link_libraries(${PROJECT_NAME}
   ur_configuration_controller_parameters
 )
 
-<<<<<<< HEAD
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror=return-type)
-=======
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror=return-type)
 endif()
->>>>>>> 04997b8 (ur_controllers: Fix compilation on Windows (#1402))
 
 # prevent pluginlib from using boost
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
