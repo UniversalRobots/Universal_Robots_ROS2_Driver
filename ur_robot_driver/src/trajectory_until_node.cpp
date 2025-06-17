@@ -42,6 +42,12 @@
 #include <functional>
 #include <thread>
 
+template <class T>
+struct until_container
+{
+  T until_client_type;
+};
+
 namespace ur_robot_driver
 {
 
@@ -113,6 +119,7 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
     const rclcpp_action::GoalUUID& /* uuid */, std::shared_ptr<const TrajectoryUntil::Goal> goal)
 {
   assign_until_action_client(goal);
+
   if (!until_action_client_) {
     RCLCPP_ERROR(this->get_logger(), "Until action server not defined, double check the types in the action "
                                      "definition.");
@@ -308,23 +315,24 @@ template <typename UntilResult>
 void TrajectoryUntilNode::report_goal(UntilResult result)
 {
   if (server_goal_handle_) {
-    prealloc_res->until_condition_result = result.result->result;
-
     switch (result.code) {
       case rclcpp_action::ResultCode::SUCCEEDED:
         prealloc_res->error_code = TrajectoryUntil::Result::SUCCESSFUL;
+        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::TRIGGERED;
         server_goal_handle_->succeed(prealloc_res);
         break;
 
       case rclcpp_action::ResultCode::ABORTED:
         prealloc_res->error_string = "Until action was aborted. Aborting goal.";
         prealloc_res->error_code = TrajectoryUntil::Result::ABORTED;
+        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::ABORTED;
         server_goal_handle_->abort(prealloc_res);
         break;
 
       case rclcpp_action::ResultCode::CANCELED:
         prealloc_res->error_string = "Until action was canceled, this should not happen. Aborting goal.";
         prealloc_res->error_code = TrajectoryUntil::Result::ABORTED;
+        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::PREEMPTED;
         server_goal_handle_->abort(prealloc_res);
         break;
 
@@ -332,6 +340,7 @@ void TrajectoryUntilNode::report_goal(UntilResult result)
         prealloc_res->error_string = "Unknown result code received from until action, this should not happen. Aborting "
                                      "goal.";
         prealloc_res->error_code = TrajectoryUntil::Result::ABORTED;
+        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::ABORTED;
         server_goal_handle_->abort(prealloc_res);
 
         break;
@@ -369,7 +378,7 @@ void TrajectoryUntilNode::reset_node()
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<ur_controllers::TrajectoryUntilNode>();
+  auto node = std::make_shared<ur_robot_driver::TrajectoryUntilNode>();
   // Use multithreaded executor because we have two callback groups
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(node);
