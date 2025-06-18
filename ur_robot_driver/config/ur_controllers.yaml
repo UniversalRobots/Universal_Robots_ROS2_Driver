@@ -21,6 +21,9 @@ controller_manager:
     forward_velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
+    forward_effort_controller:
+      type: effort_controllers/JointGroupEffortController
+
     forward_position_controller:
       type: position_controllers/JointGroupPositionController
 
@@ -158,6 +161,17 @@ forward_velocity_controller:
       - $(var tf_prefix)wrist_2_joint
       - $(var tf_prefix)wrist_3_joint
     interface_name: velocity
+
+forward_effort_controller:
+  ros__parameters:
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+    interface_name: effort
 
 forward_position_controller:
   ros__parameters:

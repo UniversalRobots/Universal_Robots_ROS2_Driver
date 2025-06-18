@@ -40,10 +40,11 @@
 #define UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
 
 // System
+#include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <limits>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
@@ -81,6 +82,7 @@ enum StoppingInterface
   STOP_FORCE_MODE,
   STOP_FREEDRIVE,
   STOP_TOOL_CONTACT,
+  STOP_TORQUE,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -114,6 +116,7 @@ class URPositionHardwareInterface : public hardware_interface::SystemInterface
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
+  URPositionHardwareInterface();
   virtual ~URPositionHardwareInterface();
 
   hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo& system_info) final;
@@ -175,6 +178,7 @@ protected:
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
+  urcl::vector6d_t urcl_torque_commands_;
   urcl::vector6d_t urcl_joint_positions_;
   urcl::vector6d_t urcl_joint_velocities_;
   urcl::vector6d_t urcl_joint_efforts_;
@@ -303,6 +307,7 @@ protected:
   std::vector<std::vector<std::string>> start_modes_;
   bool position_controller_running_;
   bool velocity_controller_running_;
+  bool torque_controller_running_;
   bool force_mode_controller_running_ = false;
 
   std::unique_ptr<urcl::UrDriver> ur_driver_;
@@ -316,6 +321,8 @@ protected:
   const std::string FORCE_MODE_GPIO = "force_mode";
   const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
   const std::string TOOL_CONTACT_GPIO = "tool_contact";
+
+  std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
 };
 }  // namespace ur_robot_driver
 
