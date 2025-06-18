@@ -32,7 +32,10 @@ jobs:
           colcon-defaults: |
             {
               "build": {
-                "mixin": ["coverage-gcc", "coverage-pytest"]
+                "mixin": ["coverage-gcc", "coverage-pytest", "debug"],
+                "cmake-args": [
+                  "-DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON",
+                ]
               },
               "test": {
                 "mixin": ["coverage-pytest"]
