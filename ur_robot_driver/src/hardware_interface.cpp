@@ -44,6 +44,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cmath>
 
 #include "ur_client_library/exceptions.h"
 #include "ur_client_library/ur/tool_communication.h"
@@ -53,9 +54,6 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ur_robot_driver/hardware_interface.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
-
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
 
 namespace rtde = urcl::rtde_interface;
 
@@ -1804,7 +1802,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
           }
         }
         double rx, ry, rz;
-        quaternionToEuler(command[10], command[11], command[12], command[13], rx, ry, rz);
+        quaternionToRotVec(command[10], command[11], command[12], command[13], rx, ry, rz);
         urcl::Pose pose = { command[7], command[8], command[9], rx, ry, rz };
 
         // Get move_time OR (velocity AND acceleration)
@@ -1871,11 +1869,11 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         }
 
         double via_rx, via_ry, via_rz;
-        quaternionToEuler(command[17], command[18], command[19], command[20], via_rx, via_ry, via_rz);
+        quaternionToRotVec(command[17], command[18], command[19], command[20], via_rx, via_ry, via_rz);
         urcl::Pose via_pose = { command[14], command[15], command[16], via_rx, via_ry, via_rz };
 
         double goal_rx, goal_ry, goal_rz;
-        quaternionToEuler(command[10], command[11], command[12], command[13], goal_rx, goal_ry, goal_rz);
+        quaternionToRotVec(command[10], command[11], command[12], command[13], goal_rx, goal_ry, goal_rz);
         urcl::Pose goal_pose = { command[7], command[8], command[9], goal_rx, goal_ry, goal_rz };
 
         // Check if the command is part of a motion sequence or a single command
@@ -1927,16 +1925,34 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
   }
 }
 
-// Convert quaternion to Euler angles (roll, pitch, yaw)
-void URPositionHardwareInterface::quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz)
-{
-  tf2::Quaternion quat_tf(qx, qy, qz, qw);
-  tf2::Matrix3x3 rot_mat(quat_tf);
-  rot_mat.getRPY(rx, ry, rz);
+void URPositionHardwareInterface::quaternionToRotVec(double qx, double qy, double qz, double qw,
+                                                     double& rx, double& ry, double& rz) {
+    // Calculating the norm of the quaternion
+    double norm = std::sqrt(qx*qx + qy*qy + qz*qz + qw*qw);
+    if (norm < 1e-8) {
+        // Invalid quaternion → zero rotation
+        rx = ry = rz = 0.0;
+        return;
+    }
 
-  // RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-  //     "Converted quaternion [%f, %f, %f, %f] to Euler angles: [%f, %f, %f]",
-  //     qx, qy, qz, qw, rx, ry, rz);
+    qx /= norm;
+    qy /= norm;
+    qz /= norm;
+    qw /= norm;
+
+    // Calculating the angle theta
+    double theta = 2.0 * std::acos(qw);
+    double s = std::sqrt(1.0 - qw*qw);
+
+    if (s < 1e-8) {
+        // Very small rotation → axis undefined, set to zero rotation
+        rx = ry = rz = 0.0;
+    } else {
+        // Normalized axis vector * angle = rotation vector
+        rx = theta * (qx / s);
+        ry = theta * (qy / s);
+        rz = theta * (qz / s);
+    }
 }
 
 bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity,
