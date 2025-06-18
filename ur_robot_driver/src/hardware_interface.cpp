@@ -54,6 +54,9 @@
 #include "ur_robot_driver/hardware_interface.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
 
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+
 namespace rtde = urcl::rtde_interface;
 
 namespace ur_robot_driver
@@ -1925,28 +1928,15 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
 }
 
 // Convert quaternion to Euler angles (roll, pitch, yaw)
-// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-void URPositionHardwareInterface::quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry,
-                                                    double& rz)
+void URPositionHardwareInterface::quaternionToEuler(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz)
 {
-  // roll (x-axis rotation)
-  double sinr_cosp = 2 * (qw * qx + qy * qz);
-  double cosr_cosp = 1 - 2 * (qx * qx + qy * qy);
-  rx = std::atan2(sinr_cosp, cosr_cosp);
-
-  // pitch (y-axis rotation)
-  double sinp = std::sqrt(1 + 2 * (qw * qy - qx * qz));
-  double cosp = std::sqrt(1 - 2 * (qw * qy - qx * qz));
-  ry = 2 * std::atan2(sinp, cosp) - M_PI / 2;
-
-  // yaw (z-axis rotation)
-  double siny_cosp = 2 * (qw * qz + qx * qy);
-  double cosy_cosp = 1 - 2 * (qy * qy + qz * qz);
-  rz = std::atan2(siny_cosp, cosy_cosp);
+  tf2::Quaternion quat_tf(qx, qy, qz, qw);
+  tf2::Matrix3x3 rot_mat(quat_tf);
+  rot_mat.getRPY(rx, ry, rz);
 
   // RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-  //       "Converted quaternion [%f, %f, %f, %f] to Euler angles: [%f, %f, %f]",
-  //       qx, qy, qz, qw, rx, ry, rz);
+  //     "Converted quaternion [%f, %f, %f, %f] to Euler angles: [%f, %f, %f]",
+  //     qx, qy, qz, qw, rx, ry, rz);
 }
 
 bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity,
