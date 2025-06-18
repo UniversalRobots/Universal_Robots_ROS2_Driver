@@ -44,7 +44,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <cmath>
 
 #include "ur_client_library/exceptions.h"
 #include "ur_client_library/ur/tool_communication.h"
@@ -1927,32 +1926,12 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
 
 void URPositionHardwareInterface::quaternionToRotVec(double qx, double qy, double qz, double qw,
                                                      double& rx, double& ry, double& rz) {
-    // Calculating the norm of the quaternion
-    double norm = std::sqrt(qx*qx + qy*qy + qz*qz + qw*qw);
-    if (norm < 1e-8) {
-        // Invalid quaternion → zero rotation
-        rx = ry = rz = 0.0;
-        return;
-    }
-
-    qx /= norm;
-    qy /= norm;
-    qz /= norm;
-    qw /= norm;
-
-    // Calculating the angle theta
-    double theta = 2.0 * std::acos(qw);
-    double s = std::sqrt(1.0 - qw*qw);
-
-    if (s < 1e-8) {
-        // Very small rotation → axis undefined, set to zero rotation
-        rx = ry = rz = 0.0;
-    } else {
-        // Normalized axis vector * angle = rotation vector
-        rx = theta * (qx / s);
-        ry = theta * (qy / s);
-        rz = theta * (qz / s);
-    }
+    tf2::Quaternion q(qx, qy, qz, qw);
+    const double angle = q.getAngle();
+    const auto axis = q.getAxis();
+    rx = axis.x() * angle;  // rx
+    ry = axis.y() * angle;  // ry
+    rz = axis.z() * angle;  // rz
 }
 
 bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity,
