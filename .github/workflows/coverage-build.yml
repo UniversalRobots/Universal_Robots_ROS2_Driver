@@ -34,7 +34,7 @@ jobs:
               "build": {
                 "mixin": ["coverage-gcc", "coverage-pytest", "debug"],
                 "cmake-args": [
-                  "-DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON",
+                  "-DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON"
                 ]
               },
               "test": {
