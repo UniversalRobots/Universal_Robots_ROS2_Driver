@@ -57,6 +57,45 @@ namespace rtde = urcl::rtde_interface;
 namespace ur_robot_driver
 {
 
+URPositionHardwareInterface::URPositionHardwareInterface()
+{
+  mode_compatibility_[hardware_interface::HW_IF_POSITION][hardware_interface::HW_IF_VELOCITY] = false;
+  mode_compatibility_[hardware_interface::HW_IF_POSITION][FORCE_MODE_GPIO] = false;
+  mode_compatibility_[hardware_interface::HW_IF_POSITION][PASSTHROUGH_GPIO] = false;
+  mode_compatibility_[hardware_interface::HW_IF_POSITION][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[hardware_interface::HW_IF_POSITION][TOOL_CONTACT_GPIO] = true;
+
+  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][hardware_interface::HW_IF_POSITION] = false;
+  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][FORCE_MODE_GPIO] = false;
+  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][PASSTHROUGH_GPIO] = false;
+  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][TOOL_CONTACT_GPIO] = true;
+
+  mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
+  mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
+  mode_compatibility_[FORCE_MODE_GPIO][PASSTHROUGH_GPIO] = true;
+  mode_compatibility_[FORCE_MODE_GPIO][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[FORCE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
+
+  mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_POSITION] = false;
+  mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
+  mode_compatibility_[PASSTHROUGH_GPIO][FORCE_MODE_GPIO] = true;
+  mode_compatibility_[PASSTHROUGH_GPIO][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[PASSTHROUGH_GPIO][TOOL_CONTACT_GPIO] = true;
+
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][FORCE_MODE_GPIO] = false;
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][PASSTHROUGH_GPIO] = false;
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
+
+  mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_POSITION] = true;
+  mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_VELOCITY] = true;
+  mode_compatibility_[TOOL_CONTACT_GPIO][FORCE_MODE_GPIO] = false;
+  mode_compatibility_[TOOL_CONTACT_GPIO][PASSTHROUGH_GPIO] = true;
+  mode_compatibility_[TOOL_CONTACT_GPIO][FREEDRIVE_MODE_GPIO] = false;
+}
+
 URPositionHardwareInterface::~URPositionHardwareInterface()
 {
 }
@@ -1094,11 +1133,25 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     }
   }
 
+  auto is_mode_compatible = [this](const std::string& mode, const std::vector<std::string>& other_modes) {
+    for (auto& other : other_modes) {
+      if (mode == other)
+        continue;
+
+      if (mode_compatibility_[mode][other] == false) {
+        RCLCPP_ERROR(get_logger(), "Starting %s together with %s is not allowed. ", mode.c_str(), other.c_str());
+        return false;
+      }
+    }
+    return true;
+  };
+
   // Starting interfaces
   // If a joint has been reserved already, raise an error.
   // Modes that are not directly mapped to a single joint such as force_mode reserve all joints.
   for (const auto& key : start_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
+<<<<<<< HEAD
       if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
         if (std::any_of(start_modes_[i].begin(), start_modes_[i].end(), [&](const std::string& item) {
               return item == hardware_interface::HW_IF_VELOCITY || item == PASSTHROUGH_GPIO ||
@@ -1161,6 +1214,25 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           return hardware_interface::return_type::ERROR;
         }
         start_modes_[i].push_back(TOOL_CONTACT_GPIO);
+=======
+      const std::vector<std::pair<std::string, std::string>> start_modes_to_check{
+        { info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION },
+        { info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_VELOCITY },
+        { tf_prefix + FORCE_MODE_GPIO + "/type", FORCE_MODE_GPIO },
+        { tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i), PASSTHROUGH_GPIO },
+        { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO },
+        { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO }
+      };
+
+      for (auto& item : start_modes_to_check) {
+        if (key == item.first) {
+          if (!is_mode_compatible(item.second, start_modes_[i])) {
+            return hardware_interface::return_type::ERROR;
+          }
+          start_modes_[i].push_back(item.second);
+          continue;
+        }
+>>>>>>> effc0a0 (Refactor prepare_switch method (#1417))
       }
     }
   }
@@ -1175,48 +1247,32 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   // add stop interface per joint in tmp var for later check
   for (const auto& key : stop_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
-      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-        stop_modes_[i].push_back(StoppingInterface::STOP_POSITION);
-        control_modes[i].erase(
-            std::remove_if(control_modes[i].begin(), control_modes[i].end(),
-                           [](const std::string& item) { return item == hardware_interface::HW_IF_POSITION; }),
-            control_modes[i].end());
-      }
-      if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-        stop_modes_[i].push_back(StoppingInterface::STOP_VELOCITY);
-        control_modes[i].erase(
-            std::remove_if(control_modes[i].begin(), control_modes[i].end(),
-                           [](const std::string& item) { return item == hardware_interface::HW_IF_VELOCITY; }),
-            control_modes[i].end());
-      }
-      if (key == tf_prefix + FORCE_MODE_GPIO + "/disable_cmd") {
-        stop_modes_[i].push_back(StoppingInterface::STOP_FORCE_MODE);
-        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
-                                              [&](const std::string& item) { return item == FORCE_MODE_GPIO; }),
-                               control_modes[i].end());
-      }
-      if (key == tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i)) {
-        stop_modes_[i].push_back(StoppingInterface::STOP_PASSTHROUGH);
-        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
-                                              [&](const std::string& item) { return item == PASSTHROUGH_GPIO; }),
-                               control_modes[i].end());
-      }
-      if (key == tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success") {
-        stop_modes_[i].push_back(StoppingInterface::STOP_FREEDRIVE);
-        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
-                                              [&](const std::string& item) { return item == FREEDRIVE_MODE_GPIO; }),
-                               control_modes[i].end());
-      }
-      if (key == tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state") {
-        stop_modes_[i].push_back(StoppingInterface::STOP_TOOL_CONTACT);
-        control_modes[i].erase(std::remove_if(control_modes[i].begin(), control_modes[i].end(),
-                                              [&](const std::string& item) { return item == TOOL_CONTACT_GPIO; }),
-                               control_modes[i].end());
+      const std::vector<std::tuple<std::string, std::string, StoppingInterface>> stop_modes_to_check{
+        { info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
+          StoppingInterface::STOP_POSITION },
+        { info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_VELOCITY,
+          StoppingInterface::STOP_VELOCITY },
+        { tf_prefix + FORCE_MODE_GPIO + "/disable_cmd", FORCE_MODE_GPIO, StoppingInterface::STOP_FORCE_MODE },
+        { tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i), PASSTHROUGH_GPIO,
+          StoppingInterface::STOP_PASSTHROUGH },
+        { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO, StoppingInterface::STOP_FREEDRIVE },
+        { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO,
+          StoppingInterface::STOP_TOOL_CONTACT }
+      };
+      for (auto& item : stop_modes_to_check) {
+        if (key == std::get<0>(item)) {
+          stop_modes_[i].push_back(std::get<2>(item));
+          control_modes[i].erase(
+              std::remove_if(control_modes[i].begin(), control_modes[i].end(),
+                             [&item](const std::string& entry) { return entry == std::get<1>(item); }),
+              control_modes[i].end());
+        }
       }
     }
   }
 
   // Do not start conflicting controllers
+<<<<<<< HEAD
   // Passthrough controller requested to start
   if (std::any_of(start_modes_[0].begin(), start_modes_[0].end(),
                   [this](auto& item) { return (item == PASSTHROUGH_GPIO); }) &&
@@ -1320,6 +1376,12 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
                                                                     "position mode or force_mode or freedrive mode "
                                                                     "running.");
     ret_val = hardware_interface::return_type::ERROR;
+=======
+  for (auto& start_mode : start_modes_[0]) {
+    if (!is_mode_compatible(start_mode, control_modes[0])) {
+      return hardware_interface::return_type::ERROR;
+    }
+>>>>>>> effc0a0 (Refactor prepare_switch method (#1417))
   }
 
   controllers_initialized_ = true;
