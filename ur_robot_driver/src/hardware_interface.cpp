@@ -1156,7 +1156,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   // Modes that are not directly mapped to a single joint such as force_mode reserve all joints.
   for (const auto& key : start_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
-      std::vector<std::pair<std::string, std::string>> start_modes_to_check{
+      const std::vector<std::pair<std::string, std::string>> start_modes_to_check{
         { info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION },
         { info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_VELOCITY },
         { tf_prefix + FORCE_MODE_GPIO + "/type", FORCE_MODE_GPIO },
@@ -1187,7 +1187,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   // add stop interface per joint in tmp var for later check
   for (const auto& key : stop_interfaces) {
     for (auto i = 0u; i < info_.joints.size(); i++) {
-      std::vector<std::tuple<std::string, std::string, StoppingInterface>> stop_modes_to_check{
+      const std::vector<std::tuple<std::string, std::string, StoppingInterface>> stop_modes_to_check{
         { info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_POSITION,
           StoppingInterface::STOP_POSITION },
         { info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_VELOCITY,
