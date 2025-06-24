@@ -2,6 +2,15 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use new API of PID class (backport of `#1410 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1410>`_) (`#1418 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1418>`_)
+  Co-authored-by: Christoph Fröhlich <christophfroehlich@users.noreply.github.com>
+* ur_controllers: Fix compilation on Windows (backport of `#1402 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1402>`_) (`#1413 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1413>`_)
+  Co-authored-by: Silvio Traversaro <silvio@traversaro.it>
+* Ignore deprecation warning for set_gains for now (backport of `#1392 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1392>`_) (`#1396 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1396>`_)
+* Contributors: mergify[bot]
+
 3.3.2 (2025-06-10)
 ------------------
 * Use std_atomic<bool> in SJTC (backport of `#1385 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1385>`_) (`#1387 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1387>`_)
