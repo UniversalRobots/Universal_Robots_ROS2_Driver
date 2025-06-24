@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.3.3 (2025-06-24)
+------------------
 * Refactor prepare_switch method (backport of `#1417 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1417>`_) (`#1428 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1428>`_)
 * Update simulation page to also explicitly mention PolyScope X (backport of `#1415 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1415>`_) (`#1426 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1426>`_)
 * Contributors: mergify[bot]
