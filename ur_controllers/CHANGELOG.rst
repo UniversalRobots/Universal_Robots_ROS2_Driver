@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.3.3 (2025-06-24)
+------------------
 * Use new API of PID class (backport of `#1410 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1410>`_) (`#1418 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1418>`_)
   Co-authored-by: Christoph Fröhlich <christophfroehlich@users.noreply.github.com>
 * ur_controllers: Fix compilation on Windows (backport of `#1402 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1402>`_) (`#1413 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1413>`_)
