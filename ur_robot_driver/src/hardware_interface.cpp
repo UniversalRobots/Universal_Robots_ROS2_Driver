@@ -220,7 +220,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       const std::vector<std::string> fts_names = {
         "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
       };
-      for (uint j = 0; j < 6; ++j) {
+      for (uint32_t j = 0; j < 6; ++j) {
         state_interfaces.emplace_back(
             hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
       }
@@ -1112,7 +1112,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
   start_modes_ = std::vector<std::vector<std::string>>(info_.joints.size());
-  stop_modes_ = std::vector<std::vector<uint>>(info_.joints.size());
+  stop_modes_ = std::vector<std::vector<uint32_t>>(info_.joints.size());
   std::vector<std::vector<std::string>> control_modes(info_.joints.size());
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
 
