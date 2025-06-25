@@ -121,17 +121,29 @@ class RobotDriverTest(unittest.TestCase):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self.node)
 
-    def lookup_tcp_in_base(self, tf_prefix, timepoint):
-        trans = None
-        while not trans:
-            rclpy.spin_once(self.node)
+    def wait_for_lookup(self, source, target, timepoint, timeout=5.0):
+        """
+        Wait until the transform between source and target is available.
+
+        :param source: The source frame
+        :param target: The target frame
+        :param timeout: The point in time at which to make the lookup
+        :param timeout: Timeout in seconds
+        :return: transform between source and target at the given timepoint
+        :raises TimeoutError: If the transform is not available within the timeout
+        """
+        end_time = time.time() + timeout
+        while time.time() < end_time:
             try:
-                trans = self.tf_buffer.lookup_transform(
-                    tf_prefix + "base", tf_prefix + "tool0", timepoint
-                )
+                trans = self.tf_buffer.lookup_transform(source, target, timepoint)
+                return trans
             except TransformException:
-                pass
-        return trans
+                rclpy.spin_once(self.node)
+                time.sleep(0.1)
+        raise TimeoutError()
+
+    def lookup_tcp_in_base(self, tf_prefix, timepoint):
+        return self.wait_for_lookup(tf_prefix + "base", tf_prefix + "tool0", timepoint)
 
     # Implementation of force mode test to be reused
     # todo: If we move to pytest this could be done using parametrization
@@ -200,6 +212,9 @@ class RobotDriverTest(unittest.TestCase):
                 z=(trans_after.transform.translation.z - trans_before.transform.translation.z),
             ),
             header=trans_after.header,
+        )
+        self.wait_for_lookup(
+            diff.header.frame_id, tf_prefix + "tool0_controller", diff.header.stamp
         )
         diff_in_tool0_controller = self.tf_buffer.transform(
             diff,
