@@ -133,6 +133,11 @@ unlock_protective_stop (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_
 
 Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the cause of the protective stop is resolved before calling this service.
 
+is_in_remote_control (`ur_dashboard_msgs/IsInRemoteControl <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/IsInRemoteControl.html>`_)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Service to query whether the robot is in remote control
+
 Parameters
 ----------
 
