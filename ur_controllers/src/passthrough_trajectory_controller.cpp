@@ -265,12 +265,21 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     active_joint_traj_ = active_goal->gh_->get_goal()->trajectory;
 
     if (current_index_ == 0 && current_transfer_state == TRANSFER_STATE_IDLE) {
+      size_t traj_size = active_joint_traj_.points.size();
+      if (active_joint_traj_.points[0].time_from_start.sec == 0 &&
+          active_joint_traj_.points[0].time_from_start.nanosec == 0) {
+        RCLCPP_WARN(get_node()->get_logger(),
+                    "First point of trajectory has time_from_start set to 0. This is not recommended, as it may lead "
+                    "to unexpected behavior. Removing the first point");
+        current_index_++;
+        traj_size--;
+      }
       active_trajectory_elapsed_time_ = rclcpp::Duration(0, 0);
       max_trajectory_time_ =
           rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
       write_success &= transfer_command_interface_->get().set_value(TRANSFER_STATE_NEW_TRAJECTORY);
       write_success &=
-          trajectory_size_command_interface_->get().set_value(static_cast<double>(active_joint_traj_.points.size()));
+          trajectory_size_command_interface_->get().set_value(static_cast<double>(traj_size));
     }
     auto active_goal_time_tol = goal_time_tolerance_.readFromRT();
     auto joint_mapping = joint_trajectory_mapping_.readFromRT();
@@ -546,6 +555,17 @@ void PassthroughTrajectoryController::goal_accepted_callback(
   RCLCPP_INFO_STREAM(get_node()->get_logger(), "Accepted new trajectory with "
                                                    << goal_handle->get_goal()->trajectory.points.size() << " points.");
   current_index_ = 0;
+
+  for (auto& point : goal_handle->get_goal()->trajectory.points) {
+    std::stringstream ss;
+    ss << "time_from_start: " << point.time_from_start.sec << "." << point.time_from_start.nanosec
+       << " sec, positions: " << std::setprecision(3) << std::fixed << "[";
+    for (const auto& pos : point.positions) {
+      ss << std::setw(8) << pos << ", ";
+    }
+    ss << "]";
+    RCLCPP_INFO_STREAM(get_node()->get_logger(), ss.str());
+  }
 
   // TODO(fexner): Merge goal tolerances with default tolerances
 
