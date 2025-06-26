@@ -10,9 +10,11 @@ trajectory_execution:
 moveit_simple_controller_manager:
   controller_names:
     - scaled_joint_trajectory_controller
+    - passthrough_trajectory_controller
     - joint_trajectory_controller
 
-  scaled_joint_trajectory_controller:
+  #scaled_joint_trajectory_controller:
+  passthrough_trajectory_controller:
     action_ns: follow_joint_trajectory
     type: FollowJointTrajectory
     default: true
