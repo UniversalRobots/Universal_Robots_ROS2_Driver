@@ -269,6 +269,11 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         }
         return true;
       });
+
+  // Service to query whether the robot is in remote control.
+  is_in_remote_control_service_ = node_->create_service<ur_dashboard_msgs::srv::IsInRemoteControl>(
+      "~/is_in_remote_control",
+      std::bind(&DashboardClientROS::handleRemoteControlQuery, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 bool DashboardClientROS::connect()
@@ -410,4 +415,20 @@ bool DashboardClientROS::handleRobotModeQuery(const ur_dashboard_msgs::srv::GetR
   }
   return true;
 }
+
+bool DashboardClientROS::handleRemoteControlQuery(
+    const ur_dashboard_msgs::srv::IsInRemoteControl::Request::SharedPtr req,
+    ur_dashboard_msgs::srv::IsInRemoteControl::Response::SharedPtr resp)
+{
+  try {
+    resp->remote_control = this->client_.commandIsInRemoteControl();
+    resp->success = true;
+  } catch (const urcl::UrException& e) {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+    resp->answer = e.what();
+    resp->success = false;
+  }
+  return true;
+}
+
 }  // namespace ur_robot_driver
