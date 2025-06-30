@@ -143,7 +143,12 @@ target_link_libraries(urscript_interface PUBLIC
 add_executable(trajectory_until_node
   src/trajectory_until_node.cpp
 )
-ament_target_dependencies(trajectory_until_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(trajectory_until_node PUBLIC
+  rclcpp::rclcpp
+  ${std_msgs_TARGETS}
+  rclcpp_action::rclcpp_action
+  ${ur_msgs_TARGETS}
+  )
 
 install(
   TARGETS
@@ -151,6 +156,7 @@ install(
     controller_stopper_node
     urscript_interface
     robot_state_helper
+    trajectory_until_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
