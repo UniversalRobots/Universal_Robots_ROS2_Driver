@@ -179,7 +179,6 @@ tcp_pose_broadcaster:
 
 motion_primitive_controller:
   ros__parameters:
-    name: motion_primitive
     command_interfaces:
       - motion_type
       - q1
