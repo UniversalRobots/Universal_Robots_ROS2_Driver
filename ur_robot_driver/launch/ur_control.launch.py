@@ -158,6 +158,16 @@ def launch_setup(context):
         arguments=["-d", rviz_config_file],
     )
 
+    trajectory_until_node = Node(
+        package="ur_robot_driver",
+        executable="trajectory_until_node",
+        name="trajectory_until_node",
+        output="screen",
+        remappings=[
+            ('/motion_controller/follow_joint_trajectory', f'/{initial_joint_controller.perform(context)}/follow_joint_trajectory'),
+            ]
+    )
+
     # Spawn controllers
     def controller_spawner(controllers, active=True):
         inactive_flags = ["--inactive"] if not active else []
@@ -221,6 +231,7 @@ def launch_setup(context):
         urscript_interface,
         rsp,
         rviz_node,
+        trajectory_until_node,
     ] + controller_spawners
 
     return nodes_to_start
