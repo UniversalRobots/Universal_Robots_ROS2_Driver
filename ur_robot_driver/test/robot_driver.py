@@ -369,7 +369,7 @@ class RobotDriverTest(unittest.TestCase):
             Duration(sec=12, nanosec=0),
         ]
         goal_tolerance = [
-            JointTolerance(position=0.01, name=tf_prefix + ROBOT_JOINTS[i])
+            JointTolerance(position=0.01, velocity=5e-5, name=tf_prefix + ROBOT_JOINTS[i])
             for i in range(len(ROBOT_JOINTS))
         ]
         goal_time_tolerance = Duration(sec=1, nanosec=0)
