@@ -44,8 +44,8 @@
 #include <memory>
 #include <variant>
 
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/bool.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <rclcpp_action/server.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <rclcpp_action/create_server.hpp>
@@ -55,26 +55,41 @@
 #include <ur_msgs/action/trajectory_until.hpp>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
+
 namespace ur_robot_driver
 {
 class TrajectoryUntilNode : public rclcpp::Node
 {
+public:
+  explicit TrajectoryUntilNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+  ~TrajectoryUntilNode();
+
 private:
   rclcpp_action::Server<ur_msgs::action::TrajectoryUntil>::SharedPtr action_server_;
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr trajectory_action_client_;
-  rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr until_action_client_;
   // Add new until types here, when available
-  std::variant<rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr> until_action_client_variant;
+  // Append only, no changing the sequence
+  using tc_client = rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr;
+
+  std::variant</* std::monostate,  */tc_client> until_action_client_variant;
 
   rclcpp::CallbackGroup::SharedPtr server_callback_group;
   rclcpp::CallbackGroup::SharedPtr clients_callback_group;
 
   std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> server_goal_handle_;
 
+  template<class ActionType, class ClientType>
+  void send_until_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+
+  template<class T>
   void
-  until_response_callback(const rclcpp_action::ClientGoalHandle<ur_msgs::action::ToolContact>::SharedPtr& goal_handle);
+  until_response_callback(const typename rclcpp_action::ClientGoalHandle<T>::SharedPtr& goal_handle);
+
+  template<class T>
   void
-  until_result_callback(const rclcpp_action::ClientGoalHandle<ur_msgs::action::ToolContact>::WrappedResult& result);
+  until_result_callback(const typename rclcpp_action::ClientGoalHandle<T>::WrappedResult& result);
+
+  void cancel_until_goal();
 
   void trajectory_response_callback(
       const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::SharedPtr& goal_handle);
@@ -84,7 +99,7 @@ private:
   void trajectory_result_callback(
       const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult& result);
 
-  void assign_until_action_client(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+  bool assign_until_action_client(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
 
   rclcpp_action::GoalResponse goal_received_callback(
       const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
@@ -95,7 +110,7 @@ private:
 
   void send_trajectory_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
 
-  void send_until_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+  
 
   void report_goal(rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult result);
 
@@ -119,10 +134,6 @@ private:
   std::condition_variable cv_trajectory_;
   std::mutex mutex_until;
   std::mutex mutex_trajectory;
-
-public:
-  explicit TrajectoryUntilNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
-  ~TrajectoryUntilNode();
 };
 
 }  // namespace ur_robot_driver
