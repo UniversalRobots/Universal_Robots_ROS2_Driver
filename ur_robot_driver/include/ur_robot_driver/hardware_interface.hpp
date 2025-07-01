@@ -67,8 +67,8 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
-#include "motion_primitives_forward_controller/execution_state.hpp"
-#include "motion_primitives_forward_controller/motion_type.hpp"
+// Motion primitives controller
+#include "motion_primitives_forward_controller/motion_primitives_forward_controller.hpp"
 
 namespace ur_robot_driver
 {
@@ -289,7 +289,8 @@ protected:
 
   // Status for communication with controller
   bool motion_primitives_forward_controller_running_;
-  std::atomic<int8_t> current_moprim_execution_status_;
+  using MoprimExecutionState = motion_primitives_forward_controller::ExecutionState;
+  MoprimExecutionState current_moprim_execution_status_;
   std::atomic_bool ready_for_new_moprim_;
 
   // Command and state interfaces for the motion primitives
