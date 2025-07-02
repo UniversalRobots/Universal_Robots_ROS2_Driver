@@ -107,15 +107,15 @@ https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.
 ## Launch hardware_interface with motion_primitives_ur_driver
 With URSim:
 ```
-ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_controller
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_forward_controller
 ```
 With H-KA UR10e:
 ```
-ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_controller
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_forward_controller
 ```
 ## (optional) switching control mode
 ```
-ros2 control switch_controllers --activate motion_primitive_controller --deactivate scaled_joint_trajectory_controller
+ros2 control switch_controllers --activate motion_primitive_forward_controller --deactivate scaled_joint_trajectory_controller
 ```
 ## Publish motion primitives
 > [!WARNING]

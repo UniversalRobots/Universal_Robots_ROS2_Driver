@@ -39,7 +39,7 @@ controller_manager:
     ur_configuration_controller:
       type: ur_controllers/URConfigurationController
 
-    motion_primitive_controller:
+    motion_primitive_forward_controller:
       type: motion_primitives_forward_controller/MotionPrimitivesForwardController
 
 speed_scaling_state_broadcaster:
@@ -177,7 +177,7 @@ tcp_pose_broadcaster:
       child_frame_id: $(var tf_prefix)tool0_controller
 
 
-motion_primitive_controller:
+motion_primitive_forward_controller:
   ros__parameters:
     command_interfaces:
       - motion_type

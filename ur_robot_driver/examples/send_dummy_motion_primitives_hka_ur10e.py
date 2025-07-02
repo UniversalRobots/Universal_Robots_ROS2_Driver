@@ -180,12 +180,12 @@ class ExecuteMotionClient(Node):
 
         # Initialize action client for ExecuteMotion action
         self._client = ActionClient(
-            self, ExecuteMotion, "/motion_primitive_controller/motion_sequence"
+            self, ExecuteMotion, "/motion_primitive_forward_controller/motion_sequence"
         )
 
         # Initialize client for cancel_goal service
         self._cancel_client = self.create_client(
-            CancelGoal, "/motion_primitive_controller/motion_sequence/_action/cancel_goal"
+            CancelGoal, "/motion_primitive_forward_controller/motion_sequence/_action/cancel_goal"
         )
 
         self._goal_id = None  # To store the goal ID for cancellation
