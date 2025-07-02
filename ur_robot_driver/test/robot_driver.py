@@ -187,6 +187,13 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_trajectory(self, tf_prefix):
         """Test robot movement."""
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["passthrough_trajectory_controller"],
+                activate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
         # Construct test trajectory
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -219,6 +226,13 @@ class RobotDriverTest(unittest.TestCase):
 
         This is more of a validation test that the testing suite does the right thing
         """
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["passthrough_trajectory_controller"],
+                activate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
         # Construct test trajectory, the second point wrongly starts before the first
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -244,6 +258,13 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_trajectory_scaled(self, tf_prefix):
         """Test robot movement."""
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["passthrough_trajectory_controller"],
+                activate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
         # Construct test trajectory
         test_trajectory = [
             (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
@@ -369,7 +390,7 @@ class RobotDriverTest(unittest.TestCase):
             Duration(sec=12, nanosec=0),
         ]
         goal_tolerance = [
-            JointTolerance(position=0.01, name=tf_prefix + ROBOT_JOINTS[i])
+            JointTolerance(position=0.01, velocity=5e-5, name=tf_prefix + ROBOT_JOINTS[i])
             for i in range(len(ROBOT_JOINTS))
         ]
         goal_time_tolerance = Duration(sec=1, nanosec=0)
