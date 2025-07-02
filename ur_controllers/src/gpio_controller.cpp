@@ -595,9 +595,9 @@ bool GPIOController::setGravity(const ur_msgs::srv::SetPayload::Request::SharedP
       command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
 
   if (resp->success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Gravity has been set successfully");
+    RCLCPP_INFO_ONCE(get_node()->get_logger(), "Gravity has been set successfully");
   } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the gravity");
+    RCLCPP_ERROR_ONCE(get_node()->get_logger(), "Could not set the gravity");
     return false;
   }
 
