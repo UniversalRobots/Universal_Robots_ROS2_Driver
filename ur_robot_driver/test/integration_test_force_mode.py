@@ -120,6 +120,7 @@ class RobotDriverTest(unittest.TestCase):
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self.node)
+        time.sleep(1)  # Wait whether the controller stopper resets controllers
 
     def wait_for_lookup(self, source, target, timepoint, timeout=5.0):
         """
@@ -139,11 +140,10 @@ class RobotDriverTest(unittest.TestCase):
                 return trans
             except TransformException:
                 rclpy.spin_once(self.node)
-                time.sleep(0.1)
         raise TimeoutError()
 
     def lookup_tcp_in_base(self, tf_prefix, timepoint):
-        return self.wait_for_lookup(tf_prefix + "base", tf_prefix + "tool0", timepoint)
+        return self.wait_for_lookup(tf_prefix + "base", tf_prefix + "tool0_controller", timepoint)
 
     # Implementation of force mode test to be reused
     # todo: If we move to pytest this could be done using parametrization
@@ -534,7 +534,6 @@ class RobotDriverTest(unittest.TestCase):
                 ],
             ).ok
         )
-        self._force_mode_controller_interface = ForceModeInterface(self.node)
 
         time.sleep(0.5)
         trans_before_wait = self.lookup_tcp_in_base(tf_prefix, self.node.get_clock().now())
@@ -546,6 +545,8 @@ class RobotDriverTest(unittest.TestCase):
         self.assertAlmostEqual(
             trans_before_wait.transform.translation.z,
             trans_after_wait.transform.translation.z,
+            delta=1e-7,
+            msg="Robot should not move after force mode is stopped",
         )
 
     def test_params_out_of_range_fails(self, tf_prefix):
