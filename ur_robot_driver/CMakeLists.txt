@@ -35,6 +35,7 @@ find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
 find_package(motion_primitives_forward_controller REQUIRED)
+find_package(industrial_robot_motion_interfaces REQUIRED)
 
 include_directories(include)
 
@@ -53,6 +54,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   ur_dashboard_msgs
   ur_msgs
   motion_primitives_forward_controller
+  industrial_robot_motion_interfaces
 )
 
 add_library(ur_robot_driver_plugin

@@ -69,6 +69,10 @@
 
 // Motion primitives controller
 #include "motion_primitives_forward_controller/motion_primitives_forward_controller.hpp"
+#include "industrial_robot_motion_interfaces/msg/motion_primitive.hpp"
+
+using MoprimMotionType = industrial_robot_motion_interfaces::msg::MotionPrimitive;
+using MoprimMotionHelperType = motion_primitives_forward_controller::MotionHelperType;
 
 namespace ur_robot_driver
 {

@@ -56,9 +56,6 @@
 
 namespace rtde = urcl::rtde_interface;
 
-using MoprimMotionType = motion_primitives_forward_controller::MotionType;
-
-
 namespace ur_robot_driver
 {
 
@@ -1590,8 +1587,8 @@ void URPositionHardwareInterface::handleMoprimCommands()
     // --> if waiting for next read() cycle it happens sometimes that a command is overwritten
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
 
-    switch (static_cast<MoprimMotionType>(static_cast<uint8_t>(hw_moprim_commands_[0]))) {
-      case MoprimMotionType::STOP_MOTION:
+    switch (static_cast<uint8_t>(hw_moprim_commands_[0])) {
+      case static_cast<uint8_t>(MoprimMotionHelperType::STOP_MOTION):
       {
         std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
         if (!new_moprim_stop_available_) {
@@ -1600,7 +1597,7 @@ void URPositionHardwareInterface::handleMoprimCommands()
         }
         break;
       }
-      case MoprimMotionType::RESET_STOP:
+      case static_cast<uint8_t>(MoprimMotionHelperType::RESET_STOP):
       {
         std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
         if (!new_moprim_reset_available_) {
@@ -1718,8 +1715,8 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
   double blend_radius = command[21];
 
   try {
-    switch (static_cast<MoprimMotionType>(static_cast<uint8_t>(motion_type))) {
-      case MoprimMotionType::MOTION_SEQUENCE_START:
+    switch (static_cast<uint8_t>(motion_type)) {
+      case static_cast<uint8_t>(MoprimMotionHelperType::MOTION_SEQUENCE_START):
       {
         RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received MOTION_SEQUENCE_START: add all "
                                                                        "following "
@@ -1730,7 +1727,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         return;
       }
 
-      case MoprimMotionType::MOTION_SEQUENCE_END:
+      case static_cast<uint8_t>(MoprimMotionHelperType::MOTION_SEQUENCE_END):
       {
         RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
                     "Received MOTION_SEQUENCE_END: executing motion sequence with %zu motion primitives",
