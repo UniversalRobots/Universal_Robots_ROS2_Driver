@@ -9,7 +9,7 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 [![Play Video](doc/motion_primitive_ur_driver/motion_primitive_demo_video_preview.png)](https://www.youtube.com/watch?v=htUJtfkgr6Q)
 
 # Related packages/ repos
-- [industrial_robot_motion_interfaces](https://github.com/b-robotized-forks/industrial_robot_motion_interfaces/tree/helper-types)
+- [control_msgs](https://github.com/ros-controls/control_msgs/blob/motion_primitives/control_msgs/action/ExecuteMotionPrimitiveSequence.action)
 - [ros2_controllers with motion_primitives_forward_controller](https://github.com/b-robotized-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
 - [Universal_Robots_ROS2_Driver with motion_primitive_ur_driver](https://github.com/b-robotized-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
 - [Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library)

@@ -68,10 +68,10 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 // Motion primitives controller
-#include "motion_primitives_forward_controller/motion_primitives_forward_controller.hpp"
-#include "industrial_robot_motion_interfaces/msg/motion_primitive.hpp"
+#include "motion_primitives_forward_controller/motion_primitives_forward_controller/motion_primitives_forward_controller.hpp"
+#include "control_msgs/msg/motion_primitive.hpp"
 
-using MoprimMotionType = industrial_robot_motion_interfaces::msg::MotionPrimitive;
+using MoprimMotionType = control_msgs::msg::MotionPrimitive;
 using MoprimMotionHelperType = motion_primitives_forward_controller::MotionHelperType;
 
 namespace ur_robot_driver

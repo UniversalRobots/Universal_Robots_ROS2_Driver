@@ -20,8 +20,8 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from geometry_msgs.msg import PoseStamped
-from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionArgument, MotionSequence
-from industrial_robot_motion_interfaces.action import ExecuteMotion
+from control_msgs.msg import MotionPrimitive, MotionArgument, MotionPrimitiveSequence
+from control_msgs.action import ExecuteMotionPrimitiveSequence
 from action_msgs.srv import CancelGoal
 from action_msgs.msg import GoalStatus 
 import threading
@@ -179,9 +179,9 @@ class ExecuteMotionClient(Node):
     def __init__(self):
         super().__init__("motion_sequence_client")
 
-        # Initialize action client for ExecuteMotion action
+        # Initialize action client for ExecuteMotionPrimitiveSequence action
         self._client = ActionClient(
-            self, ExecuteMotion, "/motion_primitive_forward_controller/motion_sequence"
+            self, ExecuteMotionPrimitiveSequence, "/motion_primitive_forward_controller/motion_sequence"
         )
 
         # Initialize client for cancel_goal service
@@ -203,8 +203,8 @@ class ExecuteMotionClient(Node):
         self.get_logger().info("Waiting for action server...")
         self._client.wait_for_server()
 
-        goal_msg = ExecuteMotion.Goal()
-        goal_msg.trajectory = MotionSequence()
+        goal_msg = ExecuteMotionPrimitiveSequence.Goal()
+        goal_msg.trajectory = MotionPrimitiveSequence()
 
         # "pick" sequence with moveC in the end
         goal_msg.trajectory.motions = [moveJ_1, moveL_1, moveL_2, moveJ_2, moveC_1]

@@ -49,7 +49,7 @@
   <depend>ur_description</depend>
   <depend>ur_msgs</depend>
   <depend>motion_primitives_forward_controller</depend>
-  <depend>industrial_robot_motion_interfaces</depend>
+  <depend>control_msgs</depend>
 
   <exec_depend>force_torque_sensor_broadcaster</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
