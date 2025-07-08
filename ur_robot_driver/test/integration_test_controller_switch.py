@@ -88,7 +88,6 @@ class RobotDriverTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
-        self._controller_manager_interface.wait_for_service(timeout_sec=30.0)
         for controller in ALL_CONTROLLERS:
             self._controller_manager_interface.wait_for_controller(controller)
 
