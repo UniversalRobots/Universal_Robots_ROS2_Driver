@@ -543,14 +543,10 @@ class RobotDriverTest(unittest.TestCase):
         trans_after_wait = self.lookup_tcp_in_base(tf_prefix, self.node.get_clock().now())
 
         self.assertAlmostEqual(
-<<<<<<< HEAD
-            trans_before_wait.transform.translation.z, trans_after_wait.transform.translation.z
-=======
             trans_before_wait.transform.translation.z,
             trans_after_wait.transform.translation.z,
             delta=1e-7,
             msg="Robot should not move after force mode is stopped",
->>>>>>> 0d5d77e (fix_flaky_force_mode_test (#1429))
         )
 
     def test_params_out_of_range_fails(self, tf_prefix):
