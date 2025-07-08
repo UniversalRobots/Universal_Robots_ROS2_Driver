@@ -23,6 +23,7 @@ from geometry_msgs.msg import PoseStamped
 from industrial_robot_motion_interfaces.msg import MotionPrimitive, MotionArgument, MotionSequence
 from industrial_robot_motion_interfaces.action import ExecuteMotion
 from action_msgs.srv import CancelGoal
+from action_msgs.msg import GoalStatus 
 import threading
 import sys
 
@@ -250,17 +251,18 @@ class ExecuteMotionClient(Node):
 
     def result_callback(self, future):
         """Handle the result from the action server after goal finishes or is canceled."""
-        result = future.result().result
-        if result.error_code == ExecuteMotion.Result.SUCCESSFUL:
+        result = future.result()
+        status = result.status
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
             self.get_logger().info("Motion sequence executed successfully!")
-        elif result.error_code == ExecuteMotion.Result.CANCELED:
+        elif status == GoalStatus.STATUS_CANCELED:
             self.get_logger().info("Motion sequence was canceled.")
-        elif result.error_code == ExecuteMotion.Result.FAILED:
+        elif status == GoalStatus.STATUS_ABORTED:
             self.get_logger().error("Motion sequence execution failed.")
         else:
-            self.get_logger().error(
-                f"Execution failed: {result.error_code} - {result.error_string}"
-            )
+            self.get_logger().error(f"Execution ended with status: {status}")
+
         rclpy.shutdown()
 
     def _wait_for_keypress(self):
