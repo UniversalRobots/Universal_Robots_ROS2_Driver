@@ -1274,8 +1274,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         { tf_prefix + FORCE_MODE_GPIO + "/type", FORCE_MODE_GPIO },
         { tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i), PASSTHROUGH_GPIO },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO },
-        { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO }
-        { HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES }
+        { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO },
+        { HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES },
       };
 
       for (auto& item : start_modes_to_check) {
@@ -1310,7 +1310,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           StoppingInterface::STOP_PASSTHROUGH },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO, StoppingInterface::STOP_FREEDRIVE },
         { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO,
-          StoppingInterface::STOP_TOOL_CONTACT }
+          StoppingInterface::STOP_TOOL_CONTACT },
         { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES, StoppingInterface::STOP_MOTION_PRIMITIVES },
 
       };
