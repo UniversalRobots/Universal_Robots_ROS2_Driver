@@ -64,7 +64,7 @@ target_link_libraries(ur_robot_driver_plugin PUBLIC
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
   ur_client_library::urcl
-  ${motion_primitives_forward_controller_TARGETS}
+  motion_primitives_forward_controller::motion_primitives_forward_controller
 )
 target_include_directories(
   ur_robot_driver_plugin
