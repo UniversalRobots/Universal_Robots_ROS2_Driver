@@ -69,7 +69,7 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 // Motion primitives controller
-#include "motion_primitives_forward_controller/motion_primitives_forward_controller/motion_primitives_forward_controller.hpp"
+#include "motion_primitives_forward_controller/motion_primitives_forward_controller.hpp"
 #include "control_msgs/msg/motion_primitive.hpp"
 
 using MoprimMotionType = control_msgs::msg::MotionPrimitive;
