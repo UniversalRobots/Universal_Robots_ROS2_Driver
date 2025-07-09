@@ -121,7 +121,7 @@ ros2 control switch_controllers --activate motion_primitive_forward_controller -
 > [!WARNING]
 > Ensure that the robot in your configuration is able to execute these motion primitives without any risk of collision.
 ```
-ros2 run ur_robot_driver send_dummy_motion_primitives_hka_ur10e.py
+ros2 run ur_robot_driver send_dummy_motion_primitives_ur10e.py
 ```
 During the execution of the motion primitives, the movement can be stopped by pressing the Enter key in the terminal.
 
