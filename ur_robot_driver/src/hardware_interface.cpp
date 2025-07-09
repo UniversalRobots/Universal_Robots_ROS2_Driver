@@ -727,7 +727,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
   ur_driver_->registerTrajectoryDoneCallback(
-      std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));  
+      std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
   // conflict with instruction_executor_ --> callback function needs to get changed when using instruction executor
 
   ur_driver_->registerToolContactResultCallback(
@@ -1311,8 +1311,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO, StoppingInterface::STOP_FREEDRIVE },
         { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO,
           StoppingInterface::STOP_TOOL_CONTACT },
-        { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES, StoppingInterface::STOP_MOTION_PRIMITIVES },
-
+        { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES,
+          StoppingInterface::STOP_MOTION_PRIMITIVES },
       };
       for (auto& item : stop_modes_to_check) {
         if (key == std::get<0>(item)) {
@@ -1371,8 +1371,9 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     freedrive_mode_controller_running_ = false;
     freedrive_activated_ = false;
     freedrive_mode_abort_ = 1.0;
-  } if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                                  StoppingInterface::STOP_MOTION_PRIMITIVES) != stop_modes_[0].end()) {
+  }
+  if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                           StoppingInterface::STOP_MOTION_PRIMITIVES) != stop_modes_[0].end()) {
     motion_primitives_forward_controller_running_ = false;
     resetMoprimCmdInterfaces();
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
@@ -1428,7 +1429,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     freedrive_mode_controller_running_ = true;
     freedrive_activated_ = false;
   }
-  if (start_modes_[0].size() != 0 && 
+  if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), HW_IF_MOTION_PRIMITIVES) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
@@ -1612,7 +1613,6 @@ bool URPositionHardwareInterface::is_valid_joint_information(std::vector<std::ar
 {
   return (data.size() > 0 && !std::isnan(data[0][0]));
 }
-
 
 void URPositionHardwareInterface::handleMoprimCommands()
 {
@@ -1970,14 +1970,15 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
   }
 }
 
-void URPositionHardwareInterface::quaternionToRotVec(double qx, double qy, double qz, double qw,
-                                                     double& rx, double& ry, double& rz) {
-    tf2::Quaternion q(qx, qy, qz, qw);
-    const double angle = q.getAngle();
-    const auto axis = q.getAxis();
-    rx = axis.x() * angle;  // rx
-    ry = axis.y() * angle;  // ry
-    rz = axis.z() * angle;  // rz
+void URPositionHardwareInterface::quaternionToRotVec(double qx, double qy, double qz, double qw, double& rx, double& ry,
+                                                     double& rz)
+{
+  tf2::Quaternion q(qx, qy, qz, qw);
+  const double angle = q.getAngle();
+  const auto axis = q.getAxis();
+  rx = axis.x() * angle;  // rx
+  ry = axis.y() * angle;  // ry
+  rz = axis.z() * angle;  // rz
 }
 
 bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity,

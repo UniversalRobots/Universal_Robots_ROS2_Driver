@@ -23,7 +23,7 @@ from geometry_msgs.msg import PoseStamped
 from control_msgs.msg import MotionPrimitive, MotionArgument, MotionPrimitiveSequence
 from control_msgs.action import ExecuteMotionPrimitiveSequence
 from action_msgs.srv import CancelGoal
-from action_msgs.msg import GoalStatus 
+from action_msgs.msg import GoalStatus
 import threading
 import sys
 
@@ -181,7 +181,9 @@ class ExecuteMotionClient(Node):
 
         # Initialize action client for ExecuteMotionPrimitiveSequence action
         self._client = ActionClient(
-            self, ExecuteMotionPrimitiveSequence, "/motion_primitive_forward_controller/motion_sequence"
+            self,
+            ExecuteMotionPrimitiveSequence,
+            "/motion_primitive_forward_controller/motion_sequence",
         )
 
         # Initialize client for cancel_goal service
