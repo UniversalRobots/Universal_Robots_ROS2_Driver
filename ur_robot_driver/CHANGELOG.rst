@@ -1,3 +1,44 @@
+4.0.3 (2025-06-16)
+------------------
+
+4.0.2 (2025-06-13)
+------------------
+* Remove unnecessary arguments. (`#1389 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1389>`_)
+* Contributors: Dr. Denis
+
+4.0.1 (2025-05-28)
+------------------
+* [force mode controller] Fix the task frame orientation (`#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_)
+* Replace ament_target_dependencies calls (`#1373 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1373>`_)
+* Update feature list (`#1372 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1372>`_)
+* Contributors: Felix Exner
+
+4.0.0 (2025-05-20)
+------------------
+* Add support for UR15 (`#1358 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1358>`_)
+* [CI] Check links using lychee instead of a custom script (`#1355 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1355>`_)
+* Make check_starting_point of test_move launch files configurable (`#1354 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1354>`_)
+* Add troubleshooting section about handling ABI breaks (`#1350 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1350>`_)
+* Only append to start_modes in prepare_switch (`#1344 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1344>`_)
+* tool_contact_test: Check result status directly (`#1345 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1345>`_)
+* Contributors: Felix Exner
+
+3.2.1 (2025-04-11)
+------------------
+* Disable enforcing command limits (`#1342 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1342>`_)
+* Contributors: Felix Exner
+
+3.2.0 (2025-04-10)
+------------------
+* Added controller to enable and disable tool contact (`#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_)
+* Start executing passthrough trajectories earlier than all points are transferred. (`#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_)
+* Support PolyScopeX robots (`#1318 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1318>`_)
+* Add support for UR7e and UR12e (`#1320 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1320>`_)
+* Use UrDriverConfig struct to initialize UrDriver (`#1328 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1328>`_)
+* Fix passthrough controller to not read non-existing state_interfaces (`#1314 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1314>`_)
+* Fix links to forward command controllers (`#1303 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1303>`_)
+* Contributors: Felix Exner, URJala
+
 3.1.1 (2025-03-17)
 ------------------
 * Update transformForceTorque to handle whether it is a cb3 or an e-Series robot (`#1287 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1287>`_)

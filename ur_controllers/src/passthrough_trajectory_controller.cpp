@@ -132,6 +132,7 @@ controller_interface::InterfaceConfiguration PassthroughTrajectoryController::co
   config.names.push_back(tf_prefix + "trajectory_passthrough/abort");
   config.names.emplace_back(tf_prefix + "trajectory_passthrough/transfer_state");
   config.names.emplace_back(tf_prefix + "trajectory_passthrough/time_from_start");
+  config.names.emplace_back(tf_prefix + "trajectory_passthrough/trajectory_size");
 
   return config;
 }
@@ -174,6 +175,19 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_activat
                            [&](auto& interface) { return (interface.get_name() == interface_name); });
     if (it != command_interfaces_.end()) {
       abort_command_interface_ = *it;
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+  }
+
+  {
+    const std::string interface_name = passthrough_params_.tf_prefix + "trajectory_passthrough/"
+                                                                       "trajectory_size";
+    auto it = std::find_if(command_interfaces_.begin(), command_interfaces_.end(),
+                           [&](auto& interface) { return (interface.get_name() == interface_name); });
+    if (it != command_interfaces_.end()) {
+      trajectory_size_command_interface_ = *it;
     } else {
       RCLCPP_ERROR(get_node()->get_logger(), "Did not find '%s' in command interfaces.", interface_name.c_str());
       return controller_interface::CallbackReturn::ERROR;
@@ -254,7 +268,9 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       active_trajectory_elapsed_time_ = rclcpp::Duration(0, 0);
       max_trajectory_time_ =
           rclcpp::Duration::from_seconds(duration_to_double(active_joint_traj_.points.back().time_from_start));
-      write_success &= transfer_command_interface_->get().set_value(TRANSFER_STATE_WAITING_FOR_POINT);
+      write_success &= transfer_command_interface_->get().set_value(TRANSFER_STATE_NEW_TRAJECTORY);
+      write_success &=
+          trajectory_size_command_interface_->get().set_value(static_cast<double>(active_joint_traj_.points.size()));
     }
     auto active_goal_time_tol = goal_time_tolerance_.readFromRT();
     auto joint_mapping = joint_trajectory_mapping_.readFromRT();

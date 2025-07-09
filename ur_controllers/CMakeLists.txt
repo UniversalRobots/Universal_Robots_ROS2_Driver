@@ -4,6 +4,7 @@ project(ur_controllers)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 find_package(ament_cmake REQUIRED)
 find_package(angles REQUIRED)
@@ -52,6 +53,11 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 include_directories(include)
 
 generate_parameter_library(
+  tool_contact_controller_parameters
+  src/tool_contact_controller_parameters.yaml
+)
+
+generate_parameter_library(
   force_mode_controller_parameters
   src/force_mode_controller_parameters.yaml
 )
@@ -87,6 +93,7 @@ generate_parameter_library(
 )
 
 add_library(${PROJECT_NAME} SHARED
+  src/tool_contact_controller.cpp
   src/force_mode_controller.cpp
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
@@ -99,6 +106,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   include
 )
 target_link_libraries(${PROJECT_NAME}
+  tool_contact_controller_parameters
   force_mode_controller_parameters
   gpio_controller_parameters
   speed_scaling_state_broadcaster_parameters
@@ -106,12 +114,29 @@ target_link_libraries(${PROJECT_NAME}
   freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters
-)
-ament_target_dependencies(${PROJECT_NAME}
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+  ${geometry_msgs_TARGETS}
+  ${lifecycle_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
+  ${tf2_geometry_msgs_TARGETS}
+  ${ur_dashboard_msgs_TARGETS}
+  ${control_msgs_TARGETS}
+  ${trajectory_msgs_TARGETS}
+  ${ur_msgs_TARGETS}
+  ${action_msgs_TARGETS}
+  angles::angles
+  controller_interface::controller_interface
+  joint_trajectory_controller::joint_trajectory_controller
+  pluginlib::pluginlib
+  rclcpp_lifecycle::rclcpp_lifecycle
+  rcutils::rcutils
+  realtime_tools::realtime_tools
+  tf2_ros::tf2_ros
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror)
+endif()
 
 # prevent pluginlib from using boost
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
@@ -155,20 +180,16 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_load_force_mode_controller
     ${PROJECT_NAME}
-  )
-  ament_target_dependencies(test_load_force_mode_controller
-    controller_manager
-    ros2_control_test_assets
+    controller_manager::controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
   )
   ament_add_gmock(test_load_freedrive_mode_controller
     test/test_load_freedrive_mode_controller.cpp
   )
   target_link_libraries(test_load_freedrive_mode_controller
     ${PROJECT_NAME}
-  )
-  ament_target_dependencies(test_load_freedrive_mode_controller
-    controller_manager
-    ros2_control_test_assets
+    controller_manager::controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
   )
 endif()
 

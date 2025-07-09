@@ -39,6 +39,17 @@ controller_manager:
     ur_configuration_controller:
       type: ur_controllers/URConfigurationController
 
+    tool_contact_controller:
+      type: ur_controllers/ToolContactController
+
+    # The way this is currently implemented upstream doesn't really work for us. When using
+    # position control, the robot will have a tracking error. However, limits will be enforced
+    # from the currently reported position, effectively limiting the possible step size using the
+    # joints' velocity limits. Until this is resolved, we will keep command limits non-enforced.
+    # Note: On Jazzy this is the default behavior, anyway. For Rolling / Kilted this defaults to
+    # true.
+    enforce_command_limits: false
+
     motion_primitive_forward_controller:
       type: motion_primitives_forward_controller/MotionPrimitivesForwardController
 
@@ -175,6 +186,10 @@ tcp_pose_broadcaster:
     pose_name: $(var tf_prefix)tcp_pose
     tf:
       child_frame_id: $(var tf_prefix)tool0_controller
+
+tool_contact_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
 
 
 motion_primitive_forward_controller:

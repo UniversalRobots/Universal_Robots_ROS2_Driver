@@ -191,6 +191,18 @@ class ActionInterface:
                 f"Exception while calling action '{self.__action_name}': {future_res.exception()}"
             )
 
+    def cancel_goal(self, goal_handle, timeout=2):
+        future_res = goal_handle.cancel_goal_async()
+        logging.info("Canceling goal from '%s' with timeout %fs", self.__action_name, timeout)
+        rclpy.spin_until_future_complete(self.__node, future_res, timeout_sec=timeout)
+        if future_res.result() is not None:
+            logging.info("  Received result: %s", future_res.result())
+            return future_res.result()
+        else:
+            raise Exception(
+                f"Exception while calling action '{self.__action_name}': {future_res.exception()}"
+            )
+
 
 class DashboardInterface(
     _ServiceInterface,
@@ -244,14 +256,19 @@ class ControllerManagerInterface(
     },
     services={"list_controllers": ListControllers},
 ):
-    def wait_for_controller(self, controller_name, target_state="active"):
-        while True:
+    def wait_for_controller(self, controller_name, target_state=None, timeout=TIMEOUT_WAIT_SERVICE):
+        start_time = time.time()
+        while time.time() - start_time < timeout:
             controllers = self.list_controllers().controller
             for controller in controllers:
-                if (controller.name == controller_name) and (controller.state == target_state):
-                    return
-
+                if controller.name == controller_name:
+                    if (target_state is None) or (controller.state == target_state):
+                        return
             time.sleep(1)
+        raise Exception(
+            "Controller '%s' not found or not in state '%s' within %fs"
+            % (controller_name, target_state, timeout)
+        )
 
 
 class IoStatusInterface(
@@ -291,7 +308,20 @@ def _declare_launch_arguments():
             "ur_type",
             default_value="ur5e",
             description="Type/series of used UR robot.",
-            choices=["ur3", "ur3e", "ur5", "ur5e", "ur10", "ur10e", "ur16e", "ur20", "ur30"],
+            choices=[
+                "ur3",
+                "ur3e",
+                "ur5",
+                "ur5e",
+                "ur7e",
+                "ur10",
+                "ur10e",
+                "ur12e",
+                "ur16e",
+                "ur15",
+                "ur20",
+                "ur30",
+            ],
         )
     )
 
@@ -341,7 +371,9 @@ def generate_dashboard_test_description():
 
 
 def generate_driver_test_description(
-    tf_prefix="", controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL
+    tf_prefix="",
+    initial_joint_controller="scaled_joint_trajectory_controller",
+    controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -350,7 +382,7 @@ def generate_driver_test_description(
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
-        "initial_joint_controller": "scaled_joint_trajectory_controller",
+        "initial_joint_controller": initial_joint_controller,
         "headless_mode": "true",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",

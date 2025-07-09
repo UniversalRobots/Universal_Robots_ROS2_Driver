@@ -51,7 +51,7 @@
 // UR client library
 #include "ur_client_library/ur/dashboard_client.h"
 #include "ur_client_library/exceptions.h"
-#include "ur_dashboard_msgs/msg/program_state.hpp"
+#include "ur_client_library/primary/primary_client.h"
 #include "ur_dashboard_msgs/srv/add_to_log.hpp"
 #include "ur_dashboard_msgs/srv/get_loaded_program.hpp"
 #include "ur_dashboard_msgs/srv/get_program_state.hpp"
@@ -62,6 +62,7 @@
 #include "ur_dashboard_msgs/srv/load.hpp"
 #include "ur_dashboard_msgs/srv/popup.hpp"
 #include "ur_dashboard_msgs/srv/raw_request.hpp"
+#include "ur_dashboard_msgs/srv/is_in_remote_control.hpp"
 
 namespace ur_robot_driver
 {
@@ -115,10 +116,16 @@ private:
   bool handleRobotModeQuery(ur_dashboard_msgs::srv::GetRobotMode::Request::SharedPtr req,
                             ur_dashboard_msgs::srv::GetRobotMode::Response::SharedPtr resp);
 
+  bool handleRemoteControlQuery(ur_dashboard_msgs::srv::IsInRemoteControl::Request::SharedPtr req,
+                                ur_dashboard_msgs::srv::IsInRemoteControl::Response::SharedPtr resp);
+
   bool connect();
 
   std::shared_ptr<rclcpp::Node> node_;
   urcl::DashboardClient client_;
+
+  urcl::comm::INotifier notifier_;
+  urcl::primary_interface::PrimaryClient primary_client_;
 
   // Commanding services
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr brake_release_service_;
@@ -148,6 +155,7 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::GetProgramState>::SharedPtr program_state_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetSafetyMode>::SharedPtr safety_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetRobotMode>::SharedPtr robot_mode_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::IsInRemoteControl>::SharedPtr is_in_remote_control_service_;
 };
 }  // namespace ur_robot_driver
 

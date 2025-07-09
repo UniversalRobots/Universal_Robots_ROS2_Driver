@@ -2,6 +2,40 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.3 (2025-06-16)
+------------------
+* Ignore RT-Tools deprecation warning about trylock
+* Contributors: Felix Exner
+
+4.0.2 (2025-06-13)
+------------------
+* Ignore deprecation warning for set_gains for now (`#1392 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1392>`_)
+* Use std_atomic<bool> in SJTC (`#1385 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1385>`_)
+* Contributors: Felix Exner
+
+4.0.1 (2025-05-28)
+------------------
+* [force mode controller] Fix the task frame orientation (`#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_)
+* Replace ament_target_dependencies calls (`#1373 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1373>`_)
+* Contributors: Felix Exner
+
+4.0.0 (2025-05-20)
+------------------
+* Remove deprecated code from sjtc (`#1362 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1362>`_)
+* SJTC: Update to latest upstream JTC API (`#1351 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1351>`_)
+* Contributors: Felix Exner
+
+3.2.1 (2025-04-11)
+------------------
+
+3.2.0 (2025-04-10)
+------------------
+* Added controller to enable and disable tool contact (`#940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/940>`_)
+* Start executing passthrough trajectories earlier than all points are transferred. (`#1313 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1313>`_)
+* Update ci (`#1315 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1315>`_)
+* Fix passthrough controller to not read non-existing state_interfaces (`#1314 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1314>`_)
+* Contributors: Felix Exner, URJala
+
 3.1.1 (2025-03-17)
 ------------------
 * Update ros2_control API to get_optional (`#1289 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1289>`_)

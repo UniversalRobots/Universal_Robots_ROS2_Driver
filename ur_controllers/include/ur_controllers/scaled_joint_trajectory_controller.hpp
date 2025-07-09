@@ -39,9 +39,8 @@
 
 #include <optional>
 #include <memory>
-#include "angles/angles.h"
+#include <vector>
 #include "joint_trajectory_controller/joint_trajectory_controller.hpp"
-#include "joint_trajectory_controller/trajectory.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
@@ -63,26 +62,35 @@ public:
 
   CallbackReturn on_init() override;
 
-protected:
-  struct TimeData
-  {
-    TimeData() : time(0.0), period(rclcpp::Duration::from_nanoseconds(0.0)), uptime(0.0)
-    {
-    }
-    rclcpp::Time time;
-    rclcpp::Duration period;
-    rclcpp::Time uptime;
-  };
-
 private:
-  double scaling_factor_{ 1.0 };
-  realtime_tools::RealtimeBuffer<TimeData> time_data_;
+  std::atomic<double> scaling_factor_{ 1.0 };
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_ =
       std::nullopt;
 
   std::shared_ptr<scaled_joint_trajectory_controller::ParamListener> scaled_param_listener_;
   scaled_joint_trajectory_controller::Params scaled_params_;
+
+  // Private methods copied from Upstream JTC
+  void update_pids();
+
+  /**
+   * @brief Assigns the values from a trajectory point interface to a joint interface.
+   *
+   * @tparam T The type of the joint interface.
+   * @param[out] joint_interface The reference_wrapper to assign the values to
+   * @param[in] trajectory_point_interface Containing the values to assign.
+   * @todo: Use auto in parameter declaration with c++20
+   */
+  template <typename T>
+  bool assign_interface_from_point(const T& joint_interface, const std::vector<double>& trajectory_point_interface)
+  {
+    bool success = true;
+    for (size_t index = 0; index < num_cmd_joints_; ++index) {
+      success &= joint_interface[index].get().set_value(trajectory_point_interface[map_cmd_to_joints_[index]]);
+    }
+    return success;
+  }
 };
 }  // namespace ur_controllers
 

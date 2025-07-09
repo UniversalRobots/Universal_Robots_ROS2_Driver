@@ -37,16 +37,27 @@
  */
 //----------------------------------------------------------------------
 
-#include <ur_robot_driver/dashboard_client_ros.hpp>
+#include <ur_client_library/exceptions.h>
+#include <ur_client_library/primary/primary_client.h>
 
 #include <string>
+
+#include <ur_robot_driver/dashboard_client_ros.hpp>
 
 namespace ur_robot_driver
 {
 DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
-  : node_(node), client_(robot_ip)
+  : node_(node), client_(robot_ip), primary_client_(robot_ip, notifier_)
 {
   node_->declare_parameter<double>("receive_timeout", 1);
+
+  primary_client_.start(10, std::chrono::seconds(10));
+  auto robot_version = primary_client_.getRobotVersion();
+
+  if (robot_version->major > 5) {
+    throw(urcl::UrException("The dashboard server is only available for CB3 and e-Series robots."));
+  }
+
   connect();
 
   // Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
@@ -258,6 +269,11 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         }
         return true;
       });
+
+  // Service to query whether the robot is in remote control.
+  is_in_remote_control_service_ = node_->create_service<ur_dashboard_msgs::srv::IsInRemoteControl>(
+      "~/is_in_remote_control",
+      std::bind(&DashboardClientROS::handleRemoteControlQuery, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 bool DashboardClientROS::connect()
@@ -399,4 +415,20 @@ bool DashboardClientROS::handleRobotModeQuery(const ur_dashboard_msgs::srv::GetR
   }
   return true;
 }
+
+bool DashboardClientROS::handleRemoteControlQuery(
+    const ur_dashboard_msgs::srv::IsInRemoteControl::Request::SharedPtr req,
+    ur_dashboard_msgs::srv::IsInRemoteControl::Response::SharedPtr resp)
+{
+  try {
+    resp->remote_control = this->client_.commandIsInRemoteControl();
+    resp->success = true;
+  } catch (const urcl::UrException& e) {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+    resp->answer = e.what();
+    resp->success = false;
+  }
+  return true;
+}
+
 }  // namespace ur_robot_driver

@@ -2,6 +2,29 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.0.3 (2025-06-16)
+------------------
+
+4.0.2 (2025-06-13)
+------------------
+
+4.0.1 (2025-05-28)
+------------------
+* Replace ament_target_dependencies calls (`#1373 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1373>`_)
+* Update feature list (`#1372 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1372>`_)
+* Contributors: Felix Exner
+
+4.0.0 (2025-05-20)
+------------------
+
+3.2.1 (2025-04-11)
+------------------
+
+3.2.0 (2025-04-10)
+------------------
+* Use modern CMake to link against yaml-cpp (`#1295 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1295>`_)
+* Contributors: Felix Exner
+
 3.1.1 (2025-03-17)
 ------------------
 

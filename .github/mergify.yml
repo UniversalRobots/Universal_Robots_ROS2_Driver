@@ -10,13 +10,13 @@ pull_request_rules:
         labels:
           - humble
 
-  - name: Backport to iron branch
+  - name: Backport to jazzy branch
     conditions:
       - base=main
-      - label=backport-iron
+      - label=backport-jazzy
     actions:
       backport:
         branches:
-          - iron
+          - jazzy
         labels:
-          - iron
+          - jazzy

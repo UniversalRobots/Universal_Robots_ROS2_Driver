@@ -1,3 +1,5 @@
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/usage/move.rst
+
 .. _move_the_robot:
 
 Move the robot
@@ -13,6 +15,21 @@ First check the controllers' state using ``ros2 control list_controllers``, befo
      $ ros2 launch ur_robot_driver test_scaled_joint_trajectory_controller.launch.py
 
   The robot should move, after a few seconds.
+
+  .. note::
+     By default, the robot's pose is checked for being close to a predefined configuration in order
+     to make sure that the robot doesn't perform any large, unexpected motions. This configuration
+     is specified in the ``config/test_goal_publishers.yaml`` config file of the
+     ``ur_robot_driver`` package. The joint values are
+
+     .. code-block:: yaml
+
+        shoulder_pan_joint: 0
+        shoulder_lift_joint: -1.57
+        elbow_joint: 0
+        wrist_1_joint: -1.57
+        wrist_2_joint: 0
+        wrist_3_joint: 0
 
 * To test another controller, simply define it using ``initial_joint_controller`` argument, for example when using mock hardware:
 

@@ -231,6 +231,12 @@
         <command_interface name="abort"/>
       </gpio>
 
+      <gpio name="${tf_prefix}tool_contact">
+        <command_interface name="tool_contact_set_state"/>
+        <state_interface name="tool_contact_result"/>
+        <state_interface name="tool_contact_state"/>
+      </gpio>
+
       <gpio name="${tf_prefix}system_interface">
         <state_interface name="initialized"/>
       </gpio>
@@ -289,6 +295,7 @@
         <command_interface name="transfer_state"/>
         <command_interface name="time_from_start"/>
         <command_interface name="abort"/>
+        <command_interface name="trajectory_size"/>
       </gpio>
 
 

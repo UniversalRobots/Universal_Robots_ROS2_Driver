@@ -11,9 +11,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check URLs
-        run: |
-          .github/helpers/check_urls.sh \
-            -d ".git build CMakeModules debian" \
-            -f "package.xml ursim_docker.rst architecture_coarse.svg" \
-            -p "vnc\.html opensource\.org\/licenses\/BSD-3-Clause"
+      - name: Restore lychee cache
+        id: restore-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: cache-lychee-
+      - name: Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          fail: true
+          args: >
+            --verbose
+            --no-progress
+            --cache
+            --cache-exclude-status 429
+            --max-cache-age 2d
+            --exclude '^http://192\.168\.56\.101'
+            --max-concurrency 1
+            './**/*.md' './**/*.html' './**/*.rst' './**/*.cpp' './**/*.h' './**/*.py'
+      - name: Save lychee cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .lycheecache
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}

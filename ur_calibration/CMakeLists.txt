@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.5)
 project(ur_calibration)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
-add_compile_options(-Wno-unused-parameter)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   message("${PROJECT_NAME}: You did not request a specific build type: selecting 'RelWithDebInfo'.")
@@ -15,6 +15,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(ur_robot_driver REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
@@ -31,14 +33,13 @@ add_library(calibration
 target_include_directories(calibration
   PUBLIC
     include
-    ${EIGEN3_INCLUDE_DIRS}
 )
 target_link_libraries(calibration
+  ur_client_library::urcl
+  Eigen3::Eigen
   yaml-cpp
-)
-ament_target_dependencies(calibration
-  rclcpp
-  ur_robot_driver
+  rclcpp::rclcpp
+  ur_robot_driver::ur_robot_driver_log_handler
 )
 
 add_executable(calibration_correction
@@ -49,9 +50,8 @@ target_include_directories(calibration_correction
     include
 )
 target_link_libraries(calibration_correction
-  ur_client_library::urcl
-)
-target_link_libraries(calibration_correction
+  ${sensor_msgs_TARGETS}
+  tf2_ros::tf2_ros
   calibration
 )
 

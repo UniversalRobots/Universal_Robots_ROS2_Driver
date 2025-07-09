@@ -9,9 +9,12 @@ option(
   OFF
 )
 
-add_compile_options(-Wall)
-add_compile_options(-Wextra)
-add_compile_options(-Wno-unused-parameter)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall)
+  add_compile_options(-Wextra)
+  add_compile_options(-Wno-unused-parameter)
+endif()
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   message("${PROJECT_NAME}: You did not request a specific build type: selecting 'RelWithDebInfo'.")
@@ -26,6 +29,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -39,7 +43,148 @@ find_package(control_msgs REQUIRED)
 
 include_directories(include)
 
-set(THIS_PACKAGE_INCLUDE_DEPENDS
+add_library(ur_robot_driver_plugin
+  SHARED
+  src/dashboard_client_ros.cpp
+  src/hardware_interface.cpp
+  src/urcl_log_handler.cpp
+)
+target_link_libraries(ur_robot_driver_plugin PUBLIC
+  ${controller_manager_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
+  ${tf2_geometry_msgs_TARGETS}
+  ${ur_dashboard_msgs_TARGETS}
+  ${ur_msgs_TARGETS}
+  ${control_msgs_TARGETS}
+  controller_manager::controller_manager
+  hardware_interface::hardware_interface
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  rclcpp_lifecycle::rclcpp_lifecycle
+  ur_client_library::urcl
+  ${motion_primitives_forward_controller_TARGETS}
+)
+target_include_directories(
+  ur_robot_driver_plugin
+  PRIVATE
+  include
+)
+pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
+
+add_library(ur_robot_driver_log_handler
+  SHARED
+  src/urcl_log_handler.cpp
+)
+target_include_directories(ur_robot_driver_log_handler
+  PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+target_link_libraries(ur_robot_driver_log_handler PUBLIC
+  rclcpp::rclcpp
+  ur_client_library::urcl
+)
+
+#
+# dashboard_client
+#
+add_executable(dashboard_client
+  src/dashboard_client_ros.cpp
+  src/dashboard_client_node.cpp
+  src/urcl_log_handler.cpp
+)
+target_link_libraries(dashboard_client PRIVATE
+  ${std_srvs_TARGETS}
+  ${ur_dashboard_msgs_TARGETS}
+  rclcpp::rclcpp
+  ur_client_library::urcl
+)
+
+#
+# controller_stopper_node
+#
+add_executable(controller_stopper_node
+  src/controller_stopper.cpp
+  src/controller_stopper_node.cpp
+)
+target_link_libraries(controller_stopper_node PRIVATE
+  ${std_msgs_TARGETS}
+  ${controller_manager_msgs_TARGETS}
+  rclcpp::rclcpp
+  ur_client_library::urcl
+)
+
+#
+# robot_state_helper
+#
+add_executable(robot_state_helper
+  src/robot_state_helper.cpp
+  src/robot_state_helper_node.cpp
+  src/urcl_log_handler.cpp
+)
+target_link_libraries(robot_state_helper PUBLIC
+  ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
+  ${ur_dashboard_msgs_TARGETS}
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  ur_client_library::urcl
+)
+
+add_executable(urscript_interface
+  src/urscript_interface.cpp
+)
+target_link_libraries(urscript_interface PUBLIC
+  rclcpp::rclcpp
+  ${std_msgs_TARGETS}
+  ur_client_library::urcl
+)
+
+install(
+  TARGETS
+    dashboard_client
+    controller_stopper_node
+    urscript_interface
+    robot_state_helper
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# INSTALL
+install(
+  TARGETS
+    ur_robot_driver_log_handler
+    ur_robot_driver_plugin
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION lib
+)
+install(
+  DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
+)
+
+## EXPORTS
+ament_export_include_directories(
+  include
+)
+ament_export_libraries(
+  ur_robot_driver_log_handler
+  ur_robot_driver_plugin
+)
+# Export modern CMake targets
+ament_export_targets(export_${PROJECT_NAME})
+
+install(DIRECTORY resources
+  DESTINATION share/${PROJECT_NAME}
+  REGEX "/ursim/" EXCLUDE
+)
+
+
+ament_export_dependencies(
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
   controller_manager
   controller_manager_msgs
   geometry_msgs
@@ -53,104 +198,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   ur_client_library
   ur_dashboard_msgs
   ur_msgs
-  motion_primitives_forward_controller
-  control_msgs
-)
-
-add_library(ur_robot_driver_plugin
-  SHARED
-  src/dashboard_client_ros.cpp
-  src/hardware_interface.cpp
-  src/urcl_log_handler.cpp
-  src/robot_state_helper.cpp
-)
-target_link_libraries(
-  ur_robot_driver_plugin
-  ur_client_library::urcl
-)
-target_include_directories(
-  ur_robot_driver_plugin
-  PRIVATE
-  include
-)
-ament_target_dependencies(
-  ur_robot_driver_plugin
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
-)
-
-pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
-
-#
-# dashboard_client
-#
-add_executable(dashboard_client
-  src/dashboard_client_ros.cpp
-  src/dashboard_client_node.cpp
-  src/urcl_log_handler.cpp
-)
-target_link_libraries(dashboard_client ur_client_library::urcl)
-ament_target_dependencies(dashboard_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-#
-# controller_stopper_node
-#
-add_executable(controller_stopper_node
-  src/controller_stopper.cpp
-  src/controller_stopper_node.cpp
-)
-ament_target_dependencies(controller_stopper_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-#
-# robot_state_helper
-#
-add_executable(robot_state_helper
-  src/robot_state_helper.cpp
-  src/robot_state_helper_node.cpp
-)
-target_link_libraries(robot_state_helper ur_client_library::urcl)
-ament_target_dependencies(robot_state_helper ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-add_executable(urscript_interface
-  src/urscript_interface.cpp
-)
-ament_target_dependencies(urscript_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
-install(
-  TARGETS dashboard_client controller_stopper_node urscript_interface robot_state_helper
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-# INSTALL
-install(
-  TARGETS ur_robot_driver_plugin
-  DESTINATION lib
-)
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
-
-## EXPORTS
-ament_export_include_directories(
-  include
-)
-ament_export_libraries(
-  ur_robot_driver_plugin
-)
-
-install(DIRECTORY resources
-  DESTINATION share/${PROJECT_NAME}
-  REGEX "/ursim/" EXCLUDE
-)
-
-
-ament_export_dependencies(
-  hardware_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
 # Install Python execs
@@ -213,6 +260,10 @@ if(BUILD_TESTING)
     add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
+    )
+    add_launch_test(test/integration_test_tool_contact.py
+      TIMEOUT
+        800
     )
   endif()
 endif()
