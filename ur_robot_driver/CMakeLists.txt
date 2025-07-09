@@ -188,10 +188,6 @@ ament_export_dependencies(
   controller_manager
   controller_manager_msgs
   geometry_msgs
-  hardware_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
   std_msgs
   std_srvs
   tf2_geometry_msgs
