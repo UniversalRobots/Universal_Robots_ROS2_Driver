@@ -1,8 +1,10 @@
 repositories:
   Universal_Robots_Client_Library:
     type: git
-    url: https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
-    version: master
+    url: https://github.com/urfeex/Universal_Robots_Client_Library.git
+    version: callback_lists
+    # url: https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
+    # version: master
   Universal_Robots_ROS2_Description:
     type: git
     url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git

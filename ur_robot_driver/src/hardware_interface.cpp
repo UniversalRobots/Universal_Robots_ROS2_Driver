@@ -728,7 +728,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   ur_driver_->registerTrajectoryDoneCallback(
       std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
-  // conflict with instruction_executor_ --> callback function needs to get changed when using instruction executor
 
   ur_driver_->registerToolContactResultCallback(
       std::bind(&URPositionHardwareInterface::tool_contact_callback, this, std::placeholders::_1));
@@ -1379,10 +1378,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
     ready_for_new_moprim_ = false;
 
-    // use the callback from the hardware_interface implementation (not the one of the instruction_executor_)
-    ur_driver_->registerTrajectoryDoneCallback(
-        std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
-
     RCLCPP_INFO(get_logger(), "Motion primitives mode stopped.");
   }
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
@@ -1437,8 +1432,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     passthrough_trajectory_controller_running_ = false;
     force_mode_controller_running_ = false;
 
-    // use the callback from the instruction_executor_ (not the one of the hardware_interface implementation)
-    instruction_executor_->registerTrajDoneCallback();
     resetMoprimCmdInterfaces();
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
     ready_for_new_moprim_ = true;
@@ -1998,8 +1991,10 @@ bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<dou
     move_time = 0.0;
     return true;
   } else {
-    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "move_time, velocity and acceleration are all "
-                                                                    "invalid");
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"),
+                 "Invalid motion parameters: move_time = %.3f, velocity = %.3f, acceleration = %.3f", command[24],
+                 command[22], command[23]);
+
     return false;
   }
 }
