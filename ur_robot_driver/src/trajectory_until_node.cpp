@@ -312,6 +312,7 @@ void TrajectoryUntilNode::report_goal(TrajectoryResult result)
         prealloc_res->error_string += " Trajectory action was canceled.";
         server_goal_handle_->canceled(prealloc_res);
         break;
+        
       default:
         prealloc_res->error_string += " Unknown result code received from trajectory action, this should not happen. "
                                       "Aborting goal.";
