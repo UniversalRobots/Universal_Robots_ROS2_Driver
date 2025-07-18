@@ -31,7 +31,6 @@ import os
 import sys
 import time
 import unittest
-import logging
 
 import pytest
 
@@ -41,7 +40,6 @@ from rclpy.node import Node
 
 from controller_manager_msgs.srv import SwitchController
 from ur_msgs.action import TrajectoryUntil
-from action_msgs.msg import GoalStatus
 from action_msgs.srv import CancelGoal_Response
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from builtin_interfaces.msg import Duration
@@ -64,7 +62,9 @@ from test_common import (  # noqa: E402
     [("", "scaled_joint_trajectory_controller"), ("my_ur_", "passthrough_trajectory_controller")],
 )
 def generate_test_description(tf_prefix, initial_joint_controller):
-    return generate_driver_test_description(tf_prefix=tf_prefix, initial_joint_controller=initial_joint_controller)
+    return generate_driver_test_description(
+        tf_prefix=tf_prefix, initial_joint_controller=initial_joint_controller
+    )
 
 
 class RobotDriverTest(unittest.TestCase):
@@ -119,7 +119,9 @@ class RobotDriverTest(unittest.TestCase):
             )
             for i in range(len(self.test_traj["waypts"]))
         ]
-        goal_handle = self._trajectory_until_interface.send_goal(trajectory=trajectory, until_type=TrajectoryUntil.Goal.TOOL_CONTACT)
+        goal_handle = self._trajectory_until_interface.send_goal(
+            trajectory=trajectory, until_type=TrajectoryUntil.Goal.TOOL_CONTACT
+        )
         self.assertTrue(goal_handle.accepted)
         if goal_handle.accepted:
             result = self._trajectory_until_interface.get_result(
@@ -133,7 +135,7 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["tool_contact_controller"],
             ).ok
         )
-    
+
     def test_trajectory_until_can_cancel(self, tf_prefix):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -150,7 +152,9 @@ class RobotDriverTest(unittest.TestCase):
             )
             for i in range(len(self.test_traj["waypts"]))
         ]
-        goal_handle = self._trajectory_until_interface.send_goal(trajectory=trajectory, until_type=TrajectoryUntil.Goal.TOOL_CONTACT)
+        goal_handle = self._trajectory_until_interface.send_goal(
+            trajectory=trajectory, until_type=TrajectoryUntil.Goal.TOOL_CONTACT
+        )
         self.assertTrue(goal_handle.accepted)
         time.sleep(2)
         result = self._trajectory_until_interface.cancel_goal(goal_handle)
@@ -162,4 +166,3 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["tool_contact_controller"],
             ).ok
         )
-

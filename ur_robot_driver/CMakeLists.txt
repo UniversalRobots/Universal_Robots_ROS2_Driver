@@ -148,7 +148,7 @@ target_link_libraries(trajectory_until_node PUBLIC
   ${std_msgs_TARGETS}
   rclcpp_action::rclcpp_action
   ${ur_msgs_TARGETS}
-  )
+)
 
 install(
   TARGETS
