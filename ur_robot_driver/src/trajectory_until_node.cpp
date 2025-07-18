@@ -95,7 +95,6 @@ TrajectoryUntilNode::~TrajectoryUntilNode()
 {
 }
 
-// Assign the until condition action client (This is not as extensible as I thought)
 bool TrajectoryUntilNode::assign_until_action_client(std::shared_ptr<const TrajectoryUntil::Goal> goal)
 {
   int type = goal->until_type;
@@ -119,6 +118,11 @@ bool TrajectoryUntilNode::assign_until_action_client(std::shared_ptr<const Traje
 rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
     const rclcpp_action::GoalUUID& /* uuid */, std::shared_ptr<const TrajectoryUntil::Goal> goal)
 {
+  if (server_goal_handle_) {
+    RCLCPP_ERROR(this->get_logger(), "Node is currently busy, rejecting action goal.");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
+
   if(!assign_until_action_client(goal)){
     RCLCPP_ERROR(this->get_logger(), "Until type not defined, double check the types in the action "
                                      "definition.");
@@ -128,12 +132,8 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
     RCLCPP_ERROR(this->get_logger(), "Trajectory action server not available.");
     return rclcpp_action::GoalResponse::REJECT;
   }
-  if (server_goal_handle_) {
-    RCLCPP_ERROR(this->get_logger(), "Node is currently busy, rejecting action goal.");
-    return rclcpp_action::GoalResponse::REJECT;
-  }
 
-  // Check until action server, send action goal to until-controller and wait for it to be accepted. 
+  // Check until action server, send action goal to until-controller and wait for it to be accepted.
   if(std::holds_alternative<tc_client>(until_action_client_variant)){
     if (!std::get<tc_client>(until_action_client_variant)->wait_for_action_server(std::chrono::seconds(1))) {
       RCLCPP_ERROR(this->get_logger(), "Until action server not available.");
@@ -178,6 +178,7 @@ void TrajectoryUntilNode::goal_accepted_callback(const std::shared_ptr<GoalHandl
 rclcpp_action::CancelResponse
 TrajectoryUntilNode::goal_cancelled_callback(const std::shared_ptr<GoalHandleTrajectoryUntil> /* goal_handle */)
 {
+  RCLCPP_INFO(this->get_logger(), "Cancel received. Cancelling trajectory-until action.");
   if (current_until_goal_handle_) {
     cancel_until_goal();
   }
@@ -293,7 +294,6 @@ void TrajectoryUntilNode::until_result_callback(const typename rclcpp_action::Cl
 
 void TrajectoryUntilNode::report_goal(TrajectoryResult result)
 {
-  std::cout << "----------------------- Reporting trajectory goal ----------------------------------" << std::endl;
   if (server_goal_handle_) {
     prealloc_res->until_condition_result = TrajectoryUntil::Result::NOT_TRIGGERED;
     prealloc_res->error_code = result.result->error_code;
@@ -309,8 +309,8 @@ void TrajectoryUntilNode::report_goal(TrajectoryResult result)
         break;
 
       case rclcpp_action::ResultCode::CANCELED:
-        prealloc_res->error_string += " Trajectory action was canceled, this should not happen. Aborting goal.";
-        server_goal_handle_->abort(prealloc_res);
+        prealloc_res->error_string += " Trajectory action was canceled.";
+        server_goal_handle_->canceled(prealloc_res);
         break;
       default:
         prealloc_res->error_string += " Unknown result code received from trajectory action, this should not happen. "
@@ -330,34 +330,28 @@ void TrajectoryUntilNode::report_goal(TrajectoryResult result)
 template <typename UntilResult>
 void TrajectoryUntilNode::report_goal(UntilResult result)
 {
-  std::cout << "----------------------- Reporting until goal ----------------------------------" << std::endl;
   if (server_goal_handle_) {
     switch (result.code) {
       case rclcpp_action::ResultCode::SUCCEEDED:
         prealloc_res->error_code = TrajectoryUntil::Result::SUCCESSFUL;
         prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::TRIGGERED;
+        prealloc_res->error_string += "Trajectory finished successfully by triggering until condition.";
         server_goal_handle_->succeed(prealloc_res);
         break;
 
       case rclcpp_action::ResultCode::ABORTED:
-        prealloc_res->error_string = "Until action was aborted. Aborting goal.";
-        prealloc_res->error_code = TrajectoryUntil::Result::ABORTED;
-        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::ABORTED;
+        prealloc_res->error_string += "Until action was aborted. Aborting goal.";
         server_goal_handle_->abort(prealloc_res);
         break;
 
       case rclcpp_action::ResultCode::CANCELED:
-        prealloc_res->error_string = "Until action was canceled, this should not happen. Aborting goal.";
-        prealloc_res->error_code = TrajectoryUntil::Result::ABORTED;
-        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::PREEMPTED;
-        server_goal_handle_->abort(prealloc_res);
+        prealloc_res->error_string += "Until action was canceled.";
+        server_goal_handle_->canceled(prealloc_res);
         break;
 
       default:
-        prealloc_res->error_string = "Unknown result code received from until action, this should not happen. Aborting "
+        prealloc_res->error_string += "Unknown result code received from until action, this should not happen. Aborting "
                                      "goal.";
-        prealloc_res->error_code = TrajectoryUntil::Result::ABORTED;
-        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::ABORTED;
         server_goal_handle_->abort(prealloc_res);
 
         break;
@@ -387,10 +381,10 @@ void TrajectoryUntilNode::reset_node()
   prealloc_res = std::make_shared<TrajectoryUntil::Result>(TrajectoryUntil::Result());
   prealloc_fb = std::make_shared<TrajectoryUntil::Feedback>(TrajectoryUntil::Feedback());
 
-  //until_action_client_variant = std::monostate();
   server_goal_handle_ = nullptr;
 }
 
+// Cancel the action contained in the variant, regardless of what type it is.
 void TrajectoryUntilNode::cancel_until_goal(){
   std::visit([this](const auto& until_client) {
       until_client->async_cancel_goal(current_until_goal_handle_);
@@ -402,7 +396,6 @@ void TrajectoryUntilNode::cancel_until_goal(){
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  //auto node = rclcpp::Node::make_shared("trajectory_until_node");
   auto node = std::make_shared<ur_robot_driver::TrajectoryUntilNode>();
   // Use multithreaded executor because we have two callback groups
   rclcpp::executors::MultiThreadedExecutor executor;
