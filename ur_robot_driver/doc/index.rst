@@ -21,3 +21,4 @@ ur_robot_driver
    dashboard_client
    robot_state_helper
    controller_stopper
+   trajectory_until_node
