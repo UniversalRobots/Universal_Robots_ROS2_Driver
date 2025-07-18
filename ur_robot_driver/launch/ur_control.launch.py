@@ -164,8 +164,11 @@ def launch_setup(context):
         name="trajectory_until_node",
         output="screen",
         remappings=[
-            ('/motion_controller/follow_joint_trajectory', f'/{initial_joint_controller.perform(context)}/follow_joint_trajectory'),
-            ]
+            (
+                "/motion_controller/follow_joint_trajectory",
+                f"/{initial_joint_controller.perform(context)}/follow_joint_trajectory",
+            ),
+        ],
     )
 
     # Spawn controllers

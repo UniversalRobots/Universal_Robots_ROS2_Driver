@@ -55,7 +55,6 @@
 #include <ur_msgs/action/trajectory_until.hpp>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
-
 namespace ur_robot_driver
 {
 class TrajectoryUntilNode : public rclcpp::Node
@@ -77,16 +76,14 @@ private:
 
   std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> server_goal_handle_;
 
-  template<class ActionType, class ClientType>
+  template <class ActionType, class ClientType>
   void send_until_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
 
-  template<class T>
-  void
-  until_response_callback(const typename rclcpp_action::ClientGoalHandle<T>::SharedPtr& goal_handle);
+  template <class T>
+  void until_response_callback(const typename rclcpp_action::ClientGoalHandle<T>::SharedPtr& goal_handle);
 
-  template<class T>
-  void
-  until_result_callback(const typename rclcpp_action::ClientGoalHandle<T>::WrappedResult& result);
+  template <class T>
+  void until_result_callback(const typename rclcpp_action::ClientGoalHandle<T>::WrappedResult& result);
 
   void cancel_until_goal();
 
