@@ -42,12 +42,6 @@
 #include <functional>
 #include <thread>
 
-template <class T>
-struct until_container
-{
-  T until_client_type;
-};
-
 namespace ur_robot_driver
 {
 
@@ -82,7 +76,7 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
                                                                                   "trajectory",
                                                                                   clients_callback_group);
 
-  // Create action server to advertise the "/trajectory_until/execute"
+  // Create action server to advertise the "/trajectory_until_node/execute"
   action_server_ = rclcpp_action::create_server<TrajectoryUntil>(
       this, std::string(this->get_name()) + "/execute",
       std::bind(&TrajectoryUntilNode::goal_received_callback, this, std::placeholders::_1, std::placeholders::_2),
@@ -95,6 +89,7 @@ TrajectoryUntilNode::~TrajectoryUntilNode()
 {
 }
 
+// Assign the correct type of action client to the variant
 bool TrajectoryUntilNode::assign_until_action_client(std::shared_ptr<const TrajectoryUntil::Goal> goal)
 {
   int type = goal->until_type;
@@ -134,12 +129,12 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
   }
 
   // Check until action server, send action goal to until-controller and wait for it to be accepted.
-  if(std::holds_alternative<tc_client>(until_action_client_variant)){
-    if (!std::get<tc_client>(until_action_client_variant)->wait_for_action_server(std::chrono::seconds(1))) {
+  if(std::holds_alternative<TCClient>(until_action_client_variant)){
+    if (!std::get<TCClient>(until_action_client_variant)->wait_for_action_server(std::chrono::seconds(1))) {
       RCLCPP_ERROR(this->get_logger(), "Until action server not available.");
       return rclcpp_action::GoalResponse::REJECT;
     }
-    send_until_goal<TCAction, tc_client>(goal);
+    send_until_goal<TCAction, TCClient>(goal);
   }
   else{
     throw std::runtime_error("Until type not implemented. This should not happen.");
@@ -185,8 +180,6 @@ TrajectoryUntilNode::goal_cancelled_callback(const std::shared_ptr<GoalHandleTra
   if (current_trajectory_goal_handle_) {
     trajectory_action_client_->async_cancel_goal(current_trajectory_goal_handle_);
   }
-
-  //server_goal_handle_ = nullptr;
 
   return rclcpp_action::CancelResponse::ACCEPT;
 }
@@ -259,7 +252,7 @@ void TrajectoryUntilNode::until_response_callback(
   cv_until_.notify_one();
 }
 
-/* Just forward feedback from trajectory controller */
+// Just forward feedback from trajectory controller. No feedback from until controllers so far.
 void TrajectoryUntilNode::trajectory_feedback_callback(
     const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::SharedPtr& /* goal_handle */,
     const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> feedback)
@@ -276,6 +269,7 @@ void TrajectoryUntilNode::trajectory_feedback_callback(
   }
 }
 
+// When a result is received from either trajectory or until condition, report it back to user
 void TrajectoryUntilNode::trajectory_result_callback(
     const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult& result)
 {
@@ -312,7 +306,7 @@ void TrajectoryUntilNode::report_goal(TrajectoryResult result)
         prealloc_res->error_string += " Trajectory action was canceled.";
         server_goal_handle_->canceled(prealloc_res);
         break;
-        
+
       default:
         prealloc_res->error_string += " Unknown result code received from trajectory action, this should not happen. "
                                       "Aborting goal.";
