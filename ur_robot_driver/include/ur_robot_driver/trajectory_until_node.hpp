@@ -67,11 +67,10 @@ public:
 private:
   rclcpp_action::Server<ur_msgs::action::TrajectoryUntil>::SharedPtr action_server_;
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr trajectory_action_client_;
-  // Add new until types here, when available
-  // Append only, no changing the sequence
-  using tc_client = rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr;
 
-  std::variant</* std::monostate,  */tc_client> until_action_client_variant;
+  // Add new until types here, when available
+  using TCClient = rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr;
+  std::variant<TCClient> until_action_client_variant;
 
   rclcpp::CallbackGroup::SharedPtr server_callback_group;
   rclcpp::CallbackGroup::SharedPtr clients_callback_group;
@@ -109,8 +108,6 @@ private:
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> goal_handle);
 
   void send_trajectory_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
-
-  
 
   void report_goal(rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult result);
 
