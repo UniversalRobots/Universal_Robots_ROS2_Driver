@@ -53,9 +53,8 @@ from test_common import (  # noqa: E402
     ConfigurationInterface,
     generate_driver_test_description,
     ROBOT_JOINTS,
+    TIMEOUT_EXECUTE_TRAJECTORY,
 )
-
-TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 
 @pytest.mark.launch_test
