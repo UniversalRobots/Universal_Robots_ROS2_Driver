@@ -97,6 +97,6 @@ class RobotDriverTest(unittest.TestCase):
     #
 
     def test_get_robot_software_version(self):
-        self.assertNotEqual(
-            self._configuration_controller_interface.get_robot_software_version().major, 0
+        self.assertGreater(
+            self._configuration_controller_interface.get_robot_software_version().major, 1
         )
