@@ -58,6 +58,9 @@ from ur_dashboard_msgs.srv import (
     Load,
 )
 from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
+from builtin_interfaces.msg import Duration
+from control_msgs.action import FollowJointTrajectory
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
@@ -300,6 +303,79 @@ class ForceModeInterface(
     services={"start_force_mode": SetForceMode, "stop_force_mode": Trigger},
 ):
     pass
+
+
+def sjtc_trajectory_test(tester, tf_prefix):
+    """Test robot movement."""
+    tester.assertTrue(
+        tester._controller_manager_interface.switch_controller(
+            strictness=SwitchController.Request.BEST_EFFORT,
+            deactivate_controllers=["passthrough_trajectory_controller"],
+            activate_controllers=["scaled_joint_trajectory_controller"],
+        ).ok
+    )
+    # Construct test trajectory
+    test_trajectory = [
+        (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
+        (Duration(sec=9, nanosec=0), [-0.5 for j in ROBOT_JOINTS]),
+        (Duration(sec=12, nanosec=0), [-1.0 for j in ROBOT_JOINTS]),
+    ]
+
+    trajectory = JointTrajectory(
+        joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+        points=[
+            JointTrajectoryPoint(positions=test_pos, time_from_start=test_time)
+            for (test_time, test_pos) in test_trajectory
+        ],
+    )
+
+    # Sending trajectory goal
+    logging.info("Sending simple goal")
+    goal_handle = tester._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
+    tester.assertTrue(goal_handle.accepted)
+
+    # Verify execution
+    result = tester._scaled_follow_joint_trajectory.get_result(
+        goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+    )
+    tester.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+
+def sjtc_illegal_trajectory_test(tester, tf_prefix):
+    """
+    Test trajectory server.
+
+    This is more of a validation test that the testing suite does the right thing
+    """
+    tester.assertTrue(
+        tester._controller_manager_interface.switch_controller(
+            strictness=SwitchController.Request.BEST_EFFORT,
+            deactivate_controllers=["passthrough_trajectory_controller"],
+            activate_controllers=["scaled_joint_trajectory_controller"],
+        ).ok
+    )
+    # Construct test trajectory, the second point wrongly starts before the first
+    test_trajectory = [
+        (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
+        (Duration(sec=3, nanosec=0), [-0.5 for j in ROBOT_JOINTS]),
+    ]
+
+    trajectory = JointTrajectory(
+        joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+        points=[
+            JointTrajectoryPoint(positions=test_pos, time_from_start=test_time)
+            for (test_time, test_pos) in test_trajectory
+        ],
+    )
+
+    # Send illegal goal
+    logging.info("Sending illegal goal")
+    goal_handle = tester._scaled_follow_joint_trajectory.send_goal(
+        trajectory=trajectory,
+    )
+
+    # Verify the failure is correctly detected
+    tester.assertFalse(goal_handle.accepted)
 
 
 def _declare_launch_arguments():

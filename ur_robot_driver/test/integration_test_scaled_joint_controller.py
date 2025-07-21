@@ -51,6 +51,8 @@ from test_common import (  # noqa: E402
     generate_driver_test_description,
     ROBOT_JOINTS,
     TIMEOUT_EXECUTE_TRAJECTORY,
+    sjtc_trajectory_test,
+    sjtc_illegal_trajectory_test,
 )
 
 
@@ -104,75 +106,10 @@ class RobotDriverTest(unittest.TestCase):
         )
 
     def test_trajectory(self, tf_prefix):
-        """Test robot movement."""
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                deactivate_controllers=["passthrough_trajectory_controller"],
-                activate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-        # Construct test trajectory
-        test_trajectory = [
-            (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
-            (Duration(sec=9, nanosec=0), [-0.5 for j in ROBOT_JOINTS]),
-            (Duration(sec=12, nanosec=0), [-1.0 for j in ROBOT_JOINTS]),
-        ]
-
-        trajectory = JointTrajectory(
-            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
-            points=[
-                JointTrajectoryPoint(positions=test_pos, time_from_start=test_time)
-                for (test_time, test_pos) in test_trajectory
-            ],
-        )
-
-        # Sending trajectory goal
-        logging.info("Sending simple goal")
-        goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
-        self.assertTrue(goal_handle.accepted)
-
-        # Verify execution
-        result = self._scaled_follow_joint_trajectory.get_result(
-            goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
-        )
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+        sjtc_trajectory_test(self, tf_prefix)
 
     def test_illegal_trajectory(self, tf_prefix):
-        """
-        Test trajectory server.
-
-        This is more of a validation test that the testing suite does the right thing
-        """
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                deactivate_controllers=["passthrough_trajectory_controller"],
-                activate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-        # Construct test trajectory, the second point wrongly starts before the first
-        test_trajectory = [
-            (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
-            (Duration(sec=3, nanosec=0), [-0.5 for j in ROBOT_JOINTS]),
-        ]
-
-        trajectory = JointTrajectory(
-            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
-            points=[
-                JointTrajectoryPoint(positions=test_pos, time_from_start=test_time)
-                for (test_time, test_pos) in test_trajectory
-            ],
-        )
-
-        # Send illegal goal
-        logging.info("Sending illegal goal")
-        goal_handle = self._scaled_follow_joint_trajectory.send_goal(
-            trajectory=trajectory,
-        )
-
-        # Verify the failure is correctly detected
-        self.assertFalse(goal_handle.accepted)
+        sjtc_illegal_trajectory_test(self, tf_prefix)
 
     def test_trajectory_scaled(self, tf_prefix):
         """Test robot movement."""
