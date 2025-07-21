@@ -334,10 +334,10 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
 
   // Motion primitives stuff
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(HW_IF_MOTION_PRIMITIVES, "execution_status", &hw_moprim_states_[0]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(HW_IF_MOTION_PRIMITIVES, "ready_for_new_primitive", &hw_moprim_states_[1]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                   "execution_status", &hw_moprim_states_[0]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                   "ready_for_new_primitive", &hw_moprim_states_[1]));
 
   return state_interfaces;
 }
@@ -481,60 +481,60 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   // Motion primitives stuff
   // Command for motion type (motion_type)
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "motion_type", &hw_moprim_commands_[0]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "motion_type", &hw_moprim_commands_[0]));
   // Joint position commands (q1, q2, ..., q6)
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "q1", &hw_moprim_commands_[1]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q1", &hw_moprim_commands_[1]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "q2", &hw_moprim_commands_[2]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q2", &hw_moprim_commands_[2]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "q3", &hw_moprim_commands_[3]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q3", &hw_moprim_commands_[3]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "q4", &hw_moprim_commands_[4]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q4", &hw_moprim_commands_[4]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "q5", &hw_moprim_commands_[5]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q5", &hw_moprim_commands_[5]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "q6", &hw_moprim_commands_[6]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q6", &hw_moprim_commands_[6]));
   // Position commands (pos_x, pos_y, pos_z, pos_qx, pos_qy, pos_qz, pos_qz)
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_x", &hw_moprim_commands_[7]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_x", &hw_moprim_commands_[7]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_y", &hw_moprim_commands_[8]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_y", &hw_moprim_commands_[8]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_z", &hw_moprim_commands_[9]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_z", &hw_moprim_commands_[9]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_qx", &hw_moprim_commands_[10]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qx", &hw_moprim_commands_[10]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_qy", &hw_moprim_commands_[11]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qy", &hw_moprim_commands_[11]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_qz", &hw_moprim_commands_[12]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qz", &hw_moprim_commands_[12]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_qw", &hw_moprim_commands_[13]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qw", &hw_moprim_commands_[13]));
   // Via Position commands for circula motion
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_via_x", &hw_moprim_commands_[14]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_x", &hw_moprim_commands_[14]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_via_y", &hw_moprim_commands_[15]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_y", &hw_moprim_commands_[15]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_via_z", &hw_moprim_commands_[16]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_via_qx", &hw_moprim_commands_[17]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_via_qy", &hw_moprim_commands_[18]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_via_qz", &hw_moprim_commands_[19]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "pos_via_qw", &hw_moprim_commands_[20]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_z", &hw_moprim_commands_[16]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qx", &hw_moprim_commands_[17]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qy", &hw_moprim_commands_[18]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qz", &hw_moprim_commands_[19]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qw", &hw_moprim_commands_[20]));
   // Other command parameters (blend_radius, velocity, acceleration, move_time)
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "blend_radius", &hw_moprim_commands_[21]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "blend_radius", &hw_moprim_commands_[21]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "velocity", &hw_moprim_commands_[22]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "acceleration", &hw_moprim_commands_[23]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "velocity", &hw_moprim_commands_[22]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "acceleration", &hw_moprim_commands_[23]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(HW_IF_MOTION_PRIMITIVES, "move_time", &hw_moprim_commands_[24]));
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "move_time", &hw_moprim_commands_[24]));
 
   return command_interfaces;
 }
@@ -1274,7 +1274,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         { tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i), PASSTHROUGH_GPIO },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO },
         { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO },
-        { HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES },
+        { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES },
       };
 
       for (auto& item : start_modes_to_check) {
