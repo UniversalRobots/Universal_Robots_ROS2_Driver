@@ -56,11 +56,9 @@ from test_common import (  # noqa: E402
 
 
 @pytest.mark.launch_test
-@launch_testing.parametrize("tf_prefix, use_mock_hardware", [("", "true"), ("my_ur_", "true")])
-def generate_test_description(tf_prefix, use_mock_hardware):
-    return generate_mock_hardware_test_description(
-        tf_prefix=tf_prefix, use_mock_hardware=use_mock_hardware
-    )
+@launch_testing.parametrize("tf_prefix", [(""), ("my_ur_")])
+def generate_test_description(tf_prefix):
+    return generate_mock_hardware_test_description(tf_prefix=tf_prefix)
 
 
 class RobotDriverTest(unittest.TestCase):
@@ -70,7 +68,6 @@ class RobotDriverTest(unittest.TestCase):
         rclpy.init()
         cls.node = Node("mock_hardware_test")
         time.sleep(1)
-        cls.mock_hardware = use_mock_hardware == "true"
         cls.init_robot(cls)
 
     @classmethod
