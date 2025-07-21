@@ -63,7 +63,7 @@ def generate_test_description(tf_prefix):
 
 class RobotDriverTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls, use_mock_hardware):
+    def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("mock_hardware_test")
