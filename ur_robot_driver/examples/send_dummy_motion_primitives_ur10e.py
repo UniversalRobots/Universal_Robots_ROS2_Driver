@@ -53,17 +53,17 @@ moveJ_1.type = MotionPrimitive.LINEAR_JOINT
 moveJ_1.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
 moveJ_1.blend_radius = 0.1
 moveJ_1.additional_arguments = [
-    MotionArgument(argument_name="velocity", argument_value=joint_velocity),
-    MotionArgument(argument_name="acceleration", argument_value=joint_acceleration),
-    MotionArgument(argument_name="move_time", argument_value=move_time),
+    MotionArgument(name="velocity", value=joint_velocity),
+    MotionArgument(name="acceleration", value=joint_acceleration),
+    MotionArgument(name="move_time", value=move_time),
 ]
 # Linear movement down
 moveL_1 = MotionPrimitive()
 moveL_1.type = MotionPrimitive.LINEAR_CARTESIAN
 moveL_1.blend_radius = 0.05
 moveL_1.additional_arguments = [
-    MotionArgument(argument_name="velocity", argument_value=cart_velocity),
-    MotionArgument(argument_name="acceleration", argument_value=cart_acceleration),
+    MotionArgument(name="velocity", value=cart_velocity),
+    MotionArgument(name="acceleration", value=cart_acceleration),
 ]
 pose_L1 = PoseStamped()
 pose_L1.pose.position.x = 0.174
@@ -129,63 +129,63 @@ moveJ_eval_0.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_0.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
 moveJ_eval_0.blend_radius = eval_blend_radius
 moveJ_eval_0.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_1 = MotionPrimitive()
 moveJ_eval_1.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_1.joint_positions = [1.57, -1.1, 1.0, -1.57, -1.57, -1.57]
 moveJ_eval_1.blend_radius = eval_blend_radius
 moveJ_eval_1.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_2 = MotionPrimitive()
 moveJ_eval_2.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_2.joint_positions = [2.0, -0.9, 0.7, -1.57, -1.57, -1.57]
 moveJ_eval_2.blend_radius = eval_blend_radius
 moveJ_eval_2.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_3 = MotionPrimitive()
 moveJ_eval_3.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_3.joint_positions = [2.4, -1.57, 1.57, -1.57, -1.57, -1.57]
 moveJ_eval_3.blend_radius = eval_blend_radius
 moveJ_eval_3.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_4 = MotionPrimitive()
 moveJ_eval_4.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_4.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
 moveJ_eval_4.blend_radius = eval_blend_radius
 moveJ_eval_4.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_5 = MotionPrimitive()
 moveJ_eval_5.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_5.joint_positions = [1.57, -1.1, 1.0, -1.57, -1.57, -1.57]
 moveJ_eval_5.blend_radius = eval_blend_radius
 moveJ_eval_5.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_6 = MotionPrimitive()
 moveJ_eval_6.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_6.joint_positions = [1.1, -0.9, 0.7, -1.57, -1.57, -1.57]
 moveJ_eval_6.blend_radius = eval_blend_radius
 moveJ_eval_6.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_7 = MotionPrimitive()
 moveJ_eval_7.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_7.joint_positions = [0.7, -1.57, 1.57, -1.57, -1.57, -1.57]
 moveJ_eval_7.blend_radius = eval_blend_radius
 moveJ_eval_7.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 moveJ_eval_8 = MotionPrimitive()
 moveJ_eval_8.type = MotionPrimitive.LINEAR_JOINT
 moveJ_eval_8.joint_positions = [1.57, -1.57, 1.57, -1.57, -1.57, -1.57]
 moveJ_eval_8.blend_radius = eval_blend_radius
 moveJ_eval_8.additional_arguments = [
-    MotionArgument(argument_name="move_time", argument_value=eval_move_time),
+    MotionArgument(name="move_time", value=eval_move_time),
 ]
 
 
