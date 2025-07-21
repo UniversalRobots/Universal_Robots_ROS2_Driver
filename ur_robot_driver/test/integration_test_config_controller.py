@@ -35,12 +35,10 @@ import unittest
 import launch_testing
 import pytest
 import rclpy
-from control_msgs.action import FollowJointTrajectory
 from rclpy.node import Node
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
-    ActionInterface,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
@@ -75,17 +73,6 @@ class RobotDriverTest(unittest.TestCase):
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._configuration_controller_interface = ConfigurationInterface(self.node)
-
-        self._scaled_follow_joint_trajectory = ActionInterface(
-            self.node,
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
-            FollowJointTrajectory,
-        )
-        self._passthrough_forward_joint_trajectory = ActionInterface(
-            self.node,
-            "/passthrough_trajectory_controller/follow_joint_trajectory",
-            FollowJointTrajectory,
-        )
 
     def setUp(self):
         self._dashboard_interface.start_robot()

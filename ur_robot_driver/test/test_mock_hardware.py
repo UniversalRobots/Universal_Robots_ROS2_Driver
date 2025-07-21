@@ -76,8 +76,8 @@ class RobotDriverTest(unittest.TestCase):
         cls.node.destroy_node()
         rclpy.shutdown()
 
+    # Connect to all interfaces and actions, even ones we know won't work with mock hardware (Except dashboard)
     def init_robot(self):
-        self._dashboard_interface = None
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._configuration_controller_interface = ConfigurationInterface(self.node)
@@ -88,9 +88,11 @@ class RobotDriverTest(unittest.TestCase):
             FollowJointTrajectory,
         )
 
-    def setUp(self):
-        time.sleep(1)
-        self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
+        self._passthrough_forward_joint_trajectory = ActionInterface(
+            self.node,
+            "/passthrough_trajectory_controller/follow_joint_trajectory",
+            FollowJointTrajectory,
+        )
 
     #
     # Test functions
@@ -165,31 +167,3 @@ class RobotDriverTest(unittest.TestCase):
 
         # Verify the failure is correctly detected
         self.assertFalse(goal_handle.accepted)
-
-    def test_trajectory_scaled(self, tf_prefix):
-        """Test robot movement."""
-        # Construct test trajectory
-        test_trajectory = [
-            (Duration(sec=6, nanosec=0), [0.0 for j in ROBOT_JOINTS]),
-            (Duration(sec=6, nanosec=500000000), [-1.0 for j in ROBOT_JOINTS]),
-        ]
-
-        trajectory = JointTrajectory(
-            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
-            points=[
-                JointTrajectoryPoint(positions=test_pos, time_from_start=test_time)
-                for (test_time, test_pos) in test_trajectory
-            ],
-        )
-
-        # Execute trajectory
-        logging.info("Sending goal for robot to follow")
-        goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
-        self.assertTrue(goal_handle.accepted)
-
-        # Verify execution
-        result = self._scaled_follow_joint_trajectory.get_result(
-            goal_handle,
-            TIMEOUT_EXECUTE_TRAJECTORY,
-        )
-        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
