@@ -49,7 +49,6 @@ from test_common import (  # noqa: E402
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
-    ConfigurationInterface,
     generate_driver_test_description,
     ROBOT_JOINTS,
     TIMEOUT_EXECUTE_TRAJECTORY,
@@ -101,13 +100,7 @@ class RobotDriverTest(unittest.TestCase):
 
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
-        self._configuration_controller_interface = ConfigurationInterface(self.node)
 
-        self._scaled_follow_joint_trajectory = ActionInterface(
-            self.node,
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
-            FollowJointTrajectory,
-        )
         self._passthrough_forward_joint_trajectory = ActionInterface(
             self.node,
             "/passthrough_trajectory_controller/follow_joint_trajectory",
@@ -115,8 +108,7 @@ class RobotDriverTest(unittest.TestCase):
         )
 
     def setUp(self):
-        if self._dashboard_interface:
-            self._dashboard_interface.start_robot()
+        self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
