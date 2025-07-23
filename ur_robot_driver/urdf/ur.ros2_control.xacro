@@ -307,9 +307,15 @@
       </gpio>
 
       <gpio name="${tf_prefix}pd_control">
-        <command_interface name="pd_control_active">
-         <param name="data_type">bool</param>
+        <command_interface name="pd_control_type">
+          <param name="initial_value">-1.0</param>
         </command_interface>
+        <command_interface name="pd_target_0"/>
+        <command_interface name="pd_target_1"/>
+        <command_interface name="pd_target_2"/>
+        <command_interface name="pd_target_3"/>
+        <command_interface name="pd_target_4"/>
+        <command_interface name="pd_target_5"/>
       </gpio>
     </ros2_control>
   </xacro:macro>

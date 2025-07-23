@@ -65,6 +65,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[hardware_interface::HW_IF_POSITION][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_POSITION][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_POSITION][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[hardware_interface::HW_IF_POSITION][PD_CONTROL_GPIO] = false;
 
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][hardware_interface::HW_IF_EFFORT] = false;
@@ -72,6 +73,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][PD_CONTROL_GPIO] = false;
 
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_VELOCITY] = false;
@@ -79,6 +81,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[hardware_interface::HW_IF_EFFORT][PD_CONTROL_GPIO] = false;
 
   mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
@@ -86,6 +89,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[FORCE_MODE_GPIO][PASSTHROUGH_GPIO] = true;
   mode_compatibility_[FORCE_MODE_GPIO][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[FORCE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
+  mode_compatibility_[FORCE_MODE_GPIO][PD_CONTROL_GPIO] = false;
 
   mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
@@ -93,6 +97,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[PASSTHROUGH_GPIO][FORCE_MODE_GPIO] = true;
   mode_compatibility_[PASSTHROUGH_GPIO][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[PASSTHROUGH_GPIO][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[PASSTHROUGH_GPIO][PD_CONTROL_GPIO] = false;
 
   mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
@@ -100,6 +105,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[FREEDRIVE_MODE_GPIO][FORCE_MODE_GPIO] = false;
   mode_compatibility_[FREEDRIVE_MODE_GPIO][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[FREEDRIVE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][PD_CONTROL_GPIO] = false;
 
   mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_POSITION] = true;
   mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_VELOCITY] = true;
@@ -107,6 +113,15 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[TOOL_CONTACT_GPIO][FORCE_MODE_GPIO] = false;
   mode_compatibility_[TOOL_CONTACT_GPIO][PASSTHROUGH_GPIO] = true;
   mode_compatibility_[TOOL_CONTACT_GPIO][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[TOOL_CONTACT_GPIO][PD_CONTROL_GPIO] = false;
+
+  mode_compatibility_[PD_CONTROL_GPIO][hardware_interface::HW_IF_POSITION] = false;
+  mode_compatibility_[PD_CONTROL_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
+  mode_compatibility_[PD_CONTROL_GPIO][hardware_interface::HW_IF_EFFORT] = false;
+  mode_compatibility_[PD_CONTROL_GPIO][FORCE_MODE_GPIO] = false;
+  mode_compatibility_[PD_CONTROL_GPIO][PASSTHROUGH_GPIO] = false;
+  mode_compatibility_[PD_CONTROL_GPIO][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[PD_CONTROL_GPIO][TOOL_CONTACT_GPIO] = false;
 }
 
 URPositionHardwareInterface::~URPositionHardwareInterface()
@@ -131,6 +146,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_pd_targets_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   position_controller_running_ = false;
   velocity_controller_running_ = false;
   torque_controller_running_ = false;
@@ -152,6 +168,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   tool_contact_result_ = NO_NEW_CMD_;
   tool_contact_set_state_ = 0.0;
   tool_contact_state_ = 0.0;
+  pd_control_type_ = -1.0;
   trajectory_joint_positions_.reserve(32768);
   trajectory_joint_velocities_.reserve(32768);
   trajectory_joint_accelerations_.reserve(32768);
@@ -472,6 +489,13 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_set_state", &tool_contact_set_state_));
+
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + PD_CONTROL_GPIO, "pd_control_type", &pd_control_type_));
+  for (size_t i = 0; i < 6; ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + PD_CONTROL_GPIO, "pd_target_" + std::to_string(i), &urcl_pd_targets_[i]));
+  }
 
   return command_interfaces;
 }
@@ -872,6 +896,10 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
           urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
       check_passthrough_trajectory_controller();
+    } else if (pd_control_type_ == static_cast<double>(urcl::comm::ControlMode::MODE_PD_CONTROLLER_JOINT) ||
+               pd_control_type_ == static_cast<double>(urcl::comm::ControlMode::MODE_PD_CONTROLLER_TASK)) {
+      ur_driver_->writeJointCommand(urcl_pd_targets_, static_cast<urcl::comm::ControlMode>(pd_control_type_));
+
     } else {
       ur_driver_->writeKeepalive();
     }
@@ -1158,6 +1186,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     if (tool_contact_controller_running_) {
       control_modes[i].push_back(TOOL_CONTACT_GPIO);
     }
+    if (pd_control_type_ >= 0.0) {
+      control_modes[i].push_back(PD_CONTROL_GPIO);
+    }
   }
 
   auto is_mode_compatible = [this](const std::string& mode, const std::vector<std::string>& other_modes) {
@@ -1293,6 +1324,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     tool_contact_result_ = 3.0;
     ur_driver_->endToolContact();
   }
+  if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                           StoppingInterface::STOP_PD_CONTROL) != stop_modes_[0].end()) {
+    pd_control_type_ = -1.0;
+  }
 
   if (start_modes_.size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
                                             hardware_interface::HW_IF_POSITION) != start_modes_[0].end()) {
@@ -1301,6 +1336,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     passthrough_trajectory_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
+    pd_control_type_ = -1.0;
 
   } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
                                                       hardware_interface::HW_IF_VELOCITY) != start_modes_[0].end()) {
@@ -1309,12 +1345,14 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     passthrough_trajectory_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
+    pd_control_type_ = -1.0;
   } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
                                                       hardware_interface::HW_IF_EFFORT) != start_modes_[0].end()) {
     position_controller_running_ = false;
     velocity_controller_running_ = false;
     torque_controller_running_ = true;
     passthrough_trajectory_controller_running_ = false;
+    pd_control_type_ = -1.0;
     urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   }
   if (start_modes_[0].size() != 0 &&
@@ -1328,6 +1366,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
     passthrough_trajectory_abort_ = 0.0;
+    pd_control_type_ = -1.0;
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
@@ -1336,10 +1375,21 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     torque_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
     freedrive_activated_ = false;
+    pd_control_type_ = -1.0;
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), TOOL_CONTACT_GPIO) != start_modes_[0].end()) {
     tool_contact_controller_running_ = true;
+    pd_control_type_ = -1.0;
+  }
+  if (start_modes_[0].size() != 0 &&
+      std::find(start_modes_[0].begin(), start_modes_[0].end(), PD_CONTROL_GPIO) != start_modes_[0].end()) {
+    velocity_controller_running_ = false;
+    position_controller_running_ = false;
+    torque_controller_running_ = false;
+    freedrive_mode_controller_running_ = false;
+    freedrive_activated_ = false;
+    pd_control_type_ = 0.0;
   }
   start_modes_.clear();
   stop_modes_.clear();

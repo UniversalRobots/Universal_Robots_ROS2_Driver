@@ -39,4 +39,9 @@
       Controller to use the tool contact functionality of the robot.
     </description>
   </class>
+  <class name="ur_controllers/PDTorqueController" type="ur_controllers::PDTorqueController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to leverage the on-control-box PD controller.
+    </description>
+  </class>
 </library>

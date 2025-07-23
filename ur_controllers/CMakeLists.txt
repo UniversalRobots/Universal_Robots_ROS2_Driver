@@ -92,6 +92,11 @@ generate_parameter_library(
   src/ur_configuration_controller_parameters.yaml
 )
 
+generate_parameter_library(
+  pd_torque_controller_parameters
+  src/pd_torque_controller_parameters.yaml
+)
+
 add_library(${PROJECT_NAME} SHARED
   src/tool_contact_controller.cpp
   src/force_mode_controller.cpp
@@ -100,6 +105,7 @@ add_library(${PROJECT_NAME} SHARED
   src/freedrive_mode_controller.cpp
   src/gpio_controller.cpp
   src/passthrough_trajectory_controller.cpp
+  src/pd_torque_controller.cpp
   src/ur_configuration_controller.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -114,6 +120,7 @@ target_link_libraries(${PROJECT_NAME}
   freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters
+  pd_torque_controller_parameters
   ${geometry_msgs_TARGETS}
   ${lifecycle_msgs_TARGETS}
   ${std_msgs_TARGETS}

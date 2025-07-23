@@ -83,6 +83,7 @@ enum StoppingInterface
   STOP_FREEDRIVE,
   STOP_TOOL_CONTACT,
   STOP_TORQUE,
+  STOP_PD_CONTROL,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -179,6 +180,7 @@ protected:
   urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
   urcl::vector6d_t urcl_torque_commands_;
+  urcl::vector6d_t urcl_pd_targets_;
   urcl::vector6d_t urcl_joint_positions_;
   urcl::vector6d_t urcl_joint_velocities_;
   urcl::vector6d_t urcl_joint_efforts_;
@@ -288,6 +290,8 @@ protected:
   std::array<double, 4> robot_status_bits_copy_;
   std::array<double, 11> safety_status_bits_copy_;
 
+  double pd_control_type_;
+
   bool robot_program_running_;
   bool non_blocking_read_;
   double robot_program_running_copy_;
@@ -321,6 +325,7 @@ protected:
   const std::string FORCE_MODE_GPIO = "force_mode";
   const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
   const std::string TOOL_CONTACT_GPIO = "tool_contact";
+  const std::string PD_CONTROL_GPIO = "pd_control";
 
   std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
 };

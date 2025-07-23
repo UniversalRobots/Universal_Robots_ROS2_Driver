@@ -45,6 +45,9 @@ controller_manager:
     tool_contact_controller:
       type: ur_controllers/ToolContactController
 
+    pd_torque_controller:
+      type: ur_controllers/PDTorqueController
+
     # The way this is currently implemented upstream doesn't really work for us. When using
     # position control, the robot will have a tracking error. However, limits will be enforced
     # from the currently reported position, effectively limiting the possible step size using the
@@ -199,5 +202,9 @@ tcp_pose_broadcaster:
       child_frame_id: $(var tf_prefix)tool0_controller
 
 tool_contact_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+pd_torque_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
