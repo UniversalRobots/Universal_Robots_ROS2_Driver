@@ -28,11 +28,15 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 
 #include <controller_interface/controller_interface.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <realtime_tools/realtime_thread_safe_box.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
-#include "realtime_tools/realtime_thread_safe_box.hpp"
+#include <tf2_ros/buffer.hpp>
+#include <tf2_ros/transform_listener.hpp>
 
 #include "ur_controllers/pd_torque_controller_parameters.hpp"
 
@@ -41,8 +45,6 @@ namespace ur_controllers
 class PDTorqueController : public controller_interface::ControllerInterface
 {
 public:
-  using CmdType = std_msgs::msg::Float64MultiArray;
-
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
@@ -67,19 +69,22 @@ private:
     TASK_SPACE = 10,
   };
 
-  void command_callback(const CmdType::SharedPtr msg, const ControlType control_type);
+  void command_callback(const std::array<double, 6> command_vec, const ControlType control_type);
 
   std::shared_ptr<pd_torque_controller::ParamListener> param_listener_;
   pd_torque_controller::Params params_;
 
-  rclcpp::Subscription<CmdType>::SharedPtr joints_command_sub_;
-  rclcpp::Subscription<CmdType>::SharedPtr task_space_command_sub_;
+  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr joints_command_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr task_space_command_sub_;
 
   // the realtime container to exchange the reference from subscriber
-  realtime_tools::RealtimeThreadSafeBox<CmdType> rt_command_;
-  // save the last reference in case of unable to get value from box
-  CmdType joint_commands_;
+  realtime_tools::RealtimeThreadSafeBox<std::array<double, 6>> rt_command_;
+
+  std::array<double, 6> joint_commands_;
 
   std::atomic<ControlType> control_type_{ ControlType::NONE };
+
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 };
 }  // namespace ur_controllers
