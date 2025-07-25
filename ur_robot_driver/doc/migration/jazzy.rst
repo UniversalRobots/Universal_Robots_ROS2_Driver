@@ -53,3 +53,27 @@ other launchfiles or by using ``ros2 pkg prefix`` on the command line. For examp
 
    $ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur20 robot_ip:=192.168.56.101 \
      kinematics_params_file:=$(ros2 pkg prefix my_robot_cell_control)/share/my_robot_cell_control/config/my_robot_calibration.yaml
+
+Removal of ros2_control_node
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``ros2_control_node`` has been removed from the driver in `#939
+<https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/pull/939>`_. Instead, the
+``ur_control.launch.py`` launchfile now uses the ``controller_manager``'s ``ros2_control_node``
+directly. This change is only relevant if you wrote your own launchfile starting the
+``ur_robot_driver``'s ``ros2_control_node``. In that case, you should adapt your launchfile to use
+the ``controller_manager``'s ``ros2_control_node`` instead. Remember to also remove the
+``robot_description`` parameter as explained above.
+
+.. code-block:: diff
+
+    ur_control_node = Node(
+    -   package="ur_robot_driver",
+    -   executable="ur_ros2_control_node",
+    +   package="controller_manager",
+    +   executable="ros2_control_node",
+        parameters=[
+    -       robot_description,
+            update_rate_config_file,
+            ParameterFile(initial_joint_controllers, allow_substs=True),
+        ],
