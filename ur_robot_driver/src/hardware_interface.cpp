@@ -34,6 +34,9 @@
  * \author  Marvin Große Besselmann grosse@fzi.de
  * \date    2020-11-9
  *
+ * \author  Mathias Fuhrer mathias.fuhrer@b-robotized.de
+ * \date    2025-05-28 – Added support for usage with motion_primitives_forward_controller
+ *
  */
 //----------------------------------------------------------------------
 #include <algorithm>
@@ -141,6 +144,20 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   trajectory_joint_positions_.reserve(32768);
   trajectory_joint_velocities_.reserve(32768);
   trajectory_joint_accelerations_.reserve(32768);
+
+  // Motion primitives stuff
+  async_moprim_thread_shutdown_ = false;
+  new_moprim_cmd_available_ = false;
+  new_moprim_stop_available_ = false;
+  new_moprim_reset_available_ = false;
+  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+  ready_for_new_moprim_ = false;
+  motion_primitives_forward_controller_running_ = false;
+  // 2 States: execution_status, ready_for_new_primitive
+  hw_moprim_states_.resize(2, std::numeric_limits<double>::quiet_NaN());
+  // 25 Commands: // motion_type + 6 joints + 2*7 positions (goal and via) + blend_radius + velocity + acceleration +
+  // move_time
+  hw_moprim_commands_.resize(25, std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     if (joint.command_interfaces.size() != 2) {
@@ -316,6 +333,12 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
 
+  // Motion primitives stuff
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                   "execution_status", &hw_moprim_states_[0]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                   "ready_for_new_primitive", &hw_moprim_states_[1]));
+
   return state_interfaces;
 }
 
@@ -455,6 +478,63 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(
       tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_set_state", &tool_contact_set_state_));
+
+  // Motion primitives stuff
+  // Command for motion type (motion_type)
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "motion_type", &hw_moprim_commands_[0]));
+  // Joint position commands (q1, q2, ..., q6)
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q1", &hw_moprim_commands_[1]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q2", &hw_moprim_commands_[2]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q3", &hw_moprim_commands_[3]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q4", &hw_moprim_commands_[4]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q5", &hw_moprim_commands_[5]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q6", &hw_moprim_commands_[6]));
+  // Position commands (pos_x, pos_y, pos_z, pos_qx, pos_qy, pos_qz, pos_qz)
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_x", &hw_moprim_commands_[7]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_y", &hw_moprim_commands_[8]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_z", &hw_moprim_commands_[9]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qx", &hw_moprim_commands_[10]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qy", &hw_moprim_commands_[11]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qz", &hw_moprim_commands_[12]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qw", &hw_moprim_commands_[13]));
+  // Via Position commands for circula motion
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_x", &hw_moprim_commands_[14]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_y", &hw_moprim_commands_[15]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_z", &hw_moprim_commands_[16]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qx", &hw_moprim_commands_[17]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qy", &hw_moprim_commands_[18]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qz", &hw_moprim_commands_[19]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "pos_via_qw", &hw_moprim_commands_[20]));
+  // Other command parameters (blend_radius, velocity, acceleration, move_time)
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "blend_radius", &hw_moprim_commands_[21]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "velocity", &hw_moprim_commands_[22]));
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                       "acceleration", &hw_moprim_commands_[23]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "move_time", &hw_moprim_commands_[24]));
 
   return command_interfaces;
 }
@@ -596,7 +676,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     driver_config.tool_comm_setup = std::move(tool_comm_setup);
     driver_config.handle_program_state =
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
-    ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
+    ur_driver_ = std::make_shared<urcl::UrDriver>(driver_config);
     if (ur_driver_->getControlFrequency() != info_.rw_rate) {
       ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, info_.rw_rate);
     }
@@ -635,12 +715,22 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   get_robot_software_version_build_ = version_info.build;
   get_robot_software_version_bugfix_ = version_info.bugfix;
 
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing InstructionExecutor");
+  instruction_executor_ = std::make_shared<urcl::InstructionExecutor>(ur_driver_);
+
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
+
+  // Start async thread for sending motion primitives
+  async_moprim_cmd_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncMoprimCmdThread, this);
+  async_moprim_stop_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncMoprimStopThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
   ur_driver_->registerTrajectoryDoneCallback(
       std::bind(&URPositionHardwareInterface::trajectory_done_callback, this, std::placeholders::_1));
+
+  ur_driver_->registerToolContactResultCallback(
+      std::bind(&URPositionHardwareInterface::tool_contact_callback, this, std::placeholders::_1));
 
   ur_driver_->registerToolContactResultCallback(
       std::bind(&URPositionHardwareInterface::tool_contact_callback, this, std::placeholders::_1));
@@ -685,6 +775,16 @@ hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
     async_thread_shutdown_ = true;
     async_thread_->join();
     async_thread_.reset();
+  }
+  if (async_moprim_cmd_thread_) {
+    async_moprim_thread_shutdown_ = true;
+    async_moprim_cmd_thread_->join();
+    async_moprim_cmd_thread_.reset();
+  }
+  if (async_moprim_stop_thread_) {
+    async_moprim_thread_shutdown_ = true;
+    async_moprim_stop_thread_->join();
+    async_moprim_stop_thread_.reset();
   }
 
   ur_driver_.reset();
@@ -822,6 +922,10 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
     updateNonDoubleValues();
 
+    // Motion primitives stuff
+    hw_moprim_states_[0] = static_cast<uint8_t>(current_moprim_execution_status_);
+    hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
+
     return hardware_interface::return_type::OK;
   }
   if (!non_blocking_read_)
@@ -853,6 +957,10 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
           urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
       check_passthrough_trajectory_controller();
+
+    } else if (motion_primitives_forward_controller_running_) {
+      handleMoprimCommands();
+
     } else {
       ur_driver_->writeKeepalive();
     }
@@ -1136,6 +1244,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     if (tool_contact_controller_running_) {
       control_modes[i].push_back(TOOL_CONTACT_GPIO);
     }
+    if (motion_primitives_forward_controller_running_) {
+      control_modes[i].push_back(HW_IF_MOTION_PRIMITIVES);
+    }
   }
 
   auto is_mode_compatible = [this](const std::string& mode, const std::vector<std::string>& other_modes) {
@@ -1162,7 +1273,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         { tf_prefix + FORCE_MODE_GPIO + "/type", FORCE_MODE_GPIO },
         { tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i), PASSTHROUGH_GPIO },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO },
-        { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO }
+        { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO },
+        { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES },
       };
 
       for (auto& item : start_modes_to_check) {
@@ -1197,7 +1309,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           StoppingInterface::STOP_PASSTHROUGH },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO, StoppingInterface::STOP_FREEDRIVE },
         { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO,
-          StoppingInterface::STOP_TOOL_CONTACT }
+          StoppingInterface::STOP_TOOL_CONTACT },
+        { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES,
+          StoppingInterface::STOP_MOTION_PRIMITIVES },
       };
       for (auto& item : stop_modes_to_check) {
         if (key == std::get<0>(item)) {
@@ -1258,6 +1372,15 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     freedrive_mode_abort_ = 1.0;
   }
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                           StoppingInterface::STOP_MOTION_PRIMITIVES) != stop_modes_[0].end()) {
+    motion_primitives_forward_controller_running_ = false;
+    resetMoprimCmdInterfaces();
+    current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+    ready_for_new_moprim_ = false;
+
+    RCLCPP_INFO(get_logger(), "Motion primitives mode stopped.");
+  }
+  if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
     tool_contact_controller_running_ = false;
     tool_contact_result_ = 3.0;
@@ -1268,6 +1391,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                             hardware_interface::HW_IF_POSITION) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
+    motion_primitives_forward_controller_running_ = false;
     urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
     position_controller_running_ = true;
 
@@ -1275,17 +1399,20 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                                       hardware_interface::HW_IF_VELOCITY) != start_modes_[0].end()) {
     position_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
+    motion_primitives_forward_controller_running_ = false;
     urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
     velocity_controller_running_ = true;
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), FORCE_MODE_GPIO) != start_modes_[0].end()) {
+    motion_primitives_forward_controller_running_ = false;
     force_mode_controller_running_ = true;
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), PASSTHROUGH_GPIO) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
+    motion_primitives_forward_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
     passthrough_trajectory_abort_ = 0.0;
   }
@@ -1293,8 +1420,24 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
       std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
     velocity_controller_running_ = false;
     position_controller_running_ = false;
+    motion_primitives_forward_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
     freedrive_activated_ = false;
+  }
+  if (start_modes_[0].size() != 0 &&
+      std::find(start_modes_[0].begin(), start_modes_[0].end(), HW_IF_MOTION_PRIMITIVES) != start_modes_[0].end()) {
+    velocity_controller_running_ = false;
+    position_controller_running_ = false;
+    freedrive_mode_controller_running_ = false;
+    passthrough_trajectory_controller_running_ = false;
+    force_mode_controller_running_ = false;
+
+    resetMoprimCmdInterfaces();
+    current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+    ready_for_new_moprim_ = true;
+    motion_primitives_forward_controller_running_ = true;
+
+    RCLCPP_INFO(get_logger(), "Motion primitives mode started.");
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), TOOL_CONTACT_GPIO) != start_modes_[0].end()) {
@@ -1462,6 +1605,413 @@ void URPositionHardwareInterface::trajectory_done_callback(urcl::control::Trajec
 bool URPositionHardwareInterface::is_valid_joint_information(std::vector<std::array<double, 6>> data)
 {
   return (data.size() > 0 && !std::isnan(data[0][0]));
+}
+
+void URPositionHardwareInterface::handleMoprimCommands()
+{
+  // Check if we have a new command
+  if (!std::isnan(hw_moprim_commands_[0])) {
+    ready_for_new_moprim_ = false;  // set to false to indicate that the driver is busy handling a command
+    // set state interface immediately
+    // --> if waiting for next read() cycle it happens sometimes that a command is overwritten
+    hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
+
+    switch (static_cast<uint8_t>(hw_moprim_commands_[0])) {
+      case static_cast<uint8_t>(MoprimMotionHelperType::STOP_MOTION):
+      {
+        std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
+        if (!new_moprim_stop_available_) {
+          new_moprim_stop_available_ = true;
+          resetMoprimCmdInterfaces();
+        }
+        break;
+      }
+      case static_cast<uint8_t>(MoprimMotionHelperType::RESET_STOP):
+      {
+        std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
+        if (!new_moprim_reset_available_) {
+          new_moprim_reset_available_ = true;
+          resetMoprimCmdInterfaces();
+        }
+        break;
+      }
+      default:
+      {
+        std::lock_guard<std::mutex> guard(moprim_cmd_mutex_);
+        if (!new_moprim_cmd_available_) {
+          // Copy command to thread-safe buffer
+          pending_moprim_cmd_ = hw_moprim_commands_;
+          new_moprim_cmd_available_ = true;
+          resetMoprimCmdInterfaces();
+        }
+        break;
+      }
+    }
+  }
+  // Send keepalive if current_moprim_execution_status_ is not EXECUTING
+  if (ur_driver_ && current_moprim_execution_status_ != MoprimExecutionState::EXECUTING) {
+    ur_driver_->writeKeepalive();
+  }
+}
+
+void URPositionHardwareInterface::resetMoprimCmdInterfaces()
+{
+  std::fill(hw_moprim_commands_.begin(), hw_moprim_commands_.end(), std::numeric_limits<double>::quiet_NaN());
+}
+
+void URPositionHardwareInterface::asyncMoprimStopThread()
+{
+  while (!async_moprim_thread_shutdown_) {
+    if (new_moprim_stop_available_) {
+      std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
+      new_moprim_stop_available_ = false;
+      processMoprimStopCmd();
+    } else if (new_moprim_reset_available_) {
+      std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
+      new_moprim_reset_available_ = false;
+      processMoprimResetCmd();
+    }
+    // Small sleep to prevent busy waiting
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "[asyncMoprimStopThread] Exiting");
+}
+
+void URPositionHardwareInterface::processMoprimStopCmd()
+{
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received Motion Primitives STOP command");
+  // delete motion sequence
+  build_moprim_sequence_ = false;
+  moprim_sequence_.clear();
+
+  if (instruction_executor_->isTrajectoryRunning()) {
+    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping motion ...");
+    if (!instruction_executor_->cancelMotion()) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to stop motion");
+      current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+    } else {
+      RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Motion stopped successfully");
+      current_moprim_execution_status_ = MoprimExecutionState::STOPPED;
+      ready_for_new_moprim_ = false;
+    }
+  } else {
+    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "No motion to stop");
+    current_moprim_execution_status_ = MoprimExecutionState::STOPPED;
+    ready_for_new_moprim_ = false;
+  }
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+              " [processMoprimStopCmd] After executing stop: current_moprim_execution_status_ = %d",
+              static_cast<uint8_t>(current_moprim_execution_status_));
+}
+
+void URPositionHardwareInterface::processMoprimResetCmd()
+{
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received RESET_STOP command");
+  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+  ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+}
+
+void URPositionHardwareInterface::asyncMoprimCmdThread()
+{
+  while (!async_moprim_thread_shutdown_) {
+    // Check for new commands
+    if (new_moprim_cmd_available_) {
+      // RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "[asyncMoprimCmdThread] New command available");
+      std::vector<double> current_command;
+      {
+        std::lock_guard<std::mutex> guard(moprim_cmd_mutex_);
+        current_command = pending_moprim_cmd_;
+        new_moprim_cmd_available_ = false;
+      }
+
+      // Process the command
+      processMoprimMotionCmd(current_command);
+    }
+
+    // Small sleep to prevent busy waiting
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "[asyncMoprimCmdThread] Exiting");
+}
+
+void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<double>& command)
+{
+  if (command.empty() || std::isnan(command[0])) {
+    return;
+  }
+  double velocity, acceleration, move_time;
+  double motion_type = command[0];
+  double blend_radius = command[21];
+
+  try {
+    switch (static_cast<uint8_t>(motion_type)) {
+      case static_cast<uint8_t>(MoprimMotionHelperType::MOTION_SEQUENCE_START):
+      {
+        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received MOTION_SEQUENCE_START: add all "
+                                                                       "following "
+                                                                       "commands to the motion sequence.");
+        build_moprim_sequence_ = true;  // set flag to put all following commands into the motion sequence
+        moprim_sequence_.clear();
+        ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+        return;
+      }
+
+      case static_cast<uint8_t>(MoprimMotionHelperType::MOTION_SEQUENCE_END):
+      {
+        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                    "Received MOTION_SEQUENCE_END: executing motion sequence with %zu motion primitives",
+                    moprim_sequence_.size());
+        build_moprim_sequence_ = false;
+        current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
+        bool success = instruction_executor_->executeMotion(moprim_sequence_);
+        current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
+        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                    " [processMoprimMotionCmd] After executing motion sequence: current_moprim_execution_status_ = %d",
+                    static_cast<uint8_t>(current_moprim_execution_status_));
+        moprim_sequence_.clear();
+        if (success) {
+          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+        }
+        return;
+      }
+
+      case MoprimMotionType::LINEAR_JOINT:
+      {  // moveJ
+        // Check if joint positions are valid
+        for (int i = 1; i <= 6; ++i) {
+          if (std::isnan(command[i])) {
+            RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: joint positions "
+                                                                            "contain NaN values");
+            current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+            return;
+          }
+        }
+        urcl::vector6d_t joint_positions = { command[1], command[2], command[3], command[4], command[5], command[6] };
+
+        // Get move_time OR (velocity AND acceleration)
+        if (!getMoprimTimeOrVelAndAcc(command, velocity, acceleration, move_time)) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid move_time, velocity or acceleration "
+                                                                          "values");
+          current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+          return;
+        }
+
+        // Check if the command is part of a motion sequence or a single command
+        if (build_moprim_sequence_) {  // Add command to motion sequence
+          moprim_sequence_.emplace_back(std::make_shared<urcl::control::MoveJPrimitive>(
+              joint_positions, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)),
+              acceleration, velocity));
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      "Added moveJ to motion sequence with joint positions: [%f, %f, %f, %f, %f, %f], "
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
+                      joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
+          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+          return;
+        } else {  // execute single primitive directly
+          current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      "Executing moveJ with joint positions: [%f, %f, %f, %f, %f, %f], "
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
+                      joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
+          bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
+          current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      " [processMoprimMotionCmd] After executing moveJ: current_moprim_execution_status_ = %d",
+                      static_cast<uint8_t>(current_moprim_execution_status_));
+          if (success) {
+            ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+          }
+          return;
+        }
+        break;
+      }
+
+      case MoprimMotionType::LINEAR_CARTESIAN:
+      {  // moveL
+        // Check if pose values (position and quaternion) are valid
+        for (int i = 7; i <= 13; ++i) {
+          if (std::isnan(command[i])) {
+            RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: pose contains NaN "
+                                                                            "values");
+            current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+            return;
+          }
+        }
+        double rx, ry, rz;
+        quaternionToRotVec(command[10], command[11], command[12], command[13], rx, ry, rz);
+        urcl::Pose pose = { command[7], command[8], command[9], rx, ry, rz };
+
+        // Get move_time OR (velocity AND acceleration)
+        if (!getMoprimTimeOrVelAndAcc(command, velocity, acceleration, move_time)) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid move_time, velocity or acceleration "
+                                                                          "values");
+          current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+          return;
+        }
+
+        // Check if the command is part of a motion sequence or a single command
+        if (build_moprim_sequence_) {  // Add command to motion sequence
+          moprim_sequence_.emplace_back(std::make_shared<urcl::control::MoveLPrimitive>(
+              pose, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration,
+              velocity));
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      "Added  moveL to motion sequence with pose: [%f, %f, %f, %f, %f, %f], "
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
+                      blend_radius);
+          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+          return;
+        } else {  // execute single primitive directly
+          current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      "Executing moveL with pose: [%f, %f, %f, %f, %f, %f], "
+                      "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
+                      pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
+                      blend_radius);
+          bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
+          current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      " [processMoprimMotionCmd] After executing moveL: current_moprim_execution_status_ = %d",
+                      static_cast<uint8_t>(current_moprim_execution_status_));
+          if (success) {
+            ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+          }
+          return;
+        }
+        break;
+      }
+
+      case MoprimMotionType::CIRCULAR_CARTESIAN:
+      {  // CIRC
+        // Check if pose values (position and quaternion) are valid
+        for (int i = 7; i <= 20; ++i) {
+          if (std::isnan(command[i])) {
+            RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: pose contains NaN "
+                                                                            "values");
+            current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+            return;
+          }
+        }
+
+        // 0: Unconstrained mode, 1: Fixed mode
+        // (https://tools.pages.cba.mit.edu/Universal_Robotics_UR10_Robot_Arm/scriptManual-3.5.4.pdf)
+        int32_t mode = 0;
+
+        // Get velocity and acceleration)
+        if (!getMoprimVelAndAcc(command, velocity, acceleration, move_time)) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid velocity or acceleration values");
+          current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+          return;
+        }
+
+        double via_rx, via_ry, via_rz;
+        quaternionToRotVec(command[17], command[18], command[19], command[20], via_rx, via_ry, via_rz);
+        urcl::Pose via_pose = { command[14], command[15], command[16], via_rx, via_ry, via_rz };
+
+        double goal_rx, goal_ry, goal_rz;
+        quaternionToRotVec(command[10], command[11], command[12], command[13], goal_rx, goal_ry, goal_rz);
+        urcl::Pose goal_pose = { command[7], command[8], command[9], goal_rx, goal_ry, goal_rz };
+
+        // Check if the command is part of a motion sequence or a single command
+        if (build_moprim_sequence_) {  // Add command to motion sequence
+          moprim_sequence_.emplace_back(std::make_shared<urcl::control::MoveCPrimitive>(
+              via_pose, goal_pose, blend_radius, acceleration, velocity, mode));
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      "Added  moveC to motion sequence with via_pose: [%f, %f, %f, %f, %f, %f], "
+                      "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
+                      "acceleration: %f, blend_radius: %f, mode: %d",
+                      via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
+                      goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
+                      blend_radius, mode);
+          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+          return;
+        } else {  // execute single primitive directly
+          current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f], "
+                      "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
+                      "acceleration: %f, blend_radius: %f, mode: %d",
+                      via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
+                      goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
+                      blend_radius, mode);
+          bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
+          current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
+          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
+                      " [processMoprimMotionCmd] After executing moveC: current_moprim_execution_status_ = %d",
+                      static_cast<uint8_t>(current_moprim_execution_status_));
+          if (success) {
+            ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+          }
+          return;
+        }
+        break;
+      }
+
+      default:
+      {
+        RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"),
+                     "Invalid motion command: motion type %f is not supported", motion_type);
+        current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+        return;
+      }
+    }
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to execute motion command: %s", e.what());
+    current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+  }
+}
+
+void URPositionHardwareInterface::quaternionToRotVec(double qx, double qy, double qz, double qw, double& rx, double& ry,
+                                                     double& rz)
+{
+  tf2::Quaternion q(qx, qy, qz, qw);
+  const double angle = q.getAngle();
+  const auto axis = q.getAxis();
+  rx = axis.x() * angle;  // rx
+  ry = axis.y() * angle;  // ry
+  rz = axis.z() * angle;  // rz
+}
+
+bool URPositionHardwareInterface::getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity,
+                                                           double& acceleration, double& move_time)
+{
+  // Check if move_time is valid
+  if (!std::isnan(command[24]) && command[24] > 0.0) {
+    move_time = command[24];
+    // If move_time is valid, velocity and acceleration are ignored in moveJ and moveL, but must be > 0.0
+    velocity = 1.0;
+    acceleration = 1.0;
+    return true;
+  } else if (!std::isnan(command[22]) && command[22] > 0.0 && !std::isnan(command[23]) && command[23] > 0.0) {
+    // If no valid move_time, check if velocity and acceleration are valid
+    velocity = command[22];
+    acceleration = command[23];
+    move_time = 0.0;
+    return true;
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"),
+                 "Invalid motion parameters: move_time = %.3f, velocity = %.3f, acceleration = %.3f", command[24],
+                 command[22], command[23]);
+
+    return false;
+  }
+}
+
+bool URPositionHardwareInterface::getMoprimVelAndAcc(const std::vector<double>& command, double& velocity,
+                                                     double& acceleration, double& move_time)
+{
+  // Check if velocity and acceleration are valid
+  if (!std::isnan(command[22]) && command[22] > 0.0 && !std::isnan(command[23]) && command[23] > 0.0) {
+    velocity = command[22];
+    acceleration = command[23];
+    move_time = 0.0;
+    return true;
+  } else {
+    RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "velocity or acceleration is invalid");
+    return false;
+  }
 }
 
 }  // namespace ur_robot_driver
