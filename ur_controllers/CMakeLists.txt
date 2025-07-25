@@ -190,10 +190,20 @@ if(BUILD_TESTING)
     controller_manager::controller_manager
     ros2_control_test_assets::ros2_control_test_assets
   )
+
   ament_add_gmock(test_load_freedrive_mode_controller
     test/test_load_freedrive_mode_controller.cpp
   )
   target_link_libraries(test_load_freedrive_mode_controller
+    ${PROJECT_NAME}
+    controller_manager::controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+
+  ament_add_gmock(test_load_pd_torque_controller
+    test/test_load_pd_torque_controller.cpp
+  )
+  target_link_libraries(test_load_pd_torque_controller
     ${PROJECT_NAME}
     controller_manager::controller_manager
     ros2_control_test_assets::ros2_control_test_assets
