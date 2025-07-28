@@ -95,7 +95,7 @@ controller_interface::CallbackReturn PDTorqueController::on_configure(const rclc
 
   // Create subscribers
   joints_command_sub_ = get_node()->create_subscription<std_msgs::msg::Float64MultiArray>(
-      "~/joint_command", rclcpp::SystemDefaultsQoS(), [this](const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
+      "~/joint_commands", rclcpp::SystemDefaultsQoS(), [this](const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
         if (msg->data.size() != 6) {
           RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *(get_node()->get_clock()), 1000,
                                "The given command has %zu entries, while it should have 6 entries. Dropping command.",
@@ -130,9 +130,6 @@ controller_interface::CallbackReturn PDTorqueController::on_configure(const rclc
         task_space_command[3] = axis.x() * angle;  // rx
         task_space_command[4] = axis.y() * angle;  // ry
         task_space_command[5] = axis.z() * angle;  // rz
-        RCLCPP_INFO(get_node()->get_logger(), "Received task space command: [%f, %f, %f, %f, %f, %f] in frame %s",
-                    task_space_command[0], task_space_command[1], task_space_command[2], task_space_command[3],
-                    task_space_command[4], task_space_command[5], msg->header.frame_id.c_str());
         command_callback(task_space_command, ControlType::TASK_SPACE);
       });
 
