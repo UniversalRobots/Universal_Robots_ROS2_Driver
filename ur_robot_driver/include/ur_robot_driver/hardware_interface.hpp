@@ -48,6 +48,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <array>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
@@ -67,10 +68,11 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "control_msgs/msg/motion_primitive.hpp"
+#include <realtime_tools/lock_free_queue.hpp>
 
 // Motion primitives controller
 #include "motion_primitives_forward_controller/motion_primitives_forward_controller.hpp"
-#include "control_msgs/msg/motion_primitive.hpp"
 
 using MoprimMotionType = control_msgs::msg::MotionPrimitive;
 using MoprimMotionHelperType = motion_primitives_forward_controller::MotionHelperType;
@@ -292,10 +294,7 @@ protected:
   // Async thread handling
   std::shared_ptr<std::thread> async_moprim_cmd_thread_;
   std::atomic_bool async_moprim_thread_shutdown_;
-  std::mutex moprim_cmd_mutex_;
-
-  // Command buffer for thread-safe communication
-  std::vector<double> pending_moprim_cmd_;
+  realtime_tools::LockFreeSPSCQueue<std::array<double, 25>, 1> moprim_cmd_queue_;
   std::atomic_bool new_moprim_cmd_available_;
 
   // Status for communication with controller
@@ -305,8 +304,11 @@ protected:
   std::atomic_bool ready_for_new_moprim_;
 
   // Command and state interfaces for the motion primitives
-  std::vector<double> hw_moprim_commands_;
-  std::vector<double> hw_moprim_states_;
+  // 25 Commands: motion_type + 6 joints + 2*7 positions (goal and via) + blend_radius + velocity + acceleration +
+  // move_time
+  std::array<double, 25> hw_moprim_commands_;
+  // 2 States: execution_status, ready_for_new_primitive
+  std::array<double, 2> hw_moprim_states_;
 
   // flag to put all following primitives into a motion sequence instead of sending single primitives
   std::atomic_bool build_moprim_sequence_{ false };
@@ -315,10 +317,10 @@ protected:
   void handleMoprimCommands();
   void resetMoprimCmdInterfaces();
   void asyncMoprimCmdThread();
-  void processMoprimMotionCmd(const std::vector<double>& command);
-  bool getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration,
+  void processMoprimMotionCmd(const std::array<double, 25>& command);
+  bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
                                 double& move_time);
-  bool getMoprimVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration,
+  bool getMoprimVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
                           double& move_time);
   void quaternionToRotVec(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz);
 
