@@ -88,6 +88,7 @@ private:
   realtime_tools::RealtimeBox<std::shared_ptr<VersionInformation>> robot_software_version_{
     std::make_shared<VersionInformation>()
   };
+  std::atomic<bool> robot_software_version_set_{ false };
 
   rclcpp::Service<ur_msgs::srv::GetRobotSoftwareVersion>::SharedPtr get_robot_software_version_srv_;
 
