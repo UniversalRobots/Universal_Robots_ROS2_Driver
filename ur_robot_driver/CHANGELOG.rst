@@ -1,3 +1,17 @@
+Forthcoming
+-----------
+* Migrate hardware_interface's on_init method (`#1464 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1464>`_)
+* Add scaling parameters to upstream JTC (`#1465 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1465>`_)
+* Add migration of ros2_control node to migration notes (`#1458 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1458>`_)
+* Fix flaky controller switch test (`#1447 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1447>`_)
+* fix_flaky_force_mode_test (`#1429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1429>`_)
+* Reduce flakiness of trajectory controller tests (`#1443 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1443>`_)
+* Added 'is in remote control' call as a dashboard service (`#1433 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1433>`_)
+* ur_robot_driver: Fix compilation on Windows (`#1421 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1421>`_)
+* Refactor prepare_switch method (`#1417 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1417>`_)
+* Update simulation page to also explicitly mention PolyScope X (`#1415 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1415>`_)
+* Contributors: Felix Exner, Mads Holm Peters, Silvio Traversaro
+
 4.0.3 (2025-06-16)
 ------------------
 
