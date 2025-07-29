@@ -2,6 +2,11 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added 'is in remote control' call as a dashboard service (`#1433 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1433>`_)
+* Contributors: Mads Holm Peters
+
 4.0.3 (2025-06-16)
 ------------------
 

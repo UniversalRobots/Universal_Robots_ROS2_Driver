@@ -2,6 +2,12 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use hpp headers from geometry2 (`#1467 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1467>`_)
+* Fix ur_calibration compilation on Windows (`#1400 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1400>`_)
+* Contributors: Felix Exner, Silvio Traversaro
+
 4.0.3 (2025-06-16)
 ------------------
 
