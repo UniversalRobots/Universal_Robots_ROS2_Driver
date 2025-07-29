@@ -732,9 +732,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   ur_driver_->registerToolContactResultCallback(
       std::bind(&URPositionHardwareInterface::tool_contact_callback, this, std::placeholders::_1));
 
-  ur_driver_->registerToolContactResultCallback(
-      std::bind(&URPositionHardwareInterface::tool_contact_callback, this, std::placeholders::_1));
-
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
