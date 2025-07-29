@@ -148,8 +148,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   // Motion primitives stuff
   async_moprim_thread_shutdown_ = false;
   new_moprim_cmd_available_ = false;
-  new_moprim_stop_available_ = false;
-  new_moprim_reset_available_ = false;
   current_moprim_execution_status_ = MoprimExecutionState::IDLE;
   ready_for_new_moprim_ = false;
   motion_primitives_forward_controller_running_ = false;
@@ -722,7 +720,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   // Start async thread for sending motion primitives
   async_moprim_cmd_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncMoprimCmdThread, this);
-  async_moprim_stop_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncMoprimStopThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
 
@@ -777,11 +774,6 @@ hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
     async_moprim_thread_shutdown_ = true;
     async_moprim_cmd_thread_->join();
     async_moprim_cmd_thread_.reset();
-  }
-  if (async_moprim_stop_thread_) {
-    async_moprim_thread_shutdown_ = true;
-    async_moprim_stop_thread_->join();
-    async_moprim_stop_thread_.reset();
   }
 
   ur_driver_.reset();
@@ -1590,12 +1582,18 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
 {
+  RCLCPP_INFO(get_logger(), "Trajectory done callback called with result: %d", static_cast<int>(result));
   if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE) {
     passthrough_trajectory_abort_ = 1.0;
   } else {
     passthrough_trajectory_abort_ = 0.0;
   }
   passthrough_trajectory_transfer_state_ = 5.0;
+
+  if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED) {
+    RCLCPP_INFO(get_logger(), "Robot stopped, TRAJECTORY_RESULT_CANCELED");
+    current_moprim_execution_status_ = MoprimExecutionState::STOPPED;
+  }
   return;
 }
 
@@ -1616,20 +1614,22 @@ void URPositionHardwareInterface::handleMoprimCommands()
     switch (static_cast<uint8_t>(hw_moprim_commands_[0])) {
       case static_cast<uint8_t>(MoprimMotionHelperType::STOP_MOTION):
       {
-        std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
-        if (!new_moprim_stop_available_) {
-          new_moprim_stop_available_ = true;
-          resetMoprimCmdInterfaces();
-        }
+        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received Motion Primitives STOP command");
+        resetMoprimCmdInterfaces();
+        build_moprim_sequence_ = false;
+        moprim_sequence_.clear(); // delete motion sequence
+        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1,
+                                           urcl::RobotReceiveTimeout::millisec(2000));
+        current_moprim_execution_status_ = MoprimExecutionState::STOPPING;
+        ready_for_new_moprim_ = false;
         break;
       }
       case static_cast<uint8_t>(MoprimMotionHelperType::RESET_STOP):
       {
-        std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
-        if (!new_moprim_reset_available_) {
-          new_moprim_reset_available_ = true;
-          resetMoprimCmdInterfaces();
-        }
+        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received RESET_STOP command");
+        resetMoprimCmdInterfaces();
+        current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+        ready_for_new_moprim_ = true;  // set to true to allow sending new commands
         break;
       }
       default:
@@ -1654,58 +1654,6 @@ void URPositionHardwareInterface::handleMoprimCommands()
 void URPositionHardwareInterface::resetMoprimCmdInterfaces()
 {
   std::fill(hw_moprim_commands_.begin(), hw_moprim_commands_.end(), std::numeric_limits<double>::quiet_NaN());
-}
-
-void URPositionHardwareInterface::asyncMoprimStopThread()
-{
-  while (!async_moprim_thread_shutdown_) {
-    if (new_moprim_stop_available_) {
-      std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
-      new_moprim_stop_available_ = false;
-      processMoprimStopCmd();
-    } else if (new_moprim_reset_available_) {
-      std::lock_guard<std::mutex> guard(moprim_stop_mutex_);
-      new_moprim_reset_available_ = false;
-      processMoprimResetCmd();
-    }
-    // Small sleep to prevent busy waiting
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "[asyncMoprimStopThread] Exiting");
-}
-
-void URPositionHardwareInterface::processMoprimStopCmd()
-{
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received Motion Primitives STOP command");
-  // delete motion sequence
-  build_moprim_sequence_ = false;
-  moprim_sequence_.clear();
-
-  if (instruction_executor_->isTrajectoryRunning()) {
-    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Stopping motion ...");
-    if (!instruction_executor_->cancelMotion()) {
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to stop motion");
-      current_moprim_execution_status_ = MoprimExecutionState::ERROR;
-    } else {
-      RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Motion stopped successfully");
-      current_moprim_execution_status_ = MoprimExecutionState::STOPPED;
-      ready_for_new_moprim_ = false;
-    }
-  } else {
-    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "No motion to stop");
-    current_moprim_execution_status_ = MoprimExecutionState::STOPPED;
-    ready_for_new_moprim_ = false;
-  }
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-              " [processMoprimStopCmd] After executing stop: current_moprim_execution_status_ = %d",
-              static_cast<uint8_t>(current_moprim_execution_status_));
-}
-
-void URPositionHardwareInterface::processMoprimResetCmd()
-{
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received RESET_STOP command");
-  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
-  ready_for_new_moprim_ = true;  // set to true to allow sending new commands
 }
 
 void URPositionHardwareInterface::asyncMoprimCmdThread()
@@ -1745,8 +1693,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
       case static_cast<uint8_t>(MoprimMotionHelperType::MOTION_SEQUENCE_START):
       {
         RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received MOTION_SEQUENCE_START: add all "
-                                                                       "following "
-                                                                       "commands to the motion sequence.");
+                                                                       "following commands to the motion sequence.");
         build_moprim_sequence_ = true;  // set flag to put all following commands into the motion sequence
         moprim_sequence_.clear();
         ready_for_new_moprim_ = true;  // set to true to allow sending new commands

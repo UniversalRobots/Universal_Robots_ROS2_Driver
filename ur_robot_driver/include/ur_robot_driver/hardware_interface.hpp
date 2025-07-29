@@ -291,16 +291,12 @@ protected:
 
   // Async thread handling
   std::shared_ptr<std::thread> async_moprim_cmd_thread_;
-  std::shared_ptr<std::thread> async_moprim_stop_thread_;
   std::atomic_bool async_moprim_thread_shutdown_;
   std::mutex moprim_cmd_mutex_;
-  std::mutex moprim_stop_mutex_;
 
   // Command buffer for thread-safe communication
   std::vector<double> pending_moprim_cmd_;
   std::atomic_bool new_moprim_cmd_available_;
-  std::atomic_bool new_moprim_stop_available_;
-  std::atomic_bool new_moprim_reset_available_;
 
   // Status for communication with controller
   bool motion_primitives_forward_controller_running_;
@@ -319,10 +315,7 @@ protected:
   void handleMoprimCommands();
   void resetMoprimCmdInterfaces();
   void asyncMoprimCmdThread();
-  void asyncMoprimStopThread();
   void processMoprimMotionCmd(const std::vector<double>& command);
-  void processMoprimStopCmd();
-  void processMoprimResetCmd();
   bool getMoprimTimeOrVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration,
                                 double& move_time);
   bool getMoprimVelAndAcc(const std::vector<double>& command, double& velocity, double& acceleration,
