@@ -1253,7 +1253,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           StoppingInterface::STOP_PASSTHROUGH },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO, StoppingInterface::STOP_FREEDRIVE },
         { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO,
-          StoppingInterface::STOP_TOOL_CONTACT }
+          StoppingInterface::STOP_TOOL_CONTACT },
+        { tf_prefix + PD_CONTROL_GPIO + "/pd_control_type", PD_CONTROL_GPIO, StoppingInterface::STOP_PD_CONTROL }
       };
       for (auto& item : stop_modes_to_check) {
         if (key == std::get<0>(item)) {

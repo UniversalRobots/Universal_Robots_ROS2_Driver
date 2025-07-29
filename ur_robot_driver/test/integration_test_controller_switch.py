@@ -97,6 +97,7 @@ class RobotDriverTest(unittest.TestCase):
                     "passthrough_trajectory_controller",
                     "force_mode_controller",
                     "freedrive_mode_controller",
+                    "pd_torque_controller",
                 ],
             ).ok
         )
@@ -134,6 +135,7 @@ class RobotDriverTest(unittest.TestCase):
                     "force_mode_controller",
                     "passthrough_trajectory_controller",
                     "freedrive_mode_controller",
+                    "pd_torque_controller",
                 ],
             ).ok
         )
@@ -208,6 +210,7 @@ class RobotDriverTest(unittest.TestCase):
                     "force_mode_controller",
                     "freedrive_mode_controller",
                     "passthrough_trajectory_controller",
+                    "pd_torque_controller",
                 ],
             ).ok
         )
@@ -269,7 +272,9 @@ class RobotDriverTest(unittest.TestCase):
             ).ok
         )
 
-    def test_activating_controller_with_running_passthrough_trajectory_controller_fails(self):
+    def test_activating_controller_with_running_passthrough_trajectory_controller_fails(
+        self,
+    ):
         # Having a position-based controller active, no other controller should be able to
         # activate.
         self.assertTrue(
@@ -425,6 +430,7 @@ class RobotDriverTest(unittest.TestCase):
                     "forward_position_controller",
                     "forward_velocity_controller",
                     "passthrough_trajectory_controller",
+                    "pd_torque_controller",
                     "force_mode_controller",
                     "tool_contact_controller",
                 ],
@@ -499,6 +505,57 @@ class RobotDriverTest(unittest.TestCase):
                 activate_controllers=[
                     "tool_contact_controller",
                     "freedrive_mode_controller",
+                ],
+            ).ok
+        )
+
+    def test_pf_torque_controller_compatibility(self):
+        # Deactivate all writing controllers
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "joint_trajectory_controller",
+                    "forward_position_controller",
+                    "forward_velocity_controller",
+                    "passthrough_trajectory_controller",
+                    "force_mode_controller",
+                    "tool_contact_controller",
+                ],
+            ).ok
+        )
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "pd_torque_controller",
+                ],
+            ).ok
+        )
+
+        # Try starting another position controller verifying that resources are cleared properly
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                ],
+                deactivate_controllers=[
+                    "pd_torque_controller",
+                ],
+            ).ok
+        )
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                ],
+                activate_controllers=[
+                    "pd_torque_controller",
                 ],
             ).ok
         )
