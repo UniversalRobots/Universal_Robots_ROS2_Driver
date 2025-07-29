@@ -1708,12 +1708,9 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
         build_moprim_sequence_ = false;
         current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
         bool success = instruction_executor_->executeMotion(moprim_sequence_);
-        current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
-        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                    " [processMoprimMotionCmd] After executing motion sequence: current_moprim_execution_status_ = %d",
-                    static_cast<uint8_t>(current_moprim_execution_status_));
         moprim_sequence_.clear();
         if (success) {
+          current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
           ready_for_new_moprim_ = true;  // set to true to allow sending new commands
         }
         return;
@@ -1760,11 +1757,8 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
                       joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
                       joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
           bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
-          current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
-          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      " [processMoprimMotionCmd] After executing moveJ: current_moprim_execution_status_ = %d",
-                      static_cast<uint8_t>(current_moprim_execution_status_));
           if (success) {
+            current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
             ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           }
           return;
@@ -1815,11 +1809,8 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
                       pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
                       blend_radius);
           bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
-          current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
-          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      " [processMoprimMotionCmd] After executing moveL: current_moprim_execution_status_ = %d",
-                      static_cast<uint8_t>(current_moprim_execution_status_));
           if (success) {
+            current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
             ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           }
           return;
@@ -1881,11 +1872,8 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::vector<doubl
                       goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
                       blend_radius, mode);
           bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
-          current_moprim_execution_status_ = success ? MoprimExecutionState::SUCCESS : MoprimExecutionState::ERROR;
-          RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      " [processMoprimMotionCmd] After executing moveC: current_moprim_execution_status_ = %d",
-                      static_cast<uint8_t>(current_moprim_execution_status_));
           if (success) {
+            current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
             ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           }
           return;
