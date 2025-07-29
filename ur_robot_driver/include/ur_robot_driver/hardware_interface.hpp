@@ -300,7 +300,7 @@ protected:
   // Status for communication with controller
   bool motion_primitives_forward_controller_running_;
   using MoprimExecutionState = motion_primitives_forward_controller::ExecutionState;
-  MoprimExecutionState current_moprim_execution_status_;
+  std::atomic<MoprimExecutionState> current_moprim_execution_status_;
   std::atomic_bool ready_for_new_moprim_;
 
   // Command and state interfaces for the motion primitives

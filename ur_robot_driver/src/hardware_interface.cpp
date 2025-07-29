@@ -909,7 +909,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     updateNonDoubleValues();
 
     // Motion primitives stuff
-    hw_moprim_states_[0] = static_cast<uint8_t>(current_moprim_execution_status_);
+    hw_moprim_states_[0] = static_cast<uint8_t>(current_moprim_execution_status_.load());
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
 
     return hardware_interface::return_type::OK;
