@@ -120,7 +120,6 @@ bool URConfigurationController::getRobotSoftwareVersion(
     RCLCPP_WARN(get_node()->get_logger(), "Robot software version not set yet.");
     return false;
   }
-  std::shared_ptr<VersionInformation> temp;
   return robot_software_version_.try_get([resp](const std::shared_ptr<VersionInformation> ptr) {
     resp->major = ptr->major;
     resp->minor = ptr->minor;
