@@ -3,7 +3,7 @@ hardware_interface in motion primitives mode
 
 Hardware interface for executing motion primitives on a UR robot using the ROS 2 control framework. It allows the controller to execute linear (LINEAR_CARTESIAN/ LIN/ MOVEL), circular (CIRCULAR_CARTESIAN/ CIRC/ MOVEC), and joint-based (LINEAR_JOINT/ PTP/ MOVEJ) motion commands asynchronously and supports motion sequences for smooth trajectory execution.
 
-![Licence](https://img.shields.io/badge/License-BSD-3-Clause-blue.svg)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 # Demo Video with motion_primitives_forward_controller
 [![Play Video](doc/motion_primitive_ur_driver/moprim_forward_controller_ur_demo_thumbnail.png)](https://youtu.be/SKz6LFvJmhQ)
