@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.1.0 (2025-07-29)
+------------------
 * ur_configuration_controller: use try_set on RTBox (`#1470 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1470>`_)
 * Use hpp headers from geometry2 (`#1467 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1467>`_)
 * Use new API of PID class (`#1410 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1410>`_)

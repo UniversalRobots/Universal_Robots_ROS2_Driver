@@ -1,5 +1,5 @@
-Forthcoming
------------
+4.1.0 (2025-07-29)
+------------------
 * Migrate hardware_interface's on_init method (`#1464 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1464>`_)
 * Add scaling parameters to upstream JTC (`#1465 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1465>`_)
 * Add migration of ros2_control node to migration notes (`#1458 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1458>`_)
