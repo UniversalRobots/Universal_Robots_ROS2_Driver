@@ -5,18 +5,11 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 
 ![Licence](https://img.shields.io/badge/License-BSD-3-Clause-blue.svg)
 
-# Demo Video with URSim
-[![Play Video](doc/motion_primitive_ur_driver/motion_primitive_demo_video_preview.png)](https://www.youtube.com/watch?v=htUJtfkgr6Q)
-
-# Related packages/ repos
-- [control_msgs](https://github.com/ros-controls/control_msgs/blob/motion_primitives/control_msgs/action/ExecuteMotionPrimitiveSequence.action)
-- [ros2_controllers with motion_primitives_forward_controller](https://github.com/b-robotized-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller)
-- [Universal_Robots_ROS2_Driver with motion_primitive_ur_driver](https://github.com/b-robotized-forks/Universal_Robots_ROS2_Driver_MotionPrimitive)
-- [Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library)
-
+# Demo Video with motion_primitives_forward_controller
+[![Play Video](doc/motion_primitive_ur_driver/moprim_forward_controller_ur_demo_thumbnail.png)](https://youtu.be/SKz6LFvJmhQ)
 
 # Architecture
-
+**with motion_primitives_forward_controller**
 ![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_ur.drawio.png)
 
 # Command and State Interfaces
@@ -104,20 +97,20 @@ ros2 run ur_client_library start_ursim.sh -m ur10e
 Remote control needs to be enabled:
 https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.html
 
-## Launch hardware_interface with motion_primitives_ur_driver
-With URSim:
+## With motion_primitives_forward_controller
+**With URSim:**
 ```
 ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_forward_controller
 ```
-With H-KA UR10e:
+**With H-KA UR10e:**
 ```
 ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 launch_rviz:=true headless_mode:=true initial_joint_controller:=motion_primitive_forward_controller
 ```
-## (optional) switching control mode
+**(optional) switching control mode**
 ```
 ros2 control switch_controllers --activate motion_primitive_forward_controller --deactivate scaled_joint_trajectory_controller
 ```
-## Send motion primitives
+**Send motion primitives from python script**
 > [!WARNING]
 > Ensure that the robot in your configuration is able to execute these motion primitives without any risk of collision.
 ```
@@ -127,19 +120,3 @@ During the execution of the motion primitives, the movement can be stopped by pr
 
 # TODOs/ Improvements
 - if trajectory is finished while `instruction_executer->cancelMotion()` is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call `instruction_executer->cancelMotion()` a second time
-- The default `hardware_interface` implementation and the `InstructionExecutor` used to execute motion primitives both rely on a callback function that is triggered when a trajectory is completed. In the current implementation, the callback function of the `ur_driver` is overwritten, meaning that only one of the callback functions can be active at a time. This issue has been addressed by registering the `InstructionExecutor`'s callback when motion primitives mode is activated, and restoring the `hardware_interface`'s callback when the mode is deactivated. To enable this, a method `registerTrajDoneCallback()` was added to the `InstructionExecutor` in the `ur_client_library`:
-```cpp
-  void urcl::InstructionExecutor::registerTrajDoneCallback()
-  {
-    driver_->registerTrajectoryDoneCallback(
-        std::bind(&InstructionExecutor::trajDoneCallback, this, std::placeholders::_1));
-  }
-```
---> Is there a better solution for this?
-
-# Useful sources
-- https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/doc/ur_client_library/doc/architecture/instruction_executor.html
-- https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/doc/ur_client_library/doc/examples/instruction_executor.html
-- https://rtw.b-robotized.com/master/use-cases/ros_workspaces/aliases.html
-- https://control.ros.org/master/doc/ros2_control/ros2controlcli/doc/userdoc.html
-- ...
