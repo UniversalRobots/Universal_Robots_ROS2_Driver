@@ -40,7 +40,6 @@
 
 #include <ur_robot_driver/trajectory_until_node.hpp>
 #include <functional>
-#include <thread>
 
 namespace ur_robot_driver
 {
@@ -60,8 +59,8 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
   , trajectory_accepted_(false)
   , until_accepted_(false)
 {
-  prealloc_res = std::make_shared<TrajectoryUntilAction::Result>(TrajectoryUntilAction::Result());
-  prealloc_fb = std::make_shared<TrajectoryUntilAction::Feedback>(TrajectoryUntilAction::Feedback());
+  prealloc_res_ = std::make_shared<TrajectoryUntilAction::Result>(TrajectoryUntilAction::Result());
+  prealloc_fb_ = std::make_shared<TrajectoryUntilAction::Feedback>(TrajectoryUntilAction::Feedback());
 
   // Different callback groups for the server and the clients, so their callbacks can run concurrently.
   server_callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -77,7 +76,7 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
 
   // Create action server to advertise the "/trajectory_until_node/execute"
   action_server_ = rclcpp_action::create_server<TrajectoryUntilAction>(
-      this, std::string(this->get_name()) + "/execute",
+      this, "~/execute",
       std::bind(&TrajectoryUntilNode::goal_received_callback, this, std::placeholders::_1, std::placeholders::_2),
       std::bind(&TrajectoryUntilNode::goal_cancelled_callback, this, std::placeholders::_1),
       std::bind(&TrajectoryUntilNode::goal_accepted_callback, this, std::placeholders::_1),
@@ -255,13 +254,13 @@ void TrajectoryUntilNode::trajectory_feedback_callback(
     const std::shared_ptr<const FollowJointTrajectory::Feedback> feedback)
 {
   if (server_goal_handle_) {
-    prealloc_fb->actual = feedback->actual;
-    prealloc_fb->desired = feedback->desired;
-    prealloc_fb->error = feedback->error;
-    prealloc_fb->header = feedback->header;
-    prealloc_fb->joint_names = feedback->joint_names;
+    prealloc_fb_->actual = feedback->actual;
+    prealloc_fb_->desired = feedback->desired;
+    prealloc_fb_->error = feedback->error;
+    prealloc_fb_->header = feedback->header;
+    prealloc_fb_->joint_names = feedback->joint_names;
     if (server_goal_handle_) {
-      server_goal_handle_->publish_feedback(prealloc_fb);
+      server_goal_handle_->publish_feedback(prealloc_fb_);
     }
   }
 }
@@ -286,32 +285,32 @@ void TrajectoryUntilNode::until_result_callback(
 void TrajectoryUntilNode::report_goal(TrajectoryResult result)
 {
   if (server_goal_handle_) {
-    prealloc_res->until_condition_result = TrajectoryUntilAction::Result::NOT_TRIGGERED;
-    prealloc_res->error_code = result.result->error_code;
-    prealloc_res->error_string = result.result->error_string;
+    prealloc_res_->until_condition_result = TrajectoryUntilAction::Result::NOT_TRIGGERED;
+    prealloc_res_->error_code = result.result->error_code;
+    prealloc_res_->error_string = result.result->error_string;
     switch (result.code) {
       case rclcpp_action::ResultCode::SUCCEEDED:
-        server_goal_handle_->succeed(prealloc_res);
+        server_goal_handle_->succeed(prealloc_res_);
         break;
 
       case rclcpp_action::ResultCode::ABORTED:
-        prealloc_res->error_string += " Trajectory action was aborted. Aborting goal.";
-        server_goal_handle_->abort(prealloc_res);
+        prealloc_res_->error_string += " Trajectory action was aborted. Aborting goal.";
+        server_goal_handle_->abort(prealloc_res_);
         break;
 
       case rclcpp_action::ResultCode::CANCELED:
-        prealloc_res->error_string += " Trajectory action was canceled.";
-        server_goal_handle_->canceled(prealloc_res);
+        prealloc_res_->error_string += " Trajectory action was canceled.";
+        server_goal_handle_->canceled(prealloc_res_);
         break;
 
       default:
-        prealloc_res->error_string += " Unknown result code received from trajectory action, this should not happen. "
-                                      "Aborting goal.";
-        server_goal_handle_->abort(prealloc_res);
+        prealloc_res_->error_string += " Unknown result code received from trajectory action, this should not happen. "
+                                       "Aborting goal.";
+        server_goal_handle_->abort(prealloc_res_);
         break;
     }
     if (result.code != rclcpp_action::ResultCode::SUCCEEDED) {
-      RCLCPP_ERROR(this->get_logger(), prealloc_res->error_string.c_str());
+      RCLCPP_ERROR(this->get_logger(), "%s", prealloc_res_->error_string.c_str());
     } else {
       RCLCPP_INFO(this->get_logger(), "Trajectory finished successfully, did not trigger until condition.");
     }
@@ -325,32 +324,32 @@ void TrajectoryUntilNode::report_goal(UntilResult result)
   if (server_goal_handle_) {
     switch (result.code) {
       case rclcpp_action::ResultCode::SUCCEEDED:
-        prealloc_res->error_code = TrajectoryUntilAction::Result::SUCCESSFUL;
-        prealloc_res->until_condition_result = TrajectoryUntilAction::Result::TRIGGERED;
-        prealloc_res->error_string += "Trajectory finished successfully by triggering until condition.";
-        server_goal_handle_->succeed(prealloc_res);
+        prealloc_res_->error_code = TrajectoryUntilAction::Result::SUCCESSFUL;
+        prealloc_res_->until_condition_result = TrajectoryUntilAction::Result::TRIGGERED;
+        prealloc_res_->error_string += "Trajectory finished successfully by triggering until condition.";
+        server_goal_handle_->succeed(prealloc_res_);
         break;
 
       case rclcpp_action::ResultCode::ABORTED:
-        prealloc_res->error_string += "Until action was aborted. Aborting goal.";
-        server_goal_handle_->abort(prealloc_res);
+        prealloc_res_->error_string += "Until action was aborted. Aborting goal.";
+        server_goal_handle_->abort(prealloc_res_);
         break;
 
       case rclcpp_action::ResultCode::CANCELED:
-        prealloc_res->error_string += "Until action was canceled.";
-        server_goal_handle_->canceled(prealloc_res);
+        prealloc_res_->error_string += "Until action was canceled.";
+        server_goal_handle_->canceled(prealloc_res_);
         break;
 
       default:
-        prealloc_res->error_string += "Unknown result code received from until action, this should not happen. "
-                                      "Aborting "
-                                      "goal.";
-        server_goal_handle_->abort(prealloc_res);
+        prealloc_res_->error_string += "Unknown result code received from until action, this should not happen. "
+                                       "Aborting "
+                                       "goal.";
+        server_goal_handle_->abort(prealloc_res_);
 
         break;
     }
     if (result.code != rclcpp_action::ResultCode::SUCCEEDED) {
-      RCLCPP_ERROR(this->get_logger(), prealloc_res->error_string.c_str());
+      RCLCPP_ERROR(this->get_logger(), "%s", prealloc_res_->error_string.c_str());
     } else {
       RCLCPP_INFO(this->get_logger(), "Trajectory finished by triggering until condition.");
     }
@@ -371,8 +370,8 @@ void TrajectoryUntilNode::reset_node()
   current_until_goal_handle_ = nullptr;
   trajectory_accepted_ = false;
   until_accepted_ = false;
-  prealloc_res = std::make_shared<TrajectoryUntilAction::Result>(TrajectoryUntilAction::Result());
-  prealloc_fb = std::make_shared<TrajectoryUntilAction::Feedback>(TrajectoryUntilAction::Feedback());
+  prealloc_res_ = std::make_shared<TrajectoryUntilAction::Result>(TrajectoryUntilAction::Result());
+  prealloc_fb_ = std::make_shared<TrajectoryUntilAction::Feedback>(TrajectoryUntilAction::Feedback());
 
   server_goal_handle_ = nullptr;
 }

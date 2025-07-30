@@ -119,9 +119,9 @@ private:
       current_trajectory_goal_handle_;
   rclcpp_action::ClientGoalHandle<ur_msgs::action::ToolContact>::SharedPtr current_until_goal_handle_;
 
-  std::shared_ptr<TrajectoryUntilAction::Result> prealloc_res;
+  std::shared_ptr<TrajectoryUntilAction::Result> prealloc_res_;
 
-  std::shared_ptr<TrajectoryUntilAction::Feedback> prealloc_fb;
+  std::shared_ptr<TrajectoryUntilAction::Feedback> prealloc_fb_;
 
   std::atomic<bool> trajectory_accepted_;
   std::atomic<bool> until_accepted_;
