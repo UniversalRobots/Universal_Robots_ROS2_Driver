@@ -28,8 +28,6 @@
 
 #
 # Author: Denis Stogl
-#
-# Author modifications: Mathias Fuhrer
 
 from launch import LaunchDescription
 from launch.actions import (
