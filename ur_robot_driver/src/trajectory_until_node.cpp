@@ -120,17 +120,20 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
                                      "definition.");
     return rclcpp_action::GoalResponse::REJECT;
   }
+
   if (!trajectory_action_client_->wait_for_action_server(std::chrono::seconds(1))) {
     RCLCPP_ERROR(this->get_logger(), "Trajectory action server not available.");
     return rclcpp_action::GoalResponse::REJECT;
   }
 
+  if (!std::visit([](const auto& client) { return client->wait_for_action_server(std::chrono::seconds(1)); },
+                  until_action_client_variant)) {
+    RCLCPP_ERROR(this->get_logger(), "Until action server not available.");
+    return rclcpp_action::GoalResponse::REJECT;
+  }
+
   // Check until action server, send action goal to until-controller and wait for it to be accepted.
   if (std::holds_alternative<TCClient>(until_action_client_variant)) {
-    if (!std::get<TCClient>(until_action_client_variant)->wait_for_action_server(std::chrono::seconds(1))) {
-      RCLCPP_ERROR(this->get_logger(), "Until action server not available.");
-      return rclcpp_action::GoalResponse::REJECT;
-    }
     send_until_goal<TCAction, TCClient>(goal);
   } else {
     throw std::runtime_error("Until type not implemented. This should not happen.");
