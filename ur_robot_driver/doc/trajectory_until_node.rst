@@ -20,3 +20,4 @@ Implementation details
 Upon instantiation of the node, the internal trajectory action client will connect to an action named ``motion_controller/follow_joint_trajectory``.
 This action does not exist, but upon launch of the driver, the node is remapped to connect to the ``initial_joint_controller``, default is ``scaled_joint_trajectory_controller``.
 If you wish to use the node with another motion controller use the launch argument ``initial_joint_controller:=<your_motion_controller>`` when launching the driver.
+The node is only compatible with motion controllers that use the FollowJointTrajectory action interface.
