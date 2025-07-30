@@ -39,7 +39,7 @@ import rclpy
 from rclpy.node import Node
 
 from controller_manager_msgs.srv import SwitchController
-from ur_msgs.action import TrajectoryUntil
+from ur_msgs.action import FollowJointTrajectoryUntil
 from action_msgs.srv import CancelGoal_Response
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from builtin_interfaces.msg import Duration
@@ -87,7 +87,7 @@ class RobotDriverTest(unittest.TestCase):
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._trajectory_until_interface = ActionInterface(
-            self.node, "/trajectory_until_node/execute", TrajectoryUntil
+            self.node, "/trajectory_until_node/execute", FollowJointTrajectoryUntil
         )
         self.test_traj = {
             "waypts": [[1.5, -1.5, 0.0, -1.5, -1.5, -1.5], [2.1, -1.2, 0.0, -2.4, -1.5, -1.5]],
@@ -120,15 +120,17 @@ class RobotDriverTest(unittest.TestCase):
             for i in range(len(self.test_traj["waypts"]))
         ]
         goal_handle = self._trajectory_until_interface.send_goal(
-            trajectory=trajectory, until_type=TrajectoryUntil.Goal.TOOL_CONTACT
+            trajectory=trajectory, until_type=FollowJointTrajectoryUntil.Goal.TOOL_CONTACT
         )
         self.assertTrue(goal_handle.accepted)
         if goal_handle.accepted:
             result = self._trajectory_until_interface.get_result(
                 goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
             )
-        self.assertEqual(result.error_code, TrajectoryUntil.Result.SUCCESSFUL)
-        self.assertEqual(result.until_condition_result, TrajectoryUntil.Result.NOT_TRIGGERED)
+        self.assertEqual(result.error_code, FollowJointTrajectoryUntil.Result.SUCCESSFUL)
+        self.assertEqual(
+            result.until_condition_result, FollowJointTrajectoryUntil.Result.NOT_TRIGGERED
+        )
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
@@ -153,12 +155,10 @@ class RobotDriverTest(unittest.TestCase):
             for i in range(len(self.test_traj["waypts"]))
         ]
         goal_handle = self._trajectory_until_interface.send_goal(
-            trajectory=trajectory, until_type=TrajectoryUntil.Goal.TOOL_CONTACT
+            trajectory=trajectory, until_type=FollowJointTrajectoryUntil.Goal.TOOL_CONTACT
         )
         self.assertTrue(goal_handle.accepted)
-        time.sleep(2)
         result = self._trajectory_until_interface.cancel_goal(goal_handle)
-        time.sleep(2)
         self.assertEqual(result.return_code, CancelGoal_Response.ERROR_NONE)
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
