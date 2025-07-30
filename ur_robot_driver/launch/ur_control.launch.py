@@ -324,7 +324,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "headless_mode",
-            default_value="true",
+            default_value="false",
             description="Enable headless mode for robot control",
         )
     )
