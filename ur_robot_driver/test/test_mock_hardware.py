@@ -57,7 +57,7 @@ def generate_test_description(tf_prefix):
     return generate_mock_hardware_test_description(tf_prefix=tf_prefix)
 
 
-class RobotDriverTest(unittest.TestCase):
+class MockHWTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the ROS context

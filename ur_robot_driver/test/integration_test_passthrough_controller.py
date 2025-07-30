@@ -79,12 +79,12 @@ time_vec = [
 TEST_TRAJECTORY = [(time_vec[i], waypts[i]) for i in range(len(waypts))]
 
 
-class RobotDriverTest(unittest.TestCase):
+class PassthroughControllerTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
-        cls.node = Node("robot_driver_test")
+        cls.node = Node("passthrough_controller_test")
         time.sleep(1)
         cls.init_robot(cls)
 
