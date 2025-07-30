@@ -99,12 +99,12 @@ private:
 
   bool assign_until_action_client(std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
 
-  rclcpp_action::GoalResponse goal_received_callback(
-      const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
-  void goal_accepted_callback(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TrajectoryUntilAction>> goal_handle);
-  rclcpp_action::CancelResponse goal_cancelled_callback(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TrajectoryUntilAction>> goal_handle);
+  rclcpp_action::GoalResponse goal_received_callback(const rclcpp_action::GoalUUID& uuid,
+                                                     std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
+  void
+  goal_accepted_callback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<TrajectoryUntilAction>> goal_handle);
+  rclcpp_action::CancelResponse
+  goal_cancelled_callback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<TrajectoryUntilAction>> goal_handle);
 
   void send_trajectory_goal(std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
 

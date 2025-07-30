@@ -267,8 +267,7 @@ void TrajectoryUntilNode::trajectory_feedback_callback(
 }
 
 // When a result is received from either trajectory or until condition, report it back to user
-void TrajectoryUntilNode::trajectory_result_callback(
-    const TrajectoryResult& result)
+void TrajectoryUntilNode::trajectory_result_callback(const TrajectoryResult& result)
 {
   RCLCPP_INFO(this->get_logger(), "Trajectory result received.");
   current_trajectory_goal_handle_.reset();
