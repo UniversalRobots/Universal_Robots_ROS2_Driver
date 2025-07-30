@@ -294,8 +294,8 @@ protected:
   // Async thread handling
   std::shared_ptr<std::thread> async_moprim_cmd_thread_;
   std::atomic_bool async_moprim_thread_shutdown_;
-  realtime_tools::LockFreeSPSCQueue<std::array<double, 25>, 1> moprim_cmd_queue_;
-  std::atomic_bool new_moprim_cmd_available_;
+  realtime_tools::LockFreeSPSCQueue<std::array<double, 25>, 1024> moprim_cmd_queue_;
+  std::array<double, 25> current_moprim_command_;
 
   // Status for communication with controller
   bool motion_primitives_forward_controller_running_;

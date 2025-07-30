@@ -147,7 +147,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
 
   // Motion primitives stuff
   async_moprim_thread_shutdown_ = false;
-  new_moprim_cmd_available_ = false;
   current_moprim_execution_status_ = MoprimExecutionState::IDLE;
   ready_for_new_moprim_ = false;
   motion_primitives_forward_controller_running_ = false;
@@ -1631,15 +1630,15 @@ void URPositionHardwareInterface::handleMoprimCommands()
       }
       default:
       {
-        if (!new_moprim_cmd_available_) {
-          // Push command to thread-safe queue
-          if (!moprim_cmd_queue_.push(hw_moprim_commands_)) {
-            RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to push command to "
-                                                                            "moprim_cmd_queue_");
-          }
-          new_moprim_cmd_available_ = true;
-          resetMoprimCmdInterfaces();
+        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received moprim command");
+        // Push command to thread-safe queue
+        if (!moprim_cmd_queue_.push(hw_moprim_commands_)) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to push command to "
+                                                                          "moprim_cmd_queue_");
+          return;
         }
+        resetMoprimCmdInterfaces();
+        ready_for_new_moprim_ = true;  // set to true to allow sending new commands
         break;
       }
     }
@@ -1659,18 +1658,9 @@ void URPositionHardwareInterface::asyncMoprimCmdThread()
 {
   while (!async_moprim_thread_shutdown_) {
     // Check for new commands
-    if (new_moprim_cmd_available_) {
-      std::array<double, 25> current_command;
-      if (!moprim_cmd_queue_.pop(current_command)) {
-        RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to pop the command from "
-                                                                        "moprim_cmd_queue_.");
-      }
-      new_moprim_cmd_available_ = false;
-
-      // Process the command
-      processMoprimMotionCmd(current_command);
+    if (moprim_cmd_queue_.pop(current_moprim_command_)) {
+      processMoprimMotionCmd(current_moprim_command_);
     }
-
     // Small sleep to prevent busy waiting
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
@@ -1694,7 +1684,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                                                                        "following commands to the motion sequence.");
         build_moprim_sequence_ = true;  // set flag to put all following commands into the motion sequence
         moprim_sequence_.clear();
-        ready_for_new_moprim_ = true;  // set to true to allow sending new commands
         return;
       }
 
@@ -1709,7 +1698,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
         moprim_sequence_.clear();
         if (success) {
           current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
-          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
         }
         return;
       }
@@ -1745,7 +1733,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
                       joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
                       joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
-          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           return;
         } else {  // execute single primitive directly
           current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
@@ -1757,7 +1744,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
           bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
-            ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           }
           return;
         }
@@ -1797,7 +1783,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
                       pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
                       blend_radius);
-          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           return;
         } else {  // execute single primitive directly
           current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
@@ -1809,7 +1794,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
           bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
-            ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           }
           return;
         }
@@ -1858,7 +1842,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                       via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
                       goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
                       blend_radius, mode);
-          ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           return;
         } else {  // execute single primitive directly
           current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
@@ -1872,7 +1855,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
           bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
-            ready_for_new_moprim_ = true;  // set to true to allow sending new commands
           }
           return;
         }
