@@ -46,8 +46,7 @@ namespace ur_robot_driver
 {
 
 using TCAction = ur_msgs::action::ToolContact;
-using TrajectoryUntil = ur_msgs::action::TrajectoryUntil;
-using GoalHandleTrajectoryUntil = rclcpp_action::ServerGoalHandle<TrajectoryUntil>;
+using GoalHandleTrajectoryUntil = rclcpp_action::ServerGoalHandle<ur_msgs::action::FollowJointTrajectoryUntil>;
 using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
 using TrajectoryResult = rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult;
 
@@ -61,8 +60,8 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
   , trajectory_accepted_(false)
   , until_accepted_(false)
 {
-  prealloc_res = std::make_shared<TrajectoryUntil::Result>(TrajectoryUntil::Result());
-  prealloc_fb = std::make_shared<TrajectoryUntil::Feedback>(TrajectoryUntil::Feedback());
+  prealloc_res = std::make_shared<TrajectoryUntilAction::Result>(TrajectoryUntilAction::Result());
+  prealloc_fb = std::make_shared<TrajectoryUntilAction::Feedback>(TrajectoryUntilAction::Feedback());
 
   // Different callback groups for the server and the clients, so their callbacks can run concurrently.
   server_callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -77,7 +76,7 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
                                                                                   clients_callback_group);
 
   // Create action server to advertise the "/trajectory_until_node/execute"
-  action_server_ = rclcpp_action::create_server<TrajectoryUntil>(
+  action_server_ = rclcpp_action::create_server<TrajectoryUntilAction>(
       this, std::string(this->get_name()) + "/execute",
       std::bind(&TrajectoryUntilNode::goal_received_callback, this, std::placeholders::_1, std::placeholders::_2),
       std::bind(&TrajectoryUntilNode::goal_cancelled_callback, this, std::placeholders::_1),
@@ -90,11 +89,10 @@ TrajectoryUntilNode::~TrajectoryUntilNode()
 }
 
 // Assign the correct type of action client to the variant
-bool TrajectoryUntilNode::assign_until_action_client(std::shared_ptr<const TrajectoryUntil::Goal> goal)
+bool TrajectoryUntilNode::assign_until_action_client(std::shared_ptr<const TrajectoryUntilAction::Goal> goal)
 {
-  int type = goal->until_type;
-  switch (type) {
-    case TrajectoryUntil::Goal::TOOL_CONTACT:
+  switch (goal->until_type) {
+    case TrajectoryUntilAction::Goal::TOOL_CONTACT:
       until_action_client_variant = rclcpp_action::create_client<TCAction>(this,
                                                                            "/tool_contact_controller/"
                                                                            "detect_tool_contact",
@@ -111,7 +109,7 @@ bool TrajectoryUntilNode::assign_until_action_client(std::shared_ptr<const Traje
 
 // Check if the node is capable of accepting a new action goal right now.
 rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
-    const rclcpp_action::GoalUUID& /* uuid */, std::shared_ptr<const TrajectoryUntil::Goal> goal)
+    const rclcpp_action::GoalUUID& /* uuid */, std::shared_ptr<const TrajectoryUntilAction::Goal> goal)
 {
   if (server_goal_handle_) {
     RCLCPP_ERROR(this->get_logger(), "Node is currently busy, rejecting action goal.");
@@ -184,7 +182,7 @@ TrajectoryUntilNode::goal_cancelled_callback(const std::shared_ptr<GoalHandleTra
 }
 
 // Send the trajectory goal, using the relevant fields supplied from the action server
-void TrajectoryUntilNode::send_trajectory_goal(std::shared_ptr<const TrajectoryUntil::Goal> goal)
+void TrajectoryUntilNode::send_trajectory_goal(std::shared_ptr<const TrajectoryUntilAction::Goal> goal)
 {
   auto goal_msg = FollowJointTrajectory::Goal();
   goal_msg.trajectory = goal->trajectory;
@@ -204,7 +202,7 @@ void TrajectoryUntilNode::send_trajectory_goal(std::shared_ptr<const TrajectoryU
 
 // Send the until goal, using the relevant fields supplied from the action server.
 template <class ActionType, class ClientType>
-void TrajectoryUntilNode::send_until_goal(std::shared_ptr<const TrajectoryUntil::Goal> /* goal */)
+void TrajectoryUntilNode::send_until_goal(std::shared_ptr<const TrajectoryUntilAction::Goal> /* goal */)
 {
   // Setup goal
   auto goal_msg = typename ActionType::Goal();
@@ -219,7 +217,7 @@ void TrajectoryUntilNode::send_until_goal(std::shared_ptr<const TrajectoryUntil:
 }
 
 void TrajectoryUntilNode::trajectory_response_callback(
-    const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::SharedPtr& goal_handle)
+    const rclcpp_action::ClientGoalHandle<FollowJointTrajectory>::SharedPtr& goal_handle)
 {
   {
     std::lock_guard<std::mutex> guard(mutex_trajectory);
@@ -253,8 +251,8 @@ void TrajectoryUntilNode::until_response_callback(
 
 // Just forward feedback from trajectory controller. No feedback from until controllers so far.
 void TrajectoryUntilNode::trajectory_feedback_callback(
-    const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::SharedPtr& /* goal_handle */,
-    const std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Feedback> feedback)
+    const rclcpp_action::ClientGoalHandle<FollowJointTrajectory>::SharedPtr& /* goal_handle */,
+    const std::shared_ptr<const FollowJointTrajectory::Feedback> feedback)
 {
   if (server_goal_handle_) {
     prealloc_fb->actual = feedback->actual;
@@ -270,7 +268,7 @@ void TrajectoryUntilNode::trajectory_feedback_callback(
 
 // When a result is received from either trajectory or until condition, report it back to user
 void TrajectoryUntilNode::trajectory_result_callback(
-    const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult& result)
+    const TrajectoryResult& result)
 {
   RCLCPP_INFO(this->get_logger(), "Trajectory result received.");
   current_trajectory_goal_handle_.reset();
@@ -289,7 +287,7 @@ void TrajectoryUntilNode::until_result_callback(
 void TrajectoryUntilNode::report_goal(TrajectoryResult result)
 {
   if (server_goal_handle_) {
-    prealloc_res->until_condition_result = TrajectoryUntil::Result::NOT_TRIGGERED;
+    prealloc_res->until_condition_result = TrajectoryUntilAction::Result::NOT_TRIGGERED;
     prealloc_res->error_code = result.result->error_code;
     prealloc_res->error_string = result.result->error_string;
     switch (result.code) {
@@ -328,8 +326,8 @@ void TrajectoryUntilNode::report_goal(UntilResult result)
   if (server_goal_handle_) {
     switch (result.code) {
       case rclcpp_action::ResultCode::SUCCEEDED:
-        prealloc_res->error_code = TrajectoryUntil::Result::SUCCESSFUL;
-        prealloc_res->until_condition_result = ur_msgs::action::TrajectoryUntil::Result::TRIGGERED;
+        prealloc_res->error_code = TrajectoryUntilAction::Result::SUCCESSFUL;
+        prealloc_res->until_condition_result = TrajectoryUntilAction::Result::TRIGGERED;
         prealloc_res->error_string += "Trajectory finished successfully by triggering until condition.";
         server_goal_handle_->succeed(prealloc_res);
         break;
@@ -374,8 +372,8 @@ void TrajectoryUntilNode::reset_node()
   current_until_goal_handle_ = nullptr;
   trajectory_accepted_ = false;
   until_accepted_ = false;
-  prealloc_res = std::make_shared<TrajectoryUntil::Result>(TrajectoryUntil::Result());
-  prealloc_fb = std::make_shared<TrajectoryUntil::Feedback>(TrajectoryUntil::Feedback());
+  prealloc_res = std::make_shared<TrajectoryUntilAction::Result>(TrajectoryUntilAction::Result());
+  prealloc_fb = std::make_shared<TrajectoryUntilAction::Feedback>(TrajectoryUntilAction::Feedback());
 
   server_goal_handle_ = nullptr;
 }

@@ -52,7 +52,7 @@
 #include <rclcpp_action/server_goal_handle.hpp>
 #include <rclcpp/duration.hpp>
 #include <ur_msgs/action/tool_contact.hpp>
-#include <ur_msgs/action/trajectory_until.hpp>
+#include <ur_msgs/action/follow_joint_trajectory_until.hpp>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 
 namespace ur_robot_driver
@@ -64,7 +64,9 @@ public:
   ~TrajectoryUntilNode();
 
 private:
-  rclcpp_action::Server<ur_msgs::action::TrajectoryUntil>::SharedPtr action_server_;
+  using TrajectoryUntilAction = ur_msgs::action::FollowJointTrajectoryUntil;
+
+  rclcpp_action::Server<TrajectoryUntilAction>::SharedPtr action_server_;
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr trajectory_action_client_;
 
   // Add new until types here, when available
@@ -74,10 +76,10 @@ private:
   rclcpp::CallbackGroup::SharedPtr server_callback_group;
   rclcpp::CallbackGroup::SharedPtr clients_callback_group;
 
-  std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> server_goal_handle_;
+  std::shared_ptr<rclcpp_action::ServerGoalHandle<TrajectoryUntilAction>> server_goal_handle_;
 
   template <class ActionType, class ClientType>
-  void send_until_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+  void send_until_goal(std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
 
   template <class T>
   void until_response_callback(const typename rclcpp_action::ClientGoalHandle<T>::SharedPtr& goal_handle);
@@ -95,16 +97,16 @@ private:
   void trajectory_result_callback(
       const rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult& result);
 
-  bool assign_until_action_client(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+  bool assign_until_action_client(std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
 
   rclcpp_action::GoalResponse goal_received_callback(
-      const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+      const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
   void goal_accepted_callback(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> goal_handle);
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TrajectoryUntilAction>> goal_handle);
   rclcpp_action::CancelResponse goal_cancelled_callback(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::TrajectoryUntil>> goal_handle);
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<TrajectoryUntilAction>> goal_handle);
 
-  void send_trajectory_goal(std::shared_ptr<const ur_msgs::action::TrajectoryUntil::Goal> goal);
+  void send_trajectory_goal(std::shared_ptr<const TrajectoryUntilAction::Goal> goal);
 
   void report_goal(rclcpp_action::ClientGoalHandle<control_msgs::action::FollowJointTrajectory>::WrappedResult result);
 
@@ -117,9 +119,9 @@ private:
       current_trajectory_goal_handle_;
   rclcpp_action::ClientGoalHandle<ur_msgs::action::ToolContact>::SharedPtr current_until_goal_handle_;
 
-  std::shared_ptr<ur_msgs::action::TrajectoryUntil::Result> prealloc_res;
+  std::shared_ptr<TrajectoryUntilAction::Result> prealloc_res;
 
-  std::shared_ptr<ur_msgs::action::TrajectoryUntil::Feedback> prealloc_fb;
+  std::shared_ptr<TrajectoryUntilAction::Feedback> prealloc_fb;
 
   std::atomic<bool> trajectory_accepted_;
   std::atomic<bool> until_accepted_;
