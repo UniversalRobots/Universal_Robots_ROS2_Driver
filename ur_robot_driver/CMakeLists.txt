@@ -225,6 +225,7 @@ install(PROGRAMS
   scripts/start_ursim.sh
   examples/examples.py
   examples/force_mode.py
+  examples/trajectory_until.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
