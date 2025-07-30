@@ -1829,7 +1829,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
         }
 
         // 0: Unconstrained mode, 1: Fixed mode
-        // (https://tools.pages.cba.mit.edu/Universal_Robotics_UR10_Robot_Arm/scriptManual-3.5.4.pdf)
+        // (https://www.universal-robots.com/manuals/EN/HTML/SW5_22/Content/prod-scriptmanual/all_scripts/movec_pose_via_pose_toa1.htm)
         int32_t mode = 0;
 
         // Get velocity and acceleration)
