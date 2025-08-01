@@ -22,7 +22,7 @@ nodes for UR robots. The only required arguments are the ``ur_type`` and ``robot
 
    $ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
 
-Allowed ``ur_type`` strings: ``ur3``, ``ur3e``, ``ur5``, ``ur5e``, ``ur7e``, ``ur10``, ``ur10e``,
+Allowed ``ur_type`` strings: ``ur3``, ``ur3e``, ``ur5``, ``ur5e``, ``ur7e``, ``ur8long``, ``ur10``, ``ur10e``,
 ``ur12e``, ``ur16e``, ``ur15``, ``ur20``, ``ur30``.
 
 Other important arguments are:
