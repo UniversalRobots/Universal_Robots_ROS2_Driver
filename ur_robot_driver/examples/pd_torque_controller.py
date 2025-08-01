@@ -225,16 +225,16 @@ class PDTorqueControllerExample(Node):
         rotations = R.from_quat(
             [
                 [
-                    self.TASK_END.pose.orientation.x,
-                    self.TASK_END.pose.orientation.y,
-                    self.TASK_END.pose.orientation.z,
-                    self.TASK_END.pose.orientation.w,
-                ],
-                [
                     self.TASK_START.pose.orientation.x,
                     self.TASK_START.pose.orientation.y,
                     self.TASK_START.pose.orientation.z,
                     self.TASK_START.pose.orientation.w,
+                ],
+                [
+                    self.TASK_END.pose.orientation.x,
+                    self.TASK_END.pose.orientation.y,
+                    self.TASK_END.pose.orientation.z,
+                    self.TASK_END.pose.orientation.w,
                 ],
             ]
         )
