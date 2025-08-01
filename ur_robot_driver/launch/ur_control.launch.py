@@ -239,6 +239,7 @@ def generate_launch_description():
                 "ur5",
                 "ur5e",
                 "ur7e",
+                "ur8long",
                 "ur10",
                 "ur10e",
                 "ur12e",
