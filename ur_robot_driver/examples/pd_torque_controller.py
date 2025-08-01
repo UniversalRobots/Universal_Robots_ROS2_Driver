@@ -86,14 +86,26 @@ class PDTorqueControllerExample(Node):
         self._step = 0
         self.timer = None
 
+        self.declare_parameter("execution_space", "joint")
+
         self.robot.init_robot()
         self.startup()
         time.sleep(0.5)
-        self.move_joint_based()
-        time.sleep(0.5)
-        self.move_to_starting_pose()
-        time.sleep(0.5)
-        self.move_task_space()
+        self.prepare_pd_torque_controller()
+
+        execution_space = self.get_parameter("execution_space")
+        if execution_space.value == "joint":
+            self.get_logger().info("Starting joint space motion")
+            self.timer = self.create_timer(self.timer_period, self.on_timer_joint, autostart=True)
+        elif execution_space.value == "task":
+            self.get_logger().info("Starting task space motion")
+            self.timer = self.create_timer(self.timer_period, self.on_timer_task, autostart=True)
+        else:
+            self.get_logger().error(
+                f"Invalid execution space: {execution_space.value}. "
+                "Please set 'execution_space' parameter to 'joint' or 'task'."
+            )
+            raise SystemExit()
 
     def move_to_starting_pose(self):
         self.robot.call_service(
@@ -123,7 +135,7 @@ class PDTorqueControllerExample(Node):
             action_client=self.robot.passthrough_trajectory_action_client,
         )
 
-    def move_joint_based(self):
+    def prepare_pd_torque_controller(self):
         # Switch to pd_torque_controller
         self.robot.call_service(
             "/controller_manager/switch_controller",
@@ -144,32 +156,6 @@ class PDTorqueControllerExample(Node):
             ),
         )
         self._step = 0
-        self.get_logger().info("Starting joint-based movement")
-        self.timer = self.create_timer(self.timer_period, self.on_timer_joint, autostart=True)
-
-    def move_task_space(self):
-        # Switch to pd_torque_controller
-        self.robot.call_service(
-            "/controller_manager/switch_controller",
-            SwitchController.Request(
-                deactivate_controllers=[
-                    "force_mode_controller",
-                    "forward_effort_controller",
-                    "forward_position_controller",
-                    "forward_velocity_controller",
-                    "freedrive_mode_controller",
-                    "joint_trajectory_controller",
-                    "passthrough_trajectory_controller",
-                    "scaled_joint_trajectory_controller",
-                    "tool_contact_controller",
-                ],
-                activate_controllers=["pd_torque_controller"],
-                strictness=SwitchController.Request.BEST_EFFORT,
-            ),
-        )
-        self._step = 0
-        self.get_logger().info("Starting task space movement")
-        self.timer = self.create_timer(self.timer_period, self.on_timer_task, autostart=True)
 
     def startup(self):
         # Press play on the robot
@@ -188,13 +174,14 @@ class PDTorqueControllerExample(Node):
         ]
         self.joint_target_pub.publish(joint_commands)
 
-        self.get_logger().info(
+        self.get_logger().debug(
             f"Step {self._step}/{self.INTERPOLATION_STEPS}, "
             f"Joint Commands: {joint_commands.data}"
         )
 
         if self._step >= self.INTERPOLATION_STEPS:
             self.timer.cancel()
+            raise SystemExit()
         self._step += 1
 
     def on_timer_task(self):
@@ -251,6 +238,7 @@ class PDTorqueControllerExample(Node):
 
         if self._step >= self.INTERPOLATION_STEPS:
             self.timer.cancel()
+            raise SystemExit()
         self._step += 1
 
 
@@ -259,8 +247,10 @@ if __name__ == "__main__":
 
     node = PDTorqueControllerExample()
 
-    node.get_logger().info("PDTorqueControllerExample started.")
     try:
         rclpy.spin(node)
+    except SystemExit:
+        node.get_logger().info("PDTorqueControllerExample stopped.")
+        time.sleep(1)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
