@@ -41,7 +41,7 @@
 #include <controller_interface/controller_interface.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <realtime_tools/realtime_buffer.hpp>
+#include <realtime_tools/realtime_thread_safe_box.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #if __has_include(<tf2_ros/buffer.hpp>)
 #include <tf2_ros/buffer.hpp>
@@ -98,7 +98,7 @@ struct ForceModeParameters
   std::array<double, 6> task_frame;
   std::array<double, 6> selection_vec;
   std::array<double, 6> limits;
-  geometry_msgs::msg::Wrench wrench;
+  geometry_msgs::msg::Wrench wrench{};
   double type;
   double damping_factor;
   double gain_scaling;
@@ -137,7 +137,7 @@ private:
   std::shared_ptr<force_mode_controller::ParamListener> param_listener_;
   force_mode_controller::Params params_;
 
-  realtime_tools::RealtimeBuffer<ForceModeParameters> force_mode_params_buffer_;
+  realtime_tools::RealtimeThreadSafeBox<ForceModeParameters> force_mode_params_buffer_;
   std::atomic<bool> force_mode_active_;
   std::atomic<bool> change_requested_;
   std::atomic<double> async_state_;
