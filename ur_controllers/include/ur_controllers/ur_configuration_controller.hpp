@@ -44,7 +44,7 @@
 #include <memory>
 
 #include <controller_interface/controller_interface.hpp>
-#include <realtime_tools/realtime_box.hpp>
+#include <realtime_tools/realtime_thread_safe_box.hpp>
 
 #include "ur_msgs/srv/get_robot_software_version.hpp"
 #include "ur_controllers/ur_configuration_controller_parameters.hpp"
@@ -85,7 +85,7 @@ public:
   CallbackReturn on_init() override;
 
 private:
-  realtime_tools::RealtimeBox<std::shared_ptr<VersionInformation>> robot_software_version_{
+  realtime_tools::RealtimeThreadSafeBox<std::shared_ptr<VersionInformation>> robot_software_version_{
     std::make_shared<VersionInformation>()
   };
   std::atomic<bool> robot_software_version_set_{ false };
