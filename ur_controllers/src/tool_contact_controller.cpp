@@ -177,18 +177,17 @@ controller_interface::CallbackReturn
 ToolContactController::on_deactivate(const rclcpp_lifecycle::State& /* previous_state */)
 {
   // Abort active goal (if any)
-  const auto active_goal = get_rt_buffer();
-
-  if (!active_goal.has_value()) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, aborting deactivation of controller.");
+  RealtimeGoalHandlePtr active_goal;
+  if (!rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; })) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, deactivation of controller failed.");
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  if (active_goal.value()) {
+  if (active_goal) {
     RCLCPP_INFO(get_node()->get_logger(), "Aborting tool contact, as controller has been deactivated.");
     // Mark the current goal as abort
     auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-    active_goal.value()->setAborted(result);
+    active_goal->setAborted(result);
     should_reset_goal = true;
   }
   if (tool_contact_active_) {
@@ -216,10 +215,10 @@ rclcpp_action::GoalResponse ToolContactController::goal_received_callback(
     return rclcpp_action::GoalResponse::REJECT;
   }
 
-  const auto active_goal = get_rt_buffer();
+  const auto active_goal = get_rt_goal_from_non_rt();
 
   if (!active_goal.has_value()) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, rejecting goal.");
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to read if active goal is present, rejecting goal.");
     return rclcpp_action::GoalResponse::REJECT;
   }
 
@@ -236,13 +235,15 @@ void ToolContactController::goal_accepted_callback(
   RCLCPP_INFO(get_node()->get_logger(), "Goal accepted.");
   tool_contact_enable_ = true;
   tool_contact_abort_ = false;
+
   RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
-  rt_goal->execute();
-  bool write_success;
-  write_success = rt_active_goal_.try_set([&rt_goal](RealtimeGoalHandlePtr& goal) { goal = rt_goal; });
-  if (!write_success) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set active goal.");
+  if (!set_rt_goal_from_non_rt(rt_goal)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set active goal in realtime box, aborting goal.");
+    goal_handle->abort(std::make_shared<ur_msgs::action::ToolContact::Result>());
+    return;
   }
+
+  rt_goal->execute();
   goal_handle_timer_.reset();
   auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::nanoseconds(action_monitor_period_.nanoseconds()));
@@ -252,7 +253,7 @@ void ToolContactController::goal_accepted_callback(
 
 void ToolContactController::action_handler()
 {
-  const auto active_goal = get_rt_buffer();
+  const auto active_goal = get_rt_goal_from_non_rt();
   if (!active_goal.has_value()) {
     RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, aborting action handler.");
     return;
@@ -262,8 +263,9 @@ void ToolContactController::action_handler()
     active_goal.value()->runNonRealtime();
     // If one of the goal ending conditions were met, reset our active goal pointer
     if (should_reset_goal) {
-      rt_active_goal_.try_set([](RealtimeGoalHandlePtr& goal) { goal = RealtimeGoalHandlePtr(); });
-      should_reset_goal = false;
+      if (set_rt_goal_from_non_rt(RealtimeGoalHandlePtr())) {
+        should_reset_goal = false;
+      }
     }
   }
 }
@@ -272,7 +274,7 @@ rclcpp_action::CancelResponse ToolContactController::goal_canceled_callback(
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<ur_msgs::action::ToolContact>> goal_handle)
 {
   // Check that cancel request refers to currently active goal (if any)
-  const auto active_goal = get_rt_buffer();
+  const auto active_goal = get_rt_goal_from_non_rt();
   if (!active_goal.has_value()) {
     RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, rejecting cancel.");
     return rclcpp_action::CancelResponse::REJECT;
@@ -307,8 +309,8 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
     write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN);
   }
 
-  const auto active_goal = get_rt_buffer();
-  if (!active_goal.has_value()) {
+  RealtimeGoalHandlePtr active_goal;
+  if (!rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; })) {
     RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, skipping update cycle.");
     return controller_interface::return_type::OK;
   }
@@ -341,7 +343,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-          active_goal.value()->setSucceeded(result);
+          active_goal->setSucceeded(result);
           should_reset_goal = true;
         }
       } else if (result.value() == 1.0) {
@@ -351,7 +353,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-          active_goal.value()->setAborted(result);
+          active_goal->setAborted(result);
           should_reset_goal = true;
         }
       }
@@ -365,7 +367,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
 
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-        active_goal.value()->setAborted(result);
+        active_goal->setAborted(result);
         should_reset_goal = true;
       }
     } break;
@@ -388,7 +390,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
 
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
-        active_goal.value()->setAborted(result);
+        active_goal->setAborted(result);
         should_reset_goal = true;
       }
     } break;
@@ -398,8 +400,8 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
     default:
       break;
   }
-  if (active_goal.value()) {
-    active_goal.value()->setFeedback(feedback_);
+  if (active_goal) {
+    active_goal->setFeedback(feedback_);
   }
 
   if (!write_success) {
@@ -409,15 +411,33 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
   return controller_interface::return_type::OK;
 }
 
-std::optional<ToolContactController::RealtimeGoalHandlePtr> ToolContactController::get_rt_buffer()
+std::optional<ToolContactController::RealtimeGoalHandlePtr> ToolContactController::get_rt_goal_from_non_rt()
 {
   RealtimeGoalHandlePtr active_goal = nullptr;
-  const bool read_success =
-      rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; });
-  if (!read_success) {
-    return std::nullopt;
+  int tries = 0;
+  while (!rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; })) {
+    if (tries > 9) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal.");
+      return std::nullopt;
+    }
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
   }
   return active_goal;
+}
+
+bool ToolContactController::set_rt_goal_from_non_rt(const RealtimeGoalHandlePtr& goal_handle)
+{
+  int tries = 0;
+  while (!rt_active_goal_.try_set([&goal_handle](RealtimeGoalHandlePtr& goal) { goal = goal_handle; })) {
+    if (tries > 9) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Failed to set active goal.");
+      return false;
+    }
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
+  }
+  return true;
 }
 
 }  // namespace ur_controllers

@@ -92,7 +92,8 @@ private:
   RealtimeGoalHandleBuffer rt_active_goal_;                     ///< Currently active action goal, if any.
   ur_msgs::action::ToolContact::Feedback::SharedPtr feedback_;  ///< preallocated feedback
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;              ///< Timer to frequently check on the running goal
-  std::optional<RealtimeGoalHandlePtr> get_rt_buffer();
+  std::optional<RealtimeGoalHandlePtr> get_rt_goal_from_non_rt();
+  bool set_rt_goal_from_non_rt(const RealtimeGoalHandlePtr& goal_handle);
 
   // non-rt function that will be called with action_monitor_period to monitor the rt action
   rclcpp::Duration action_monitor_period_ = rclcpp::Duration::from_seconds(0.05);
