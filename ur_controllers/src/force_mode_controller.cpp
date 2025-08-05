@@ -362,11 +362,17 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   }
   force_mode_parameters.gain_scaling = req->gain_scaling;
 
-  if (!force_mode_params_buffer_.try_set(force_mode_parameters)) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not set force mode parameters in realtime buffer.");
-    resp->success = false;
-    return false;
+  int tries = 0;
+  while (!force_mode_params_buffer_.try_set(force_mode_parameters)) {
+    if (tries > 10) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Could not set force mode parameters in realtime buffer.");
+      resp->success = false;
+      return false;
+    }
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
   }
+
   force_mode_active_ = true;
   change_requested_ = true;
 
