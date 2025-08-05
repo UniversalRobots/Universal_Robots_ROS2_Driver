@@ -159,6 +159,8 @@ private:
   bool check_goal_positions(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
   bool check_goal_velocities(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
   bool check_goal_accelerations(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  std::optional<RealtimeGoalHandlePtr> get_rt_goal_from_non_rt();
+  bool set_rt_goal_from_non_rt(RealtimeGoalHandlePtr& rt_goal);
 
   trajectory_msgs::msg::JointTrajectory active_joint_traj_;
   // std::vector<control_msgs::msg::JointTolerance> path_tolerance_;
