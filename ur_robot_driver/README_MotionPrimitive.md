@@ -40,6 +40,7 @@ These interfaces are used to communicate the internal status of the hardware int
   - `EXECUTING`: Currently executing a primitive
   - `SUCCESS`: Last command finished successfully
   - `ERROR`: An error occurred during execution
+  - `STOPPING`: The hardware interface has received the `STOP_MOTION` command, but the robot has not yet come to a stop.
   - `STOPPED`: The robot was stopped using the `STOP_MOTION` command and must be reset with the `RESET_STOP` command before executing new commands.
 - `ready_for_new_primitive`: Boolean flag indicating whether the interface is ready to receive a new motion primitive
 
