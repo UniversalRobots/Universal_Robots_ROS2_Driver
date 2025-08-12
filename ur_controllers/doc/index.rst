@@ -40,7 +40,7 @@ floating points between 0 and 1.
 In the `ur_robot_driver
 <https://index.ros.org/p/ur_robot_driver>`_
 this is calculated by multiplying the two `RTDE
-<https://www.universal-robots.com/articles/ur/real-time-data-exchange-rtde-guide/>`_ data
+<https://www.universal-robots.com/articles/ur/interface-communication/real-time-data-exchange-rtde-guide/>`_ data
 fields ``speed_scaling`` (which should be equal to the value shown by the speed slider position on the
 teach pendant) and ``target_speed_fraction`` (Which is the fraction to which execution gets slowed
 down by the controller).
