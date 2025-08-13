@@ -33,7 +33,7 @@ These interfaces are used to send motion primitive data to the hardware interfac
 
 ## State Interfaces
 
-These interfaces are used to communicate the internal status of the hardware interface back to the [`motion_primitives_forward_controller`](https://github.com/b-robotized-forks/ros2_controllers/tree/motion_primitive_forward_controller/motion_primitives_forward_controller):
+These interfaces are used to communicate the internal status of the hardware interface back to the controller.
 
 - `execution_status`: Indicates the current execution state of the primitive. Possible values are:
   - `IDLE`: No motion in progress
