@@ -87,7 +87,7 @@ joint_trajectory_controller:
       - $(var tf_prefix)wrist_2_joint
       - $(var tf_prefix)wrist_3_joint
     command_interfaces:
-      - position
+      - velocity
     state_interfaces:
       - position
       - velocity
@@ -137,6 +137,14 @@ scaled_joint_trajectory_controller:
       $(var tf_prefix)wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
       $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
     speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
+    gains:
+      # These values will work for all e-series robots, but will not work for UR15/20/30
+      $(var tf_prefix)shoulder_pan_joint:  {p: 5.0,  i: 0.3, d: 0.01, ff_velocity_scale: 1.0, i_clamp: 1.0, antiwindup_strategy: conditional_integration}
+      $(var tf_prefix)shoulder_lift_joint: {p: 5.0,  i: 0.3, d: 0.01, ff_velocity_scale: 1.0, i_clamp: 1.0, antiwindup_strategy: conditional_integration}
+      $(var tf_prefix)elbow_joint:         {p: 5.0,  i: 0.3, d: 0.01, ff_velocity_scale: 1.0, i_clamp: 1.0, antiwindup_strategy: conditional_integration}
+      $(var tf_prefix)wrist_1_joint:       {p: 5.0,  i: 0.3, d: 0.01, ff_velocity_scale: 1.0, i_clamp: 1.0, antiwindup_strategy: conditional_integration}
+      $(var tf_prefix)wrist_2_joint:       {p: 5.0,  i: 0.3, d: 0.01, ff_velocity_scale: 1.0, i_clamp: 1.0, antiwindup_strategy: conditional_integration}
+      $(var tf_prefix)wrist_3_joint:       {p: 5.0,  i: 0.3, d: 0.01, ff_velocity_scale: 1.0, i_clamp: 1.0, antiwindup_strategy: conditional_integration}
 
 passthrough_trajectory_controller:
   ros__parameters:
