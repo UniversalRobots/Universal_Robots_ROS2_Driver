@@ -156,7 +156,7 @@ class RobotDriverTest(unittest.TestCase):
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "tool0_controller")
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "tool0_controller")
         frame_stamp = PoseStamped()
         frame_stamp.header = header
         frame_stamp.pose = task_frame_pose
@@ -359,7 +359,7 @@ class RobotDriverTest(unittest.TestCase):
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "base")
         header.stamp.sec = int(time.time()) + 1
         header.stamp.nanosec = 0
         frame_stamp = PoseStamped()
@@ -401,7 +401,7 @@ class RobotDriverTest(unittest.TestCase):
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "base")
         header.stamp.sec = int(time.time()) + 1
         header.stamp.nanosec = 0
         frame_stamp = PoseStamped()
@@ -443,7 +443,7 @@ class RobotDriverTest(unittest.TestCase):
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "base")
         header.stamp.sec = int(time.time()) + 1
         header.stamp.nanosec = 0
         frame_stamp = PoseStamped()
@@ -476,7 +476,7 @@ class RobotDriverTest(unittest.TestCase):
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "base")
         header.stamp.sec = int(time.time()) + 1
         header.stamp.nanosec = 0
         frame_stamp = PoseStamped()
@@ -570,7 +570,7 @@ class RobotDriverTest(unittest.TestCase):
         task_frame_pose = Pose()
         task_frame_pose.position = point
         task_frame_pose.orientation = orientation
-        header = std_msgs.msg.Header(seq=1, frame_id=tf_prefix + "base")
+        header = std_msgs.msg.Header(frame_id=tf_prefix + "base")
         header.stamp.sec = int(time.time()) + 1
         header.stamp.nanosec = 0
         frame_stamp = PoseStamped()
