@@ -15,7 +15,7 @@
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
@@ -29,7 +29,7 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
-      - id: check-byte-order-marker  # Forbid UTF-8 byte-order markers
+      - id: fix-byte-order-marker  # Forbid UTF-8 byte-order markers
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
@@ -87,7 +87,7 @@ repos:
         args: ["--linelength=120"]
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v20.1.8'
+    rev: 'v21.1.0'
     hooks:
       - id: clang-format
 
