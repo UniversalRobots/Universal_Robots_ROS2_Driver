@@ -35,7 +35,7 @@
  * \date    2020-11-9
  *
  * \author  Mathias Fuhrer mathias.fuhrer@b-robotized.de
- * \date    2025-05-28 – Added support for usage with motion_primitives_forward_controller
+ * \date    2025-05-28 – Added support for usage with motion_primitives_controller
  *
  */
 //----------------------------------------------------------------------
@@ -1630,7 +1630,7 @@ void URPositionHardwareInterface::handleMoprimCommands()
       }
       default:
       {
-        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received moprim command");
+        RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "Received moprim command");
         // Push command to thread-safe queue
         if (!moprim_cmd_queue_.push(hw_moprim_commands_)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to push command to "

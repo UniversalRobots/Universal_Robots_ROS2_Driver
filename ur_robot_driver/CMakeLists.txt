@@ -38,7 +38,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
-find_package(motion_primitives_forward_controller REQUIRED)
+find_package(motion_primitives_controllers REQUIRED)
 find_package(control_msgs REQUIRED)
 
 include_directories(include)
@@ -64,7 +64,7 @@ target_link_libraries(ur_robot_driver_plugin PUBLIC
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
   ur_client_library::urcl
-  motion_primitives_forward_controller::motion_primitives_forward_controller
+  motion_primitives_controllers::motion_primitives_controllers
 )
 target_include_directories(
   ur_robot_driver_plugin

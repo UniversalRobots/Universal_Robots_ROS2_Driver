@@ -51,7 +51,7 @@ controller_manager:
     enforce_command_limits: false
 
     motion_primitive_forward_controller:
-      type: motion_primitives_forward_controller/MotionPrimitivesForwardController
+      type: motion_primitives_controllers/MotionPrimitivesForwardController
 
 speed_scaling_state_broadcaster:
   ros__parameters:
