@@ -8,9 +8,15 @@ Hardware interface for executing motion primitives on a UR robot using the ROS 2
 # Demo Video with motion_primitives_forward_controller
 [![Play Video](doc/motion_primitive_ur_driver/moprim_forward_controller_ur_demo_thumbnail.png)](https://youtu.be/SKz6LFvJmhQ)
 
+# Demo Video with motion_primitives_from_trajectory_controller
+[![Play Video](doc/motion_primitive_ur_driver/moprim_from_traj_controller_ur_demo_thumbnail.png)](https://youtu.be/nsG4sW8BfLI)
+
 # Architecture
 **with motion_primitives_forward_controller**
 ![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_ur.drawio.png)
+
+**with motion_primitives_from_trajectory_controller**
+![Architecture Overview](doc/motion_primitive_ur_driver/ros2_control_motion_primitives_from_traj_ur.drawio.png)
 
 # Command and State Interfaces
 
@@ -118,6 +124,20 @@ ros2 control switch_controllers --activate motion_primitive_forward_controller -
 ros2 run ur_robot_driver send_dummy_motion_primitives_ur10e.py
 ```
 During the execution of the motion primitives, the movement can be stopped by pressing the Enter key in the terminal.
+
+## With motion_primitives_from_trajectory_controller with MoveIt + RViz
+**Start MoveIt + RViz**
+```
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur10e launch_rviz:=true
+```
+**Start Controller + HW-Interface with URSim**
+```
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.56.101 initial_joint_controller:=motion_primitive_from_trajectory_controller launch_rviz:=false headless_mode:=true
+```
+**Start Controller + HW-Interface with H-KA UR10e**
+```
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.168.1.102 initial_joint_controller:=motion_primitive_from_trajectory_controller launch_rviz:=false headless_mode:=true
+```
 
 # TODOs/ Improvements
 - if trajectory is finished while `instruction_executer->cancelMotion()` is called --> returns with execution_status ERROR --> no new command can be sent to hw-interface --> need to call `instruction_executer->cancelMotion()` a second time
