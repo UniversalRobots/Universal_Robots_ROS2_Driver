@@ -180,7 +180,12 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
   if (change_requested_) {
     bool write_successful = true;
     if (force_mode_active_) {
-      const auto force_mode_parameters = force_mode_params_buffer_.readFromRT();
+      const auto force_mode_parameters = force_mode_params_buffer_.try_get();
+      if (!force_mode_parameters) {
+        RCLCPP_WARN(get_node()->get_logger(), "Could not get force mode parameters from realtime buffer. Retrying in "
+                                              "next update cycle.");
+        return controller_interface::return_type::OK;
+      }
       write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_X].set_value(
           force_mode_parameters->task_frame[0]);
       write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_TASK_FRAME_Y].set_value(
@@ -357,7 +362,17 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   }
   force_mode_parameters.gain_scaling = req->gain_scaling;
 
-  force_mode_params_buffer_.writeFromNonRT(force_mode_parameters);
+  int tries = 0;
+  while (!force_mode_params_buffer_.try_set(force_mode_parameters)) {
+    if (tries > 10) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Could not set force mode parameters in realtime buffer.");
+      resp->success = false;
+      return false;
+    }
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
+  }
+
   force_mode_active_ = true;
   change_requested_ = true;
 

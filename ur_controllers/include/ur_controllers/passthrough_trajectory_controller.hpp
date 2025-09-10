@@ -51,7 +51,7 @@
 #include <vector>
 
 #include <controller_interface/controller_interface.hpp>
-#include <realtime_tools/realtime_buffer.hpp>
+#include <realtime_tools/realtime_thread_safe_box.hpp>
 #include <realtime_tools/realtime_server_goal_handle.hpp>
 #include <rclcpp_action/server.hpp>
 #include <rclcpp_action/create_server.hpp>
@@ -114,11 +114,11 @@ private:
   using FollowJTrajAction = control_msgs::action::FollowJointTrajectory;
   using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<FollowJTrajAction>;
   using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
-  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
+  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeThreadSafeBox<RealtimeGoalHandlePtr>;
 
   RealtimeGoalHandleBuffer rt_active_goal_;         ///< Currently active action goal, if any.
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;  ///< Timer to frequently check on the running goal
-  realtime_tools::RealtimeBuffer<std::unordered_map<std::string, size_t>> joint_trajectory_mapping_;
+  realtime_tools::RealtimeThreadSafeBox<std::unordered_map<std::string, size_t>> joint_trajectory_mapping_;
 
   rclcpp::Duration action_monitor_period_ = rclcpp::Duration(50ms);
 
@@ -147,7 +147,7 @@ private:
   void goal_accepted_callback(
       std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
 
-  realtime_tools::RealtimeBuffer<std::vector<std::string>> joint_names_;
+  realtime_tools::RealtimeThreadSafeBox<std::vector<std::string>> joint_names_;
   std::vector<std::string> state_interface_types_;
 
   std::vector<std::string> joint_state_interface_names_;
@@ -159,11 +159,13 @@ private:
   bool check_goal_positions(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
   bool check_goal_velocities(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
   bool check_goal_accelerations(std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal);
+  std::optional<RealtimeGoalHandlePtr> get_rt_goal_from_non_rt();
+  bool set_rt_goal_from_non_rt(RealtimeGoalHandlePtr& rt_goal);
 
   trajectory_msgs::msg::JointTrajectory active_joint_traj_;
   // std::vector<control_msgs::msg::JointTolerance> path_tolerance_;
-  realtime_tools::RealtimeBuffer<std::vector<control_msgs::msg::JointTolerance>> goal_tolerance_;
-  realtime_tools::RealtimeBuffer<rclcpp::Duration> goal_time_tolerance_{ rclcpp::Duration(0, 0) };
+  realtime_tools::RealtimeThreadSafeBox<std::vector<control_msgs::msg::JointTolerance>> goal_tolerance_;
+  realtime_tools::RealtimeThreadSafeBox<rclcpp::Duration> goal_time_tolerance_{ rclcpp::Duration(0, 0) };
 
   std::atomic<size_t> current_index_;
   std::atomic<bool> trajectory_active_;
