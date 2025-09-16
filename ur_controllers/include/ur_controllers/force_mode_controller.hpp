@@ -42,13 +42,8 @@
 
 #include <controller_interface/controller_interface.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
-<<<<<<< HEAD
-#include <realtime_tools/realtime_buffer.hpp>
-#include <rclcpp/rclcpp.hpp>
-=======
 #include <rclcpp/rclcpp.hpp>
 #include <realtime_tools/realtime_thread_safe_box.hpp>
->>>>>>> 76b3e37 (Realtime tools migration (#1474))
 #include <std_srvs/srv/trigger.hpp>
 #include <ur_msgs/srv/set_force_mode.hpp>
 
