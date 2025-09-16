@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.4.0 (2025-09-16)
+------------------
 * Add support for launching UR8Long (backport `#1490 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1490>`_) (`#1497 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1497>`_)
 * [Force mode test] Remove wrong seq entry (backport of `#1488 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1488>`_) (`#1489 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1489>`_)
 * Add migration of ros2_control node to migration notes (backport of `#1458 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1458>`_) (`#1466 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1466>`_)
