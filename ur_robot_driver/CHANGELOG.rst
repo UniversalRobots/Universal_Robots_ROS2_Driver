@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.9.0 (2025-09-16)
+------------------
 * Add support for UR8 Long (`#1491 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1491>`_)
 * Fix flaky controller switch test (backport of `#1447 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1447>`_) (`#1450 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1450>`_)
 * fix_flaky_force_mode_test (backport of `#1429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1429>`_) (`#1448 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1448>`_)
