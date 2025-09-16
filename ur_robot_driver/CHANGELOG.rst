@@ -1,3 +1,16 @@
+Forthcoming
+-----------
+* Add support for launching UR8Long (backport `#1490 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1490>`_) (`#1497 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1497>`_)
+* [Force mode test] Remove wrong seq entry (backport of `#1488 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1488>`_) (`#1489 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1489>`_)
+* Add migration of ros2_control node to migration notes (backport of `#1458 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1458>`_) (`#1466 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1466>`_)
+* Fix flaky controller switch test (backport of `#1447 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1447>`_) (`#1451 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1451>`_)
+* fix_flaky_force_mode_test (backport of `#1429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1429>`_) (`#1449 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1449>`_)
+* Reduce flakiness of trajectory controller tests (backport of `#1443 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1443>`_) (`#1445 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1445>`_)
+* Added 'is in remote control' call as a dashboard service (backport of `#1433 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1433>`_) (`#1437 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1437>`_)
+* ur_robot_driver: Fix compilation on Windows (backport of `#1421 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1421>`_) (`#1432 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1432>`_)
+  Co-authored-by: Silvio Traversaro <silvio@traversaro.it>
+* Contributors: mergify[bot]
+
 3.3.3 (2025-06-24)
 ------------------
 * Refactor prepare_switch method (backport of `#1417 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1417>`_) (`#1428 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1428>`_)
