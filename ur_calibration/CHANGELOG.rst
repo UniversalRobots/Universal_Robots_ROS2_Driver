@@ -2,6 +2,11 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix ur_calibration compilation on Windows (backport of `#1400 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1400>`_) (`#1408 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1408>`_)
+* Contributors: mergify[bot]
+
 2.8.1 (2025-06-11)
 ------------------
 * Update feature list (backport of `#1372 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1372>`_) (`#1374 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1374>`_)

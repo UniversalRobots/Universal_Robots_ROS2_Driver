@@ -1,3 +1,15 @@
+Forthcoming
+-----------
+* Add support for UR8 Long (`#1491 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1491>`_)
+* Fix flaky controller switch test (backport of `#1447 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1447>`_) (`#1450 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1450>`_)
+* fix_flaky_force_mode_test (backport of `#1429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1429>`_) (`#1448 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1448>`_)
+* Reduce flakiness of trajectory controller tests (backport of `#1443 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1443>`_) (`#1444 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1444>`_)
+* Added 'is in remote control' call as a dashboard service (backport of `#1433 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1433>`_) (`#1436 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1436>`_)
+* ur_robot_driver: Fix compilation on Windows (backport of `#1421 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1421>`_) (`#1431 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1431>`_)
+  Co-authored-by: Silvio Traversaro <silvio@traversaro.it>
+* Refactor prepare_switch method (backport `#1417 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1417>`_) (`#1427 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1427>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 2.8.1 (2025-06-11)
 ------------------
 * [force mode controller] Fix the task frame orientation (backport `#1379 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1379>`_) (`#1380 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1380>`_)

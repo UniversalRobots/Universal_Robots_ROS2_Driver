@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add support for UR8 Long (`#1491 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1491>`_)
+* ur_moveit_config: Assure the description is loaded as string (`#1452 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1452>`_)
+* Contributors: Felix Exner
+
 2.8.1 (2025-06-11)
 ------------------
 

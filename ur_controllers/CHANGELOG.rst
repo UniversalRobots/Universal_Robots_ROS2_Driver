@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* ur_controllers: Fix compilation on Windows (backport `#1402 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1402>`_) (`#1412 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1412>`_)
+  Co-authored-by: Silvio Traversaro <silvio@traversaro.it>
+* Contributors: mergify[bot]
+
 2.8.1 (2025-06-11)
 ------------------
 * Use std_atomic<bool> in SJTC (backport of `#1385 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1385>`_) (`#1386 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1386>`_)
