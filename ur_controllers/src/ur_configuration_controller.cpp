@@ -39,7 +39,6 @@
 //----------------------------------------------------------------------
 
 #include <ur_controllers/ur_configuration_controller.hpp>
-#include <realtime_tools/realtime_box.hpp>
 namespace ur_controllers
 {
 
@@ -120,12 +119,20 @@ bool URConfigurationController::getRobotSoftwareVersion(
     RCLCPP_WARN(get_node()->get_logger(), "Robot software version not set yet.");
     return false;
   }
-  return robot_software_version_.try_get([resp](const std::shared_ptr<VersionInformation> ptr) {
+  int tries = 0;
+  while (!robot_software_version_.try_get([resp](const std::shared_ptr<VersionInformation> ptr) {
     resp->major = ptr->major;
     resp->minor = ptr->minor;
     resp->build = ptr->build;
     resp->bugfix = ptr->bugfix;
-  });
+  })) {
+    if (tries > 10) {
+      return false;
+    }
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
+  }
+  return true;
 }
 }  // namespace ur_controllers
 

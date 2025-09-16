@@ -54,6 +54,74 @@
 namespace ur_controllers
 {
 
+template <class RTBox>
+auto get_rt_box_from_non_rt(RTBox& rt_box)
+{
+  int tries = 0;
+  auto return_val = rt_box.try_get();
+  while (!return_val.has_value()) {
+    if (tries > 9) {
+      RCLCPP_ERROR(rclcpp::get_logger("PassthroughTrajectoryController"), "Failed to get value from realtime box.");
+      return decltype(return_val){};
+    }
+    RCLCPP_WARN(rclcpp::get_logger("PassthroughTrajectoryController"), "Waiting for value to be set in realtime box, "
+                                                                       "retrying...");
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    return_val = rt_box.try_get();
+    tries++;
+  }
+  return return_val;
+}
+
+template <class RTBox, class ValueType>
+bool set_rt_box_from_non_rt(RTBox& rt_box, const ValueType& value)
+{
+  int tries = 0;
+  while (!rt_box.try_set(value)) {
+    if (tries > 9) {
+      RCLCPP_ERROR(rclcpp::get_logger("PassthroughTrajectoryController"), "Failed to get value from realtime box.");
+      return false;
+    }
+    RCLCPP_WARN(rclcpp::get_logger("PassthroughTrajectoryController"), "Waiting for value to be set in realtime box, "
+                                                                       "retrying...");
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
+  }
+  return true;
+}
+
+std::optional<PassthroughTrajectoryController::RealtimeGoalHandlePtr>
+PassthroughTrajectoryController::get_rt_goal_from_non_rt()
+{
+  RealtimeGoalHandlePtr active_goal = nullptr;
+  int tries = 0;
+  while (!rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; })) {
+    if (tries > 9) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Failed to get active goal from realtime box.");
+      return std::nullopt;
+    }
+    RCLCPP_WARN(get_node()->get_logger(), "Waiting for active goal to be read, retrying...");
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
+  }
+  return active_goal;
+}
+
+bool PassthroughTrajectoryController::set_rt_goal_from_non_rt(RealtimeGoalHandlePtr& rt_goal)
+{
+  int tries = 0;
+  while (!rt_active_goal_.try_set([&rt_goal](RealtimeGoalHandlePtr& goal) { goal = rt_goal; })) {
+    if (tries > 9) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Failed to set active goal in realtime box.");
+      return false;
+    }
+    RCLCPP_WARN(get_node()->get_logger(), "Waiting for active goal to be set, retrying...");
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
+  }
+  return true;
+}
+
 double duration_to_double(const builtin_interfaces::msg::Duration& duration)
 {
   return duration.sec + (duration.nanosec / 1000000000.0);
@@ -65,7 +133,10 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
   passthrough_params_ = passthrough_param_listener_->get_params();
   current_index_ = 0;
   auto joint_names = passthrough_params_.joints;
-  joint_names_.writeFromNonRT(joint_names);
+  if (!set_rt_box_from_non_rt(joint_names_, joint_names)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set joint names in realtime box.");
+    return controller_interface::CallbackReturn::ERROR;
+  }
   number_of_joints_ = joint_names.size();
   state_interface_types_ = passthrough_params_.state_interfaces;
   scaling_factor_ = 1.0;
@@ -73,6 +144,7 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_init()
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
+// Not part of real time loop
 controller_interface::CallbackReturn
 PassthroughTrajectoryController::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
@@ -83,7 +155,11 @@ PassthroughTrajectoryController::on_configure(const rclcpp_lifecycle::State& pre
 
   joint_state_interface_names_.reserve(number_of_joints_ * state_interface_types_.size());
 
-  auto joint_names_internal = joint_names_.readFromRT();
+  auto joint_names_internal = get_rt_box_from_non_rt(joint_names_);
+  if (!joint_names_internal.has_value()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to get joint names from realtime box.");
+    return controller_interface::CallbackReturn::ERROR;
+  }
   for (const auto& joint_name : *joint_names_internal) {
     for (const auto& interface_type : state_interface_types_) {
       joint_state_interface_names_.emplace_back(joint_name + "/" + interface_type);
@@ -228,12 +304,22 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_deactiv
     return controller_interface::CallbackReturn::ERROR;
   }
   if (trajectory_active_) {
-    const auto active_goal = *rt_active_goal_.readFromRT();
+    RealtimeGoalHandlePtr active_goal = nullptr;
+    bool success = rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; });
+    if (!success) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Could not read active goal from realtime buffer, deactivation of "
+                                             "controller failed.");
+      return controller_interface::CallbackReturn::ERROR;
+    }
     std::shared_ptr<control_msgs::action::FollowJointTrajectory::Result> result =
         std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
     result->set__error_string("Aborting current goal, since the controller is being deactivated.");
     active_goal->setAborted(result);
-    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+    success = rt_active_goal_.try_set([](RealtimeGoalHandlePtr& goal) { goal = RealtimeGoalHandlePtr(); });
+    if (!success) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Failed to set active goal, deactivation of controller failed.");
+      return controller_interface::CallbackReturn::ERROR;
+    }
     end_goal();
   }
   return CallbackReturn::SUCCESS;
@@ -242,7 +328,13 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_deactiv
 controller_interface::return_type PassthroughTrajectoryController::update(const rclcpp::Time& /*time*/,
                                                                           const rclcpp::Duration& period)
 {
-  const auto active_goal = *rt_active_goal_.readFromRT();
+  RealtimeGoalHandlePtr active_goal = nullptr;
+  const bool read_success =
+      rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; });
+  if (!read_success) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not read active goal from realtime buffer, skipping cycle.");
+    return controller_interface::return_type::OK;
+  }
 
   const auto current_transfer_state = transfer_command_interface_->get().get_optional().value_or(TRANSFER_STATE_IDLE);
 
@@ -272,8 +364,18 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
       write_success &=
           trajectory_size_command_interface_->get().set_value(static_cast<double>(active_joint_traj_.points.size()));
     }
-    auto active_goal_time_tol = goal_time_tolerance_.readFromRT();
-    auto joint_mapping = joint_trajectory_mapping_.readFromRT();
+
+    auto active_goal_time_tol = goal_time_tolerance_.try_get();
+    if (!active_goal_time_tol) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Could not read goal time tolerance, skipping cycle.");
+      return controller_interface::return_type::OK;
+    }
+
+    auto joint_mapping = joint_trajectory_mapping_.try_get();
+    if (!joint_mapping) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Could not read joint trajectory mapping, skipping cycle.");
+      return controller_interface::return_type::OK;
+    }
 
     // Write a new point to the command interface, if the previous point has been read by the hardware interface.
     if (current_transfer_state == TRANSFER_STATE_WAITING_FOR_POINT) {
@@ -283,7 +385,12 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
             duration_to_double(active_joint_traj_.points[current_index_].time_from_start));
 
         // Write the positions for each joint of the robot
-        auto joint_names_internal = joint_names_.readFromRT();
+        auto joint_names_internal = joint_names_.try_get();
+        if (!joint_names_internal) {
+          RCLCPP_ERROR(get_node()->get_logger(), "Could not read joint names, skipping cycle.");
+          return controller_interface::return_type::OK;
+        }
+
         // We've added the joint interfaces matching the order of the joint names so we can safely access
         // them by the index.
         for (size_t i = 0; i < number_of_joints_; i++) {
@@ -422,7 +529,12 @@ bool PassthroughTrajectoryController::check_goal_tolerances(
     std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
 {
   auto& tolerances = goal->goal_tolerance;
-  auto joint_names_internal = joint_names_.readFromRT();
+  auto joint_names_internal = get_rt_box_from_non_rt(joint_names_);
+  if (!joint_names_internal.has_value()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to get joint names from realtime box.");
+    return false;
+  }
+
   if (!tolerances.empty()) {
     for (auto& tol : tolerances) {
       auto found_it = std::find(joint_names_internal->begin(), joint_names_internal->end(), tol.name);
@@ -526,14 +638,26 @@ rclcpp_action::CancelResponse PassthroughTrajectoryController::goal_cancelled_ca
     const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
 {
   // Check that cancel request refers to currently active goal (if any)
-  const auto active_goal = *rt_active_goal_.readFromNonRT();
+  auto goal = get_rt_goal_from_non_rt();
+  if (!goal.has_value()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to get goal handle.");
+    return rclcpp_action::CancelResponse::REJECT;
+  }
+  RealtimeGoalHandlePtr active_goal = goal.value();
+
   if (active_goal && active_goal->gh_ == goal_handle) {
     RCLCPP_INFO(get_node()->get_logger(), "Cancelling active trajectory requested.");
+
+    auto new_goal = RealtimeGoalHandlePtr();
+    if (!set_rt_goal_from_non_rt(new_goal)) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Failed to reset active goal, cancel request failed.");
+      return rclcpp_action::CancelResponse::REJECT;
+    }
 
     // Mark the current goal as canceled
     auto result = std::make_shared<FollowJTrajAction::Result>();
     active_goal->setCanceled(result);
-    rt_active_goal_.writeFromNonRT(RealtimeGoalHandlePtr());
+
     trajectory_active_ = false;
   }
   return rclcpp_action::CancelResponse::ACCEPT;
@@ -548,13 +672,40 @@ void PassthroughTrajectoryController::goal_accepted_callback(
   current_index_ = 0;
 
   // TODO(fexner): Merge goal tolerances with default tolerances
+  auto map = create_joint_mapping(goal_handle->get_goal()->trajectory.joint_names);
+  if (map.empty()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to create joint trajectory mapping, aborting goal.");
+    auto result = std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    result->error_code =
+        control_msgs::action::FollowJointTrajectory::Result::INVALID_JOINTS;  // Not entirely sure, if this is the
+                                                                              // correct error code.
+    result->error_string = "Failed to create joint mapping.";
+    goal_handle->abort(result);
+    return;
+  }
 
-  joint_trajectory_mapping_.writeFromNonRT(create_joint_mapping(goal_handle->get_goal()->trajectory.joint_names));
+  if (!set_rt_box_from_non_rt(joint_trajectory_mapping_, map)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set joint trajectory mapping in realtime box.");
+    auto result = std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    result->error_code = control_msgs::action::FollowJointTrajectory::Result::INVALID_JOINTS;
+    result->error_string = "Failed to set joint trajectory mapping.";
+    goal_handle->abort(result);
+    return;
+  }
 
   // sort goal tolerances to match internal joint order
   std::vector<control_msgs::msg::JointTolerance> goal_tolerances;
   if (!goal_handle->get_goal()->goal_tolerance.empty()) {
-    auto joint_names_internal = joint_names_.readFromRT();
+    auto joint_names_internal = get_rt_box_from_non_rt(joint_names_);
+    if (!joint_names_internal.has_value()) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Failed to get joint names, aborting goal.");
+      auto result = std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+      result->error_code = control_msgs::action::FollowJointTrajectory::Result::INVALID_JOINTS;
+      result->error_string = "Failed to get joint names.";
+      goal_handle->abort(result);
+      return;
+    }
+
     std::stringstream ss;
     ss << "Using goal tolerances\n";
     for (auto& joint_name : *joint_names_internal) {
@@ -569,19 +720,44 @@ void PassthroughTrajectoryController::goal_accepted_callback(
     }
     RCLCPP_INFO_STREAM(get_node()->get_logger(), ss.str());
   }
-  goal_tolerance_.writeFromNonRT(goal_tolerances);
-  goal_time_tolerance_.writeFromNonRT(goal_handle->get_goal()->goal_time_tolerance);
+
+  if (!set_rt_box_from_non_rt(goal_tolerance_, goal_tolerances)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set goal tolerances in realtime box.");
+    auto result = std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    result->error_code = control_msgs::action::FollowJointTrajectory::Result::INVALID_GOAL;
+    result->error_string = "Failed to set goal tolerances.";
+    goal_handle->abort(result);
+    return;
+  }
+
+  if (!set_rt_box_from_non_rt(goal_time_tolerance_, goal_handle->get_goal()->goal_time_tolerance)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set goal time tolerance in realtime box.");
+    auto result = std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    result->error_code = control_msgs::action::FollowJointTrajectory::Result::INVALID_GOAL;
+    result->error_string = "Failed to set goal time tolerance.";
+    goal_handle->abort(result);
+    return;
+  }
+
   RCLCPP_INFO_STREAM(get_node()->get_logger(),
                      "Goal time tolerance: " << duration_to_double(goal_handle->get_goal()->goal_time_tolerance)
                                              << " sec");
+
+  RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
+  if (!set_rt_goal_from_non_rt(rt_goal)) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to set active goal, aborting goal.");
+    auto result = std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    result->error_code = control_msgs::action::FollowJointTrajectory::Result::INVALID_GOAL;
+    result->error_string = "Failed to set active goal.";
+    goal_handle->abort(result);
+    return;
+  }
 
   // Action handling will be done from the timer callback to avoid those things in the realtime
   // thread. First, we delete the existing (if any) timer by resetting the pointer and then create a new
   // one.
   //
-  RealtimeGoalHandlePtr rt_goal = std::make_shared<RealtimeGoalHandle>(goal_handle);
   rt_goal->execute();
-  rt_active_goal_.writeFromNonRT(rt_goal);
   goal_handle_timer_.reset();
   goal_handle_timer_ = get_node()->create_wall_timer(action_monitor_period_.to_chrono<std::chrono::nanoseconds>(),
                                                      std::bind(&RealtimeGoalHandle::runNonRealtime, rt_goal));
@@ -589,11 +765,25 @@ void PassthroughTrajectoryController::goal_accepted_callback(
   return;
 }
 
+// Called from RT thread
 bool PassthroughTrajectoryController::check_goal_tolerance()
 {
-  auto goal_tolerance = goal_tolerance_.readFromRT();
-  auto joint_mapping = joint_trajectory_mapping_.readFromRT();
-  auto joint_names_internal = joint_names_.readFromRT();
+  auto goal_tolerance = goal_tolerance_.try_get();
+  if (!goal_tolerance) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not get goal tolerance, cannot check goal tolerance.");
+    return false;
+  }
+  auto joint_mapping = joint_trajectory_mapping_.try_get();
+  if (!joint_mapping) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not get joint mapping, cannot check goal tolerance.");
+    return false;
+  }
+  auto joint_names_internal = joint_names_.try_get();
+  if (!joint_names_internal) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not get joint names, cannot check goal tolerance.");
+    return false;
+  }
+
   if (goal_tolerance->empty()) {
     return true;
   }
@@ -650,7 +840,12 @@ std::unordered_map<std::string, size_t>
 PassthroughTrajectoryController::create_joint_mapping(const std::vector<std::string>& joint_names) const
 {
   std::unordered_map<std::string, size_t> joint_mapping;
-  auto joint_names_internal = joint_names_.readFromNonRT();
+  auto joint_names_internal = get_rt_box_from_non_rt(joint_names_);
+  if (!joint_names_internal.has_value()) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to get joint names from realtime box.");
+    return joint_mapping;
+  }
+
   for (auto& joint_name : *joint_names_internal) {
     auto found_it = std::find(joint_names.begin(), joint_names.end(), joint_name);
     if (found_it != joint_names.end()) {
@@ -659,6 +854,7 @@ PassthroughTrajectoryController::create_joint_mapping(const std::vector<std::str
   }
   return joint_mapping;
 }
+
 }  // namespace ur_controllers
 
 #include "pluginlib/class_list_macros.hpp"

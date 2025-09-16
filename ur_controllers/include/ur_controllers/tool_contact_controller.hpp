@@ -53,8 +53,9 @@
 #include <rclcpp_action/server_goal_handle.hpp>
 #include <rclcpp/duration.hpp>
 
-#include <realtime_tools/realtime_buffer.hpp>
+#include <realtime_tools/realtime_thread_safe_box.hpp>
 #include <realtime_tools/realtime_server_goal_handle.hpp>
+#include <realtime_tools/lock_free_queue.hpp>
 
 #include <ur_msgs/action/tool_contact.hpp>
 #include "ur_controllers/tool_contact_controller_parameters.hpp"
@@ -86,11 +87,13 @@ public:
 private:
   using RealtimeGoalHandle = realtime_tools::RealtimeServerGoalHandle<ur_msgs::action::ToolContact>;
   using RealtimeGoalHandlePtr = std::shared_ptr<RealtimeGoalHandle>;
-  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeBuffer<RealtimeGoalHandlePtr>;
+  using RealtimeGoalHandleBuffer = realtime_tools::RealtimeThreadSafeBox<RealtimeGoalHandlePtr>;
 
   RealtimeGoalHandleBuffer rt_active_goal_;                     ///< Currently active action goal, if any.
   ur_msgs::action::ToolContact::Feedback::SharedPtr feedback_;  ///< preallocated feedback
   rclcpp::TimerBase::SharedPtr goal_handle_timer_;              ///< Timer to frequently check on the running goal
+  std::optional<RealtimeGoalHandlePtr> get_rt_goal_from_non_rt();
+  bool set_rt_goal_from_non_rt(const RealtimeGoalHandlePtr& goal_handle);
 
   // non-rt function that will be called with action_monitor_period to monitor the rt action
   rclcpp::Duration action_monitor_period_ = rclcpp::Duration::from_seconds(0.05);
