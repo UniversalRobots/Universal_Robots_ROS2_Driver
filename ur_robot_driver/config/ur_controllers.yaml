@@ -87,7 +87,7 @@ joint_trajectory_controller:
       - $(var tf_prefix)wrist_2_joint
       - $(var tf_prefix)wrist_3_joint
     command_interfaces:
-      - velocity
+      - position
     state_interfaces:
       - position
       - velocity
