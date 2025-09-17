@@ -34,6 +34,8 @@ from controller_manager_msgs.srv import (
     SwitchController,
     LoadController,
     UnloadController,
+    SetHardwareComponentState,
+    ListHardwareComponents,
 )
 from launch import LaunchDescription
 from launch.actions import (
@@ -254,7 +256,11 @@ class ControllerManagerInterface(
         "load_controller": LoadController,
         "unload_controller": UnloadController,
     },
-    services={"list_controllers": ListControllers},
+    services={
+        "list_controllers": ListControllers,
+        "set_hardware_component_state": SetHardwareComponentState,
+        "list_hardware_components": ListHardwareComponents,
+    },
 ):
     def wait_for_controller(self, controller_name, target_state=None, timeout=TIMEOUT_WAIT_SERVICE):
         start_time = time.time()
