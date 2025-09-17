@@ -34,6 +34,8 @@ from controller_manager_msgs.srv import (
     SwitchController,
     LoadController,
     UnloadController,
+    SetHardwareComponentState,
+    ListHardwareComponents,
 )
 from launch import LaunchDescription
 from launch.actions import (
@@ -259,7 +261,11 @@ class ControllerManagerInterface(
         "load_controller": LoadController,
         "unload_controller": UnloadController,
     },
-    services={"list_controllers": ListControllers},
+    services={
+        "list_controllers": ListControllers,
+        "set_hardware_component_state": SetHardwareComponentState,
+        "list_hardware_components": ListHardwareComponents,
+    },
 ):
     def wait_for_controller(self, controller_name, target_state=None, timeout=TIMEOUT_WAIT_SERVICE):
         start_time = time.time()
@@ -388,14 +394,15 @@ def _declare_launch_arguments():
             description="Type/series of used UR robot.",
             choices=[
                 "ur3",
-                "ur3e",
                 "ur5",
+                "ur10",
+                "ur3e",
                 "ur5e",
                 "ur7e",
-                "ur10",
                 "ur10e",
                 "ur12e",
                 "ur16e",
+                "ur8long",
                 "ur15",
                 "ur20",
                 "ur30",
