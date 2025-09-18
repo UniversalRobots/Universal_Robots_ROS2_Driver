@@ -62,12 +62,12 @@ def generate_test_description(tf_prefix):
     return generate_driver_test_description(tf_prefix=tf_prefix)
 
 
-class RobotDriverTest(unittest.TestCase):
+class ToolContactTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the ROS context
         rclpy.init()
-        cls.node = Node("robot_driver_test")
+        cls.node = Node("tool_contact_test")
         time.sleep(1)
         cls.init_robot(cls)
 
