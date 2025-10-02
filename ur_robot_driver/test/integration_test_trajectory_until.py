@@ -94,6 +94,8 @@ class RobotDriverTest(unittest.TestCase):
             "time_vec": [Duration(sec=3, nanosec=0), Duration(sec=6, nanosec=0)],
         }
 
+        self._controller_manager_interface.wait_for_controller("tool_contact_controller")
+
     def setUp(self):
         self._dashboard_interface.start_robot()
         time.sleep(1)
