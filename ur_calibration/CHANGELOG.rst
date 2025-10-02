@@ -2,6 +2,9 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.2.0 (2025-09-16)
+------------------
+
 4.1.0 (2025-07-29)
 ------------------
 * Use hpp headers from geometry2 (`#1467 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1467>`_)

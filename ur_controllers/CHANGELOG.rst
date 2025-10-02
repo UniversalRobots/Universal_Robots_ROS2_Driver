@@ -2,6 +2,13 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.2.0 (2025-09-16)
+------------------
+* Realtime tools migration (`#1474 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1474>`_)
+  Use RealtimeThreadSafeBox instead of RealTimeBuffer.
+* Replace SJTC implementation with upstream (`#1485 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1485>`_)
+* Contributors: Felix Exner, URJala
+
 4.1.0 (2025-07-29)
 ------------------
 * ur_configuration_controller: use try_set on RTBox (`#1470 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1470>`_)
