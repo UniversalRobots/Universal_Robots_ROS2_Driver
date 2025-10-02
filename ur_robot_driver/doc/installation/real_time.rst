@@ -223,7 +223,7 @@ Setup user privileges to use real-time scheduling
 -------------------------------------------------
 
 To be able to schedule threads with user privileges (what the driver will do) you'll have to change
-the user's limits by changing ``/etc/security/limits.conf`` (See `the manpage <https://manpages.ubuntu.com/manpages/bionic/man5/limits.conf.5.html>`_ for details)
+the user's limits by changing ``/etc/security/limits.conf`` (See `the manpage <https://manpages.ubuntu.com/manpages/jammy/en/man5/limits.conf.5.html>`_ for details)
 
 We recommend to setup a group for real-time users instead of writing a fixed username into the config
 file:
