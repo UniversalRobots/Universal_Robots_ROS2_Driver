@@ -67,6 +67,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
 TIMEOUT_WAIT_ACTION = 10
+TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 TIMEOUT_EXECUTE_TRAJECTORY = 30
 
