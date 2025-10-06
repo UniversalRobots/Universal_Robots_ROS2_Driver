@@ -107,6 +107,10 @@ class PassthroughControllerTest(unittest.TestCase):
             FollowJointTrajectory,
         )
 
+        # Wait for all controllers needed below, as controller manager services might fail
+        # e.g. when attempting to deactivate an unknown controller
+        self._controller_manager_interface.wait_for_controller("scaled_joint_trajectory_controller")
+
     def setUp(self):
         self._dashboard_interface.start_robot()
         time.sleep(1)
