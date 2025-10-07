@@ -405,6 +405,7 @@ def _declare_launch_arguments():
                 "ur16e",
                 "ur8long",
                 "ur15",
+                "ur18",
                 "ur20",
                 "ur30",
             ],
