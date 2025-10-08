@@ -231,6 +231,7 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   std::atomic_bool async_thread_shutdown_;
+  urcl::VersionInformation version_info_;
   double get_robot_software_version_major_;
   double get_robot_software_version_minor_;
   double get_robot_software_version_bugfix_;
