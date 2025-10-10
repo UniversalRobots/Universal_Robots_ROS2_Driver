@@ -66,11 +66,14 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
   server_callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   clients_callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
+  this->declare_parameter("motion_controller", "scaled_joint_trajectory_controller");
+  std::string motion_controller = this->get_parameter("motion_controller").as_string();
+
   // Initialize a trajectory action client, to a generic action that does not exist. This is remapped via ros-args when
   // launching the node
   trajectory_action_client_ = rclcpp_action::create_client<FollowJointTrajectory>(this,
-                                                                                  "/motion_controller/"
-                                                                                  "follow_joint_"
+                                                                                  motion_controller +
+                                                                                  "/follow_joint_"
                                                                                   "trajectory",
                                                                                   clients_callback_group);
 
