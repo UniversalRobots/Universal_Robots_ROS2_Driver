@@ -200,6 +200,11 @@ if(BUILD_TESTING)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
 
+  add_launch_test(test/test_mock_hardware.py
+    TIMEOUT
+      800
+  )
+
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
     add_launch_test(test/launch_args.py
       TIMEOUT
@@ -209,7 +214,7 @@ if(BUILD_TESTING)
       TIMEOUT
         180
     )
-    add_launch_test(test/robot_driver.py
+    add_launch_test(test/integration_test_scaled_joint_controller.py
       TIMEOUT
         800
     )
@@ -224,6 +229,18 @@ if(BUILD_TESTING)
     add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
+    )
+    add_launch_test(test/integration_test_config_controller.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_passthrough_controller.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_io_controller.py
+      TIMEOUT
+        800
     )
     add_launch_test(test/integration_test_tool_contact.py
       TIMEOUT
