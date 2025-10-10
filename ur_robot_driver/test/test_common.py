@@ -472,8 +472,8 @@ def generate_mock_hardware_test_description(
         "headless_mode": "true",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
-        "use_mock_hardware": "true",
-        "mock_sensor_commands": "true",
+        "use_fake_hardware": "true",
+        "fake_sensor_commands": "true",
     }
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix

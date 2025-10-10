@@ -214,15 +214,11 @@ if(BUILD_TESTING)
       TIMEOUT
         180
     )
-<<<<<<< HEAD
-    add_launch_test(test/robot_driver.py
-=======
     add_launch_test(test/example_move.py
       TIMEOUT
         180
     )
     add_launch_test(test/integration_test_scaled_joint_controller.py
->>>>>>> fe37d9a (Running integration tests with mock hardware (#1226))
       TIMEOUT
         800
     )
