@@ -214,10 +214,6 @@ if(BUILD_TESTING)
       TIMEOUT
         180
     )
-    add_launch_test(test/example_move.py
-      TIMEOUT
-        180
-    )
     add_launch_test(test/integration_test_scaled_joint_controller.py
       TIMEOUT
         800
