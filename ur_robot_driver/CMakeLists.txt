@@ -129,16 +129,12 @@ target_link_libraries(trajectory_until_node PUBLIC
 )
 
 install(
-<<<<<<< HEAD
-  TARGETS dashboard_client controller_stopper_node urscript_interface robot_state_helper
-=======
   TARGETS
     dashboard_client
     controller_stopper_node
     urscript_interface
     robot_state_helper
     trajectory_until_node
->>>>>>> 92ded2d (Trajectory until node (#1461))
   DESTINATION lib/${PROJECT_NAME}
 )
 
