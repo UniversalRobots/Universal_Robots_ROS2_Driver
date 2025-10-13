@@ -199,6 +199,7 @@ def launch_setup(context):
         "joint_trajectory_controller",
         "forward_velocity_controller",
         "forward_position_controller",
+        "forward_effort_controller",
         "force_mode_controller",
         "passthrough_trajectory_controller",
         "freedrive_mode_controller",
