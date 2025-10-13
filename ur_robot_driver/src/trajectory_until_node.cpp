@@ -72,9 +72,8 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
   // Initialize a trajectory action client, to a generic action that does not exist. This is remapped via ros-args when
   // launching the node
   trajectory_action_client_ = rclcpp_action::create_client<FollowJointTrajectory>(this,
-                                                                                  motion_controller +
-                                                                                  "/follow_joint_"
-                                                                                  "trajectory",
+                                                                                  motion_controller + "/follow_joint_"
+                                                                                                      "trajectory",
                                                                                   clients_callback_group);
 
   // Create action server to advertise the "/trajectory_until_node/execute"

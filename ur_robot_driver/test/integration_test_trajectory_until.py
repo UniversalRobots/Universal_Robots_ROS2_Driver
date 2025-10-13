@@ -105,7 +105,9 @@ class RobotDriverTest(unittest.TestCase):
     # Tests
     #
 
-    def test_trajectory_with_tool_contact_no_trigger_succeeds(self, tf_prefix, initial_joint_controller):
+    def test_trajectory_with_tool_contact_no_trigger_succeeds(
+        self, tf_prefix, initial_joint_controller
+    ):
         self._controller_manager_interface.wait_for_controller(initial_joint_controller)
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
