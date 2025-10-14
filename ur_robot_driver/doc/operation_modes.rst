@@ -14,7 +14,7 @@ Both will be explained below.
 
 Robot's control modes
 ---------------------
-E-series robots can operate in different command modes: It can be either in *local control mode* where the teach pendant is the single point of control, or in *remote control mode* where the teach pendant is locked and cannot be used to start any motion, including freedrive. Note that the ability to change to *remote control mode* has to be explicitly enabled in the robot's settings under Settings -> System -> Remote Control. See the [robot manual](https://myur.universal-robots.com/manuals) for details.
+PolyScope 5 and PolyScope X robots can operate in different command modes: It can be either in *local control mode* where the teach pendant is the single point of control, or in *remote control mode* where the teach pendant is locked and cannot be used to start any motion, including freedrive. Note that for PolyScope 5 the ability to change to *remote control mode* has to be explicitly enabled in the robot's settings under Settings -> System -> Remote Control. See the [robot manual](https://myur.universal-robots.com/manuals) for details.
 
 The remote control mode is needed for many aspects of this driver such as
 
