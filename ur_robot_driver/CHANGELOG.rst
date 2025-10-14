@@ -1,3 +1,14 @@
+Forthcoming
+-----------
+* Add missing dependency to effort_controllers (`#1531 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1531>`_)
+* Add effort command interface to hardware interface (`#1411 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1411>`_)
+* Add support for UR18 (`#1524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1524>`_)
+* Trajectory until node (`#1461 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1461>`_)
+* Wait for used controllers in test setup (`#1519 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1519>`_)
+* Running integration tests with mock hardware (`#1226 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1226>`_)
+* Add test for hardware component lifecycle (`#1476 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1476>`_)
+* Contributors: Felix Exner, URJala
+
 4.2.0 (2025-09-16)
 ------------------
 * Add support for launching UR8Long (`#1490 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1490>`_)
