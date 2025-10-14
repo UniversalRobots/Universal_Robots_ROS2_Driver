@@ -33,11 +33,7 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-<<<<<<< HEAD
-    rev: v3.19.1
-=======
     rev: v3.21.0
->>>>>>> a3390ff (Auto-update pre-commit hooks (#1527))
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
