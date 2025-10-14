@@ -2,6 +2,9 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 4.2.0 (2025-09-16)
 ------------------
 * Realtime tools migration (`#1474 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1474>`_)
