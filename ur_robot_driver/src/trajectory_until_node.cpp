@@ -122,7 +122,12 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
   }
 
   if (!trajectory_action_client_->wait_for_action_server(std::chrono::seconds(1))) {
-    RCLCPP_ERROR(this->get_logger(), "Trajectory action server not available.");
+    std::string send_goal_service_name = get_node_base_interface()->resolve_topic_or_service_name("/motion_controller/"
+                                                                                                  "follow_joint_"
+                                                                                                  "trajectory/_action/"
+                                                                                                  "send_goal",
+                                                                                                  true);
+    RCLCPP_ERROR(this->get_logger(), "Trajectory action server at %s not available.", send_goal_service_name.c_str());
     return rclcpp_action::GoalResponse::REJECT;
   }
 
