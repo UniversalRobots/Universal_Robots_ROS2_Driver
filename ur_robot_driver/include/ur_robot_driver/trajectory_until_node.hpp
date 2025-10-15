@@ -42,6 +42,7 @@
 #define UR_ROBOT_DRIVER__TRAJECTORY_UNTIL_NODE_HPP_
 
 #include <memory>
+#include <string>
 #include <variant>
 
 #include <rclcpp/rclcpp.hpp>
@@ -68,10 +69,12 @@ private:
 
   rclcpp_action::Server<TrajectoryUntilAction>::SharedPtr action_server_;
   rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr trajectory_action_client_;
+  std::string trajectory_action_uri_;
 
   // Add new until types here, when available
   using TCClient = rclcpp_action::Client<ur_msgs::action::ToolContact>::SharedPtr;
   std::variant<TCClient> until_action_client_variant;
+  std::string until_action_uri_;
 
   rclcpp::CallbackGroup::SharedPtr server_callback_group;
   rclcpp::CallbackGroup::SharedPtr clients_callback_group;

@@ -335,11 +335,11 @@ def launch_setup(context, *args, **kwargs):
         executable="trajectory_until_node",
         name="trajectory_until_node",
         output="screen",
-        remappings=[
-            (
-                "/motion_controller/follow_joint_trajectory",
-                f"/{initial_joint_controller.perform(context)}/follow_joint_trajectory",
-            ),
+        parameters=[
+            {
+                "motion_controller_uri": f"/{initial_joint_controller.perform(context)}/follow_joint_trajectory",
+                "until_action_uri": "tool_contact_controller/detect_tool_contact",
+            },
         ],
     )
 

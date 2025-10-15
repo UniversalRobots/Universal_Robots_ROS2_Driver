@@ -66,13 +66,15 @@ TrajectoryUntilNode::TrajectoryUntilNode(const rclcpp::NodeOptions& options)
   server_callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   clients_callback_group = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
+  declare_parameter("motion_controller_uri", "scaled_joint_trajectory_controller/follow_joint_trajectory");
+  get_parameter("motion_controller_uri", trajectory_action_uri_);
   // Initialize a trajectory action client, to a generic action that does not exist. This is remapped via ros-args when
   // launching the node
-  trajectory_action_client_ = rclcpp_action::create_client<FollowJointTrajectory>(this,
-                                                                                  "/motion_controller/"
-                                                                                  "follow_joint_"
-                                                                                  "trajectory",
-                                                                                  clients_callback_group);
+  trajectory_action_client_ =
+      rclcpp_action::create_client<FollowJointTrajectory>(this, trajectory_action_uri_, clients_callback_group);
+
+  declare_parameter("until_action_uri", "tool_contact_controller/detect_tool_contact");
+  get_parameter("until_action_uri", until_action_uri_);
 
   // Create action server to advertise the "/trajectory_until_node/execute"
   action_server_ = rclcpp_action::create_server<TrajectoryUntilAction>(
@@ -92,10 +94,8 @@ bool TrajectoryUntilNode::assign_until_action_client(std::shared_ptr<const Traje
 {
   switch (goal->until_type) {
     case TrajectoryUntilAction::Goal::TOOL_CONTACT:
-      until_action_client_variant = rclcpp_action::create_client<TCAction>(this,
-                                                                           "/tool_contact_controller/"
-                                                                           "detect_tool_contact",
-                                                                           clients_callback_group);
+      until_action_client_variant =
+          rclcpp_action::create_client<TCAction>(this, until_action_uri_, clients_callback_group);
       break;
 
     default:
@@ -122,12 +122,7 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
   }
 
   if (!trajectory_action_client_->wait_for_action_server(std::chrono::seconds(1))) {
-    std::string send_goal_service_name = get_node_base_interface()->resolve_topic_or_service_name("/motion_controller/"
-                                                                                                  "follow_joint_"
-                                                                                                  "trajectory/_action/"
-                                                                                                  "send_goal",
-                                                                                                  true);
-    RCLCPP_ERROR(this->get_logger(), "Trajectory action server at %s not available.", send_goal_service_name.c_str());
+    RCLCPP_ERROR(this->get_logger(), "Trajectory action server at %s not available.", trajectory_action_uri_.c_str());
     return rclcpp_action::GoalResponse::REJECT;
   }
 
