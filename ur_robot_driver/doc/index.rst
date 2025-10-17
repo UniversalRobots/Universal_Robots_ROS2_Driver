@@ -18,9 +18,4 @@ Welcome to ur_robot_driver's documentation!
    generated/index
    robot_state_helper
    controller_stopper
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
+   trajectory_until_node
