@@ -62,6 +62,7 @@ def generate_launch_description():
                 "ur16e",
                 "ur8long",
                 "ur15",
+                "ur18",
                 "ur20",
                 "ur30",
             ],
