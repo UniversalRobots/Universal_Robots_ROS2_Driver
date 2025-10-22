@@ -14,14 +14,8 @@ Welcome to ur_robot_driver's documentation!
    installation/toc
    usage
    setup_tool_communication
-<<<<<<< HEAD
    ROS_INTERFACE
    generated/index
-=======
-   hardware_interface
-   hardware_interface_parameters
-   dashboard_client
->>>>>>> c1cb7f2 (Add effort command interface to hardware interface (#1411))
    robot_state_helper
    controller_stopper
    trajectory_until_node
