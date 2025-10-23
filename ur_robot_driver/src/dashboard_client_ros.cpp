@@ -101,8 +101,10 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   play_service_ =
       createDashboardTriggerSrv("~/play", std::bind(&urcl::DashboardClient::commandPlayWithResponse, client_.get()));
 
-  resume_service_ = createDashboardTriggerSrv(
-      "~/resume", std::bind(&urcl::DashboardClient::commandResumeWithResponse, client_.get()));
+  if (dashboard_policy == urcl::DashboardClient::ClientPolicy::POLYSCOPE_X) {
+    resume_service_ = createDashboardTriggerSrv(
+        "~/resume", std::bind(&urcl::DashboardClient::commandResumeWithResponse, client_.get()));
+  }
 
   // Power off the robot motors
   power_off_service_ = createDashboardTriggerSrv(
