@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.5.0 (2025-10-23)
+------------------
 * Add missing update_rate config files for UR7e and UR12e (backport `#1544 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1544>`_) (`#1548 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1548>`_)
 * Specify that only PS5 needs the option of remote control explicitly enabled (backport of `#1530 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1530>`_) (`#1534 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1534>`_)
 * Add missing dependency to effort_controllers (backport of `#1531 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1531>`_) (`#1532 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1532>`_)
