@@ -6,6 +6,12 @@
 ur_moveit_config
 ================
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   migration_notes
+
 This package contains an **example** MoveIt! configuration for Universal Robots arms. Since the
 default description contains only the arm, this MoveIt! configuration package also only contains the
 arm without any objects around it.
