@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 project = "ur_controllers"
-copyright = "2022, Universal Robots A/S"
+copyright = "2025, Universal Robots A/S"
 author = "Felix Exner"
 
 # The short X.Y version
