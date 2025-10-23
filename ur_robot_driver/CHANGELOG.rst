@@ -1,3 +1,14 @@
+Forthcoming
+-----------
+* Add missing update_rate config files for UR7e and UR12e (backport of `#1544 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1544>`_) (`#1547 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1547>`_)
+* Add support for UR18 (backport `#1524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1524>`_) (`#1525 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1525>`_)
+* Trajectory until node (backport of `#1461 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1461>`_) (`#1522 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1522>`_)
+* Wait for used controllers in test setup (backport `#1519 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1519>`_) (`#1520 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1520>`_)
+* Running integration tests with mock hardware (backport `#1226 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1226>`_) (`#1508 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1508>`_)
+* Fix link to limits man page (`#1518 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1518>`_)
+* Add test for hardware component lifecycle (backport `#1476 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1476>`_) (`#1506 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1506>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 2.9.0 (2025-09-16)
 ------------------
 * Add support for UR8 Long (`#1491 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1491>`_)

@@ -2,6 +2,11 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add support for UR18 (backport `#1524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1524>`_) (`#1525 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1525>`_)
+* Contributors: mergify[bot]
+
 2.9.0 (2025-09-16)
 ------------------
 * Add support for UR8 Long (`#1491 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1491>`_)
