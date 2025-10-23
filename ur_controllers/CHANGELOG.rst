@@ -2,6 +2,9 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.4.0 (2025-09-16)
 ------------------
 * Use RealtimeThreadSafeBox instead of RealTimeBuffer (backport `#1474 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1474>`_) (`#1501 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1501>`_)
