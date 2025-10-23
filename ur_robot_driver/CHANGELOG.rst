@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.10.0 (2025-10-23)
+-------------------
 * Add missing update_rate config files for UR7e and UR12e (backport of `#1544 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1544>`_) (`#1547 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1547>`_)
 * Add support for UR18 (backport `#1524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1524>`_) (`#1525 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1525>`_)
 * Trajectory until node (backport of `#1461 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1461>`_) (`#1522 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1522>`_)
