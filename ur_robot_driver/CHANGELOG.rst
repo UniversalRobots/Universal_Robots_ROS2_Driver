@@ -1,3 +1,16 @@
+Forthcoming
+-----------
+* Add missing update_rate config files for UR7e and UR12e (backport `#1544 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1544>`_) (`#1548 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1548>`_)
+* Specify that only PS5 needs the option of remote control explicitly enabled (backport of `#1530 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1530>`_) (`#1534 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1534>`_)
+* Add missing dependency to effort_controllers (backport of `#1531 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1531>`_) (`#1532 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1532>`_)
+* Add effort command interface to hardware interface (backport of `#1411 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1411>`_) (`#1529 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1529>`_)
+* Trajectory until node (backport `#1461 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1461>`_) (`#1523 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1523>`_)
+* Add support for UR18 (backport of `#1524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1524>`_) (`#1526 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1526>`_)
+* Wait for used controllers in test setup (backport of `#1519 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1519>`_) (`#1521 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1521>`_)
+* Running integration tests with mock hardware (`#1226 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1226>`_) (`#1509 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1509>`_)
+* Add test for hardware component lifecycle (backport `#1476 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1476>`_) (`#1507 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1507>`_)
+* Contributors: mergify[bot]
+
 3.4.0 (2025-09-16)
 ------------------
 * Add support for launching UR8Long (backport `#1490 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1490>`_) (`#1497 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1497>`_)
