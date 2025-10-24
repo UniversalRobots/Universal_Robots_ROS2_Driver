@@ -108,11 +108,11 @@ private:
   }
 
   template <class SrvResponseT>
-  urcl::DashboardResponse dashboardCallWithChecks(std::function<urcl::DashboardResponse()> call, SrvResponseT resp)
+  urcl::DashboardResponse dashboardCallWithChecks(std::function<urcl::DashboardResponse()> dashboard_call, SrvResponseT resp)
   {
     urcl::DashboardResponse dashboard_response;
     try {
-      dashboard_response = call();
+      dashboard_response = dashboard_call();
       resp->success = dashboard_response.ok;
       resp->answer = dashboard_response.message;
     } catch (const urcl::NotImplementedException& e) {

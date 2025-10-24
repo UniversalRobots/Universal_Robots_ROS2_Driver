@@ -122,7 +122,7 @@ resume (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Resume a paused program on a PolyScope X robot. This service is only available on a PolyScope X
-robot connected.
+robot.
 
 shutdown (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
