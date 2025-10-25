@@ -400,6 +400,8 @@ protected:
 
   std::unique_ptr<urcl::rtde_interface::DataPackage> data_package_buffer_;
   std::function<bool()> get_data_package;
+
+  bool use_currents_as_efforts_ = false;
 };
 }  // namespace ur_robot_driver
 
