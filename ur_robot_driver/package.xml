@@ -3,7 +3,11 @@
 <package format="3">
   <name>ur_robot_driver</name>
   <version>4.3.0</version>
-  <description>The new driver for Universal Robots UR3, UR5 and UR10 robots with CB3 controllers and the e-series.</description>
+    <description>
+      The ROS 2 driver for Universal Robots manipulators. This driver should support all robot
+      models as listed in the documentation. For robot controllers, PolyScope X, PolyScope 5 and
+      CB3 controllers are supported.
+    </description>
 
   <maintainer email="feex@universal-robots.com">Felix Exner</maintainer>
   <maintainer email="rsk@universal-robots.com">Rune Søe-Knudsen</maintainer>
@@ -13,6 +17,7 @@
 
   <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues</url>
   <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver</url>
+  <url type="website">https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/</url>
 
   <author email="denis@stoglrobotics.de">Denis Stogl</author>
   <author email="wilbrandt@fzi.de">Robert Wilbrandt</author>

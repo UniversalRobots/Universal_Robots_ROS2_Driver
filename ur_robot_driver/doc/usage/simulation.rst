@@ -18,8 +18,8 @@ Usage with official UR simulator
 The easiest way to use URSim is the Docker
 image provided by Universal Robots. There is an image for each software generation:
 
-- `PolyScope 5 <https://hub.docker.com/r/universalrobots/ursim_e-series>`_
 - `PolyScope X <https://hub.docker.com/r/universalrobots/ursim_polyscopex>`_
+- `PolyScope 5 <https://hub.docker.com/r/universalrobots/ursim_e-series>`_
 - `CB3 <https://hub.docker.com/r/universalrobots/ursim_cb3>`_
 
 We have prepared a script to unify the startup of the simulator independent of the software
