@@ -26,6 +26,7 @@
     trajectory_port:=50003
     non_blocking_read:=true
     robot_receive_timeout:=0.04
+    use_currents_as_efforts:=true
     ">
 
     <xacro:property name="config_kinematics_parameters" value="${xacro.load_yaml(kinematics_parameters_file)}"/>
@@ -71,6 +72,7 @@
           <param name="tool_device_name">${tool_device_name}</param>
           <param name="tool_tcp_port">${tool_tcp_port}</param>
           <param name="robot_receive_timeout">${robot_receive_timeout}</param>
+          <param name="use_currents_as_efforts">${use_currents_as_efforts}</param>
         </xacro:unless>
       </hardware>
 

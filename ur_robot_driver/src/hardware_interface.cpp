@@ -511,6 +511,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // The driver will offer an interface to receive the program's URScript on this port.
   const int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
 
+  // Newer software version (5.23.0 / 10.11.0) support reporting the actual joint torques. On older
+  // versions fall back to the currents, instead.
+  use_currents_as_efforts_ = ((info_.hardware_parameters["use_currents_as_efforts"] == "true") ||
+                              (info_.hardware_parameters["use_currents_as_efforts"] == "True"));
+
   // The ip address of the host the driver runs on
   std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
   if (reverse_ip == "0.0.0.0") {
@@ -664,6 +669,17 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   get_robot_software_version_build_ = version_info_.build;
   get_robot_software_version_bugfix_ = version_info_.bugfix;
 
+  if (!use_currents_as_efforts_) {
+    if ((version_info_.major == 5 && version_info_.minor < 23) ||
+        (version_info_.major == 10 && version_info_.minor < 11) || version_info_.major < 5) {
+      RCLCPP_ERROR(get_logger(),
+                   "Driver configured to use actual torques as efforts, which is not supported by this software "
+                   "version %s. Please use version 5.23.0 / 10.11.0 or newer for this feature.",
+                   version_info_.toString().c_str());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+  }
+
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
@@ -774,7 +790,11 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     packet_read_ = true;
     readData(data_pkg, "actual_q", urcl_joint_positions_);
     readData(data_pkg, "actual_qd", urcl_joint_velocities_);
-    readData(data_pkg, "actual_current", urcl_joint_efforts_);
+    if (use_currents_as_efforts_) {
+      readData(data_pkg, "actual_current", urcl_joint_efforts_);
+    } else {
+      readData(data_pkg, "actual_current_as_torque", urcl_joint_efforts_);
+    }
 
     readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
     readData(data_pkg, "speed_scaling", speed_scaling_);
