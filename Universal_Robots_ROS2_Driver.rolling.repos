@@ -17,10 +17,8 @@ repositories:
     version: master
   ros2_controllers:
     type: git
-    url: https://github.com/b-robotized-forks/ros2_controllers
-    version: motion_primitive_forward_controller
-    # url: https://github.com/ros-controls/ros2_controllers
-    # version: master
+    url: https://github.com/ros-controls/ros2_controllers
+    version: master
   kinematics_interface:
     type: git
     url: https://github.com/ros-controls/kinematics_interface.git
