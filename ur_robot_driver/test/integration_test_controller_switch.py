@@ -203,14 +203,16 @@ class ControllerSwitchTest(unittest.TestCase):
                 ],
             ).ok
         )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "forward_position_controller",
-                ],
-            ).ok
-        )
+        # This got removed on 2025-10-29 due to a change in ros2_control
+        # See https://github.com/ros-controls/ros2_control/issues/2758 for details
+        # self.assertFalse(
+        # self._controller_manager_interface.switch_controller(
+        # strictness=SwitchController.Request.STRICT,
+        # activate_controllers=[
+        # "forward_position_controller",
+        # ],
+        # ).ok
+        # )
         self.assertFalse(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.STRICT,
