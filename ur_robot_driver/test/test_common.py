@@ -235,6 +235,7 @@ class DashboardInterface(
     },
 ):
     def start_robot(self):
+        self._check_call(self.power_off())
         self._check_call(self.power_on())
         self._check_call(self.brake_release())
 

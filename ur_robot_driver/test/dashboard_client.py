@@ -61,6 +61,7 @@ class DashboardClientTest(unittest.TestCase):
 
     def init_robot(self):
         self._dashboard_interface = DashboardInterface(self.node)
+        self._dashboard_interface.power_off()  # create a defined starting state
 
     def test_switch_on(self):
         """Test power on a robot."""
