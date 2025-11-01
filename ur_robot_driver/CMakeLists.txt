@@ -38,6 +38,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(ur_client_library REQUIRED)
 find_package(ur_dashboard_msgs REQUIRED)
 find_package(ur_msgs REQUIRED)
+find_package(motion_primitives_controllers REQUIRED)
+find_package(control_msgs REQUIRED)
 
 include_directories(include)
 
@@ -55,12 +57,14 @@ target_link_libraries(ur_robot_driver_plugin PUBLIC
   ${tf2_geometry_msgs_TARGETS}
   ${ur_dashboard_msgs_TARGETS}
   ${ur_msgs_TARGETS}
+  ${control_msgs_TARGETS}
   controller_manager::controller_manager
   hardware_interface::hardware_interface
   pluginlib::pluginlib
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
   ur_client_library::urcl
+  motion_primitives_controllers::motion_primitives_controllers
 )
 target_include_directories(
   ur_robot_driver_plugin
@@ -190,10 +194,6 @@ install(DIRECTORY resources
 )
 
 
-install(DIRECTORY include/
-  DESTINATION include
-)
-
 ament_export_dependencies(
   hardware_interface
   pluginlib
@@ -202,10 +202,6 @@ ament_export_dependencies(
   controller_manager
   controller_manager_msgs
   geometry_msgs
-  hardware_interface
-  pluginlib
-  rclcpp
-  rclcpp_lifecycle
   std_msgs
   std_srvs
   tf2_geometry_msgs
@@ -225,6 +221,7 @@ install(PROGRAMS
   scripts/start_ursim.sh
   examples/examples.py
   examples/force_mode.py
+  examples/send_dummy_motion_primitives_ur10e.py
   examples/move_until_example.py
   DESTINATION lib/${PROJECT_NAME}
 )

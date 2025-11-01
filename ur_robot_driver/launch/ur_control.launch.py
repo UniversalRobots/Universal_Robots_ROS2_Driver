@@ -205,6 +205,7 @@ def launch_setup(context):
         "passthrough_trajectory_controller",
         "freedrive_mode_controller",
         "tool_contact_controller",
+        "motion_primitive_forward_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
@@ -362,6 +363,7 @@ def generate_launch_description():
                 "forward_position_controller",
                 "freedrive_mode_controller",
                 "passthrough_trajectory_controller",
+                "motion_primitive_forward_controller",
             ],
             description="Initially loaded robot controller.",
         )
