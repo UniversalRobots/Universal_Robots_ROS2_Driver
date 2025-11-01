@@ -1,3 +1,34 @@
+4.3.0 (2025-10-14)
+------------------
+* Add missing dependency to effort_controllers (`#1531 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1531>`_)
+* Add effort command interface to hardware interface (`#1411 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1411>`_)
+* Add support for UR18 (`#1524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1524>`_)
+* Trajectory until node (`#1461 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1461>`_)
+* Wait for used controllers in test setup (`#1519 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1519>`_)
+* Running integration tests with mock hardware (`#1226 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1226>`_)
+* Add test for hardware component lifecycle (`#1476 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1476>`_)
+* Contributors: Felix Exner, URJala
+
+4.2.0 (2025-09-16)
+------------------
+* Add support for launching UR8Long (`#1490 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1490>`_)
+* [Force mode test] Remove wrong seq entry (`#1488 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1488>`_)
+* Contributors: Felix Exner
+
+4.1.0 (2025-07-29)
+------------------
+* Migrate hardware_interface's on_init method (`#1464 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1464>`_)
+* Add scaling parameters to upstream JTC (`#1465 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1465>`_)
+* Add migration of ros2_control node to migration notes (`#1458 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1458>`_)
+* Fix flaky controller switch test (`#1447 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1447>`_)
+* fix_flaky_force_mode_test (`#1429 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1429>`_)
+* Reduce flakiness of trajectory controller tests (`#1443 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1443>`_)
+* Added 'is in remote control' call as a dashboard service (`#1433 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1433>`_)
+* ur_robot_driver: Fix compilation on Windows (`#1421 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1421>`_)
+* Refactor prepare_switch method (`#1417 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1417>`_)
+* Update simulation page to also explicitly mention PolyScope X (`#1415 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1415>`_)
+* Contributors: Felix Exner, Mads Holm Peters, Silvio Traversaro
+
 4.0.3 (2025-06-16)
 ------------------
 

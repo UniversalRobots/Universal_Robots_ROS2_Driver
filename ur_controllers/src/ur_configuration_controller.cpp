@@ -39,7 +39,6 @@
 //----------------------------------------------------------------------
 
 #include <ur_controllers/ur_configuration_controller.hpp>
-#include <realtime_tools/realtime_box.hpp>
 namespace ur_controllers
 {
 
@@ -88,18 +87,21 @@ controller_interface::InterfaceConfiguration URConfigurationController::state_in
 controller_interface::return_type URConfigurationController::update(const rclcpp::Time& /* time */,
                                                                     const rclcpp::Duration& /* period */)
 {
+  if (!robot_software_version_set_) {
+    robot_software_version_set_ =
+        robot_software_version_.try_set([this](const std::shared_ptr<VersionInformation>& ptr) {
+          ptr->major = state_interfaces_[StateInterfaces::ROBOT_VERSION_MAJOR].get_optional().value_or(0.0);
+          ptr->minor = state_interfaces_[StateInterfaces::ROBOT_VERSION_MINOR].get_optional().value_or(0.0);
+          ptr->build = state_interfaces_[StateInterfaces::ROBOT_VERSION_BUILD].get_optional().value_or(0.0);
+          ptr->bugfix = state_interfaces_[StateInterfaces::ROBOT_VERSION_BUGFIX].get_optional().value_or(0.0);
+        });
+  }
   return controller_interface::return_type::OK;
 }
 
 controller_interface::CallbackReturn
 URConfigurationController::on_activate(const rclcpp_lifecycle::State& /* previous_state */)
 {
-  robot_software_version_.set([this](const std::shared_ptr<VersionInformation> ptr) {
-    ptr->major = state_interfaces_[StateInterfaces::ROBOT_VERSION_MAJOR].get_optional().value_or(0.0);
-    ptr->minor = state_interfaces_[StateInterfaces::ROBOT_VERSION_MINOR].get_optional().value_or(0.0);
-    ptr->build = state_interfaces_[StateInterfaces::ROBOT_VERSION_BUILD].get_optional().value_or(0.0);
-    ptr->bugfix = state_interfaces_[StateInterfaces::ROBOT_VERSION_BUGFIX].get_optional().value_or(0.0);
-  });
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -113,13 +115,24 @@ bool URConfigurationController::getRobotSoftwareVersion(
     ur_msgs::srv::GetRobotSoftwareVersion::Request::SharedPtr /*req*/,
     ur_msgs::srv::GetRobotSoftwareVersion::Response::SharedPtr resp)
 {
-  std::shared_ptr<VersionInformation> temp;
-  return robot_software_version_.try_get([resp](const std::shared_ptr<VersionInformation> ptr) {
+  if (!robot_software_version_set_) {
+    RCLCPP_WARN(get_node()->get_logger(), "Robot software version not set yet.");
+    return false;
+  }
+  int tries = 0;
+  while (!robot_software_version_.try_get([resp](const std::shared_ptr<VersionInformation> ptr) {
     resp->major = ptr->major;
     resp->minor = ptr->minor;
     resp->build = ptr->build;
     resp->bugfix = ptr->bugfix;
-  });
+  })) {
+    if (tries > 10) {
+      return false;
+    }
+    rclcpp::sleep_for(std::chrono::milliseconds(50));
+    tries++;
+  }
+  return true;
 }
 }  // namespace ur_controllers
 

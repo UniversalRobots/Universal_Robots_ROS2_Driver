@@ -96,6 +96,7 @@ enum StoppingInterface
   STOP_FREEDRIVE,
   STOP_TOOL_CONTACT,
   STOP_MOTION_PRIMITIVES,
+  STOP_TORQUE,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -132,7 +133,7 @@ public:
   URPositionHardwareInterface();
   virtual ~URPositionHardwareInterface();
 
-  hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo& system_info) final;
+  hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) final;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 
@@ -191,6 +192,7 @@ protected:
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
+  urcl::vector6d_t urcl_torque_commands_;
   urcl::vector6d_t urcl_joint_positions_;
   urcl::vector6d_t urcl_joint_velocities_;
   urcl::vector6d_t urcl_joint_efforts_;
@@ -243,6 +245,7 @@ protected:
   bool initialized_;
   double system_interface_initialized_;
   std::atomic_bool async_thread_shutdown_;
+  urcl::VersionInformation version_info_;
   double get_robot_software_version_major_;
   double get_robot_software_version_minor_;
   double get_robot_software_version_bugfix_;
@@ -358,6 +361,7 @@ protected:
   std::vector<std::vector<std::string>> start_modes_;
   bool position_controller_running_;
   bool velocity_controller_running_;
+  bool torque_controller_running_;
   bool force_mode_controller_running_ = false;
 
   std::shared_ptr<urcl::UrDriver> ur_driver_;  // changed to shared_ptr for instruction_executer

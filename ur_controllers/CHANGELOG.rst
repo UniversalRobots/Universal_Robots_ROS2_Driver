@@ -2,6 +2,24 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.3.0 (2025-10-14)
+------------------
+
+4.2.0 (2025-09-16)
+------------------
+* Realtime tools migration (`#1474 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1474>`_)
+  Use RealtimeThreadSafeBox instead of RealTimeBuffer.
+* Replace SJTC implementation with upstream (`#1485 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1485>`_)
+* Contributors: Felix Exner, URJala
+
+4.1.0 (2025-07-29)
+------------------
+* ur_configuration_controller: use try_set on RTBox (`#1470 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1470>`_)
+* Use hpp headers from geometry2 (`#1467 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1467>`_)
+* Use new API of PID class (`#1410 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1410>`_)
+* ur_controllers: Fix compilation on Windows (`#1402 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1402>`_)
+* Contributors: Christoph Fröhlich, Felix Exner, Silvio Traversaro
+
 4.0.3 (2025-06-16)
 ------------------
 * Ignore RT-Tools deprecation warning about trylock

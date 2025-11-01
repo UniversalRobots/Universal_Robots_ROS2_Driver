@@ -28,6 +28,8 @@ body:
         - Galactic
         - Humble
         - Iron
+        - Jazzy
+        - Kilted
         - Rolling
         - Other
     validations:
