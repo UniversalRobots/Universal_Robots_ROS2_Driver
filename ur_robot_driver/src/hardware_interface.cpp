@@ -875,7 +875,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (velocity_controller_running_) {
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
     } else if (torque_controller_running_) {
-      ur_driver_->writeJointCommand(urcl_torque_commands_, urcl::comm::ControlMode::MODE_TORQUE, receive_timeout_);
+      ur_driver_->writeJointCommand(urcl_torque_commands_, urcl::comm::ControlMode::MODE_, receive_timeout_);
     } else if (freedrive_mode_controller_running_ && freedrive_activated_) {
       ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
