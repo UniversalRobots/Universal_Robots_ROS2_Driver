@@ -214,4 +214,3 @@ tool_contact_controller:
 motion_primitive_forward_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
-
