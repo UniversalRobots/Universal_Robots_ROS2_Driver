@@ -68,6 +68,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[hardware_interface::HW_IF_POSITION][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_POSITION][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_POSITION][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[hardware_interface::HW_IF_POSITION][HW_IF_MOTION_PRIMITIVES] = false;
 
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][hardware_interface::HW_IF_EFFORT] = false;
@@ -75,6 +76,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_VELOCITY][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][HW_IF_MOTION_PRIMITIVES] = false;
 
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_VELOCITY] = false;
@@ -82,6 +84,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[hardware_interface::HW_IF_EFFORT][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[hardware_interface::HW_IF_EFFORT][HW_IF_MOTION_PRIMITIVES] = false;
 
   mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
@@ -89,6 +92,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[FORCE_MODE_GPIO][PASSTHROUGH_GPIO] = true;
   mode_compatibility_[FORCE_MODE_GPIO][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[FORCE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
+  mode_compatibility_[FORCE_MODE_GPIO][HW_IF_MOTION_PRIMITIVES] = true;
 
   mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
@@ -96,6 +100,7 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[PASSTHROUGH_GPIO][FORCE_MODE_GPIO] = true;
   mode_compatibility_[PASSTHROUGH_GPIO][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility_[PASSTHROUGH_GPIO][TOOL_CONTACT_GPIO] = true;
+  mode_compatibility_[PASSTHROUGH_GPIO][HW_IF_MOTION_PRIMITIVES] = false;
 
   mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
@@ -103,6 +108,8 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[FREEDRIVE_MODE_GPIO][FORCE_MODE_GPIO] = false;
   mode_compatibility_[FREEDRIVE_MODE_GPIO][PASSTHROUGH_GPIO] = false;
   mode_compatibility_[FREEDRIVE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
+  mode_compatibility_[FREEDRIVE_MODE_GPIO][HW_IF_MOTION_PRIMITIVES] = false;
 
   mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_POSITION] = true;
   mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_VELOCITY] = true;
@@ -110,6 +117,15 @@ URPositionHardwareInterface::URPositionHardwareInterface()
   mode_compatibility_[TOOL_CONTACT_GPIO][FORCE_MODE_GPIO] = false;
   mode_compatibility_[TOOL_CONTACT_GPIO][PASSTHROUGH_GPIO] = true;
   mode_compatibility_[TOOL_CONTACT_GPIO][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[TOOL_CONTACT_GPIO][HW_IF_MOTION_PRIMITIVES] = true;
+
+  mode_compatibility_[HW_IF_MOTION_PRIMITIVES][hardware_interface::HW_IF_POSITION] = false;
+  mode_compatibility_[HW_IF_MOTION_PRIMITIVES][hardware_interface::HW_IF_VELOCITY] = false;
+  mode_compatibility_[HW_IF_MOTION_PRIMITIVES][hardware_interface::HW_IF_EFFORT] = false;
+  mode_compatibility_[HW_IF_MOTION_PRIMITIVES][FORCE_MODE_GPIO] = true;
+  mode_compatibility_[HW_IF_MOTION_PRIMITIVES][PASSTHROUGH_GPIO] = false;
+  mode_compatibility_[HW_IF_MOTION_PRIMITIVES][FREEDRIVE_MODE_GPIO] = false;
+  mode_compatibility_[HW_IF_MOTION_PRIMITIVES][TOOL_CONTACT_GPIO] = true;
 }
 
 URPositionHardwareInterface::~URPositionHardwareInterface()
