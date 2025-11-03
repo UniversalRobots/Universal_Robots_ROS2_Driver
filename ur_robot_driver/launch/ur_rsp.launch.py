@@ -73,6 +73,7 @@ def generate_launch_description():
     reverse_port = LaunchConfiguration("reverse_port")
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
+    use_currents_as_efforts = LaunchConfiguration("use_currents_as_efforts")
 
     script_filename = PathJoinSubstitution(
         [
@@ -184,6 +185,8 @@ def generate_launch_description():
             "trajectory_port:=",
             trajectory_port,
             " ",
+            "use_currents_as_efforts:=",
+            use_currents_as_efforts,
         ]
     )
     robot_description = {
@@ -440,6 +443,13 @@ def generate_launch_description():
             "trajectory_port",
             default_value="50003",
             description="Port that will be opened for trajectory control.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_currents_as_efforts",
+            default_value="true",
+            description="Report motor currents as efforts. When set to false, the torques as reported from the robot are used. Note that this requires software 5.23.0 / 10.11.0.",
         )
     )
 

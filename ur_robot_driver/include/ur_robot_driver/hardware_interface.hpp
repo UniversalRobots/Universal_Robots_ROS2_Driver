@@ -324,6 +324,8 @@ protected:
   const std::string TOOL_CONTACT_GPIO = "tool_contact";
 
   std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
+
+  bool use_currents_as_efforts_ = false;
 };
 }  // namespace ur_robot_driver
 
