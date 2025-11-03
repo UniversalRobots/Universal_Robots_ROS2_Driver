@@ -1215,8 +1215,10 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
       })) {
     if ((version_info_.major == 5 && version_info_.minor < 23) ||
         (version_info_.major == 10 && version_info_.minor < 10) || version_info_.major < 5) {
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Requested to use effort interface on a robot version that doesn't support it. Torque "
-                                 "control is available from robot software 5.23.0 / 10.10.0 on.");
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Requested to use effort interface on a robot "
+                                                                      "version that doesn't support it. Torque "
+                                                                      "control is available from robot software 5.23.0 "
+                                                                      "/ 10.10.0 on.");
       return hardware_interface::return_type::ERROR;
     }
   }
