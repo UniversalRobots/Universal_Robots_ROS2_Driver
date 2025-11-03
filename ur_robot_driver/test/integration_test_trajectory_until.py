@@ -96,10 +96,12 @@ class RobotDriverTest(unittest.TestCase):
 
         self._controller_manager_interface.wait_for_controller("tool_contact_controller")
 
-    def setUp(self):
+    def setUp(self, initial_joint_controller):
         self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
+
+        self._controller_manager_interface.wait_for_controller(initial_joint_controller, "active")
 
     #
     # Tests
