@@ -47,7 +47,12 @@ jobs:
           file: ros_ws/lcov/total_coverage.info
           flags: unittests
           name: codecov-umbrella
+<<<<<<< HEAD
       - uses: actions/upload-artifact@v1
+=======
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - uses: actions/upload-artifact@v5
+>>>>>>> 29842df (Bump actions/upload-artifact from 4 to 5 (#1552))
         with:
           name: colcon-logs-${{ matrix.os }}
           path: ros_ws/log
