@@ -1398,7 +1398,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   }
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
-    RCLCPP_WARN(get_logger(), "Stopping passthrough trajectory controller.");
     passthrough_trajectory_controller_running_ = false;
     passthrough_trajectory_abort_ = 1.0;
     trajectory_joint_positions_.clear();
@@ -1417,8 +1416,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     resetMoprimCmdInterfaces();
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
     ready_for_new_moprim_ = false;
-
-    RCLCPP_INFO(get_logger(), "Motion primitives mode stopped.");
   }
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
