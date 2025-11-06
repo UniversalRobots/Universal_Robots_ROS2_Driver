@@ -34,6 +34,9 @@
  * \author  Marvin Große Besselmann grosse@fzi.de
  * \date    2019-04-11
  *
+ * \author  Mathias Fuhrer mathias.fuhrer@b-robotized.de
+ * \date    2025-05-28 – Added support for usage with motion_primitives_controller
+ *
  */
 //----------------------------------------------------------------------
 #ifndef UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
@@ -45,6 +48,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <array>
 
 // ros2_control hardware_interface
 #include "hardware_interface/hardware_info.hpp"
@@ -53,6 +57,7 @@
 
 // UR stuff
 #include "ur_client_library/ur/ur_driver.h"
+#include "ur_client_library/ur/instruction_executor.h"
 #include "ur_client_library/ur/robot_receive_timeout.h"
 #include "ur_robot_driver/dashboard_client_ros.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
@@ -63,6 +68,14 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "control_msgs/msg/motion_primitive.hpp"
+#include <realtime_tools/lock_free_queue.hpp>
+
+// Motion primitives controller
+#include "motion_primitives_controllers/motion_primitives_forward_controller.hpp"
+
+using MoprimMotionType = control_msgs::msg::MotionPrimitive;
+using MoprimMotionHelperType = motion_primitives_controllers::MotionHelperType;
 
 namespace ur_robot_driver
 {
@@ -82,6 +95,7 @@ enum StoppingInterface
   STOP_FORCE_MODE,
   STOP_FREEDRIVE,
   STOP_TOOL_CONTACT,
+  STOP_MOTION_PRIMITIVES,
   STOP_TORQUE,
 };
 
@@ -277,6 +291,45 @@ protected:
   double force_mode_damping_;
   double force_mode_gain_scaling_;
 
+  //*************** Motion primitives stuff ***************
+  std::shared_ptr<urcl::InstructionExecutor> instruction_executor_;
+
+  // Async thread handling
+  std::shared_ptr<std::thread> async_moprim_cmd_thread_;
+  std::atomic_bool async_moprim_thread_shutdown_;
+  realtime_tools::LockFreeSPSCQueue<std::array<double, 25>, 1024> moprim_cmd_queue_;
+  std::array<double, 25> current_moprim_command_;
+
+  // Status for communication with controller
+  bool motion_primitives_forward_controller_running_;
+  using MoprimExecutionState = motion_primitives_controllers::ExecutionState;
+  std::atomic<MoprimExecutionState> current_moprim_execution_status_;
+  std::atomic_bool ready_for_new_moprim_;
+
+  // Command and state interfaces for the motion primitives
+  // 25 Commands: motion_type + 6 joints + 2*7 positions (goal and via) + blend_radius + velocity + acceleration +
+  // move_time
+  std::array<double, 25> hw_moprim_commands_;
+  // 2 States: execution_status, ready_for_new_primitive
+  std::array<double, 2> hw_moprim_states_;
+
+  // flag to put all following primitives into a motion sequence instead of sending single primitives
+  std::atomic_bool build_moprim_sequence_{ false };
+  std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> moprim_sequence_;
+
+  void handleMoprimCommands();
+  void resetMoprimCmdInterfaces();
+  void asyncMoprimCmdThread();
+  void processMoprimMotionCmd(const std::array<double, 25>& command);
+  bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
+                                double& move_time);
+  bool getMoprimVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
+                          double& move_time);
+  void quaternionToRotVec(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz);
+
+  const std::string HW_IF_MOTION_PRIMITIVES = "motion_primitive";
+  //*************** End Motion primitives stuff ***************
+
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;
   std::array<double, 18> actual_dig_in_bits_copy_;
@@ -311,7 +364,7 @@ protected:
   bool torque_controller_running_;
   bool force_mode_controller_running_ = false;
 
-  std::unique_ptr<urcl::UrDriver> ur_driver_;
+  std::shared_ptr<urcl::UrDriver> ur_driver_;  // changed to shared_ptr for instruction_executer
   std::shared_ptr<std::thread> async_thread_;
 
   std::atomic_bool rtde_comm_has_been_started_ = false;

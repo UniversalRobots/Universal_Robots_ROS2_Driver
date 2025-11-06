@@ -307,6 +307,38 @@
         <state_interface name="get_version_build"/>
         <state_interface name="get_version_bugfix"/>
       </gpio>
+
+      <gpio name="${tf_prefix}motion_primitive">
+        <command_interface name="motion_type"/>
+        <command_interface name="q1"/>
+        <command_interface name="q2"/>
+        <command_interface name="q3"/>
+        <command_interface name="q4"/>
+        <command_interface name="q5"/>
+        <command_interface name="q6"/>
+        <command_interface name="pos_x"/>
+        <command_interface name="pos_y"/>
+        <command_interface name="pos_z"/>
+        <command_interface name="pos_qx"/>
+        <command_interface name="pos_qy"/>
+        <command_interface name="pos_qz"/>
+        <command_interface name="pos_qw"/>
+        <command_interface name="pos_via_x"/>
+        <command_interface name="pos_via_y"/>
+        <command_interface name="pos_via_z"/>
+        <command_interface name="pos_via_qx"/>
+        <command_interface name="pos_via_qy"/>
+        <command_interface name="pos_via_qz"/>
+        <command_interface name="pos_via_qw"/>
+        <command_interface name="blend_radius"/>
+        <command_interface name="velocity"/>
+        <command_interface name="acceleration"/>
+        <command_interface name="move_time"/>
+
+        <state_interface name="execution_status"/>
+        <state_interface name="ready_for_new_primitive"/>
+      </gpio>
+
     </ros2_control>
   </xacro:macro>
 </robot>

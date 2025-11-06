@@ -25,6 +25,8 @@
   <author>Felix Exner</author>
   <author>Lea Steffen</author>
   <author>Tristan Schnell</author>
+  <author email="mathias.fuhrer@b-robotized.de">Mathias Fuhrer</author>
+
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
@@ -46,6 +48,8 @@
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_description</depend>
   <depend>ur_msgs</depend>
+  <depend>motion_primitives_controllers</depend>
+  <depend>control_msgs</depend>
 
   <exec_depend>effort_controllers</exec_depend>
   <exec_depend>force_torque_sensor_broadcaster</exec_depend>
