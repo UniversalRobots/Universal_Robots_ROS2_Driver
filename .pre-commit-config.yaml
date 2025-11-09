@@ -33,7 +33,7 @@ repos:
 
   # Python hooks
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.0
+    rev: v3.21.1
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
@@ -87,7 +87,7 @@ repos:
         args: ["--linelength=120"]
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v21.1.2'
+    rev: 'v21.1.5'
     hooks:
       - id: clang-format
 
