@@ -51,7 +51,7 @@ namespace ur_robot_driver
 DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
   : node_(node), primary_client_(robot_ip, notifier_)
 {
-  node_->declare_parameter<double>("receive_timeout", 1);
+  node_->declare_parameter<double>("receive_timeout", 2);
 
   primary_client_.start(10, std::chrono::seconds(10));
   auto robot_version = primary_client_.getRobotVersion();
