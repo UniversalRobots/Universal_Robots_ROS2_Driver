@@ -4,7 +4,7 @@
   <name>ur_robot_driver</name>
   <version>4.3.0</version>
     <description>
-      The ROS 2 driver for Universal Robots manipulators. This driver should support all robot
+      The ROS 2 driver for Universal Robots manipulators. This driver supports all robot
       models as listed in the documentation. For robot controllers, PolyScope X, PolyScope 5 and
       CB3 controllers are supported.
     </description>
