@@ -7,7 +7,7 @@ This is one of the very first ROS2 manipulator drivers. Some of the new features
 
 This driver is developed on top of [Universal_Robots_Client_Library](https://github.com/UniversalRobots/Universal_Robots_Client_Library) and support some key cobot functionalities like; pause at emergency stop, safeguard stop, automatic speed scaling to avoid violate the safety setting and manually speed scaling from the teach pendant. In addition the externalControl URCap makes it possible to include ROS2 behaviors in the robot program.
 
-The driver is compatible across the entire line of UR robots -- from 3 kg payload to 30 kg payload and includes all robots from the CB3 series and newer.
+The driver is compatible across the entire line of UR robots -- from 3 kg payload to 30 kg payload and includes all robots with PolyScope X, PolyScope 5 or CB3 controller.
 
 
 Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) about this driver.

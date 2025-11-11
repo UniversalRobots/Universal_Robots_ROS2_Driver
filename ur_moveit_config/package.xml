@@ -12,6 +12,8 @@
 
   <license>Apache2.0</license>
 
+  <url type="website">https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/</url>
+
   <author email="wilbrandt@fzi.de">Robert Wilbrandt</author>
   <author email="denis@stoglrobotics.de">Denis Stogl</author>
   <author email="lovro.ivanov@gmail.com">Lovro Ivanov</author>
