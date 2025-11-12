@@ -85,16 +85,19 @@ public:
   virtual ~DashboardClientROS() = default;
 
 private:
-  inline rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr createDashboardTriggerSrv(const std::string& topic,
-                                                                                      const std::string& command,
-                                                                                      const std::string& expected)
+  inline rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr
+  createDashboardTriggerSrv(const std::string& topic, std::function<urcl::DashboardResponse()> command)
   {
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr service = node_->create_service<std_srvs::srv::Trigger>(
-        topic, [&, command, expected](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
-                                      const std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
+        topic, [command](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+                         const std::shared_ptr<std_srvs::srv::Trigger::Response> resp) {
           try {
-            resp->message = this->client_.sendAndReceive(command);
-            resp->success = std::regex_match(resp->message, std::regex(expected));
+            auto response = command();
+            resp->message = response.message;
+            if (response.data.find("status_code") != response.data.end()) {
+              resp->message += ", status_code: " + std::to_string(std::get<int>(response.data["status_code"]));
+            }
+            resp->success = response.ok;
           } catch (const urcl::UrException& e) {
             RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
             resp->message = e.what();
@@ -102,6 +105,60 @@ private:
           }
         });
     return service;
+  }
+
+  template <class SrvResponseT>
+  urcl::DashboardResponse dashboardCallWithChecks(std::function<urcl::DashboardResponse()> dashboard_call,
+                                                  SrvResponseT resp)
+  {
+    urcl::DashboardResponse dashboard_response;
+    try {
+      dashboard_response = dashboard_call();
+      resp->success = dashboard_response.ok;
+      resp->answer = dashboard_response.message;
+    } catch (const urcl::NotImplementedException& e) {
+      RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "This service call seems not to be implemented (for this "
+                                                           "robot version).");
+      resp->answer = "Not implemented for this robot software version.";
+      resp->success = false;
+    } catch (const urcl::UrException& e) {
+      RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+      resp->answer = e.what();
+      resp->success = false;
+      return dashboard_response;
+    }
+    return dashboard_response;
+  }
+
+  template <class SrvResponseT>
+  void handleDashboardResponseData(std::function<void()> fun, SrvResponseT& resp,
+                                   const urcl::DashboardResponse& dashboard_response)
+  {
+    try {
+      fun();
+    } catch (const std::bad_variant_access& e) {
+      RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+      std::ostringstream oss;
+      for (const auto& [key, value] : dashboard_response.data) {
+        oss << key << ": ";
+        std::visit([&oss](const auto& arg) { oss << arg; }, value);
+        oss << "\n";
+      }
+      RCLCPP_INFO(rclcpp::get_logger("Dashboard_Client"), "Available data:\n%s", oss.str().c_str());
+      resp->answer = e.what();
+      resp->success = false;
+    } catch (const std::out_of_range& e) {
+      RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+      std::ostringstream oss;
+      for (const auto& [key, value] : dashboard_response.data) {
+        oss << key << ": ";
+        std::visit([&oss](const auto& arg) { oss << arg; }, value);
+        oss << "\n";
+      }
+      RCLCPP_INFO(rclcpp::get_logger("Dashboard_Client"), "Available data:\n%s", oss.str().c_str());
+      resp->answer = e.what();
+      resp->success = false;
+    }
   }
 
   bool handleRunningQuery(ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
@@ -122,7 +179,7 @@ private:
   bool connect();
 
   std::shared_ptr<rclcpp::Node> node_;
-  urcl::DashboardClient client_;
+  std::unique_ptr<urcl::DashboardClient> client_;
 
   urcl::comm::INotifier notifier_;
   urcl::primary_interface::PrimaryClient primary_client_;
@@ -134,6 +191,7 @@ private:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr close_safety_popup_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr pause_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr play_service_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr resume_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr power_off_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr power_on_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr restart_safety_service_;
