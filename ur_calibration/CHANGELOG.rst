@@ -2,6 +2,21 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Explicitly state PolyScope X compatibility (`#1563 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1563>`_)
+* Implement motion_primitive interface in hardware interface (`#1341 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1341>`_)
+  With this it is possible to use motion_primitives to command the robot's motion.
+* Add migration notes to individual packages (`#1545 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1545>`_)
+  * Add migration notes to packages.
+  Also added a GitHub action to build the Sphinx documentation.
+  * Add conf.py to moveit_config package
+  * Suppress reference warnings when building package docs individually
+  * Apply suggestions from code review
+  ---------
+  Co-authored-by: Felix Exner <feex@universal-robots.com>
+* Contributors: Felix Exner, Mathias Fuhrer, URJala
+
 4.3.0 (2025-10-14)
 ------------------
 
