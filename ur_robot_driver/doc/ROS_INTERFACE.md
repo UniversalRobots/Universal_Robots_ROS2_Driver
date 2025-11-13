@@ -190,6 +190,11 @@ General purpose service to send arbitrary messages to the dashboard server
 
 Used when robot gets a safety fault or violation to restart the safety. After safety has been rebooted the robot will be in Power Off. NOTE: You should always ensure it is okay to restart the system. It is highly recommended to check the error log before using this command (either via PolyScope or e.g. ssh connection).
 
+##### resume ([std_srvs/Trigger](http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html))
+
+Resume a paused program on a PolyScope X robot. This service is only available on a PolyScope X
+robot.
+
 ##### shutdown ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
 Shutdown the robot controller
