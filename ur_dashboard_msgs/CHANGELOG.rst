@@ -2,6 +2,11 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Explicitly state PolyScope X compatibility (`#1563 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1563>`_)
+* Contributors: Felix Exner
+
 4.3.0 (2025-10-14)
 ------------------
 

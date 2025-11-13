@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Explicitly state PolyScope X compatibility (`#1563 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1563>`_)
+* Add migration notes to individual packages (`#1545 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1545>`_)
+* Contributors: Felix Exner, URJala
+
 4.3.0 (2025-10-14)
 ------------------
 * Add support for UR18 (`#1524 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1524>`_)

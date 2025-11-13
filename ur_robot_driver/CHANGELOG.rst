@@ -1,3 +1,18 @@
+Forthcoming
+-----------
+* Docs: Corrects forward hardware interfaces & Contributing.md (`#1569 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1569>`_)
+* Explicitly state PolyScope X compatibility (`#1563 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1563>`_)
+* Fix flaky tests (`#1559 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1559>`_)
+* Increase default dashboard client timeout to 2 seconds (`#1564 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1564>`_)
+* Dashboard client polyscopex (`#1546 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1546>`_)
+* Implement motion_primitive interface in hardware interface (`#1341 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1341>`_)
+* Fix syntax for link to robot_manual (`#1558 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1558>`_)
+* Temporarily deactivate one testcase in controller_switch_test (`#1553 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1553>`_)
+* Add missing update_rate config files for UR7e and UR12e (`#1544 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1544>`_)
+* Add migration notes to individual packages (`#1545 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1545>`_)
+* Specify that only PolyScope 5 needs the option of remote control explicitly e… (`#1530 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1530>`_)
+* Contributors: Felix Exner, Mathias Fuhrer, Matthias Mayr, URJala
+
 4.3.0 (2025-10-14)
 ------------------
 * Add missing dependency to effort_controllers (`#1531 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1531>`_)
