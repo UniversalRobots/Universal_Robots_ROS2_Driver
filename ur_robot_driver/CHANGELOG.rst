@@ -1,3 +1,13 @@
+Forthcoming
+-----------
+* Docs: Corrects forward hardware interfaces & Contributing.md (backport `#1569 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1569>`_) (`#1570 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1570>`_)
+* Explicitly state PolyScope X compatibility (backport `#1563 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1563>`_) (`#1568 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1568>`_)
+* Fix flaky tests (backport `#1559 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1559>`_) (`#1567 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1567>`_)
+* Dashboard client polyscopex (backport `#1546 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1546>`_) (`#1561 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1561>`_)
+* Fix syntax for link to robot_manual (backport of `#1558 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1558>`_) (`#1560 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1560>`_)
+* Temporarily deactivate one testcase in controller_switch_test (backport `#1553 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1553>`_) (`#1554 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1554>`_)
+* Contributors: mergify[bot]
+
 3.5.0 (2025-10-23)
 ------------------
 * Add missing update_rate config files for UR7e and UR12e (backport `#1544 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1544>`_) (`#1548 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1548>`_)
