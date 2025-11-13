@@ -1,5 +1,5 @@
-Forthcoming
------------
+4.4.0 (2025-11-13)
+------------------
 * Docs: Corrects forward hardware interfaces & Contributing.md (`#1569 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1569>`_)
 * Explicitly state PolyScope X compatibility (`#1563 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1563>`_)
 * Fix flaky tests (`#1559 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1559>`_)
