@@ -15,8 +15,7 @@ jobs:
     name: Format
     runs-on: ubuntu-22.04
     steps:
-<<<<<<< HEAD
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: 3.10.4
@@ -25,14 +24,3 @@ jobs:
       - uses: pre-commit/action@v3.0.1
         with:
           extra_args: --all-files --hook-stage manual
-=======
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
-      with:
-        python-version: 3.10.4
-    - name: Install system hooks
-      run: sudo apt-get install clang-format-14 cppcheck
-    - uses: pre-commit/action@v3.0.1
-      with:
-        extra_args: --all-files --hook-stage manual
->>>>>>> 9715e26 (Bump actions/checkout from 5 to 6 (#1581))
