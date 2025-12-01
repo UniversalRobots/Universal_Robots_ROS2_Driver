@@ -1,3 +1,10 @@
+Forthcoming
+-----------
+* Dashboard client polyscopex (backport `#1546 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1546>`_) (`#1562 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1562>`_)
+* Fix flaky tests (backport `#1559 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1559>`_) (`#1566 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1566>`_)
+* Add effort command interface to hardware interface (backport `#1411 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1411>`_) (`#1528 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1528>`_)
+* Contributors: mergify[bot]
+
 2.10.0 (2025-10-23)
 -------------------
 * Add missing update_rate config files for UR7e and UR12e (backport of `#1544 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1544>`_) (`#1547 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1547>`_)
