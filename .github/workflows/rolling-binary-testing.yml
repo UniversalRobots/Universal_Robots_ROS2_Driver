@@ -15,6 +15,7 @@ jobs:
   rolling_binary_testing:
     uses: ./.github/workflows/reusable_ici.yml
     with:
+      runner: ros_driver_runner1
       ros_distro: rolling
       ros_repo: testing
       ref_for_scheduled_build: main
