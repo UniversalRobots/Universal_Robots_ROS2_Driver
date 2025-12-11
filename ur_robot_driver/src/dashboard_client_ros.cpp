@@ -53,6 +53,9 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 {
   node_->declare_parameter<double>("receive_timeout", 2);
 
+  param_callback_handle_ = node_->add_on_set_parameters_callback(
+      std::bind(&DashboardClientROS::parametersCallback, this, std::placeholders::_1));
+
   primary_client_.start(10, std::chrono::seconds(10));
   auto robot_version = primary_client_.getRobotVersion();
   primary_client_.stop();
@@ -394,6 +397,33 @@ bool DashboardClientROS::handleRemoteControlQuery(
     resp->success = false;
   }
   return true;
+}
+
+rcl_interfaces::msg::SetParametersResult
+DashboardClientROS::parametersCallback(const std::vector<rclcpp::Parameter>& parameters)
+
+{
+  rcl_interfaces::msg::SetParametersResult result;
+
+  for (const auto& parameter : parameters) {
+    if (parameter.get_name() == "receive_timeout") {
+      timeval tv;
+      double time_buffer = parameter.as_double();
+      tv.tv_sec = time_buffer;
+      tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
+      client_->setReceiveTimeout(tv);
+      RCLCPP_INFO(node_->get_logger(), "Set receive_timeout to %f seconds", time_buffer);
+    } else {
+      result.successful = false;
+      result.reason = "Requested to change parameter '" + parameter.get_name() +
+                      "'. Changing this parameter during runtime is not supported / will not have any effect";
+      return result;
+    }
+  }
+  result.successful = true;
+  result.reason = "success";
+
+  return result;
 }
 
 }  // namespace ur_robot_driver
