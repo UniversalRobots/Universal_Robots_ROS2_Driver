@@ -51,7 +51,7 @@ namespace ur_robot_driver
 DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
   : node_(node), primary_client_(robot_ip, notifier_)
 {
-  node_->declare_parameter<double>("receive_timeout", 2);
+  node_->declare_parameter<double>("receive_timeout", 20);
 
   param_callback_handle_ = node_->add_on_set_parameters_callback(
       std::bind(&DashboardClientROS::parametersCallback, this, std::placeholders::_1));
