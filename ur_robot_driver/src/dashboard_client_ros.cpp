@@ -275,7 +275,7 @@ bool DashboardClientROS::connect()
   double time_buffer = 0;
   node_->get_parameter("receive_timeout", time_buffer);
   tv.tv_sec = time_buffer;
-  tv.tv_usec = 0;
+  tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
   client_->setReceiveTimeout(tv);
   return client_->connect();
 }
