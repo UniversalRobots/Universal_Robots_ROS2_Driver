@@ -44,6 +44,7 @@
 #include <regex>
 #include <string>
 #include <memory>
+#include <vector>
 
 // ROS
 #include "rclcpp/rclcpp.hpp"
@@ -161,6 +162,8 @@ private:
     }
   }
 
+  rcl_interfaces::msg::SetParametersResult parametersCallback(const std::vector<rclcpp::Parameter>& parameters);
+
   bool handleRunningQuery(ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
                           ur_dashboard_msgs::srv::IsProgramRunning::Response::SharedPtr resp);
 
@@ -214,6 +217,8 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::GetSafetyMode>::SharedPtr safety_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetRobotMode>::SharedPtr robot_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::IsInRemoteControl>::SharedPtr is_in_remote_control_service_;
+
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };
 }  // namespace ur_robot_driver
 
