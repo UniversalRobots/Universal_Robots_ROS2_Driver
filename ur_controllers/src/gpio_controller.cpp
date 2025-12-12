@@ -325,7 +325,7 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
         "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
 
-    set_gravity_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
+    set_gravity_srv_ = get_node()->create_service<ur_msgs::srv::SetGravity>(
         "~/set_gravity", std::bind(&GPIOController::setGravity, this, std::placeholders::_1, std::placeholders::_2));
 
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
@@ -574,15 +574,15 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   return true;
 }
 
-bool GPIOController::setGravity(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
-                                ur_msgs::srv::SetPayload::Response::SharedPtr resp)
+bool GPIOController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
+                                ur_msgs::srv::SetGravity::Response::SharedPtr resp)
 {
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(req->center_of_gravity.x);
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(req->center_of_gravity.y);
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(req->center_of_gravity.z);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(req->gravity.x);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(req->gravity.y);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(req->gravity.z);
 
   if (!waitForAsyncCommand([&]() {
         return command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);

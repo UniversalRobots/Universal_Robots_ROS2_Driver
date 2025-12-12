@@ -50,6 +50,7 @@
 #include "ur_msgs/msg/tool_data_msg.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
+#include "ur_msgs/srv/set_gravity.hpp"
 #include "ur_msgs/srv/set_io.hpp"
 #include "ur_msgs/srv/set_analog_output.hpp"
 #include "ur_msgs/srv/set_speed_slider_fraction.hpp"
@@ -143,8 +144,8 @@ private:
   bool setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                   ur_msgs::srv::SetPayload::Response::SharedPtr resp);
 
-  bool setGravity(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
-                  ur_msgs::srv::SetPayload::Response::SharedPtr resp);
+  bool setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
+                  ur_msgs::srv::SetGravity::Response::SharedPtr resp);
 
   bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
 
@@ -175,7 +176,7 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetAnalogOutput>::SharedPtr set_analog_output_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
-  rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_gravity_srv_;
+  rclcpp::Service<ur_msgs::srv::SetGravity>::SharedPtr set_gravity_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
