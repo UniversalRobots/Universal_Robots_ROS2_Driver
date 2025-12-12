@@ -58,11 +58,9 @@ int main(int argc, char** argv)
   try {
     client = std::make_shared<ur_robot_driver::DashboardClientROS>(node, robot_ip);
   } catch (const urcl::UrException& e) {
-    RCLCPP_WARN(rclcpp::get_logger("Dashboard_Client"),
-                "%s This warning is expected on a PolyScopeX robot. If you don't want to see this warning, "
-                "please don't start the dashboard client. Exiting dashboard client now.",
-                e.what());
-    return 0;
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"),
+                 "Error raised during Dashboard Client startup: %s. Exiting dashboard client now.", e.what());
+    return 1;
   }
 
   rclcpp::spin(node);
