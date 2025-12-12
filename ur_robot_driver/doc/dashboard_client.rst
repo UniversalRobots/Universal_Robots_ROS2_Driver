@@ -147,10 +147,10 @@ Service to query whether the robot is in remote control
 Parameters
 ----------
 
-receive_timeout (Required)
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+receive_timeout (default: 20.0)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Timeout (in seconds, double) after which a call to the dashboard server will be considered failure if no answer has been received.
+Timeout (in seconds, double) after which a call to the dashboard server will be considered failure if no answer has been received. This defaults to 20 seconds, as some operations (like loading larger programs) can take a while.
 
 robot_ip (Required)
 ^^^^^^^^^^^^^^^^^^^
