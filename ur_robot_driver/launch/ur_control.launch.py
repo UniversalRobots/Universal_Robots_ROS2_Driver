@@ -79,16 +79,18 @@ def launch_setup(context):
         output="screen",
     )
 
-    dashboard_client_node = Node(
-        package="ur_robot_driver",
+    dashboard_client_node = IncludeLaunchDescription(
         condition=IfCondition(
             AndSubstitution(launch_dashboard_client, NotSubstitution(use_mock_hardware))
         ),
-        executable="dashboard_client",
-        name="dashboard_client",
-        output="screen",
-        emulate_tty=True,
-        parameters=[{"robot_ip": robot_ip}],
+        launch_description_source=AnyLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_dashboard_client.launch.py"]
+            )
+        ),
+        launch_arguments={
+            "robot_ip": robot_ip,
+        }.items(),
     )
 
     robot_state_helper_node = Node(
