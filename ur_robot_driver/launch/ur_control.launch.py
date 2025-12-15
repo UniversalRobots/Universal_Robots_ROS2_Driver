@@ -34,7 +34,8 @@ from launch_ros.parameter_descriptions import ParameterFile, ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
+from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import (
     AndSubstitution,
@@ -245,16 +246,18 @@ def launch_setup(context, *args, **kwargs):
         condition=UnlessCondition(use_fake_hardware),
     )
 
-    dashboard_client_node = Node(
-        package="ur_robot_driver",
+    dashboard_client_node = IncludeLaunchDescription(
         condition=IfCondition(
             AndSubstitution(launch_dashboard_client, NotSubstitution(use_fake_hardware))
         ),
-        executable="dashboard_client",
-        name="dashboard_client",
-        output="screen",
-        emulate_tty=True,
-        parameters=[{"robot_ip": robot_ip}],
+        launch_description_source=AnyLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_dashboard_client.launch.py"]
+            )
+        ),
+        launch_arguments={
+            "robot_ip": robot_ip,
+        }.items(),
     )
 
     robot_state_helper_node = Node(
