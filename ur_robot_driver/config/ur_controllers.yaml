@@ -45,6 +45,9 @@ controller_manager:
     ur_configuration_controller:
       type: ur_controllers/URConfigurationController
 
+    sine_controller:
+      type: ur_controllers/SineController
+
     tool_contact_controller:
       type: ur_controllers/ToolContactController
 
@@ -222,3 +225,16 @@ tool_contact_controller:
 motion_primitive_forward_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
+
+sine_controller:
+  ros__parameters:
+    joints:
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
+    interface_name: velocity
+    amplitude: 0.7
+    frequency: 0.5
