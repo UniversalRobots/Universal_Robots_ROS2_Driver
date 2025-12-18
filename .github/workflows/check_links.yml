@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Restore lychee cache
         id: restore-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .lycheecache
           key: cache-lychee-${{ github.run_id }}-${{ github.run_attempt }}
@@ -34,7 +34,7 @@ jobs:
             --exclude 'releases/download/v\$%7BURCAP_VERSION%7D/externalcontrol-\$%7BURCAP_VERSION%7D\.jar'
             './**/*.md' './**/*.html' './**/*.rst' './**/*.cpp' './**/*.h' './**/*.py'
       - name: Save lychee cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: .lycheecache
