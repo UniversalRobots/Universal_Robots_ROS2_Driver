@@ -1110,7 +1110,7 @@ void URPositionHardwareInterface::transformForceTorque()
     ft = base_to_flange.M.Inverse() * ft;
 
     // Transform the wrench to the tcp frame
-    ft = flange_to_tcp * ft;
+    ft = flange_to_tcp.Inverse() * ft;
   } else {  // CB3
     KDL::Vector vec = KDL::Vector(urcl_target_tcp_pose_[3], urcl_target_tcp_pose_[4], urcl_target_tcp_pose_[5]);
     double angle = vec.Normalize();
