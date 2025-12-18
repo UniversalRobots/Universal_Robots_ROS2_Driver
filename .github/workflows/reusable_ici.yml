@@ -55,7 +55,7 @@ jobs:
       - run: docker network create --subnet=192.168.56.0/24 ursim_net
         if: ${{ !env.ACT }}
       - name: Cache ccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}
