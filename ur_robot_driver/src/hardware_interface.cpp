@@ -156,6 +156,24 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   trajectory_joint_velocities_.reserve(32768);
   trajectory_joint_accelerations_.reserve(32768);
 
+<<<<<<< HEAD
+=======
+  // Motion primitives stuff
+  async_moprim_thread_shutdown_ = false;
+  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+  ready_for_new_moprim_ = false;
+  motion_primitives_forward_controller_running_ = false;
+  hw_moprim_states_.fill(std::numeric_limits<double>::quiet_NaN());
+  hw_moprim_commands_.fill(std::numeric_limits<double>::quiet_NaN());
+  for (size_t i = 0; i < 6; i++) {
+    force_mode_task_frame_[i] = NO_NEW_CMD_;
+    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_wrench_[i] = NO_NEW_CMD_;
+    force_mode_limits_[i] = NO_NEW_CMD_;
+  }
+  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+
+>>>>>>> b9d3d7d (Initialize force mode interfaces to NaN on init (#1625))
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
       auto it = find_if(
@@ -682,13 +700,6 @@ URPositionHardwareInterface::on_activate(const rclcpp_lifecycle::State& previous
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Activating HW interface");
 
-  for (size_t i = 0; i < 6; i++) {
-    force_mode_task_frame_[i] = NO_NEW_CMD_;
-    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
-    force_mode_wrench_[i] = NO_NEW_CMD_;
-    force_mode_limits_[i] = NO_NEW_CMD_;
-  }
-  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
