@@ -1,3 +1,14 @@
+Forthcoming
+-----------
+* Fix flange-to-TCP wrench transformation (`#1615 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1615>`_)
+* Exposes rw_rate in xacro macro for hardware interface (`#1631 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1631>`_)
+* Initialize force mode interfaces to NaN on init (`#1625 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1625>`_)
+* [DashboardClient] Add a parameter callback (`#1598 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1598>`_)
+* Replace dashboard client on PolyScope X warning (`#1599 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1599>`_)
+* Add ros2run as a test_depend (`#1597 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1597>`_)
+* Docs: Update tool comm setup for PolyScope X (`#1588 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1588>`_)
+* Contributors: Felix Exner, Li Yunwen, Maximilian Schik
+
 4.4.0 (2025-11-13)
 ------------------
 * Docs: Corrects forward hardware interfaces & Contributing.md (`#1569 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1569>`_)
