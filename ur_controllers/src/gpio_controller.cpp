@@ -282,6 +282,7 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
   try {
     auto qos_latched = rclcpp::SystemDefaultsQoS();
     qos_latched.transient_local();
+    qos_latched.reliable();
     // register publisher
     io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
 
