@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.12.0 (2026-01-13)
+-------------------
 * Fix flange-to-TCP wrench transformation (backport `#1615 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1615>`_) (`#1635 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1635>`_)
 * Initialize force mode interfaces to NaN on init (backport `#1625 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1625>`_) (`#1627 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1627>`_)
 * [DashboardClient] Add a parameter callback (backport `#1598 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1598>`_) (`#1604 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1604>`_)
