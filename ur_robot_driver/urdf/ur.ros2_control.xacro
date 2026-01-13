@@ -26,7 +26,9 @@
     trajectory_port:=50003
     non_blocking_read:=true
     robot_receive_timeout:=0.04
+    rw_rate:=0
     ">
+    <!-- rw_rate of 0 uses the rate of the controller_manager -->
 
     <xacro:property name="config_kinematics_parameters" value="${xacro.load_yaml(kinematics_parameters_file)}"/>
     <xacro:property name="sec_kinematics" value="${config_kinematics_parameters['kinematics']}" />
@@ -36,7 +38,7 @@
     <!--<xacro:ur_arm_transmission prefix="${prefix}" hw_interface="${transmission_hw_interface}" />-->
     <!-- Placeholder for ros2_control transmission which don't yet exist -->
 
-    <ros2_control name="${name}" type="system">
+    <ros2_control name="${name}" type="system" rw_rate="${rw_rate}">
       <hardware>
         <xacro:if value="${use_mock_hardware}">
           <plugin>mock_components/GenericSystem</plugin>
