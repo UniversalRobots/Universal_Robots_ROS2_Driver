@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ensure latched qos is reliable (`#1594 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1594>`_)
+* Contributors: Rahat Dhande
+
 4.4.0 (2025-11-13)
 ------------------
 * Explicitly state PolyScope X compatibility (`#1563 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1563>`_)
