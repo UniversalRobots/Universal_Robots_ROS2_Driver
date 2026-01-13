@@ -1,5 +1,5 @@
-Forthcoming
------------
+4.5.0 (2026-01-13)
+------------------
 * Fix flange-to-TCP wrench transformation (`#1615 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1615>`_)
 * Exposes rw_rate in xacro macro for hardware interface (`#1631 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1631>`_)
 * Initialize force mode interfaces to NaN on init (`#1625 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1625>`_)
