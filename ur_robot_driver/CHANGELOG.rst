@@ -1,3 +1,11 @@
+Forthcoming
+-----------
+* Fix flange-to-TCP wrench transformation (backport `#1615 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1615>`_) (`#1635 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1635>`_)
+* Initialize force mode interfaces to NaN on init (backport `#1625 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1625>`_) (`#1627 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1627>`_)
+* [DashboardClient] Add a parameter callback (backport `#1598 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1598>`_) (`#1604 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1604>`_)
+* Replace dashboard client on PolyScope X warning (backport of `#1599 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1599>`_) (`#1602 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1602>`_)
+* Add ros2run as a test_depend (backport of `#1597 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1597>`_) (`#1600 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1600>`_)
+
 2.11.0 (2025-12-01)
 -------------------
 * Dashboard client polyscopex (backport `#1546 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1546>`_) (`#1562 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1562>`_)
