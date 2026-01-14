@@ -112,7 +112,11 @@ def _call_service(node, client, request):
     rclpy.spin_until_future_complete(node, future)
 
     if future.result() is not None:
-        logging.info("  Received result: %s", future.result())
+        response_str = str(future.result())
+        if type(future.result()).__name__ == "ListControllers_Response":
+            controllers_str_list = [f"{c.name}: {c.state}" for c in future.result().controller]
+            response_str = f"controllers: [{', '.join(controllers_str_list)}]"
+        logging.info("  Received result: %s", response_str)
         return future.result()
 
     raise Exception(f"Error while calling service '{client.srv_name}': {future.exception()}")
