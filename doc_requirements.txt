@@ -1,4 +1,4 @@
-sphinx
+sphinx<9
 sphinx-copybutton
 sphinx-tabs
 sphinx_rtd_theme
