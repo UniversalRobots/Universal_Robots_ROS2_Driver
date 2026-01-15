@@ -247,13 +247,16 @@ class DashboardInterface(
         time.sleep(1)
 
         robot_mode = self.get_robot_mode()
-        self._check_call(robot_mode)
-        if robot_mode.robot_mode.mode != RobotMode.RUNNING:
-            raise Exception(
-                f"Incorrect robot mode: Expected {RobotMode.RUNNING}, got {robot_mode.robot_mode.mode}"
-            )
-
-        self._check_call(self.stop())
+        start_time = time.time()
+        while time.time() - start_time < 10:
+            self._check_call(robot_mode)
+            if robot_mode.robot_mode.mode == RobotMode.RUNNING:
+                self._check_call(self.stop())
+                return
+            time.sleep(0.1)
+        raise Exception(
+            f"Incorrect robot mode: Expected {RobotMode.RUNNING}, got {robot_mode.robot_mode.mode}"
+        )
 
     def _check_call(self, result):
         if not result.success:
