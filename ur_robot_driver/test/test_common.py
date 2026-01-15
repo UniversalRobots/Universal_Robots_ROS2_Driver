@@ -242,6 +242,7 @@ class DashboardInterface(
         self._check_call(self.power_off())
         self._check_call(self.power_on())
         self._check_call(self.brake_release())
+        self._check_call(self.unlock_protective_stop())
 
         time.sleep(1)
 
