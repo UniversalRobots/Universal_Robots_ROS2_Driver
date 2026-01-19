@@ -248,7 +248,7 @@ class DashboardInterface(
 
         robot_mode = self.get_robot_mode()
         start_time = time.time()
-        while time.time() - start_time < 10:
+        while time.time() - start_time < TIMEOUT_WAIT_SERVICE:
             self._check_call(robot_mode)
             if robot_mode.robot_mode.mode == RobotMode.RUNNING:
                 self._check_call(self.stop())
