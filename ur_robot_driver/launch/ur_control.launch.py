@@ -208,6 +208,7 @@ def launch_setup(context):
         "freedrive_mode_controller",
         "tool_contact_controller",
         "motion_primitive_forward_controller",
+        "twist_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
