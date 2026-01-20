@@ -104,6 +104,11 @@ the fraction determined by the current speed scaling. If speed scaling is curren
 interpolation of the current control cycle will start half a time step after the beginning of the
 previous control cycle.
 
+Using velocity as command interface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The controller is able to use velocity as the sole command interface, and gains for that control mode have been specified, that work with all e-series robots.
+The UR8 Long, UR15, UR20 and UR30 robot models, however, do not support this control mode.
+
 .. _io_and_status_controller:
 
 ur_controllers/GPIOController
