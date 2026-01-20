@@ -159,6 +159,9 @@ def generate_launch_description():
         parameters=[
             moveit_config.to_dict(),
             servo_params,
+            {
+                "use_sim_time": use_sim_time,
+            },
         ],
         output="screen",
     )
