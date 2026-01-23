@@ -24,6 +24,7 @@ set(srv_files
   srv/Popup.srv
   srv/RawRequest.srv
   srv/IsInRemoteControl.srv
+  srv/GetPolyScopeVersion.srv
 )
 
 set(action_files

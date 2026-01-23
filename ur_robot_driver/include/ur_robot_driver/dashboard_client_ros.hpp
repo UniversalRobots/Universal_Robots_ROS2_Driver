@@ -64,6 +64,7 @@
 #include "ur_dashboard_msgs/srv/popup.hpp"
 #include "ur_dashboard_msgs/srv/raw_request.hpp"
 #include "ur_dashboard_msgs/srv/is_in_remote_control.hpp"
+#include "ur_dashboard_msgs/srv/get_poly_scope_version.hpp"
 
 namespace ur_robot_driver
 {
@@ -179,6 +180,9 @@ private:
   bool handleRemoteControlQuery(ur_dashboard_msgs::srv::IsInRemoteControl::Request::SharedPtr req,
                                 ur_dashboard_msgs::srv::IsInRemoteControl::Response::SharedPtr resp);
 
+  bool handleGetPolyScopeVersionQuery(ur_dashboard_msgs::srv::GetPolyScopeVersion::Request::SharedPtr req,
+                                      ur_dashboard_msgs::srv::GetPolyScopeVersion::Response::SharedPtr resp);
+
   bool connect();
 
   std::shared_ptr<rclcpp::Node> node_;
@@ -217,6 +221,7 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::GetSafetyMode>::SharedPtr safety_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetRobotMode>::SharedPtr robot_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::IsInRemoteControl>::SharedPtr is_in_remote_control_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetPolyScopeVersion>::SharedPtr get_polyscope_version_service_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };

@@ -43,6 +43,7 @@
 
 #include <memory>
 #include <string>
+#include <regex>
 
 #include <ur_robot_driver/dashboard_client_ros.hpp>
 
@@ -234,6 +235,10 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         return true;
       });
 
+  get_polyscope_version_service_ = node->create_service<ur_dashboard_msgs::srv::GetPolyScopeVersion>(
+      "~/get_polyscope_version", std::bind(&DashboardClientROS::handleGetPolyScopeVersionQuery, this,
+                                           std::placeholders::_1, std::placeholders::_2));
+
   // General purpose service to send arbitrary messages to the dashboard server
   raw_request_service_ = node_->create_service<ur_dashboard_msgs::srv::RawRequest>(
       "~/raw_request", [&](const ur_dashboard_msgs::srv::RawRequest::Request::SharedPtr req,
@@ -395,6 +400,44 @@ bool DashboardClientROS::handleRemoteControlQuery(
     RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
     resp->answer = e.what();
     resp->success = false;
+  }
+  return true;
+}
+
+bool DashboardClientROS::handleGetPolyScopeVersionQuery(
+    ur_dashboard_msgs::srv::GetPolyScopeVersion::Request::SharedPtr req,
+    ur_dashboard_msgs::srv::GetPolyScopeVersion::Response::SharedPtr resp)
+{
+  auto dashboard_response =
+      dashboardCallWithChecks([this]() { return client_->commandPolyscopeVersionWithResponse(); }, resp);
+  if (resp->success) {
+    handleDashboardResponseData(
+        [dashboard_response, resp]() {
+          std::string version_string = std::get<std::string>(dashboard_response.data.at("polyscope_version"));
+          std::regex version_regex(R"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)");
+          std::smatch version_match;
+          if (std::regex_search(version_string, version_match, version_regex)) {
+            int num = 0;
+            int counter = 0;
+            for (auto c : version_match[0].str()) {
+              if (std::isdigit(c)) {
+                num = num * 10 + (c - '0');
+              } else if (c == '.') {
+                if (counter == 0) {
+                  resp->major = num;
+                } else if (counter == 1) {
+                  resp->minor = num;
+                } else if (counter == 2) {
+                  resp->bugfix = num;
+                }
+                counter++;
+                num = 0;
+              }
+            }
+            resp->build = num;
+          }
+        },
+        resp, dashboard_response);
   }
   return true;
 }
