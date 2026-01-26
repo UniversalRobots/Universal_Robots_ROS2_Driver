@@ -58,6 +58,8 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "tf2_ros/buffer.hpp"
+#include "tf2_ros/transform_listener.hpp"
 #include "ur_controllers/gpio_controller_parameters.hpp"
 
 namespace ur_controllers
@@ -190,6 +192,9 @@ protected:
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
   std_msgs::msg::Bool program_running_msg_;
+
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   // Parameters from ROS for gpio_controller
   std::shared_ptr<gpio_controller::ParamListener> param_listener_;

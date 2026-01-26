@@ -53,6 +53,9 @@ controller_interface::CallbackReturn GPIOController::on_init()
     return CallbackReturn::ERROR;
   }
 
+  tf_buffer_ = std::make_shared<tf2_ros::Buffer>(get_node()->get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -577,12 +580,27 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
 bool GPIOController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
                                 ur_msgs::srv::SetGravity::Response::SharedPtr resp)
 {
+  // Check transform
+  geometry_msgs::msg::TransformStamped tf_to_base_link;
+  try {
+    tf_to_base_link =
+        tf_buffer_->lookupTransform(req->base_frame_name, req->gravity.header.frame_id, tf2::TimePointZero);
+  } catch (const tf2::TransformException& ex) {
+    resp->success = false;
+    resp->status = ex.what();
+    return false;
+  }
+
+  // Transform the gravity vector
+  geometry_msgs::msg::Vector3 transformed_gravity;
+  tf2::doTransform(req->gravity.vector, transformed_gravity, tf_to_base_link);
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(req->gravity.x);
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(req->gravity.y);
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(req->gravity.z);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(transformed_gravity.x);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(transformed_gravity.y);
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(transformed_gravity.z);
 
   if (!waitForAsyncCommand([&]() {
         return command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
@@ -595,13 +613,12 @@ bool GPIOController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedP
       command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
 
   if (resp->success) {
-    RCLCPP_INFO_ONCE(get_node()->get_logger(), "Gravity has been set successfully");
+    resp->status = "Gravity has been set successfully";
   } else {
-    RCLCPP_ERROR_ONCE(get_node()->get_logger(), "Could not set the gravity");
-    return false;
+    resp->status = "Could not set the gravity";
   }
 
-  return true;
+  return resp->success;
 }
 
 bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
