@@ -581,10 +581,10 @@ bool GPIOController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedP
                                 ur_msgs::srv::SetGravity::Response::SharedPtr resp)
 {
   // Check transform
+  const std::string base_frame_name = params_.tf_prefix + "base_link";
   geometry_msgs::msg::TransformStamped tf_to_base_link;
   try {
-    tf_to_base_link =
-        tf_buffer_->lookupTransform(req->base_frame_name, req->gravity.header.frame_id, tf2::TimePointZero);
+    tf_to_base_link = tf_buffer_->lookupTransform(base_frame_name, req->gravity.header.frame_id, tf2::TimePointZero);
   } catch (const tf2::TransformException& ex) {
     resp->success = false;
     resp->status = ex.what();
