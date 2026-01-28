@@ -463,6 +463,15 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "damping", &force_mode_damping_);
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "gain_scaling", &force_mode_gain_scaling_);
 
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "gravity", "x", &gravity_vector_[0]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "gravity", "y", &gravity_vector_[1]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "gravity", "z", &gravity_vector_[2]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "gravity", "gravity_async_success", &gravity_async_success_));
+
   for (size_t i = 0; i < 18; ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
@@ -1036,6 +1045,8 @@ void URPositionHardwareInterface::initAsyncIO()
 
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+
+  gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
@@ -1103,6 +1114,12 @@ void URPositionHardwareInterface::checkAsyncIO()
     payload_async_success_ = ur_driver_->setPayload(payload_mass_, payload_center_of_gravity_);
     payload_mass_ = NO_NEW_CMD_;
     payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  }
+
+  if (!std::isnan(gravity_vector_[0]) && !std::isnan(gravity_vector_[1]) && !std::isnan(gravity_vector_[2]) &&
+      ur_driver_ != nullptr) {
+    gravity_async_success_ = ur_driver_->setGravity(gravity_vector_);
+    gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   }
 
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
