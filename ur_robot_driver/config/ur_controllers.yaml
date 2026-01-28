@@ -79,7 +79,7 @@ force_torque_sensor_broadcaster:
       - torque.x
       - torque.y
       - torque.z
-    frame_id: $(var tf_prefix)tool0
+    frame_id: $(var tf_prefix)tool0_controller
     topic_name: ft_data
 
 
