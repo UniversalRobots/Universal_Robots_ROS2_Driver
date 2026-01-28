@@ -581,7 +581,7 @@ bool GPIOController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedP
                                 ur_msgs::srv::SetGravity::Response::SharedPtr resp)
 {
   // Check transform
-  const std::string base_frame_name = params_.tf_prefix + "base_link";
+  const std::string base_frame_name = params_.tf_prefix + "base";
   geometry_msgs::msg::TransformStamped tf_to_base_link;
   try {
     tf_to_base_link = tf_buffer_->lookupTransform(base_frame_name, req->gravity.header.frame_id, tf2::TimePointZero);
@@ -591,11 +591,14 @@ bool GPIOController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedP
     return false;
   }
 
+  // The passed gravity vector is the direction of gravity (towards the Earth)
+  // But the UR Client Library call is expecting anti-gravity (away from Earth), so negate here
+  tf2::Vector3 anti_gravity(-1 * req->gravity.vector.x, -1 * req->gravity.vector.y, -1 * req->gravity.vector.z);
+
   // Rotate the gravity vector
-  tf2::Vector3 raw_gravity(req->gravity.vector.x, req->gravity.vector.y, req->gravity.vector.z);
   tf2::Quaternion quat;
   tf2::fromMsg(tf_to_base_link.transform.rotation, quat);
-  tf2::Vector3 transformed_gravity = tf2::quatRotate(quat, raw_gravity);
+  tf2::Vector3 transformed_gravity = tf2::quatRotate(quat, anti_gravity);
 
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
