@@ -300,6 +300,14 @@
         <command_interface name="trajectory_size"/>
       </gpio>
 
+      <gpio name="${tf_prefix}twist">
+        <command_interface name="linear_velocity_x"/>
+        <command_interface name="linear_velocity_y"/>
+        <command_interface name="linear_velocity_z"/>
+        <command_interface name="angular_velocity_x"/>
+        <command_interface name="angular_velocity_y"/>
+        <command_interface name="angular_velocity_z"/>
+      </gpio>
 
       <gpio name="${tf_prefix}get_robot_software_version">
         <state_interface name="get_version_major">
