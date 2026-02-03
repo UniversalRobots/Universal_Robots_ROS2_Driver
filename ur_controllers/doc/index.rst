@@ -50,6 +50,11 @@ down by the controller).
 ur_controlers/ScaledJointTrajectoryController
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+   The upstream joint_trajectory_controller has been updated to support the scaling feature
+   explained below. Hence, we have decided to deprecate the scaled joint trajectory controller.
+   It will get removed in ROS Lyrical Luth.
+
 These controllers work similar to the well-known
 `joint_trajectory_controller <https://control.ros.org/master/doc/ros2_controllers/joint_trajectory_controller/doc/userdoc.html>`_.
 

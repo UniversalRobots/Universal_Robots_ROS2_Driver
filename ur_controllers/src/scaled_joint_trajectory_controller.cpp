@@ -52,6 +52,10 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_init()
     get_node()->set_parameter(
         rclcpp::Parameter("speed_scaling.state_interface", scaled_params_.speed_scaling_interface_name));
   }
+
+  RCLCPP_WARN(get_node()->get_logger(), "DEPRECATION WARNING: Using the scaled joint trajectory controller is "
+                                        "considered deprecated. It will get removed with ROS Lyrical Luth. Please "
+                                        "use the joint_trajectory_controller that supports the same features.");
   return JointTrajectoryController::on_init();
 }
 
