@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - main
+      - kilted
   push:
     branches:
-      - main
+      - kilted
   schedule:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '13 4 * * *'
@@ -17,4 +17,3 @@ jobs:
     with:
       ros_distro: kilted
       ros_repo: testing
-      ref_for_scheduled_build: main

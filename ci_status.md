@@ -48,15 +48,15 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
     </td>
     <td> <!-- kilted -->
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-binary-main.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-binary-main.yml/badge.svg?branch=main"
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-binary-main.yml/badge.svg?event=schedule"
               alt="Kilted Binary Main"/>
       </a> <br />
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-binary-testing.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-binary-testing.yml/badge.svg?branch=main"
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-binary-testing.yml/badge.svg?event=schedule"
               alt="Kilted Binary Testing"/>
       </a> <br />
       <a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-semi-binary-main.yml?query=branch%3Amain+">
-         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-semi-binary-main.yml/badge.svg?branch=main"
+         <img src="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/actions/workflows/kilted-semi-binary-main.yml/badge.svg?event=schedule"
               alt="Kilted Semi-Binary Main"/>
       </a> <br />
     </td>
