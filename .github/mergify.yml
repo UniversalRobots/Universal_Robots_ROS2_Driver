@@ -20,3 +20,14 @@ pull_request_rules:
           - jazzy
         labels:
           - jazzy
+
+  - name: Backport to kilted branch
+    conditions:
+      - base=main
+      - label=backport-kilted
+    actions:
+      backport:
+        branches:
+          - kilted
+        labels:
+          - kilted
