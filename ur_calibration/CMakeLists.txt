@@ -26,7 +26,7 @@ find_package(ur_client_library REQUIRED)
 ## Build ##
 ###########
 
-add_library(calibration
+add_library(calibration STATIC
   src/calibration.cpp
   src/calibration_consumer.cpp
 )
