@@ -34,6 +34,11 @@ on:
         default: '.ccache'
         required: false
         type: string
+      rosdep_skip_keys:
+        description: "Skip those keys when doing 'rosdep install'. space-separated list"
+        default: ''
+        required: false
+        type: string
 
 jobs:
   reusable_ici:
@@ -43,6 +48,7 @@ jobs:
       DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
       CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}
+      ROSDEP_SKIP_KEYS: ${{ inputs.rosdep_skip_keys }}
     steps:
       - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
