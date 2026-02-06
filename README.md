@@ -27,7 +27,7 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
         <th>Branch</th>
         <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
         <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/jazzy">jazzy</a></td>
-        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">kilted</a></td>
+        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/kilted">kilted</a></td>
         <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
       </tr>
       <tr>
