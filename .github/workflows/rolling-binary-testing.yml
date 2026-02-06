@@ -27,3 +27,4 @@ jobs:
         moveit_ros_visualization
         moveit_servo
         moveit_simple_controller_manager
+        warehouse_ros_sqlite
