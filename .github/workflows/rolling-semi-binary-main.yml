@@ -19,3 +19,4 @@ jobs:
       ros_repo: main
       upstream_workspace: Universal_Robots_ROS2_Driver.rolling.repos
       ref_for_scheduled_build: main
+      rosdep_skip_keys: moveit_ros_visualization

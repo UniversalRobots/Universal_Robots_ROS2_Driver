@@ -18,3 +18,4 @@ jobs:
       ros_distro: rolling
       ros_repo: testing
       ref_for_scheduled_build: main
+      rosdep_skip_keys: moveit_ros_visualization
