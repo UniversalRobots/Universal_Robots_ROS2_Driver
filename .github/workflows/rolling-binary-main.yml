@@ -18,4 +18,12 @@ jobs:
       ros_distro: rolling
       ros_repo: main
       ref_for_scheduled_build: main
-      rosdep_skip_keys: moveit_ros_visualization
+      rosdep_skip_keys: >
+        moveit_configs_utils
+        moveit_kinematics
+        moveit_planners
+        moveit_planners_chomp
+        moveit_ros_move_group
+        moveit_ros_visualization
+        moveit_servo
+        moveit_simple_controller_manager
