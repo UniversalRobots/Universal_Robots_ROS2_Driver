@@ -18,7 +18,7 @@ jobs:
       ros_distro: rolling
       ros_repo: main
       ref_for_scheduled_build: main
-      rosdep_skip_keys: >
+      rosdep_skip_keys: >-
         moveit_configs_utils
         moveit_kinematics
         moveit_planners
