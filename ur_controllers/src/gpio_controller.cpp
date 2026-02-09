@@ -53,6 +53,9 @@ controller_interface::CallbackReturn GPIOController::on_init()
     return CallbackReturn::ERROR;
   }
 
+  tf_buffer_ = std::make_shared<tf2_ros::Buffer>(get_node()->get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -98,6 +101,12 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
   config.names.emplace_back(tf_prefix + "gpio/analog_output_domain_cmd");
+
+  // Gravity stuff
+  config.names.emplace_back(tf_prefix + "gravity/x");
+  config.names.emplace_back(tf_prefix + "gravity/y");
+  config.names.emplace_back(tf_prefix + "gravity/z");
+  config.names.emplace_back(tf_prefix + "gravity/gravity_async_success");
 
   return config;
 }
@@ -318,6 +327,9 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
 
     set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
         "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_gravity_srv_ = get_node()->create_service<ur_msgs::srv::SetGravity>(
+        "~/set_gravity", std::bind(&GPIOController::setGravity, this, std::placeholders::_1, std::placeholders::_2));
 
     tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
         "~/zero_ftsensor",
@@ -563,6 +575,55 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   }
 
   return true;
+}
+
+bool GPIOController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
+                                ur_msgs::srv::SetGravity::Response::SharedPtr resp)
+{
+  // Check transform
+  const std::string base_frame_name = params_.tf_prefix + "base";
+  geometry_msgs::msg::TransformStamped tf_to_base_link;
+  try {
+    tf_to_base_link = tf_buffer_->lookupTransform(base_frame_name, req->gravity.header.frame_id, tf2::TimePointZero);
+  } catch (const tf2::TransformException& ex) {
+    resp->success = false;
+    resp->status = ex.what();
+    return false;
+  }
+
+  // The passed gravity vector is the direction of gravity (towards the Earth)
+  // But the UR Client Library call is expecting anti-gravity (away from Earth), so negate here
+  tf2::Vector3 anti_gravity(-1 * req->gravity.vector.x, -1 * req->gravity.vector.y, -1 * req->gravity.vector.z);
+
+  // Rotate the gravity vector
+  tf2::Quaternion quat;
+  tf2::fromMsg(tf_to_base_link.transform.rotation, quat);
+  tf2::Vector3 transformed_gravity = tf2::quatRotate(quat, anti_gravity);
+
+  // reset success flag
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(transformed_gravity.x());
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(transformed_gravity.y());
+  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(transformed_gravity.z());
+
+  if (!waitForAsyncCommand([&]() {
+        return command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+      })) {
+    RCLCPP_WARN(get_node()->get_logger(), "Could not verify that gravity was set. (This might happen when using the "
+                                          "mocked interface)");
+  }
+
+  resp->success = static_cast<bool>(
+      command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
+
+  if (resp->success) {
+    resp->status = "Gravity has been set successfully";
+  } else {
+    resp->status = "Could not set the gravity";
+  }
+
+  return resp->success;
 }
 
 bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,

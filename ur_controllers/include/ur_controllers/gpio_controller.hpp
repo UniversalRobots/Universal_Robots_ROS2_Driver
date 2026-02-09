@@ -50,6 +50,7 @@
 #include "ur_msgs/msg/tool_data_msg.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
+#include "ur_msgs/srv/set_gravity.hpp"
 #include "ur_msgs/srv/set_io.hpp"
 #include "ur_msgs/srv/set_analog_output.hpp"
 #include "ur_msgs/srv/set_speed_slider_fraction.hpp"
@@ -57,6 +58,10 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "tf2/LinearMath/Quaternion.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_ros/buffer.hpp"
+#include "tf2_ros/transform_listener.hpp"
 #include "ur_controllers/gpio_controller_parameters.hpp"
 
 namespace ur_controllers
@@ -81,6 +86,10 @@ enum CommandInterfaces
   HAND_BACK_CONTROL_CMD = 33,
   HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
   ANALOG_OUTPUTS_DOMAIN = 35,
+  GRAVITY_X = 36,
+  GRAVITY_Y = 37,
+  GRAVITY_Z = 38,
+  GRAVITY_ASYNC_SUCCESS = 39,
 };
 
 enum StateInterfaces
@@ -139,6 +148,9 @@ private:
   bool setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                   ur_msgs::srv::SetPayload::Response::SharedPtr resp);
 
+  bool setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
+                  ur_msgs::srv::SetGravity::Response::SharedPtr resp);
+
   bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
 
   void publishIO();
@@ -168,6 +180,7 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetIO>::SharedPtr set_io_srv_;
   rclcpp::Service<ur_msgs::srv::SetAnalogOutput>::SharedPtr set_analog_output_srv_;
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
+  rclcpp::Service<ur_msgs::srv::SetGravity>::SharedPtr set_gravity_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
 
   std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
@@ -181,6 +194,9 @@ protected:
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
   std_msgs::msg::Bool program_running_msg_;
+
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   // Parameters from ROS for gpio_controller
   std::shared_ptr<gpio_controller::ParamListener> param_listener_;
