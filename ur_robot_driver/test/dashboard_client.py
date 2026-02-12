@@ -101,3 +101,18 @@ class DashboardClientTest(unittest.TestCase):
             mode = result.robot_mode.mode
 
         self.assertEqual(mode, RobotMode.RUNNING)
+
+    def test_get_polyscope_version(self):
+        self.fail()
+
+    def test_get_serial_number(self):
+        self.fail()
+
+    def test_user_role_services(self):
+        self.fail()
+
+    def test_operational_mode_services(self):
+        self.fail()
+
+    def test_get_robot_model(self):
+        self.fail()

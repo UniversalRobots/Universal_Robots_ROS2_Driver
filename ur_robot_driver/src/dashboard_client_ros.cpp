@@ -217,6 +217,23 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         return true;
       });
 
+  // Service to get serial number of the robot
+  get_serial_number_service_ = node->create_service<ur_dashboard_msgs::srv::GetSerialNumber>(
+      "~/get_serial_number", [&](const ur_dashboard_msgs::srv::GetSerialNumber::Request::SharedPtr /*unused*/,
+                                 ur_dashboard_msgs::srv::GetSerialNumber::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetSerialNumberWithResponse(); }, resp);
+
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->serial_number = std::stoull(std::get<std::string>(dashboard_response.data.at("serial_number")));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
   // Service to query the current safety mode
   safety_mode_service_ = node_->create_service<ur_dashboard_msgs::srv::GetSafetyMode>(
       "~/get_safety_mode",
@@ -234,7 +251,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         dashboardCallWithChecks([this, req]() { return client_->commandAddToLogWithResponse(req->message); }, resp);
         return true;
       });
-
+  // Service to get the polyscope version running on the robot
   get_polyscope_version_service_ = node->create_service<ur_dashboard_msgs::srv::GetPolyScopeVersion>(
       "~/get_polyscope_version", std::bind(&DashboardClientROS::handleGetPolyScopeVersionQuery, this,
                                            std::placeholders::_1, std::placeholders::_2));
@@ -274,6 +291,72 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   is_in_remote_control_service_ = node_->create_service<ur_dashboard_msgs::srv::IsInRemoteControl>(
       "~/is_in_remote_control",
       std::bind(&DashboardClientROS::handleRemoteControlQuery, this, std::placeholders::_1, std::placeholders::_2));
+
+  // Service to set the user role on the robot (Only valid for CB3 robots)
+  set_user_role_service_ = node->create_service<ur_dashboard_msgs::srv::SetUserRole>(
+      "~/set_user_role", [&](const ur_dashboard_msgs::srv::SetUserRole::Request::SharedPtr req,
+                             ur_dashboard_msgs::srv::SetUserRole::Response::SharedPtr resp) {
+        dashboardCallWithChecks([this, req]() { return client_->commandSetUserRoleWithResponse(req->user_role.role); },
+                                resp);
+        return true;
+      });
+
+  // Service to get the current user role (Only valid for CB3)
+  get_user_role_service_ = node->create_service<ur_dashboard_msgs::srv::GetUserRole>(
+      "~/get_user_role", [&](const ur_dashboard_msgs::srv::GetUserRole::Request::SharedPtr /*unused*/,
+                             ur_dashboard_msgs::srv::GetUserRole::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetUserRoleWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->user_role.role = std::get<std::string>(dashboard_response.data.at("user_role"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to set the operational mode. (e-series only)
+  set_operational_mode_service_ = node->create_service<ur_dashboard_msgs::srv::SetOperationalMode>(
+      "~/set_operational_mode", [&](const ur_dashboard_msgs::srv::SetOperationalMode::Request::SharedPtr req,
+                                    ur_dashboard_msgs::srv::SetOperationalMode::Response::SharedPtr resp) {
+        dashboardCallWithChecks(
+            [this, req]() { return client_->commandSetOperationalModeWithResponse(req->operational_mode.mode); }, resp);
+        return true;
+      });
+
+  // Service to get the current operational mode (e-series only)
+  get_operational_mode_service_ = node->create_service<ur_dashboard_msgs::srv::GetOperationalMode>(
+      "~/get_operational_mode", [&](const ur_dashboard_msgs::srv::GetOperationalMode::Request::SharedPtr /*unused*/,
+                                    ur_dashboard_msgs::srv::GetOperationalMode::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetOperationalModeWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->operational_mode.mode = std::get<std::string>(dashboard_response.data.at("operational_mode"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to get the robot model as a string
+  get_robot_model_service_ = node->create_service<ur_dashboard_msgs::srv::GetRobotModel>(
+      "~/get_robot_model", [&](const ur_dashboard_msgs::srv::GetRobotModel::Request::SharedPtr /*unused*/,
+                               ur_dashboard_msgs::srv::GetRobotModel::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetRobotModelWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->robot_model = std::get<std::string>(dashboard_response.data.at("robot_model"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
 }
 
 bool DashboardClientROS::connect()

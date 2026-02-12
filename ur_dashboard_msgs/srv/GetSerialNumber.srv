@@ -1,0 +1,4 @@
+---
+uint64 serial_number
+string answer
+bool success
