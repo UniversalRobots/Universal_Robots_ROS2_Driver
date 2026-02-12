@@ -1,0 +1,4 @@
+---
+bool success
+string answer
+string robot_model
