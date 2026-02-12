@@ -148,3 +148,18 @@ class DashboardClientTest(unittest.TestCase):
             program_name="test upload", target_path="/tmp/test_program_download.urpx"
         )
         self.assertTrue(result.success)
+
+    def test_get_polyscope_version(self):
+        self.fail()
+
+    def test_get_serial_number(self):
+        self.fail()
+
+    def test_user_role_services(self):
+        self.fail()
+
+    def test_operational_mode_services(self):
+        self.fail()
+
+    def test_get_robot_model(self):
+        self.fail()

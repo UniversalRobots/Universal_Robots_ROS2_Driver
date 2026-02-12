@@ -68,6 +68,12 @@
 #include "ur_dashboard_msgs/srv/download_program.hpp"
 #include "ur_dashboard_msgs/srv/upload_program.hpp"
 #include "ur_dashboard_msgs/srv/get_poly_scope_version.hpp"
+#include "ur_dashboard_msgs/srv/get_serial_number.hpp"
+#include "ur_dashboard_msgs/srv/get_user_role.hpp"
+#include "ur_dashboard_msgs/srv/set_user_role.hpp"
+#include "ur_dashboard_msgs/srv/get_operational_mode.hpp"
+#include "ur_dashboard_msgs/srv/set_operational_mode.hpp"
+#include "ur_dashboard_msgs/srv/get_robot_model.hpp"
 
 namespace ur_robot_driver
 {
@@ -215,6 +221,8 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::AddToLog>::SharedPtr add_to_log_service_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reconnect_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::RawRequest>::SharedPtr raw_request_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::SetUserRole>::SharedPtr set_user_role_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::SetOperationalMode>::SharedPtr set_operational_mode_service_;
 
   // Query services
   rclcpp::Service<ur_dashboard_msgs::srv::IsProgramRunning>::SharedPtr running_service_;
@@ -230,6 +238,10 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::UploadProgram>::SharedPtr update_program_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::DownloadProgram>::SharedPtr download_program_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetPolyScopeVersion>::SharedPtr get_polyscope_version_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetSerialNumber>::SharedPtr get_serial_number_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetUserRole>::SharedPtr get_user_role_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetOperationalMode>::SharedPtr get_operational_mode_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetRobotModel>::SharedPtr get_robot_model_service_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };
