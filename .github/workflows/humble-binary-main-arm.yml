@@ -1,0 +1,19 @@
+name: Humble Binary Build Arm
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - humble
+
+jobs:
+  humble_binary_arm:
+    name: humble binary build arm
+    runs-on: ubuntu-22.04-arm
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: 'ros-industrial/industrial_ci@master'
+        env:
+          ROS_DISTRO: humble
+          ROS_REPO: main
