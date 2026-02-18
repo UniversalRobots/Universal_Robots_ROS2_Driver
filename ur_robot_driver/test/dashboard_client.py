@@ -121,7 +121,15 @@ class DashboardClientTest(unittest.TestCase):
         result = self._dashboard_interface.get_robot_mode()
         self.assertTrue(result.success)
 
-    def test_program_management(self, ursim_version):
+    def test_get_programs_(self, ursim_version):
+        """Test getting the program list."""
+        if not ursim_version.startswith("10."):
+            self.skipTest("Getting the program list is only supported on PolyScope X")
+        result = self._dashboard_interface.get_programs()
+        self.assertTrue(result.success)
+        self.assertTrue(len(result.programs) > 0)
+
+    def test_upload_download(self, ursim_version):
         """Test uploading a program."""
         if not ursim_version.startswith("10."):
             self.skipTest("Uploading a program is only supported on PolyScope X")
@@ -130,10 +138,6 @@ class DashboardClientTest(unittest.TestCase):
         )
         self.assertTrue(result.success)
         self.assertEqual(result.program_name, "test upload")
-
-        result = self._dashboard_interface.get_programs()
-        self.assertTrue(result.success)
-        self.assertTrue(len(result.programs) > 0)
 
         # TODO: Updating a program requires an open UI session. We would need to start a browser
         # from within this test. Maybe it would be better to turn those tests into unittests, as
