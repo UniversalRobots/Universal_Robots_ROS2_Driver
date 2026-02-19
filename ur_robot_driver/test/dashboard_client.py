@@ -196,6 +196,16 @@ class DashboardClientTest(unittest.TestCase):
         resp = self._dashboard_interface.clear_operational_mode()
         self.assertTrue(resp.success)
 
+    # Just for PSX
+    def test_get_operational_mode(self):
+        polyscope_version = self._dashboard_interface.get_polyscope_version()
+        self.assertTrue(polyscope_version.success)
+        if polyscope_version.version.major != 10:
+            self.skipTest("Specific test for PolyScope X, skipping")
+        resp = self._dashboard_interface.get_operational_mode()
+        self.assertTrue(resp.success)
+        self.assertIn(resp.operational_mode.mode, ["MANUAL", "AUTOMATIC"])
+
     def test_get_robot_model(self):
         polyscope_version = self._dashboard_interface.get_polyscope_version()
         self.assertTrue(polyscope_version.success)
