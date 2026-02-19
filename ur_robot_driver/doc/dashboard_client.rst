@@ -208,7 +208,7 @@ set_operational_mode (`ur_dashboard_msgs/SetOperationalMode <http://docs.ros.org
 get_robot_model (`ur_dashboard_msgs/GetRobotModel <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GetRobotModel.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**CB3 | PolyScope 5** Get the robot model (URx)
+**CB3 | PolyScope 5** Get the robot model, in the format URx. It should be noted this call does not differentiate between e-series and CB3, so UR5 and UR5e will both report as UR5
 
 get_safety_status (`ur_dashboard_msgs/GetSafetyStatus <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GetSafetyStatus.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
