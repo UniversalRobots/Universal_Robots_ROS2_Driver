@@ -3,4 +3,4 @@ string OPERATOR = OPERATOR
 string NONE = NONE
 string LOCKED = LOCKED
 
-string role OPERATOR
+string role

@@ -434,6 +434,40 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         }
         return true;
       });
+
+  // Service to get robot safety status as a string
+  get_safety_status_service_ = node->create_service<ur_dashboard_msgs::srv::GetSafetyStatus>(
+      "~/get_safety_status", [&](const ur_dashboard_msgs::srv::GetSafetyStatus::Request::SharedPtr /*unused*/,
+                                 ur_dashboard_msgs::srv::GetSafetyStatus::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandSafetyStatusWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->safety_status.status = std::get<std::string>(dashboard_response.data.at("safety_status"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to generate flight report, defaults to system type
+  generate_flight_report_service_ = node->create_service<ur_dashboard_msgs::srv::GenerateFlightReport>(
+      "~/generate_flight_report", [&](const ur_dashboard_msgs::srv::GenerateFlightReport::Request::SharedPtr req,
+                                      ur_dashboard_msgs::srv::GenerateFlightReport::Response::SharedPtr resp) {
+        dashboardCallWithChecks(
+            [this, req]() { return client_->commandGenerateFlightReportWithResponse(req->report_type); }, resp);
+        return true;
+      });
+
+  // Service to generate support file, defaults to saving the file in /programs
+  generate_support_file_service_ = node->create_service<ur_dashboard_msgs::srv::GenerateSupportFile>(
+      "~/generate_support_file", [&](const ur_dashboard_msgs::srv::GenerateSupportFile::Request::SharedPtr req,
+                                     ur_dashboard_msgs::srv::GenerateSupportFile::Response::SharedPtr resp) {
+        dashboardCallWithChecks(
+            [this, req]() { return client_->commandGenerateSupportFileWithResponse(req->dir_path); }, resp);
+        return true;
+      });
 }
 
 bool DashboardClientROS::connect()
@@ -574,6 +608,7 @@ bool DashboardClientROS::handleGetPolyScopeVersionQuery(
     handleDashboardResponseData(
         [dashboard_response, resp]() {
           std::string version_string = std::get<std::string>(dashboard_response.data.at("polyscope_version"));
+
           std::regex version_regex(R"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)");
           std::smatch version_match;
           if (std::regex_search(version_string, version_match, version_regex)) {
@@ -584,17 +619,17 @@ bool DashboardClientROS::handleGetPolyScopeVersionQuery(
                 num = num * 10 + (c - '0');
               } else if (c == '.') {
                 if (counter == 0) {
-                  resp->major = num;
+                  resp->version.major = num;
                 } else if (counter == 1) {
-                  resp->minor = num;
+                  resp->version.minor = num;
                 } else if (counter == 2) {
-                  resp->bugfix = num;
+                  resp->version.bugfix = num;
                 }
                 counter++;
                 num = 0;
               }
             }
-            resp->build = num;
+            resp->version.build = num;
           }
         },
         resp, dashboard_response);

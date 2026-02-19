@@ -163,3 +163,12 @@ class DashboardClientTest(unittest.TestCase):
 
     def test_get_robot_model(self):
         self.fail()
+
+    def test_get_safety_status(self):
+        self.fail()
+
+    def test_generate_flight_report(self):
+        self.fail()
+
+    def test_generate_support_file(self):
+        self.fail()

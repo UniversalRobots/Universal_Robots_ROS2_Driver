@@ -1,0 +1,9 @@
+string CONTROLLER = CONTROLLER
+string SOFTWARE = SOFTWARE
+string SYSTEM = SYSTEM
+
+# Same default as in the dashboard server
+string report_type SYSTEM
+---
+bool success
+string answer

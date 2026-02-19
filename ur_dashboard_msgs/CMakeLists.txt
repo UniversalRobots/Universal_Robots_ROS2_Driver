@@ -13,6 +13,8 @@ set(msg_files
   msg/SafetyMode.msg
   msg/OperationalMode.msg
   msg/UserRole.msg
+  msg/VersionInformation.msg
+  msg/SafetyStatus.msg
 )
 
 set(srv_files
@@ -37,6 +39,9 @@ set(srv_files
   srv/SetOperationalMode.srv
   srv/GetOperationalMode.srv
   srv/GetRobotModel.srv
+  srv/GetSafetyStatus.srv
+  srv/GenerateFlightReport.srv
+  srv/GenerateSupportFile.srv
 )
 
 set(action_files

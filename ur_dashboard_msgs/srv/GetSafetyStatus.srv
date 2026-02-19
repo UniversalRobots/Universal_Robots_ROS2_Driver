@@ -1,4 +1,4 @@
 ---
 string answer
 bool success
-VersionInformation version
+SafetyStatus safety_status

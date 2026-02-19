@@ -74,6 +74,9 @@
 #include "ur_dashboard_msgs/srv/get_operational_mode.hpp"
 #include "ur_dashboard_msgs/srv/set_operational_mode.hpp"
 #include "ur_dashboard_msgs/srv/get_robot_model.hpp"
+#include "ur_dashboard_msgs/srv/get_safety_status.hpp"
+#include "ur_dashboard_msgs/srv/generate_flight_report.hpp"
+#include "ur_dashboard_msgs/srv/generate_support_file.hpp"
 
 namespace ur_robot_driver
 {
@@ -223,6 +226,8 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::RawRequest>::SharedPtr raw_request_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::SetUserRole>::SharedPtr set_user_role_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::SetOperationalMode>::SharedPtr set_operational_mode_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GenerateFlightReport>::SharedPtr generate_flight_report_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GenerateSupportFile>::SharedPtr generate_support_file_service_;
 
   // Query services
   rclcpp::Service<ur_dashboard_msgs::srv::IsProgramRunning>::SharedPtr running_service_;
@@ -242,6 +247,7 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::GetUserRole>::SharedPtr get_user_role_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetOperationalMode>::SharedPtr get_operational_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetRobotModel>::SharedPtr get_robot_model_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetSafetyStatus>::SharedPtr get_safety_status_service_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };
