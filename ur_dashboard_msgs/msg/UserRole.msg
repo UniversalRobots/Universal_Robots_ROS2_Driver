@@ -2,5 +2,6 @@ string PROGRAMMER = PROGRAMMER
 string OPERATOR = OPERATOR
 string NONE = NONE
 string LOCKED = LOCKED
+string RESTRICTED = RESTRICTED
 
 string role
