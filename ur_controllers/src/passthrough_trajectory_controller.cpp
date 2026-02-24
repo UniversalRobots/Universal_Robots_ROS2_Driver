@@ -797,9 +797,9 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
       return false;
     }
     if (std::abs(joint_pos.value() - setpoint) > joint_tol.position) {
-      // RCLCPP_ERROR(
-      // get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f, where tolerance is %f",
-      // joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos, joint_tol.position);
+      RCLCPP_ERROR(
+          get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f, where tolerance is %f",
+          joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos.value(), joint_tol.position);
       return false;
     }
 
