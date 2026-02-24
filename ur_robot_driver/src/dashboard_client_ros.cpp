@@ -76,12 +76,12 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
               dashboard_policy == urcl::DashboardClient::ClientPolicy::G5 ? "G5" : "Polyscope X");
   client_ = std::make_unique<urcl::DashboardClient>(robot_ip, dashboard_policy);
 
-  if (!connect()) {
-    RCLCPP_FATAL(node_->get_logger(),
+  while (!connect() && rclcpp::ok()) {
+    RCLCPP_ERROR(node_->get_logger(),
                  "Failed to connect to Dashboard Server at %s. Please check the IP address and ensure the robot is "
-                 "powered on and has the dashboard server enabled. Exiting now.",
+                 "powered on and has the dashboard server enabled. Retrying in 5 seconds.",
                  robot_ip.c_str());
-    exit(1);
+    rclcpp::sleep_for(std::chrono::seconds(5));
   }
   RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
               robot_ip.c_str(), robot_version->toString().c_str());
