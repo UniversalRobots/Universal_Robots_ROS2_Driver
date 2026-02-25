@@ -377,6 +377,8 @@ protected:
   const std::string TOOL_CONTACT_GPIO = "tool_contact";
 
   std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
+
+  std::unique_ptr<urcl::rtde_interface::DataPackage> data_package_buffer_;
 };
 }  // namespace ur_robot_driver
 
