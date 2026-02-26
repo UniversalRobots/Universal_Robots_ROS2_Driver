@@ -151,7 +151,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
       "~/program_running",
       std::bind(&DashboardClientROS::handleRunningQuery, this, std::placeholders::_1, std::placeholders::_2));
 
-  // Load a robot installation from a file
+  // Get the name of the currently loaded program
   get_loaded_program_service_ = node_->create_service<ur_dashboard_msgs::srv::GetLoadedProgram>(
       "~/get_loaded_program", [&](const ur_dashboard_msgs::srv::GetLoadedProgram::Request::SharedPtr req,
                                   ur_dashboard_msgs::srv::GetLoadedProgram::Response::SharedPtr resp) {
