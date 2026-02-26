@@ -806,10 +806,16 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
     if (!active_joint_traj_.points.back().velocities.empty() && !joint_velocity_state_interface_.empty()) {
       const auto joint_vel = joint_velocity_state_interface_[i].get().get_optional();
       if (!joint_vel.has_value()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Could not read velocity for joint %s, cannot check velocity tolerance.",
+                     joint_velocity_state_interface_[i].get().get_name().c_str());
         return false;
       }
       const auto& expected_vel = active_joint_traj_.points.back().velocities[joint_mapping->at(joint_name)];
       if (std::abs(joint_vel.value() - expected_vel) > joint_tol.velocity) {
+        RCLCPP_ERROR(get_node()->get_logger(),
+                     "Joint %s should be at velocity %f, but is at velocity %f, where tolerance is %f",
+                     joint_velocity_state_interface_[i].get().get_name().c_str(), expected_vel, joint_vel.value(),
+                     joint_tol.velocity);
         return false;
       }
     }
