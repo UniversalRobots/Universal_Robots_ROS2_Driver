@@ -138,6 +138,10 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   if (hardware_interface::SystemInterface::on_init(params) != hardware_interface::CallbackReturn::SUCCESS) {
     return hardware_interface::CallbackReturn::ERROR;
   }
+  // Obtain the tf_prefix which is needed for the logging handler so that log messages from different arms are
+  // distiguishable in the log
+  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
+  registerUrclLogHandler(tf_prefix);
 
   info_ = params.hardware_info;
 
@@ -698,11 +702,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     tool_comm_setup->setTxIdleChars(tx_idle_chars);
   }
 
-  // Obtain the tf_prefix which is needed for the logging handler so that log messages from different arms are
-  // distiguishable in the log
-  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
-  registerUrclLogHandler(tf_prefix);
   try {
     rtde_comm_has_been_started_ = false;
     urcl::UrDriverConfiguration driver_config;
@@ -799,7 +799,11 @@ hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_shutdown(const rclcpp_lifecycle::State& previous_state)
 {
   RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "on_shutdown");
-  return stop();
+
+  auto result = stop();
+
+  unregisterUrclLogHandler();
+  return result;
 }
 
 hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
@@ -817,9 +821,8 @@ hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
     async_moprim_cmd_thread_.reset();
   }
 
+  instruction_executor_.reset();
   ur_driver_.reset();
-
-  unregisterUrclLogHandler();
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully stopped!");
 
