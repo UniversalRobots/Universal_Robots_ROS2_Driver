@@ -457,13 +457,13 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
                                       ur_dashboard_msgs::srv::GenerateFlightReport::Response::SharedPtr resp) {
         auto dashboard_response = dashboardCallWithChecks(
             [this, req]() { return client_->commandGenerateFlightReportWithResponse(req->report_type); }, resp);
-        if(resp->success){
+        if (resp->success) {
           handleDashboardResponseData(
               [dashboard_response, resp]() {
                 std::string key = "id: ";
                 auto it = dashboard_response.message.find(key);
-                if(it != dashboard_response.message.npos){
-                  std::string id = dashboard_response.message.substr(it+key.size());
+                if (it != dashboard_response.message.npos) {
+                  std::string id = dashboard_response.message.substr(it + key.size());
                   resp->report_id = id;
                 }
               },
@@ -478,13 +478,13 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
                                      ur_dashboard_msgs::srv::GenerateSupportFile::Response::SharedPtr resp) {
         auto dashboard_response = dashboardCallWithChecks(
             [this, req]() { return client_->commandGenerateSupportFileWithResponse(req->dir_path); }, resp);
-        if(resp->success){
+        if (resp->success) {
           handleDashboardResponseData(
               [dashboard_response, resp]() {
                 std::string key = "Completed successfully: ";
                 auto it = dashboard_response.message.find(key);
-                if(it != dashboard_response.message.npos){
-                  std::string name = dashboard_response.message.substr(it+key.size());
+                if (it != dashboard_response.message.npos) {
+                  std::string name = dashboard_response.message.substr(it + key.size());
                   resp->generated_file_name = name;
                 }
               },
