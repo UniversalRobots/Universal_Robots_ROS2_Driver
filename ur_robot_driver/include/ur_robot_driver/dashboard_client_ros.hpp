@@ -122,8 +122,7 @@ private:
       resp->answer = dashboard_response.message;
     } catch (const urcl::NotImplementedException& e) {
       RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"),
-                   "This service call seems not to be implemented (for this "
-                   "robot version). Error message: '%s'",
+                   "This service call seems not to be implemented (for this robot version). Error message: '%s'",
                    e.what());
       resp->answer = "Not implemented for this robot software version.";
       resp->success = false;
