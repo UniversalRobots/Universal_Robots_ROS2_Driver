@@ -152,10 +152,12 @@ class DashboardClientTest(unittest.TestCase):
     def test_get_polyscope_version(self):
         resp = self._dashboard_interface.get_polyscope_version()
         self.assertTrue(resp.success)
+        self.assertNotEqual(resp.version.major, 0)
 
     def test_get_serial_number(self):
         resp = self._dashboard_interface.get_serial_number()
         self.assertTrue(resp.success)
+        self.assertNotEqual(resp.serial_number, 0)
 
     def test_user_role_services(self):
         polyscope_version = self._dashboard_interface.get_polyscope_version()
@@ -177,7 +179,7 @@ class DashboardClientTest(unittest.TestCase):
             self.assertTrue(resp.success)
             self.assertEqual(role, resp.user_role.role)
 
-    # Not all operational mode services are supported in PSX yet
+    # Not all operational mode services are supported in PolyScope X yet
     def test_operational_mode_services(self):
         polyscope_version = self._dashboard_interface.get_polyscope_version()
         self.assertTrue(polyscope_version.success)
@@ -196,7 +198,7 @@ class DashboardClientTest(unittest.TestCase):
         resp = self._dashboard_interface.clear_operational_mode()
         self.assertTrue(resp.success)
 
-    # Just for PSX
+    # Just for PolyScope X
     def test_get_operational_mode(self):
         polyscope_version = self._dashboard_interface.get_polyscope_version()
         self.assertTrue(polyscope_version.success)
@@ -231,6 +233,7 @@ class DashboardClientTest(unittest.TestCase):
             self.skipTest("Generating flight report not supported on PolyScope X, skipping tests")
         resp = self._dashboard_interface.generate_flight_report()
         self.assertTrue(resp.success)
+        self.assertNotEqual(resp.report_id, "")
 
     def test_generate_support_file(self):
         polyscope_version = self._dashboard_interface.get_polyscope_version()
@@ -239,3 +242,4 @@ class DashboardClientTest(unittest.TestCase):
             self.skipTest("Generating support file not supported on PolyScope X, skipping tests")
         resp = self._dashboard_interface.generate_support_file()
         self.assertTrue(resp.success)
+        self.assertNotEqual(resp.generated_file_name, "")
