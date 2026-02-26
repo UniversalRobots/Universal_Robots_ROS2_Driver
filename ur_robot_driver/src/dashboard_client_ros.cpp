@@ -76,12 +76,17 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
               dashboard_policy == urcl::DashboardClient::ClientPolicy::G5 ? "G5" : "Polyscope X");
   client_ = std::make_unique<urcl::DashboardClient>(robot_ip, dashboard_policy);
 
-  while (!connect() && rclcpp::ok()) {
+  while (!connect()) {
     RCLCPP_ERROR(node_->get_logger(),
                  "Failed to connect to Dashboard Server at %s. Please check the IP address and ensure the robot is "
                  "powered on and has the dashboard server enabled. Retrying in 5 seconds.",
                  robot_ip.c_str());
-    rclcpp::sleep_for(std::chrono::seconds(5));
+    if (rclcpp::ok()) {
+      rclcpp::sleep_for(std::chrono::seconds(5));
+    } else {
+      RCLCPP_ERROR(node_->get_logger(), "ROS is shutting down, exiting now.");
+      return;
+    }
   }
   RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
               robot_ip.c_str(), robot_version->toString().c_str());
@@ -286,9 +291,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         if (resp->success) {
           handleDashboardResponseData(
               [dashboard_response, resp]() {
-                const auto& programs = std::get<std::vector<urcl::ProgramInformation>>(dashboard_response.data.at("prog"
-                                                                                                                  "ram"
-                                                                                                                  "s"));
+                const std::vector<urcl::ProgramInformation>& programs =
+                    std::get<std::vector<urcl::ProgramInformation>>(dashboard_response.data.at("programs"));
                 for (const auto& program : programs) {
                   ur_dashboard_msgs::msg::ProgramInformation program_msg;
                   program_msg.name = program.name;
@@ -337,7 +341,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   download_program_service_ = node_->create_service<ur_dashboard_msgs::srv::DownloadProgram>(
       "~/download_program", [&](const ur_dashboard_msgs::srv::DownloadProgram::Request::SharedPtr req,
                                 ur_dashboard_msgs::srv::DownloadProgram::Response::SharedPtr resp) {
-        auto dashboard_response = dashboardCallWithChecks(
+        dashboardCallWithChecks(
             [this, req]() { return client_->commandDownloadProgramWithResponse(req->program_name, req->target_path); },
             resp);
         return true;
