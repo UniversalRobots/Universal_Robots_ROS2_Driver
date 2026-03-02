@@ -53,11 +53,15 @@ from rclpy.action import ActionClient
 from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
+    DownloadProgram,
     GetLoadedProgram,
     GetProgramState,
+    GetPrograms,
     GetRobotMode,
+    IsInRemoteControl,
     IsProgramRunning,
     Load,
+    UploadProgram,
 )
 from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
 from builtin_interfaces.msg import Duration
@@ -67,8 +71,6 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
 TIMEOUT_WAIT_ACTION = 10
-TIMEOUT_EXECUTE_TRAJECTORY = 30
-
 TIMEOUT_EXECUTE_TRAJECTORY = 30
 
 ROBOT_JOINTS = [
@@ -236,6 +238,11 @@ class DashboardInterface(
         "program_running": IsProgramRunning,
         "play": Trigger,
         "stop": Trigger,
+        "is_in_remote_control": IsInRemoteControl,
+        "get_programs": GetPrograms,
+        "upload_program": UploadProgram,
+        "update_program": UploadProgram,
+        "download_program": DownloadProgram,
     },
 ):
     def start_robot(self):
@@ -424,7 +431,7 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-def _ursim_action():
+def _ursim_action(ursim_version="latest"):
     ur_type = LaunchConfiguration("ur_type")
 
     return ExecuteProcess(
@@ -439,13 +446,15 @@ def _ursim_action():
             ),
             "-m",
             ur_type,
+            "-v",
+            ursim_version,
         ],
         name="start_ursim",
         output="screen",
     )
 
 
-def generate_dashboard_test_description():
+def generate_dashboard_test_description(ursim_version="latest"):
     dashboard_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -462,7 +471,8 @@ def generate_dashboard_test_description():
     )
 
     return LaunchDescription(
-        _declare_launch_arguments() + [ReadyToTest(), dashboard_client, _ursim_action()]
+        _declare_launch_arguments()
+        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version)]
     )
 
 

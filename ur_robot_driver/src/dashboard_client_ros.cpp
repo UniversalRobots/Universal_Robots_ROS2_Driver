@@ -76,7 +76,20 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
               dashboard_policy == urcl::DashboardClient::ClientPolicy::G5 ? "G5" : "Polyscope X");
   client_ = std::make_unique<urcl::DashboardClient>(robot_ip, dashboard_policy);
 
-  connect();
+  while (!connect()) {
+    RCLCPP_ERROR(node_->get_logger(),
+                 "Failed to connect to Dashboard Server at %s. Please check the IP address and ensure the robot is "
+                 "powered on and has the dashboard server enabled. Retrying in 5 seconds.",
+                 robot_ip.c_str());
+    if (rclcpp::ok()) {
+      rclcpp::sleep_for(std::chrono::seconds(5));
+    } else {
+      RCLCPP_ERROR(node_->get_logger(), "ROS is shutting down, exiting now.");
+      return;
+    }
+  }
+  RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
+              robot_ip.c_str(), robot_version->toString().c_str());
 
   // Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
   brake_release_service_ = createDashboardTriggerSrv(
@@ -143,7 +156,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
       "~/program_running",
       std::bind(&DashboardClientROS::handleRunningQuery, this, std::placeholders::_1, std::placeholders::_2));
 
-  // Load a robot installation from a file
+  // Get the name of the currently loaded program
   get_loaded_program_service_ = node_->create_service<ur_dashboard_msgs::srv::GetLoadedProgram>(
       "~/get_loaded_program", [&](const ur_dashboard_msgs::srv::GetLoadedProgram::Request::SharedPtr req,
                                   ur_dashboard_msgs::srv::GetLoadedProgram::Response::SharedPtr resp) {
@@ -269,6 +282,70 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   is_in_remote_control_service_ = node_->create_service<ur_dashboard_msgs::srv::IsInRemoteControl>(
       "~/is_in_remote_control",
       std::bind(&DashboardClientROS::handleRemoteControlQuery, this, std::placeholders::_1, std::placeholders::_2));
+
+  get_programs_service_ = node_->create_service<ur_dashboard_msgs::srv::GetPrograms>(
+      "~/get_programs", [&](const ur_dashboard_msgs::srv::GetPrograms::Request::SharedPtr /*unused*/,
+                            ur_dashboard_msgs::srv::GetPrograms::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetProgramListWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                const std::vector<urcl::ProgramInformation>& programs =
+                    std::get<std::vector<urcl::ProgramInformation>>(dashboard_response.data.at("programs"));
+                for (const auto& program : programs) {
+                  ur_dashboard_msgs::msg::ProgramInformation program_msg;
+                  program_msg.name = program.name;
+                  program_msg.description = program.description;
+                  program_msg.created_date = program.createdDate;
+                  program_msg.last_modified_date = program.lastModifiedDate;
+                  program_msg.last_saved_date = program.lastSavedDate;
+                  program_msg.program_state = program.programState;
+                  resp->programs.push_back(program_msg);
+                }
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+  upload_program_service_ = node_->create_service<ur_dashboard_msgs::srv::UploadProgram>(
+      "~/upload_program", [&](const ur_dashboard_msgs::srv::UploadProgram::Request::SharedPtr req,
+                              ur_dashboard_msgs::srv::UploadProgram::Response::SharedPtr resp) {
+        auto dashboard_response = dashboardCallWithChecks(
+            [this, req]() { return client_->commandUploadProgramWithResponse(req->file_path); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->program_name = std::get<std::string>(dashboard_response.data.at("program_name"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  update_program_service_ = node_->create_service<ur_dashboard_msgs::srv::UploadProgram>(
+      "~/update_program", [&](const ur_dashboard_msgs::srv::UploadProgram::Request::SharedPtr req,
+                              ur_dashboard_msgs::srv::UploadProgram::Response::SharedPtr resp) {
+        auto dashboard_response = dashboardCallWithChecks(
+            [this, req]() { return client_->commandUpdateProgramWithResponse(req->file_path); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->program_name = std::get<std::string>(dashboard_response.data.at("program_name"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  download_program_service_ = node_->create_service<ur_dashboard_msgs::srv::DownloadProgram>(
+      "~/download_program", [&](const ur_dashboard_msgs::srv::DownloadProgram::Request::SharedPtr req,
+                                ur_dashboard_msgs::srv::DownloadProgram::Response::SharedPtr resp) {
+        dashboardCallWithChecks(
+            [this, req]() { return client_->commandDownloadProgramWithResponse(req->program_name, req->target_path); },
+            resp);
+        return true;
+      });
 }
 
 bool DashboardClientROS::connect()
