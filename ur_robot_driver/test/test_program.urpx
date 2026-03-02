@@ -1,0 +1,2299 @@
+{
+  "application": {
+    "id": "5",
+    "applicationInfo": {
+      "name": "application"
+    },
+    "applicationContent": {
+      "applicationContributions": {
+        "ur-mounting": {
+          "type": "ur-mounting",
+          "version": "0.0.1",
+          "mounting": {
+            "baseAngle": {
+              "value": 0,
+              "unit": "deg"
+            },
+            "tiltAngle": {
+              "value": 0,
+              "unit": "deg"
+            }
+          }
+        },
+        "ur-frames": {
+          "type": "ur-frames",
+          "version": "0.0.7",
+          "framesList": [
+            {
+              "name": "base",
+              "nameVariable": {
+                "name": "base",
+                "reference": false,
+                "type": "$$Variable",
+                "valueType": "frame",
+                "id": "4aa883ca-3eba-49ec-bbcc-ee1ee65176ed",
+                "_IDENTIFIER": "VariableDeclaration"
+              },
+              "parent": "world",
+              "pose": {
+                "position": [
+                  0,
+                  0,
+                  0
+                ],
+                "orientation": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "name": "tcp",
+              "nameVariable": {
+                "name": "tcp",
+                "reference": false,
+                "type": "$$Variable",
+                "valueType": "frame",
+                "id": "551721e6-e865-fe61-5a00-85c8f3fcb7ce",
+                "_IDENTIFIER": "VariableDeclaration"
+              },
+              "parent": "flange",
+              "pose": {
+                "position": [
+                  0,
+                  0,
+                  0
+                ],
+                "orientation": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "name": "world",
+              "nameVariable": {
+                "name": "world",
+                "reference": false,
+                "type": "$$Variable",
+                "valueType": "frame",
+                "id": "15d05e2b-ad37-603f-cfbd-3b344fdee9d4",
+                "_IDENTIFIER": "VariableDeclaration"
+              },
+              "pose": {
+                "position": [
+                  0,
+                  0,
+                  0
+                ],
+                "orientation": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "name": "flange",
+              "nameVariable": {
+                "name": "flange",
+                "reference": false,
+                "type": "$$Variable",
+                "valueType": "frame",
+                "id": "af9509cc-f84c-71b2-3578-10a8172db29b",
+                "_IDENTIFIER": "VariableDeclaration"
+              },
+              "parent": "base",
+              "pose": {
+                "position": [
+                  0,
+                  0,
+                  0
+                ],
+                "orientation": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        },
+        "ur-grid-pattern": {
+          "type": "ur-grid-pattern",
+          "version": "0.0.3",
+          "grids": [
+            {
+              "grid": {
+                "name": "grid",
+                "reference": false,
+                "type": "$$Variable",
+                "valueType": "grid",
+                "id": "17606307-89d9-eb68-6cfb-918c0ddbed4c",
+                "_IDENTIFIER": "VariableDeclaration"
+              },
+              "waypoint": {
+                "name": "grid_iterator",
+                "reference": false,
+                "type": "$$Variable",
+                "valueType": "waypoint",
+                "id": "74c6d3f7-b0ad-09c5-4bf6-2acc5848f9d5",
+                "_IDENTIFIER": "VariableDeclaration"
+              },
+              "corners": [
+                null,
+                null,
+                null,
+                null
+              ],
+              "numRows": 4,
+              "numColumns": 5
+            }
+          ]
+        },
+        "ur-end-effector": {
+          "type": "ur-end-effector",
+          "version": "0.0.2",
+          "endEffectors": [
+            {
+              "id": "d2a7e55f-5c8b-3fb9-d898-93ce3c841a6c",
+              "name": "Robot",
+              "payload": {
+                "weight": {
+                  "value": 0,
+                  "unit": "kg"
+                }
+              },
+              "cog": {
+                "cx": {
+                  "value": 0,
+                  "unit": "m"
+                },
+                "cy": {
+                  "value": 0,
+                  "unit": "m"
+                },
+                "cz": {
+                  "value": 0,
+                  "unit": "m"
+                }
+              },
+              "inertia": {
+                "Ixx": {
+                  "value": 0,
+                  "unit": "kg*m^2"
+                },
+                "Iyy": {
+                  "value": 0,
+                  "unit": "kg*m^2"
+                },
+                "Izz": {
+                  "value": 0,
+                  "unit": "kg*m^2"
+                },
+                "Ixy": {
+                  "value": 0,
+                  "unit": "kg*m^2"
+                },
+                "Ixz": {
+                  "value": 0,
+                  "unit": "kg*m^2"
+                },
+                "Iyz": {
+                  "value": 0,
+                  "unit": "kg*m^2"
+                }
+              },
+              "useCustomInertia": false,
+              "tcps": [
+                {
+                  "id": "4076e4c7-d851-a441-2776-902faa191f9a",
+                  "name": "Tool_flange",
+                  "x": {
+                    "value": 0,
+                    "unit": "m"
+                  },
+                  "y": {
+                    "value": 0,
+                    "unit": "m"
+                  },
+                  "z": {
+                    "value": 0,
+                    "unit": "m"
+                  },
+                  "rx": {
+                    "value": 0,
+                    "unit": "rad"
+                  },
+                  "ry": {
+                    "value": 0,
+                    "unit": "rad"
+                  },
+                  "rz": {
+                    "value": 0,
+                    "unit": "rad"
+                  }
+                }
+              ]
+            }
+          ],
+          "defaultTcp": {
+            "endEffectorId": "d2a7e55f-5c8b-3fb9-d898-93ce3c841a6c",
+            "tcpId": "4076e4c7-d851-a441-2776-902faa191f9a"
+          }
+        },
+        "ur-motion-profiles": {
+          "type": "ur-motion-profiles",
+          "version": "0.0.1",
+          "moveProfiles": {
+            "joint": [
+              {
+                "isDefault": false,
+                "profile": {
+                  "name": "Joint_fast",
+                  "reference": false,
+                  "type": "$$Variable",
+                  "valueType": "profile",
+                  "id": "9cadc383-da1d-d089-1320-9760cfb9fe0e",
+                  "_IDENTIFIER": "VariableDeclaration"
+                },
+                "parameters": {
+                  "speedType": "OptiMove",
+                  "speed": {
+                    "entity": {
+                      "value": 1.0471975511965976,
+                      "unit": "rad/s"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 1.0471975511965976
+                  },
+                  "acceleration": {
+                    "entity": {
+                      "value": 1.3962634015954636,
+                      "unit": "rad/s^2"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 1.3962634015954636
+                  },
+                  "optiMoveSpeed": {
+                    "entity": {
+                      "value": 50,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 50
+                  },
+                  "optiMoveAcceleration": {
+                    "entity": {
+                      "value": 25,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 25
+                  }
+                }
+              },
+              {
+                "isDefault": true,
+                "profile": {
+                  "name": "Joint_slow",
+                  "reference": false,
+                  "type": "$$Variable",
+                  "valueType": "profile",
+                  "id": "9f7cd9c1-6b40-8ecf-cc23-dd5e94791815",
+                  "_IDENTIFIER": "VariableDeclaration"
+                },
+                "parameters": {
+                  "speedType": "OptiMove",
+                  "speed": {
+                    "entity": {
+                      "value": 1.0471975511965976,
+                      "unit": "rad/s"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 1.0471975511965976
+                  },
+                  "acceleration": {
+                    "entity": {
+                      "value": 1.3962634015954636,
+                      "unit": "rad/s^2"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 1.3962634015954636
+                  },
+                  "optiMoveSpeed": {
+                    "entity": {
+                      "value": 20,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 20
+                  },
+                  "optiMoveAcceleration": {
+                    "entity": {
+                      "value": 4,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 4
+                  }
+                }
+              }
+            ],
+            "linear": [
+              {
+                "isDefault": false,
+                "profile": {
+                  "name": "Linear_fast",
+                  "reference": false,
+                  "type": "$$Variable",
+                  "valueType": "profile",
+                  "id": "bbc53484-5136-9422-baed-131c092effdc",
+                  "_IDENTIFIER": "VariableDeclaration"
+                },
+                "parameters": {
+                  "speedType": "OptiMove",
+                  "speed": {
+                    "entity": {
+                      "value": 0.25,
+                      "unit": "m/s"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 0.25
+                  },
+                  "acceleration": {
+                    "entity": {
+                      "value": 1.2,
+                      "unit": "m/s^2"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 1.2
+                  },
+                  "optiMoveSpeed": {
+                    "entity": {
+                      "value": 50,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 50
+                  },
+                  "optiMoveAcceleration": {
+                    "entity": {
+                      "value": 25,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 25
+                  }
+                }
+              },
+              {
+                "isDefault": true,
+                "profile": {
+                  "name": "Linear_slow",
+                  "reference": false,
+                  "type": "$$Variable",
+                  "valueType": "profile",
+                  "id": "a4ce2084-6f47-6b6b-1e85-cb174d0397b3",
+                  "_IDENTIFIER": "VariableDeclaration"
+                },
+                "parameters": {
+                  "speedType": "OptiMove",
+                  "speed": {
+                    "entity": {
+                      "value": 0.25,
+                      "unit": "m/s"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 0.25
+                  },
+                  "acceleration": {
+                    "entity": {
+                      "value": 1.2,
+                      "unit": "m/s^2"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 1.2
+                  },
+                  "optiMoveSpeed": {
+                    "entity": {
+                      "value": 20,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 20
+                  },
+                  "optiMoveAcceleration": {
+                    "entity": {
+                      "value": 4,
+                      "unit": "%"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 4
+                  }
+                }
+              }
+            ],
+            "process": [
+              {
+                "isDefault": true,
+                "profile": {
+                  "name": "Process",
+                  "reference": false,
+                  "type": "$$Variable",
+                  "valueType": "profile",
+                  "id": "9e716d40-7af5-7806-2a39-f1d98dce92dd",
+                  "_IDENTIFIER": "VariableDeclaration"
+                },
+                "parameters": {
+                  "speedType": "Classic",
+                  "speed": {
+                    "entity": {
+                      "value": 0.25,
+                      "unit": "m/s"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 0.25
+                  },
+                  "acceleration": {
+                    "entity": {
+                      "value": 1.2,
+                      "unit": "m/s^2"
+                    },
+                    "selectedType": "VALUE",
+                    "value": 1.2
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "ur-smart-skills": {
+          "type": "ur-smart-skills",
+          "version": "0.0.3",
+          "preamble": "# Start of Forces\n###\n# Transforms the force and torque values along the axes of the given pose\n# @param pose pose Any valid pose, defaults to base, the x, y, and z values are ignored\n# @return array 6D force torque vector with [Fx, Fy, Fz, Mx, My, Mz] aligned to pose in N and Nm respectively\n###\ndef get_tcp_wrench_in_frame(pose = p[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):\n    # we are only interested in the rotation of pose, set translations to zero\n    local target_pose = pose\n    target_pose[0] = 0\n    target_pose[1] = 0\n    target_pose[2] = 0\n    # the conversion needs to happen as poses, so we need to convert back and forth a bit\n    local force = get_tcp_force()\n    local force_vector_as_pose = p[force[0], force[1], force[2], 0, 0, 0]\n    local torque_vector_as_pose = p[force[3], force[4], force[5], 0, 0, 0]\n    local transformed_force_as_pose = pose_trans(pose_inv(target_pose), force_vector_as_pose)\n    local transformed_torque_as_pose = pose_trans(pose_inv(target_pose), torque_vector_as_pose)\n    return [transformed_force_as_pose[0], transformed_force_as_pose[1], transformed_force_as_pose[2], transformed_torque_as_pose[0], transformed_torque_as_pose[1], transformed_torque_as_pose[2]]\nend\n###\n# See documentation for @link:get_tcp_wrench_in_frame()\n# @return forces and torques measured in TCP frame\n###\ndef get_tcp_wrench():\n    return get_tcp_wrench_in_frame(get_target_tcp_pose())\nend\n###\n# Projects the measured TCP force along the axis given\n# @param axis array 3D vector\n###\ndef project_tcp_force(axis):\n    local wrench = get_tcp_wrench()\n    local force = [wrench[0], wrench[1], wrench[2]]\n    return dot(force, axis)\nend\n# End of Forces\n# Start of Math\n# Definitions of constants\nglobal PI = acos(-1)\n###\n# Calculates the cross product between to 3D vectors\n# @param v1 array 3D vector\n# @param v2 array 3D vector\n###\ndef cross(v1, v2):\n    if length(v1) != length(v2):\n        popup(str_cat(\"For computing the cross product, the two vectors must have the same length. Provided lengths: \", [length(v1), length(v2)]), error=True, blocking=True)\n        return -1\n    end\n    if length(v1) != 3:\n        popup(str_cat(\"For computing the cross product, the two vectors must have length 3. Provided lengths: \", [length(v1), length(v2)]), error=True, blocking=True)\n        return -1\n    end\n    local cross = [0.0, 0.0, 0.0]\n    local i = 0\n    while i < 3:\n        local j = (i + 1) % 3 # The next index in a cyclic order\n        local k = (i + 2) % 3 # The next next index in a cyclic order\n        cross[i] = v1[j] * v2[k] - v1[k] * v2[j]\n        i = i + 1\n    end\n    return cross\nend\n###\n# Calculates the dot product between to n-dimensional vectors\n# @param v1 array nD vector\n# @param v2 array nD vector\n###\ndef dot(v1, v2):\n    if length(v1) != length(v2):\n        popup(str_cat(\"For computing the dot product, the two vectors must have the same length. Provided lengths: \", [length(v1), length(v2)]), error=True, blocking=True)\n        return -1\n    end\n    local result = 0\n    local i = 0\n    while i < length(v1):\n        result = result + (v1[i] * v2[i])\n        i = i + 1\n    end\n    return result\nend\n###\n# Return the larger number of a and b\n# @param a number a\n# @param b number b\n###\ndef max(a, b):\n    if a > b:\n        return a\n    end\n    return b\nend\n###\n# Find the maximum value in a list. The list must be of non-zero length and contain numbers\n# @param list array list\n###\ndef list_max(list):\n    local length = get_list_length(list)\n    if  length == 0:\n        popup(\"Getting the maximum of an empty list is impossible in list_max().\", error = True, blocking = True)\n        halt\n    end\n    local i = 0\n    local max = list[0]\n    while i < length:\n        if list[i] > max:\n            max = list[i]\n        end\n        i = i + 1\n        sync_at_multiple(i, 30)\n    end\n    return max\nend\ndef sync_at_multiple(i, n):\n    local tmp = i / n\n    if tmp == floor(tmp):\n        sync()\n    end\nend\n# End of Math\n# Start of Move Helper\nur_move_until_force_distance = 0.1\nur_move_until_force_direction = [0, 0, 1]\nur_move_until_force_velocity = 0.1\nur_move_until_force_acceleration = 0.2\ndef ur_move_tcp_direction(distance, direction, velocity, acceleration, blend_radius):\n    local current_pose = get_target_tcp_pose()\n    local movement = normalize(direction) * distance\n    local target_pose = pose_trans(current_pose, p[movement[0], movement[1], movement[2], 0, 0, 0])\n    movel(target_pose, a = 0.2, v = velocity, r = blend_radius)\nend\nthread ur_move_until_force_thread():\n    ur_move_tcp_direction(ur_move_until_force_distance, ur_move_until_force_direction, ur_move_until_force_velocity, ur_move_until_force_acceleration, 0)\n    popup(\"No contact detected.\", title = \"No Contact\", warning = False, error = True, blocking = False)\n    halt\nend\n###\n# Moves the robot in the TCP direction specified until a contact point is reached *or*\n# the robot reaches the maximum distance allowed specified by the distance parameter.\n# @param distance number The maximum distance the robot is allowed to travel in the direction specified\n# @param direction array 3D vector determining the move direction of the TCP\n# @param velocity number Velocity of the robot\n# @param acceleration number Acceleration of the robot\n# @param stop_force number Maximum search radius\n###\ndef ur_move_until_force(distance = 0.1, direction = [0, 0, 1], velocity = 0.1, acceleration = 0.2, stop_force = 20):\n    ur_move_until_force_distance = distance\n    ur_move_until_force_direction = direction\n    ur_move_until_force_velocity = velocity\n    ur_move_until_force_acceleration = acceleration\n    \n    thrd = run ur_move_until_force_thread()\n    while - project_tcp_force(direction) < stop_force:\n        sync()\n    end\n    kill thrd\n    local actual_pose = get_actual_tcp_pose()\n    stopl(1.0)\n    return actual_pose\nend\ndef ur_get_joint_speeds_before_offset(previous_q, time):\n    local current_q = get_joint_positions()\n    local delta_q = current_q - previous_q\n    return delta_q / time\nend\ndef ur_path_move(end_q, v, rampdown=False):\n    # Calculate distance to target\n    local start_q = get_joint_positions()\n    local delta_q = end_q - start_q\n    local positive_delta_q = [norm(delta_q[0]), norm(delta_q[1]), norm(delta_q[2]), norm(delta_q[3]), norm(delta_q[4]), norm(delta_q[5])]\n    # Calculate time to move based on desired velocity\n    local t = list_max(positive_delta_q) / v\n    servoj(end_q , 0, 0, t, lookahead_time=0.1, gain=500)\n    if(rampdown):\n        while(norm(ur_get_joint_speeds_before_offset(start_q, t)) > 0.0001):\n            t = max(t, 0.001)\n            start_q = get_joint_positions()\n            servoj(end_q , 0, 0, t)\n        end\n    end\nend\n# End of Move Helper"
+        },
+        "ur-application-variables": {
+          "type": "ur-application-variables",
+          "version": "0.0.1",
+          "variables": {}
+        },
+        "universal-robots-external-control-external-control-application": {
+          "type": "universal-robots-external-control-external-control-application",
+          "version": "1.0.0",
+          "port": 50002,
+          "robotIP": "192.168.56.1"
+        }
+      },
+      "sourceConfig": {
+        "labelMap": {},
+        "analogDomainMap": {},
+        "presets": {}
+      },
+      "sourcesNodes": {
+        "robot": {
+          "groupId": "robot",
+          "version": "1.0.0.",
+          "sources": [
+            {
+              "sourceID": "ur-wired-io",
+              "signals": [
+                {
+                  "signalID": "DI 0",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 1",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 2",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 3",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 4",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 5",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 6",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 7",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 0",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 1",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 2",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 3",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 4",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 5",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 6",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 7",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 0",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 1",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 2",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 3",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 4",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 5",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 6",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CI 7",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 0",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 1",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 2",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 3",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 4",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 5",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 6",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "CO 7",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "AI 0",
+                  "direction": "IN",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "signalID": "AI 1",
+                  "direction": "IN",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "signalID": "AO 0",
+                  "direction": "OUT",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "signalID": "AO 1",
+                  "direction": "OUT",
+                  "valueType": "FLOAT"
+                }
+              ],
+              "webSocketURL": "/sources/wired-io"
+            },
+            {
+              "sourceID": "ur-tool-io",
+              "signals": [
+                {
+                  "signalID": "DI 0",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DI 1",
+                  "direction": "IN",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 0",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "DO 1",
+                  "direction": "OUT",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "signalID": "AI 0",
+                  "direction": "IN",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "signalID": "AI 1",
+                  "direction": "IN",
+                  "valueType": "FLOAT"
+                }
+              ],
+              "webSocketURL": "/sources/tool-io"
+            }
+          ],
+          "isDynamic": false
+        },
+        "ur-modbus": {
+          "groupId": "ur-modbus",
+          "isDynamic": true,
+          "version": "1.0.0",
+          "sources": []
+        },
+        "ur-robot-io": {
+          "type": "ur-robot-io",
+          "groupId": "ur-robot-io",
+          "isDynamic": false,
+          "version": "1.0.2",
+          "sources": [
+            {
+              "sourceID": "ur-robot-wired-io",
+              "name": "Wired I/O",
+              "signals": [
+                {
+                  "direction": "IN",
+                  "signalID": "DI 0",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 1",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 2",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 3",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 4",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 5",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 6",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 7",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 0",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 1",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 2",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 3",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 4",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 5",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 6",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 7",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 0",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 1",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 2",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 3",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 4",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 5",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 6",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "CI 7",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 0",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 1",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 2",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 3",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 4",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 5",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 6",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "CO 7",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "AI 0",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "AI 1",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "AO 0",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "AO 1",
+                  "valueType": "FLOAT"
+                }
+              ]
+            },
+            {
+              "sourceID": "ur-robot-tool-io",
+              "name": "Tool I/O",
+              "signals": [
+                {
+                  "direction": "IN",
+                  "signalID": "DI 0",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "DI 1",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "AI 0",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "direction": "IN",
+                  "signalID": "AI 1",
+                  "valueType": "FLOAT"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 0",
+                  "valueType": "BOOLEAN"
+                },
+                {
+                  "direction": "OUT",
+                  "signalID": "DO 1",
+                  "valueType": "BOOLEAN"
+                }
+              ]
+            }
+          ],
+          "parameters": {
+            "sourceConfig": {
+              "labelMap": {},
+              "analogDomainMap": {},
+              "presets": {},
+              "toolOutput": {
+                "dualPinPower": false,
+                "voltage": {
+                  "value": 0,
+                  "unit": "V"
+                },
+                "powerOutput": {
+                  "DO 0": 1,
+                  "DO 1": 1
+                }
+              }
+            },
+            "migrateSourceConfigDone": true
+          }
+        }
+      },
+      "safety": {
+        "settings": {
+          "io": {
+            "automaticModeSafeguardResetInput": {
+              "name": "automaticModeSafeguardResetInput",
+              "valueA": 255,
+              "valueB": 255
+            },
+            "automaticModeSafeguardStopInput": {
+              "name": "automaticModeSafeguardStopInput",
+              "valueA": 255,
+              "valueB": 255
+            },
+            "emergencyStopInput": {
+              "name": "emergencyStopInput",
+              "valueA": 255,
+              "valueB": 255
+            },
+            "notReducedModeOutput": {
+              "name": "notReducedModeOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            },
+            "operationalModeInput": {
+              "name": "operationalModeInput",
+              "valueA": 255,
+              "valueB": 255
+            },
+            "reducedModeInput": {
+              "name": "reducedModeInput",
+              "valueA": 255,
+              "valueB": 255
+            },
+            "reducedModeOutput": {
+              "name": "reducedModeOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            },
+            "robotMovingOutput": {
+              "name": "robotMovingOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            },
+            "robotNotStoppingOutput": {
+              "name": "robotNotStoppingOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            },
+            "safeHomeOutput": {
+              "name": "safeHomeOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            },
+            "safeguardResetInput": {
+              "name": "safeguardResetInput",
+              "valueA": 0,
+              "valueB": 1
+            },
+            "systemEmergencyStoppedOutput": {
+              "name": "systemEmergencyStoppedOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            },
+            "threePositionSwitchInput": {
+              "name": "threePositionSwitchInput",
+              "valueA": 255,
+              "valueB": 255
+            },
+            "freedriveEnabledInput": {
+              "name": "freedriveEnabledInput",
+              "valueA": 255,
+              "valueB": 255
+            },
+            "threePositionEnablingStopOutput": {
+              "name": "threePositionEnablingStopOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            },
+            "notThreePositionEnablingStopOutput": {
+              "name": "notThreePositionEnablingStopOutput",
+              "ossdEnabled": false,
+              "valueA": 255,
+              "valueB": 255
+            }
+          },
+          "major": 5,
+          "minor": 13,
+          "normalJointPositions": {
+            "base": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "elbow": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "shoulder": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "wrist1": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "wrist2": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "wrist3": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            }
+          },
+          "normalJointSpeeds": {
+            "base": 3.3415926,
+            "shoulder": 3.3415926,
+            "elbow": 3.3415926,
+            "wrist1": 3.3415926,
+            "wrist2": 3.3415926,
+            "wrist3": 3.3415926
+          },
+          "normalRobotLimits": {
+            "elbowForce": 150,
+            "elbowSpeed": 1.5,
+            "momentum": 25,
+            "power": 300,
+            "stoppingDistance": 0.5,
+            "stoppingTime": 0.4,
+            "toolForce": 150,
+            "toolSpeed": 1.5
+          },
+          "reducedJointPositions": {
+            "base": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "elbow": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "shoulder": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "wrist1": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "wrist2": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            },
+            "wrist3": {
+              "maximum": 6.33555,
+              "maximumJointPosition": 0.05235988,
+              "maximumRevolutionCounter": 1,
+              "minimum": -6.33555,
+              "minimumJointPosition": 6.2308254,
+              "minimumRevolutionCounter": -2,
+              "unlimited": false
+            }
+          },
+          "reducedJointSpeeds": {
+            "base": 3.3415926,
+            "shoulder": 3.3415926,
+            "elbow": 3.3415926,
+            "wrist1": 3.3415926,
+            "wrist2": 3.3415926,
+            "wrist3": 3.3415926
+          },
+          "reducedRobotLimits": {
+            "elbowForce": 120,
+            "elbowSpeed": 0.75,
+            "momentum": 10,
+            "power": 200,
+            "stoppingDistance": 0.3,
+            "stoppingTime": 0.3,
+            "toolForce": 120,
+            "toolSpeed": 0.75
+          },
+          "safetyHardware": {
+            "injectionMoldingMachineInterface": "NONE",
+            "teachPendant": "NORMAL"
+          },
+          "safetyPlanes": {
+            "planes": [
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "safetyPlane": {
+                  "normalModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModePlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "reducedModeTriggerPlane": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "restriction": "disabled"
+              }
+            ],
+            "ioSafetyPlanes": [
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              },
+              {
+                "name": "UNDEFINED",
+                "ioSafetyPlane": {
+                  "triggerOutput": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "triggerSafeguard": {
+                    "distance": 0,
+                    "vector": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0
+                    }
+                  },
+                  "restrictsElbow": false,
+                  "restrictsToolFlange": true,
+                  "inputConfiguration": {
+                    "name": "UNDEFINED",
+                    "valueA": 255,
+                    "valueB": 255
+                  },
+                  "outputConfiguration": {
+                    "name": "UNDEFINED",
+                    "ossdEnabled": false,
+                    "valueA": 255,
+                    "valueB": 255
+                  }
+                },
+                "tilt": 0,
+                "offset": 0,
+                "rotation": 0,
+                "trigger": "disabled"
+              }
+            ]
+          },
+          "safetySafeHome": {
+            "base": -1,
+            "elbow": -1,
+            "shoulder": -1,
+            "wrist1": -1,
+            "wrist2": -1,
+            "wrist3": -1,
+            "enabled": false
+          },
+          "safetyAPIParameters": {
+            "numberOfClients": 0,
+            "clients": []
+          },
+          "safetyFieldbusses": {
+            "enablePROFIsafe": false,
+            "sourceAddressPROFIsafe": 0,
+            "destAddressPROFIsafe": 0,
+            "modeControlPROFIsafe": false
+          },
+          "threePosition": {
+            "allowManualHighSpeed": true,
+            "useTeachPendantAs3PE": false
+          },
+          "toolDirection": {
+            "limitDeviation": 6.2831855,
+            "limitDirection": {
+              "x": 0,
+              "y": 0,
+              "z": 1
+            },
+            "limitRestriction": "DISABLED",
+            "toolPan": 0,
+            "toolTilt": 0
+          },
+          "toolPositions": {
+            "toolPositions": [
+              {
+                "name": "Tool Flange",
+                "center": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "radius": 0,
+                "definition": 2
+              },
+              {
+                "name": "UNDEFINED",
+                "center": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "radius": 0,
+                "definition": 0
+              },
+              {
+                "name": "UNDEFINED",
+                "center": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "radius": 0,
+                "definition": 0
+              }
+            ]
+          },
+          "normalWristClamp": {
+            "enableWristClampPosition": "LIMIT_ENABLED",
+            "enableWristClampTorque": "LIMIT_ENABLED"
+          },
+          "reducedWristClamp": {
+            "enableWristClampPosition": "LIMIT_ENABLED",
+            "enableWristClampTorque": "LIMIT_ENABLED"
+          }
+        },
+        "crc": "633835311"
+      },
+      "operatorScreens": [
+        {
+          "type": "ur-operator-screen-default",
+          "version": "0.0.2",
+          "parameters": {
+            "status": [],
+            "configuration": []
+          }
+        }
+      ],
+      "sidebarItems": [
+        {
+          "type": "ur-global-variables",
+          "version": "1.0.0",
+          "disabled": {
+            "master": false,
+            "automaticMode": false,
+            "remoteMode": true
+          }
+        },
+        {
+          "type": "ur-log-messages-sidebar",
+          "version": "0.0.1",
+          "disabled": {
+            "master": true,
+            "automaticMode": true,
+            "remoteMode": true
+          }
+        }
+      ],
+      "smartSkills": [
+        {
+          "name": "Align to Plane",
+          "enabled": true,
+          "type": "ur-align-to-plane",
+          "parameters": {
+            "radius": 0.05,
+            "push_force": 20,
+            "n_plane_points": 3,
+            "max_distance": 0.25,
+            "velocity_slow": 0.001,
+            "velocity_search": 0.035,
+            "velocity_move": 0.1,
+            "acceleration": 0.1
+          }
+        },
+        {
+          "name": "Align Z to Nearest Axis",
+          "enabled": true,
+          "type": "ur-align-z-to-nearest-axis"
+        },
+        {
+          "name": "Center",
+          "enabled": true,
+          "type": "ur-center",
+          "parameters": {
+            "push_force": 10,
+            "velocity_move": 0.05,
+            "acc_move": 0.2,
+            "max_radius_search": 0.05,
+            "num_fingers": 3
+          }
+        },
+        {
+          "name": "Freedrive",
+          "enabled": true,
+          "type": "ur-freedrive",
+          "version": "1.0.0",
+          "recordingFrequency": 50,
+          "recordingSignals": [
+            "timestamp",
+            "target_q",
+            "actual_TCP_pose",
+            "tcp_offset"
+          ]
+        },
+        {
+          "name": "Move into Contact",
+          "enabled": true,
+          "type": "ur-move-into-contact",
+          "parameters": {
+            "force": 10,
+            "velocity": 0.05,
+            "acceleration": 0.2,
+            "max_distance": 0.25,
+            "retract": 0
+          }
+        },
+        {
+          "name": "Retract",
+          "enabled": true,
+          "type": "ur-retract",
+          "parameters": {
+            "distance": -0.1,
+            "acceleration": 0.4,
+            "velocity": 0.1
+          }
+        },
+        {
+          "name": "Put into Box",
+          "enabled": false,
+          "type": "ur-put-in-box",
+          "version": "1.0.0"
+        },
+        {
+          "name": "Custom",
+          "enabled": false,
+          "type": "ur-custom-smart-skill",
+          "parameters": {
+            "includePreamble": true,
+            "includeModules": false
+          },
+          "version": "1.0.0"
+        },
+        {
+          "name": "Home",
+          "enabled": true,
+          "type": "ur-position",
+          "version": "1.1.2",
+          "parameters": {
+            "actualWaypoint": {
+              "frame": "base",
+              "pose": {
+                "position": [
+                  -1.8246917738038495E-9,
+                  -0.2329000001676105,
+                  1.0793999999522315
+                ],
+                "orientation": [
+                  3.987257497300885E-9,
+                  2.2214414675120993,
+                  -2.221441467056474
+                ]
+              },
+              "qNear": {
+                "base": 0,
+                "shoulder": -1.5707963249999999,
+                "elbow": 0,
+                "wrist1": -1.5707963249999999,
+                "wrist2": 0,
+                "wrist3": 0
+              }
+            },
+            "variable": {
+              "name": "Home",
+              "reference": false,
+              "type": "$$Variable",
+              "valueType": "waypoint",
+              "id": "038b8cab-70ae-6958-23c8-174fa0b397d1",
+              "_IDENTIFIER": "VariableDeclaration"
+            }
+          }
+        }
+      ]
+    },
+    "urscript": {
+      "script": "set_safety_mode_transition_hardness(1)\nreset_world_model()\nset_input_actions_to_default()\nset_analog_outputdomain(0,0)\nset_analog_outputdomain(1,0)\nset_standard_analog_input_domain(0,0)\nset_standard_analog_input_domain(1,0)\nset_tool_output_mode(0)\nset_tool_voltage(0)\nset_tool_digital_output_mode(0,1)\nset_tool_digital_output_mode(1,1)\nset_tool_analog_input_domain(0,0)\nset_tool_analog_input_domain(1,0)\nset_gravity([0, 0, 9.82])\nlocal existingBaseParent = get_frame_parent(\"base\")\nlocal basePose = get_pose(\"base\", existingBaseParent)\nbasePose[3] = 0\nbasePose[4] = 0\nbasePose[5] = 0\nmove_frame(\"base\", basePose, existingBaseParent)\nglobal base = \"base\"\nglobal tcp = \"tcp\"\nglobal world = \"world\"\nglobal flange = \"flange\"\nset_target_payload(0, [0, 0, 0], [0, 0, 0, 0, 0, 0])\nset_tcp(p[0, 0, 0, 0, 0, 0], \"Tool_flange\")\n# Start of Forces\n###\n# Transforms the force and torque values along the axes of the given pose\n# @param pose pose Any valid pose, defaults to base, the x, y, and z values are ignored\n# @return array 6D force torque vector with [Fx, Fy, Fz, Mx, My, Mz] aligned to pose in N and Nm respectively\n###\ndef get_tcp_wrench_in_frame(pose = p[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]):\n    # we are only interested in the rotation of pose, set translations to zero\n    local target_pose = pose\n    target_pose[0] = 0\n    target_pose[1] = 0\n    target_pose[2] = 0\n    # the conversion needs to happen as poses, so we need to convert back and forth a bit\n    local force = get_tcp_force()\n    local force_vector_as_pose = p[force[0], force[1], force[2], 0, 0, 0]\n    local torque_vector_as_pose = p[force[3], force[4], force[5], 0, 0, 0]\n    local transformed_force_as_pose = pose_trans(pose_inv(target_pose), force_vector_as_pose)\n    local transformed_torque_as_pose = pose_trans(pose_inv(target_pose), torque_vector_as_pose)\n    return [transformed_force_as_pose[0], transformed_force_as_pose[1], transformed_force_as_pose[2], transformed_torque_as_pose[0], transformed_torque_as_pose[1], transformed_torque_as_pose[2]]\nend\n###\n# See documentation for @link:get_tcp_wrench_in_frame()\n# @return forces and torques measured in TCP frame\n###\ndef get_tcp_wrench():\n    return get_tcp_wrench_in_frame(get_target_tcp_pose())\nend\n###\n# Projects the measured TCP force along the axis given\n# @param axis array 3D vector\n###\ndef project_tcp_force(axis):\n    local wrench = get_tcp_wrench()\n    local force = [wrench[0], wrench[1], wrench[2]]\n    return dot(force, axis)\nend\n# End of Forces\n# Start of Math\n# Definitions of constants\nglobal PI = acos(-1)\n###\n# Calculates the cross product between to 3D vectors\n# @param v1 array 3D vector\n# @param v2 array 3D vector\n###\ndef cross(v1, v2):\n    if length(v1) != length(v2):\n        popup(str_cat(\"For computing the cross product, the two vectors must have the same length. Provided lengths: \", [length(v1), length(v2)]), error=True, blocking=True)\n        return -1\n    end\n    if length(v1) != 3:\n        popup(str_cat(\"For computing the cross product, the two vectors must have length 3. Provided lengths: \", [length(v1), length(v2)]), error=True, blocking=True)\n        return -1\n    end\n    local cross = [0.0, 0.0, 0.0]\n    local i = 0\n    while i < 3:\n        local j = (i + 1) % 3 # The next index in a cyclic order\n        local k = (i + 2) % 3 # The next next index in a cyclic order\n        cross[i] = v1[j] * v2[k] - v1[k] * v2[j]\n        i = i + 1\n    end\n    return cross\nend\n###\n# Calculates the dot product between to n-dimensional vectors\n# @param v1 array nD vector\n# @param v2 array nD vector\n###\ndef dot(v1, v2):\n    if length(v1) != length(v2):\n        popup(str_cat(\"For computing the dot product, the two vectors must have the same length. Provided lengths: \", [length(v1), length(v2)]), error=True, blocking=True)\n        return -1\n    end\n    local result = 0\n    local i = 0\n    while i < length(v1):\n        result = result + (v1[i] * v2[i])\n        i = i + 1\n    end\n    return result\nend\n###\n# Return the larger number of a and b\n# @param a number a\n# @param b number b\n###\ndef max(a, b):\n    if a > b:\n        return a\n    end\n    return b\nend\n###\n# Find the maximum value in a list. The list must be of non-zero length and contain numbers\n# @param list array list\n###\ndef list_max(list):\n    local length = get_list_length(list)\n    if  length == 0:\n        popup(\"Getting the maximum of an empty list is impossible in list_max().\", error = True, blocking = True)\n        halt\n    end\n    local i = 0\n    local max = list[0]\n    while i < length:\n        if list[i] > max:\n            max = list[i]\n        end\n        i = i + 1\n        sync_at_multiple(i, 30)\n    end\n    return max\nend\ndef sync_at_multiple(i, n):\n    local tmp = i / n\n    if tmp == floor(tmp):\n        sync()\n    end\nend\n# End of Math\n# Start of Move Helper\nur_move_until_force_distance = 0.1\nur_move_until_force_direction = [0, 0, 1]\nur_move_until_force_velocity = 0.1\nur_move_until_force_acceleration = 0.2\ndef ur_move_tcp_direction(distance, direction, velocity, acceleration, blend_radius):\n    local current_pose = get_target_tcp_pose()\n    local movement = normalize(direction) * distance\n    local target_pose = pose_trans(current_pose, p[movement[0], movement[1], movement[2], 0, 0, 0])\n    movel(target_pose, a = 0.2, v = velocity, r = blend_radius)\nend\nthread ur_move_until_force_thread():\n    ur_move_tcp_direction(ur_move_until_force_distance, ur_move_until_force_direction, ur_move_until_force_velocity, ur_move_until_force_acceleration, 0)\n    popup(\"No contact detected.\", title = \"No Contact\", warning = False, error = True, blocking = False)\n    halt\nend\n###\n# Moves the robot in the TCP direction specified until a contact point is reached *or*\n# the robot reaches the maximum distance allowed specified by the distance parameter.\n# @param distance number The maximum distance the robot is allowed to travel in the direction specified\n# @param direction array 3D vector determining the move direction of the TCP\n# @param velocity number Velocity of the robot\n# @param acceleration number Acceleration of the robot\n# @param stop_force number Maximum search radius\n###\ndef ur_move_until_force(distance = 0.1, direction = [0, 0, 1], velocity = 0.1, acceleration = 0.2, stop_force = 20):\n    ur_move_until_force_distance = distance\n    ur_move_until_force_direction = direction\n    ur_move_until_force_velocity = velocity\n    ur_move_until_force_acceleration = acceleration\n    \n    thrd = run ur_move_until_force_thread()\n    while - project_tcp_force(direction) < stop_force:\n        sync()\n    end\n    kill thrd\n    local actual_pose = get_actual_tcp_pose()\n    stopl(1.0)\n    return actual_pose\nend\ndef ur_get_joint_speeds_before_offset(previous_q, time):\n    local current_q = get_joint_positions()\n    local delta_q = current_q - previous_q\n    return delta_q / time\nend\ndef ur_path_move(end_q, v, rampdown=False):\n    # Calculate distance to target\n    local start_q = get_joint_positions()\n    local delta_q = end_q - start_q\n    local positive_delta_q = [norm(delta_q[0]), norm(delta_q[1]), norm(delta_q[2]), norm(delta_q[3]), norm(delta_q[4]), norm(delta_q[5])]\n    # Calculate time to move based on desired velocity\n    local t = list_max(positive_delta_q) / v\n    servoj(end_q , 0, 0, t, lookahead_time=0.1, gain=500)\n    if(rampdown):\n        while(norm(ur_get_joint_speeds_before_offset(start_q, t)) > 0.0001):\n            t = max(t, 0.001)\n            start_q = get_joint_positions()\n            servoj(end_q , 0, 0, t)\n        end\n    end\nend\n# End of Move Helper\n# Waypoint variable for Home smart skill\nglobal Home = struct(p=p[-1.8246917738038495e-9, -0.2329000001676105, 1.0793999999522315, 3.987257497300885e-9, 2.2214414675120993, -2.221441467056474], frame=\"base\", q=[0, -1.5707963249999999, 0, -1.5707963249999999, 0, 0])\n# Start of Align to Plane\n###\n# Align to plane will touch up a plane by moving the robot into contact with the table or part in several locations to determine its orientation. Afterwards the robot will orient its tool to the plane.\n# @param radius number Radius [m] of the circle within the plane will be touched up\n# @param push_force number How hard to robot pushed against the plane\n# @param n_plane_points number Number of points that the robot uses to compute the plane\n# @param max_distance number Maximum distance that the robot searches\n# @param velocity_slow number Velocity when pressing downwards\n# @param velocity_search number Velocity used when approaching the touch up point\n# @param velocity_move number Velocity used in freespace\n# @param acceleration number Acceleration of the robot\n# @param direction array 3D vector determining the direction of the TCP for touching up the plane\n###\ndef ur_align_to_plane(radius = 0.05, push_force = 20, n_plane_points = 3, max_distance = 0.25, velocity_slow = 0.001, velocity_search = 0.035, velocity_move = 0.10, acceleration = 0.1, direction = [0, 0, 1]):\n    local angle = 2 * PI / n_plane_points\n    local start_pos = get_target_tcp_pose()\n    local retract_distance = -0.015\n    ur_move_tcp_direction(retract_distance, direction, velocity_move, acceleration, 0)\n    sleep(0.25)\n    zero_ftsensor()\n    local cnt = 0\n    local t_base_target = get_target_tcp_pose()\n    local mean_point = [0.0, 0.0, 0.0]\n    local A = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]\n    local b = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]\n    while cnt < n_plane_points:\n        local new_pos = pose_trans(t_base_target, p[cos(angle * cnt) * radius, sin(angle * cnt) * radius, 0.0, 0.0, 0.0, 0.0])\n        local blend_radius = norm(point_dist(get_actual_tcp_pose(), new_pos))/5\n        movel(new_pos, a = acceleration, v = velocity_move, r = blend_radius)\n        ur_move_until_force(max_distance + norm(retract_distance), direction, velocity_search, acceleration, push_force)\n        local movement = normalize(direction * -1) * 0.0005\n        local target_pose = pose_trans(get_actual_tcp_pose(), p[movement[0], movement[1], movement[2], 0, 0, 0])\n        movel(target_pose)\n        sleep(0.2)\n        ur_move_until_force(max_distance + norm(retract_distance), direction, velocity_slow, acceleration, push_force)\n        sleep(0.2)\n        while (not is_steady()):\n            sync()\n        end\n        local poked_point = get_target_tcp_pose()\n        poked_point = pose_trans(inv(t_base_target), poked_point)\n        A[cnt, 0] = poked_point[0]\n        A[cnt, 1] = poked_point[1]\n        A[cnt, 2] = 1.0\n        b[cnt] = poked_point[2]\n        mean_point = mean_point + [poked_point[0], poked_point[1], poked_point[2]]\n        movel(new_pos, a = 0.2, v = velocity_move, r = blend_radius)\n        cnt = cnt + 1\n    end\n    mean_point = mean_point / n_plane_points\n    cnt = 0\n    while cnt < n_plane_points:\n        local cntj = 0\n        while cntj < 2:\n            A[cnt, cntj] = A[cnt, cntj] - mean_point[cntj]\n            cntj = cntj + 1\n        end\n        b[cnt] = b[cnt] - mean_point[2]\n        cnt = cnt + 1\n    end\n    local x1 = inv(transpose(A) * A) * transpose(A) * b\n    local x = normalize([x1[0], x1[1], -1])\n    local d = dot(mean_point, x)\n    local dval = dot(direction, x)\n    if dval < 0:\n        x = -x\n        dval = -dval\n    end\n    local eaa = [0.0, 0.0, 0.0]\n    local EPSILON = 1e-10\n    if norm(dval - 1) < EPSILON:\n        # if the projection is close to 1 then the angle between the vectors are almost 0 and we cannot\n        # reliably determine the perpendicular axis.\n        # A good approximation is therefore just to set the EAA equal to 0.\n        eaa = [0.0, 0.0, 0.0]\n    else:\n        local axis = cross(direction, x)\n        local eaa = normalize(axis) * acos(dval)\n    end\n    local t_base_target_aligned = pose_trans(t_base_target, p[0, 0, 0, eaa[0], eaa[1], eaa[2]])\n    movel(t_base_target_aligned, a = 0.2, v = velocity_move)\nend\n# End of Align to Plane\n# Start of Align Z to Nearest Axis\n###\n# Aligns the TCP Z axis to the nearest axis of the given frame\n# @param frame_id string frame_id to lookup frame\n###\ndef ur_align_z_to_nearest_axis(frame_id = \"world\"):\n    ###\n    # Given a reference frame as input this function returns a struct with the nearest\n    # pose which aligns the z-axis of the robot TCP with the z-axis of the given reference frame.\n    # The pose is in the reference of the given frame.\n    # @param frame bool frame\n    # @returns struct pose, distance, referencePose\n    ###\n    def get_aligned_z_pose(frame):\n        local actualPose = get_actual_tcp_pose()\n        local actualPoseInFrame = pose_trans(pose_inv(frame), actualPose)\n        # Create rotation vector and convert that to RPY representation\n        local actualRotInFrame = [actualPoseInFrame[3], actualPoseInFrame[4], actualPoseInFrame[5]]\n        local actRPY = rotvec2rpy(actualRotInFrame)\n        # Set RX and RY to 0 and convert back to rotation vector\n        local alignedRot = rpy2rotvec([0, 0, actRPY[2]])\n        local alignedRotFlipped = rpy2rotvec([PI, 0, actRPY[2]])\n        local zUpPose = actualPoseInFrame\n        zUpPose[3] = alignedRot[0]\n        zUpPose[4] = alignedRot[1]\n        zUpPose[5] = alignedRot[2]\n        zUpStruct = struct(pose = zUpPose, distance=pose_dist(actualPoseInFrame, zUpPose), referencePose=frame)\n        local zDownPose = actualPoseInFrame\n        zDownPose[3] = alignedRotFlipped[0]\n        zDownPose[4] = alignedRotFlipped[1]\n        zDownPose[5] = alignedRotFlipped[2]\n        local zDownStruct = struct(pose = zDownPose, distance=pose_dist(actualPoseInFrame, zDownPose), referencePose=frame)\n        # Return the solution which is closer to the current robot pose\n        if (zDownStruct.distance > zUpStruct.distance):\n            return zUpStruct\n        else:\n            return zDownStruct\n        end\n    end\n    local frame = get_pose(frame_id)\n    # Rotate the given frame so that Z can be align to X-Y-Z respectively \n    local rotZtoX = rpy2rotvec([0,0.5*PI,0])\n    local rotZtoY = rpy2rotvec([0.5*PI,0,0])\n    local rotZtoZ = rpy2rotvec([0,0,0])\n    # Get aligned poses for each of the rotated frames\n    local structAlignedToX = get_aligned_z_pose(pose_trans(frame, p[0,0,0,rotZtoX[0],rotZtoX[1],rotZtoX[2]]))\n    structAlignedToY = get_aligned_z_pose(pose_trans(frame, p[0,0,0,rotZtoY[0],rotZtoY[1],rotZtoY[2]]))\n    structAlignedToZ = get_aligned_z_pose(pose_trans(frame, p[0,0,0,rotZtoZ[0],rotZtoZ[1],rotZtoZ[2]]))\n    # Find the nearest alignment\n    local structAligned = structAlignedToZ\n    if(structAligned.distance > structAlignedToX.distance):\n        structAligned = structAlignedToX    \n    end\n    if(structAligned.distance > structAlignedToY.distance):\n        structAligned = structAlignedToY    \n    end\n    # Move the robot to the aligned pose\n    movel(pose_trans(get_actual_tcp_pose(), p[0,0,0.00001,0,0,0]), v = 0.1)\n    movel(pose_trans(structAligned.referencePose, structAligned.pose ), v = 0.1)\nend\n# End of Align Z to Nearest Axis\n# Start of Center to Object\n###\n# Centers to an object by touching the externals of it. It works well for fixtured or heavy parts.\n# @param push_force number Force the robot uses to determine if a contact has been achieved\n# @param velocity_move number Velocity in freespace\n# @param velocity_search number First move is used then search\n# @param acc_move number Acceleration in freespace\n# @param max_radius_search number Maximum search radius\n# @param num_fingers number Number of fingers that the gripper has\n###\ndef ur_center_to_object(push_force = 10, velocity_move = 0.10, velocity_search = 0.01, acc_move = 0.2, max_radius_search = 0.05, num_fingers = 3):\n    def compute_circle_center(p_list):\n        # Compute the circle center by circular regression\n        # Source: https://math.stackexchange.com/questions/2898295/how-to-quickly-fit-a-circle-by-given-random-arc-points\n        local itr = 0\n        local x = 0\n        local y = 1\n    \n        local m1 = [[0,0,0],[0,0,0],[0,0,0]]\n        local m2 = [[0,0],[0,0],[0,0]]\n        local m3 = [[0],[0],[0]]\n    \n        while(itr < get_list_length(p_list)):\n            local p = p_list[itr]\n    \n            if(p_list[itr] == p[0,0,0,0,0,0]):\n                break\n            end\n    \n            m1[0,0] = m1[0,0] + (p[x]*p[x])\n            m1[0,1] = m1[0,1] + (p[x]*p[y])\n            m1[0,2] = m1[0,2] + (p[x])\n    \n            m1[1,0] = m1[1,0] + (p[x]*p[y])\n            m1[1,1] = m1[1,1] + (p[y]*p[y])\n            m1[1,2] = m1[1,2] + (p[y])\n    \n            m1[2,0] = m1[2,0] + (p[x])\n            m1[2,1] = m1[2,1] + (p[y])\n    \n            m2[0,0] = m2[0,0] + (pow(p[x], 3))\n            m2[0,1] = m2[0,1] + (p[x] * pow(p[y], 2))\n    \n            m2[1,0] = m2[1,0] + (pow(p[y], 3))\n            m2[1,1] = m2[1,1] + (pow(p[x], 2) * p[y])\n    \n            m2[2,0] = m2[2,0] + (pow(p[x], 2))\n            m2[2,1] = m2[2,1] + (pow(p[y], 2))\n    \n            itr = itr +1\n        end\n    \n        if(itr < 2):\n            return p[0,0,0,0,0,0]\n        elif(itr > get_list_length(p_list)):\n            return p[0,0,0,0,0,0]\n        end\n    \n        m1[0,0] = 2 * m1[0,0]\n        m1[0,1] = 2 * m1[0,1]\n        m1[1,0] = 2 * m1[1,0]\n        m1[1,1] = 2 * m1[1,1]\n        m1[2,0] = 2 * m1[2,0]\n        m1[2,1] = 2 * m1[2,1]\n        m1[2,2] = itr\n        m3[0,0] = m2[0,0] + m2[0,1]\n        m3[1,0] = m2[1,0] + m2[1,1]\n        m3[2,0] = m2[2,0] + m2[2,1]\n    \n        local center = inv(m1) * m3\n    \n        return p[center[0,0], center[1,0],0,0,0,0]\n    end\n    \n    def sanity_checked_move(p_org, p_new, max_diff, acc, vel):\n        if (pose_dist(p_org, p_new) > max_diff):\n            movel(p_org, a = acc, v = vel)\n            popup(\"New pose is too far away from original. Returning to original\", title = \"Failed\", warning = False, error = True, blocking = True)\n        else:\n            movel(p_new, a = acc, v = vel)\n        end\n    end\n    # Start by zeroing the FT sensor\n    sleep(0.25)\n    zero_ftsensor()\n    local p_start = get_actual_tcp_pose()\n    local p0 = p[0,0,0,0,0,0]\n    local DIR_X = [1, 0, 0]\n    if (num_fingers == 2):\n        local dir_list = [DIR_X, -DIR_X, DIR_X, -DIR_X]\n        local start_offset = [p[0,0,0,0,0,0], p[0,0,0,0,0,0], p[0,0,0,0,0,0.35], p[0,0,0,0,0,0.35]]\n        local p_list = [p0, p0, p0, p0]\n    elif (num_fingers == 3):\n        local DIR_P1 = DIR_X\n        local DIR_P2 = [-1 / 2, sqrt(3.0) / 2.0, 0]\n        local DIR_P3 = [-1 / 2, -sqrt(3.0) / 2.0, 0]\n        local dir_list = [DIR_P1, DIR_P2, DIR_P3, DIR_P1, DIR_P2, DIR_P3]\n        local start_offset = [p[0,0,0,0,0,0], p[0,0,0,0,0,0], p[0,0,0,0,0,0], p[0,0,0,0,0,0.35], p[0,0,0,0,0,0.35], p[0,0,0,0,0,0.35]]\n        local p_list = [p0, p0, p0, p0, p0, p0]\n    else:\n        popup(\"Number of fingers not supported\")\n        halt\n    end\n    # Loop through directions\n    local it = 0\n    local dir_list_size = size(dir_list)\n    local dir_list_length = dir_list_size[0]\n    while(it < dir_list_length):\n        # Move to starting position if more than 3 positions is stored then calculate a new starting position\n        if(it < 3):\n            movel(pose_trans(p_start, start_offset[it]), a = acc_move, v = velocity_move)\n        else:\n            local p_start_temp = pose_trans(pose_trans(p_start, compute_circle_center(p_list)), start_offset[it])\n            local p_start_w_offset = pose_trans(p_start, start_offset[it])\n            sanity_checked_move(p_start_w_offset, p_start_temp, max_radius_search, acc_move, velocity_move)\n        end\n        local p_start_temp = get_actual_tcp_pose()\n        # Move into contact and store contact point\n        sleep(0.1)\n        local contact_point = ur_move_until_force(distance = max_radius_search, direction = [dir_list[it, 0], dir_list[it, 1], dir_list[it, 2]], velocity = velocity_search, acceleration = acc_move, stop_force = push_force)\n        \n        local dir = [dir_list[it, 0], dir_list[it, 1], dir_list[it, 2]]\n        dir = normalize(dir) * 0.05\n        contact_point = pose_trans(contact_point, p[dir[0], dir[1], dir[2], 0, 0, 0])\n        p_list[it] = pose_trans(pose_inv(p_start), contact_point)\n        # Move out of contact\n        movel(p_start_temp, a = acc_move, v = velocity_move)\n        it = it + 1\n    end\n    # Find circle center based on n stored  points\n    local center_offset_xy = compute_circle_center(p_list)\n    local p_center = pose_trans(p_start, center_offset_xy)\n    \n    # Move the robot to the center if it can\n    sanity_checked_move(p_start, p_center, max_radius_search, acc_move, velocity_move)\nend\n# End of Center to Object\n# Start of Move Into Contact\n###\n# Moves the robot into contact in the TCP direction set\n# @param force number Force that determines when a contact has been achieved\n# @param velocity number Velocity of the robot\n# @param acceleration number Acceleration of the robot\n# @param max_distance number Maximum distance that the robot searches\n# @param velocity_search number velocity_search\n# @param retract number Retract distance after a contact has been found\n# @param move_tcp_dir array TCP direction (3D vector)\n# @param zero_ft_on_start bool Determines if the force-torque sensor should be zeroed on start\n###\ndef ur_move_into_contact(force = 10, velocity = 0.05, acceleration = 0.1, max_distance = 0.25, retract = 0.0, move_tcp_dir = [0, 0, 1], zero_ft_on_start = True):\n    # Zero the force torque sensor\n    if (zero_ft_on_start):\n        sleep(0.25)\n        zero_ftsensor()\n    end\n    # Move the robot\n    ur_move_until_force(max_distance, move_tcp_dir, velocity, acceleration, force)\n    # If a retract distance is set, move the robot back to that position\n    if (retract != 0):\n        # Compute position offset from TCP direction and retract distance\n        local position = normalize(move_tcp_dir) * retract\n        movel(pose_trans(get_actual_tcp_pose(), p[position[0], position[1], position[2], 0, 0, 0]))\n    end\nend\n# End of Move Into Contact\n# Start of Retract\n###\n# Retract in the TCP direction set\n# @param distance number Retraction distance\n# @param direction array TCP direction to move in (3D vector)\n# @param acceleration number Acceleration used by the robot\n# @param velocity number Velocity used by the robot\n###\ndef ur_retract(distance = -0.1, direction = [0, 0, 1], acceleration = 0.4, velocity = 0.1):\n    local movement = normalize(direction) * distance\n    movel(pose_trans(get_actual_tcp_pose(), p[movement[0], movement[1], movement[2], 0, 0, 0]), a = acceleration, v = velocity)\nend\n# End of Retract",
+      "nodeIDList": []
+    }
+  },
+  "program": {
+    "id": "5",
+    "programContent": {
+      "children": [
+        {
+          "children": [],
+          "contributedNode": {
+            "type": "ur-modules",
+            "version": "0.0.1",
+            "allowsChildren": true,
+            "lockChildren": false
+          },
+          "guid": "e98f5594-3223-dccd-3a54-e4a0ebb448ae",
+          "parentId": "563d78e2-b8b7-818d-6886-d3d169c13afb"
+        },
+        {
+          "children": [],
+          "contributedNode": {
+            "type": "ur-functions",
+            "version": "0.0.1",
+            "allowsChildren": true,
+            "lockChildren": false
+          },
+          "guid": "f486e2c5-15bd-418e-bbce-fdb9b1bf0b36",
+          "parentId": "563d78e2-b8b7-818d-6886-d3d169c13afb"
+        },
+        {
+          "children": [],
+          "contributedNode": {
+            "type": "ur-before-start",
+            "version": "0.0.1",
+            "allowsChildren": true
+          },
+          "guid": "f37a4466-36c4-fecd-db39-70c813c3e4cf",
+          "parentId": "563d78e2-b8b7-818d-6886-d3d169c13afb"
+        },
+        {
+          "children": [],
+          "contributedNode": {
+            "type": "ur-configuration",
+            "version": "0.0.1",
+            "allowsChildren": true,
+            "parameters": {}
+          },
+          "guid": "afe54a28-c4e9-e549-5537-623168b12932",
+          "parentId": "563d78e2-b8b7-818d-6886-d3d169c13afb"
+        },
+        {
+          "children": [],
+          "contributedNode": {
+            "type": "ur-status",
+            "version": "0.0.1",
+            "allowsChildren": true,
+            "parameters": {}
+          },
+          "guid": "9560e234-e99c-194a-61ab-6d9086f9cc3b",
+          "parentId": "563d78e2-b8b7-818d-6886-d3d169c13afb"
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "contributedNode": {
+                "type": "ur-wait",
+                "version": "0.0.3",
+                "parameters": {
+                  "type": "time",
+                  "time": {
+                    "entity": {
+                      "value": 23,
+                      "unit": "s"
+                    },
+                    "selectedType": "VALUE",
+                    "value": "23"
+                  }
+                }
+              },
+              "guid": "fb05e537-a239-564a-9f4a-8241657bb343",
+              "parentId": "6a3b8974-6b6b-a47d-0e37-f636c0bec306",
+              "programLabel": [
+                {
+                  "type": "secondary",
+                  "value": "23.00 s"
+                }
+              ]
+            }
+          ],
+          "contributedNode": {
+            "type": "ur-code",
+            "version": "0.0.1",
+            "allowsChildren": true,
+            "lockChildren": false,
+            "parameters": {
+              "loopForever": false
+            }
+          },
+          "guid": "6a3b8974-6b6b-a47d-0e37-f636c0bec306",
+          "parentId": "563d78e2-b8b7-818d-6886-d3d169c13afb"
+        }
+      ],
+      "contributedNode": {
+        "type": "ur-program",
+        "version": "0.0.2",
+        "allowsChildren": true,
+        "lockChildren": true,
+        "parameters": {
+          "name": "Default program",
+          "symbolHistory": {
+            "variables": [
+              {
+                "name": "base",
+                "valueType": "frame",
+                "reference": {
+                  "id": "4aa883ca-3eba-49ec-bbcc-ee1ee65176ed",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "tcp",
+                "valueType": "frame",
+                "reference": {
+                  "id": "551721e6-e865-fe61-5a00-85c8f3fcb7ce",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "world",
+                "valueType": "frame",
+                "reference": {
+                  "id": "15d05e2b-ad37-603f-cfbd-3b344fdee9d4",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "flange",
+                "valueType": "frame",
+                "reference": {
+                  "id": "af9509cc-f84c-71b2-3578-10a8172db29b",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "grid",
+                "valueType": "grid",
+                "reference": {
+                  "id": "17606307-89d9-eb68-6cfb-918c0ddbed4c",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "grid_iterator",
+                "valueType": "waypoint",
+                "reference": {
+                  "id": "74c6d3f7-b0ad-09c5-4bf6-2acc5848f9d5",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "Joint_fast",
+                "valueType": "profile",
+                "reference": {
+                  "id": "9cadc383-da1d-d089-1320-9760cfb9fe0e",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "Joint_slow",
+                "valueType": "profile",
+                "reference": {
+                  "id": "9f7cd9c1-6b40-8ecf-cc23-dd5e94791815",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "Linear_fast",
+                "valueType": "profile",
+                "reference": {
+                  "id": "bbc53484-5136-9422-baed-131c092effdc",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "Linear_slow",
+                "valueType": "profile",
+                "reference": {
+                  "id": "a4ce2084-6f47-6b6b-1e85-cb174d0397b3",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "Process",
+                "valueType": "profile",
+                "reference": {
+                  "id": "9e716d40-7af5-7806-2a39-f1d98dce92dd",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              },
+              {
+                "name": "Home",
+                "valueType": "waypoint",
+                "reference": {
+                  "id": "038b8cab-70ae-6958-23c8-174fa0b397d1",
+                  "_IDENTIFIER": "VariableReference"
+                }
+              }
+            ],
+            "functions": [],
+            "modules": [
+              {
+                "name": "application",
+                "reference": {
+                  "id": "application-module-id",
+                  "_IDENTIFIER": "ModuleReference"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "guid": "563d78e2-b8b7-818d-6886-d3d169c13afb"
+    },
+    "programInformation": {
+      "name": "test upload",
+      "description": "",
+      "createdDate": 1771239851763,
+      "lastSavedDate": 1771242227312,
+      "lastModifiedDate": null,
+      "programState": "FINAL",
+      "functionsBlockShown": false
+    },
+    "urscript": {
+      "script": "$ 1 \"ur-program\"\n$ 2 \"ur-modules\"\n$ 3 \"ur-functions\"\n$ 4 \"ur-before-start\"\n$ 5 \"ur-code\"\n$ 6 \"ur-wait\"\nsleep(23)",
+      "nodeIDList": [
+        "00000000-0000-0000-0000-000000000000",
+        "563d78e2-b8b7-818d-6886-d3d169c13afb",
+        "e98f5594-3223-dccd-3a54-e4a0ebb448ae",
+        "f486e2c5-15bd-418e-bbce-fdb9b1bf0b36",
+        "f37a4466-36c4-fecd-db39-70c813c3e4cf",
+        "6a3b8974-6b6b-a47d-0e37-f636c0bec306",
+        "fb05e537-a239-564a-9f4a-8241657bb343"
+      ]
+    }
+  }
+}
