@@ -126,9 +126,21 @@ Close a safety popup on the teach pendant.
 
 Service to reconnect to the dashboard server
 
+##### download_program ([ur_dashboard_msgs/Download](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/DownloadProgram.html))
+
+**PolyScope X only**: Download a program with the given name from the robot and save it as
+`*.urpx` file locally. This service is only available on a PolyScope X robot with version >=
+10.12.0.
+
+
 ##### get_loaded_program ([ur_dashboard_msgs/GetLoadedProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetLoadedProgram.html))
 
-Load a robot installation from a file
+Get the name of the currently loaded program.
+
+##### get_programs ([ur_dashboard_msgs/GetPrograms](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetPrograms.html))
+
+**PolyScope X only**: Get a list of all programs on the robot. This service is only available on a
+PolyScope X robot with version >= 10.12.0.
 
 ##### get_robot_mode ([ur_dashboard_msgs/GetRobotMode](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetRobotMode.html))
 
@@ -138,13 +150,20 @@ Service to query the current robot mode
 
 Service to query the current safety mode
 
+##### is_in_remote_control ([ur_dashboard_msgs/IsInRemoteControl](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/IsInRemoteControl.html))
+
+Service to query whether the robot is in remote control.
+
 ##### load_installation ([ur_dashboard_msgs/Load](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/Load.html))
 
 Load a robot installation from a file
 
 ##### load_program ([ur_dashboard_msgs/Load](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/Load.html))
 
-Load a robot program from a file
+Load a robot program from a file on the robot. On PolyScope 5, this can be either file in the
+robot's programs folder or an absolute path to a file. The filename has to include the `.urp`
+ending. On PolyScope X, this has to be the program's name as shown in the Programs overview on the
+robot, without a `.urpx` suffix.
 
 ##### pause ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
@@ -192,8 +211,8 @@ Used when robot gets a safety fault or violation to restart the safety. After sa
 
 ##### resume ([std_srvs/Trigger](http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html))
 
-Resume a paused program on a PolyScope X robot. This service is only available on a PolyScope X
-robot.
+**PolyScope X only**: Resume a paused program on a PolyScope X robot. This service is only available on a PolyScope X
+robot with version >= 10.11.0.
 
 ##### shutdown ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
@@ -207,9 +226,17 @@ Stop program execution on the robot
 
 Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the cause of the protective stop is resolved before calling this service.
 
-##### is_in_remote_control [ur_dashboard_msgs/IsInRemoteControl](http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/IsInRemoteControl.html)
+##### update_program ([ur_dashboard_msgs/UpdateProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/UpdateProgram.html))
 
-Service to query whether the robot is in remote control
+**PolyScope X only**: Update a program on the robot. If the program does not exist or the program
+is currently loaded, this service call will fail. This service is only available on a PolyScope X
+robot with version >= 10.12.0.
+
+##### upload_program ([ur_dashboard_msgs/UploadProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/UploadProgram.html))
+
+**PolyScope X only**: Upload a program to the robot. If a program with the same name already
+exists, this service call will fail. This service is only available on a PolyScope X robot with
+version >= 10.12.0.
 
 #### Parameters
 
