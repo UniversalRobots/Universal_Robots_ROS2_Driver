@@ -31,27 +31,35 @@ import sys
 import time
 import unittest
 
+import launch_testing
 import pytest
 import rclpy
 from rclpy.node import Node
 from ur_dashboard_msgs.msg import RobotMode
 
 sys.path.append(os.path.dirname(__file__))
-from test_common import DashboardInterface, generate_dashboard_test_description  # noqa: E402
+from test_common import (  # noqa: E402
+    DashboardInterface,
+    generate_dashboard_test_description,
+)
 
 
 @pytest.mark.launch_test
-def generate_test_description():
-    return generate_dashboard_test_description()
+@launch_testing.parametrize(
+    "ursim_version",
+    ["latest", "10.12.0"],
+)
+def generate_test_description(ursim_version):
+    return generate_dashboard_test_description(ursim_version)
 
 
 class DashboardClientTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, ursim_version):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("dashboard_client_test")
-        cls.init_robot(cls)
+        cls.init_robot(cls, ursim_version)
 
     @classmethod
     def tearDownClass(cls):
@@ -59,12 +67,18 @@ class DashboardClientTest(unittest.TestCase):
         cls.node.destroy_node()
         rclpy.shutdown()
 
-    def init_robot(self):
+    def init_robot(self, ursim_version):
         self._dashboard_interface = DashboardInterface(self.node)
-        self._dashboard_interface.power_off()  # create a defined starting state
+        result = self._dashboard_interface.is_in_remote_control()
+        self.remote_control = result.remote_control
+        if self.remote_control or ursim_version.startswith("5.") or ursim_version == "latest":
+            self._dashboard_interface.power_off()  # create a defined starting state
 
-    def test_switch_on(self):
+    def test_switch_on(self, ursim_version):
         """Test power on a robot."""
+        if ursim_version.startswith("10."):
+            self.skipTest("Currently, this test isn't supported on PolyScope X")
+
         # Wait until the robot is booted completely
         end_time = time.time() + 10
         mode = RobotMode.DISCONNECTED
@@ -101,3 +115,36 @@ class DashboardClientTest(unittest.TestCase):
             mode = result.robot_mode.mode
 
         self.assertEqual(mode, RobotMode.RUNNING)
+
+    def test_get_robot_mode(self):
+        """Test get robot mode."""
+        result = self._dashboard_interface.get_robot_mode()
+        self.assertTrue(result.success)
+
+    def test_program_management(self, ursim_version):
+        """Test uploading a program."""
+        if not ursim_version.startswith("10."):
+            self.skipTest("Uploading a program is only supported on PolyScope X")
+        result = self._dashboard_interface.upload_program(
+            file_path=os.path.join(os.path.dirname(__file__), "test_program.urpx")
+        )
+        self.assertTrue(result.success)
+        self.assertEqual(result.program_name, "test upload")
+
+        result = self._dashboard_interface.get_programs()
+        self.assertTrue(result.success)
+        self.assertTrue(len(result.programs) > 0)
+
+        # TODO: Updating a program requires an open UI session. We would need to start a browser
+        # from within this test. Maybe it would be better to turn those tests into unittests, as
+        # functionality is tested in the client library, already.
+        # result = self._dashboard_interface.update_program(
+        # file_path=os.path.join(os.path.dirname(__file__), "test_program.urpx")
+        # )
+        # self.assertTrue(result.success)
+        # self.assertEqual(result.program_name, "test upload")
+
+        result = self._dashboard_interface.download_program(
+            program_name="test upload", target_path="/tmp/test_program_download.urpx"
+        )
+        self.assertTrue(result.success)

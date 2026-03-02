@@ -1,0 +1,5 @@
+string program_name
+string target_path
+---
+string answer
+bool success
