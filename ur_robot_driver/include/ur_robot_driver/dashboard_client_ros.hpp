@@ -64,6 +64,9 @@
 #include "ur_dashboard_msgs/srv/popup.hpp"
 #include "ur_dashboard_msgs/srv/raw_request.hpp"
 #include "ur_dashboard_msgs/srv/is_in_remote_control.hpp"
+#include "ur_dashboard_msgs/srv/get_programs.hpp"
+#include "ur_dashboard_msgs/srv/download_program.hpp"
+#include "ur_dashboard_msgs/srv/upload_program.hpp"
 
 namespace ur_robot_driver
 {
@@ -118,8 +121,9 @@ private:
       resp->success = dashboard_response.ok;
       resp->answer = dashboard_response.message;
     } catch (const urcl::NotImplementedException& e) {
-      RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "This service call seems not to be implemented (for this "
-                                                           "robot version).");
+      RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"),
+                   "This service call seems not to be implemented (for this robot version). Error message: '%s'",
+                   e.what());
       resp->answer = "Not implemented for this robot software version.";
       resp->success = false;
     } catch (const urcl::UrException& e) {
@@ -217,6 +221,10 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::GetSafetyMode>::SharedPtr safety_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GetRobotMode>::SharedPtr robot_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::IsInRemoteControl>::SharedPtr is_in_remote_control_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::GetPrograms>::SharedPtr get_programs_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::UploadProgram>::SharedPtr upload_program_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::UploadProgram>::SharedPtr update_program_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::DownloadProgram>::SharedPtr download_program_service_;
 
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
 };
