@@ -7,6 +7,7 @@ find_package(action_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 
 set(msg_files
+  msg/ProgramInformation.msg
   msg/ProgramState.msg
   msg/RobotMode.msg
   msg/SafetyMode.msg
@@ -14,7 +15,9 @@ set(msg_files
 
 set(srv_files
   srv/AddToLog.srv
+  srv/DownloadProgram.srv
   srv/GetLoadedProgram.srv
+  srv/GetPrograms.srv
   srv/GetProgramState.srv
   srv/GetRobotMode.srv
   srv/GetSafetyMode.srv
@@ -24,6 +27,7 @@ set(srv_files
   srv/Popup.srv
   srv/RawRequest.srv
   srv/IsInRemoteControl.srv
+  srv/UploadProgram.srv
 )
 
 set(action_files

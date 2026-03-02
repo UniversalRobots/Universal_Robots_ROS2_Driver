@@ -1,0 +1,4 @@
+---
+ProgramInformation[] programs
+string answer
+bool success
