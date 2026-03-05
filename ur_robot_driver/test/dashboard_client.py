@@ -198,7 +198,6 @@ class DashboardClientTest(unittest.TestCase):
         resp = self._dashboard_interface.clear_operational_mode()
         self.assertTrue(resp.success)
 
-    # Just for PolyScope X
     def test_get_operational_mode(self, ursim_version):
         if not ursim_version.startswith("10."):
             self.skipTest("Specific test for PolyScope X, skipping")
