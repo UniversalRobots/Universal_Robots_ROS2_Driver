@@ -218,7 +218,7 @@ get_safety_status (`ur_dashboard_msgs/GetSafetyStatus <http://docs.ros.org/en/ro
 generate_flight_report (`ur_dashboard_msgs/GenerateFlightReport <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GenerateFlightReport.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**CB3 | PolyScope 5** Generate flight report of the chosen type, defaults to SYSTEM
+**CB3 | PolyScope 5** Generate flight report of the chosen type, defaults to SYSTEM. It is required to wait at least 30 seconds between triggering software or controller reports.
 
 generate_support_file (`ur_dashboard_msgs/GenerateSupportFile <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GenerateSupportFile.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
