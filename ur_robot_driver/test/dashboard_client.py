@@ -46,11 +46,11 @@ from test_common import (  # noqa: E402
 
 @pytest.mark.launch_test
 @launch_testing.parametrize(
-    "ursim_version",
-    ["latest", "10.12.0", "3.15.8"],
+    "ursim_version, ur_type",
+    [("latest", "ur30"), ("10.12.0", "ur7e"), ("3.15.8", "ur10")],
 )
-def generate_test_description(ursim_version):
-    return generate_dashboard_test_description(ursim_version)
+def generate_test_description(ursim_version, ur_type):
+    return generate_dashboard_test_description(ursim_version, ur_type)
 
 
 class DashboardClientTest(unittest.TestCase):

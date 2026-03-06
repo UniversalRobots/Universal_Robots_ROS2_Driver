@@ -452,9 +452,7 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-def _ursim_action(ursim_version="latest"):
-    ur_type = LaunchConfiguration("ur_type")
-
+def _ursim_action(ursim_version="latest", ur_type="ur5e"):
     return ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
@@ -475,7 +473,7 @@ def _ursim_action(ursim_version="latest"):
     )
 
 
-def generate_dashboard_test_description(ursim_version="latest"):
+def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e"):
     dashboard_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -493,7 +491,7 @@ def generate_dashboard_test_description(ursim_version="latest"):
 
     return LaunchDescription(
         _declare_launch_arguments()
-        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version)]
+        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version, ur_type)]
     )
 
 
