@@ -209,11 +209,11 @@ def launch_setup(context):
         "tool_contact_controller",
         "motion_primitive_forward_controller",
     ]
-    if activate_joint_controller.perform(context) == "true":
+    if activate_joint_controller.perform(context):
         controllers_active.append(initial_joint_controller.perform(context))
         controllers_inactive.remove(initial_joint_controller.perform(context))
 
-    if use_mock_hardware.perform(context) == "true":
+    if use_mock_hardware.perform(context):
         controllers_active.remove("tcp_pose_broadcaster")
 
     controller_spawners = [
