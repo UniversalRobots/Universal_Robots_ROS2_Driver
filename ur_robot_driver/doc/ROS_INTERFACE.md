@@ -132,10 +132,26 @@ Service to reconnect to the dashboard server
 `*.urpx` file locally. This service is only available on a PolyScope X robot with version >=
 10.12.0.
 
+##### generate_flight_report ([ur_dashboard_msgs/GenerateFlightReport](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GenerateFlightReport.html))
+
+**CB3 | PolyScope 5** Generate flight report of the chosen type, defaults to SYSTEM. It is required to wait at least 30 seconds between triggering software or controller reports.
+
+##### generate_support_file ([ur_dashboard_msgs/GenerateSupportFile](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GenerateSupportFile.html))
+
+**CB3 | PolyScope 5** Generate a support file at the specified location. Location is relative to the programs folder, if saving to a subfolder it must exist prior to the service call.
+Defaults to saving to the programs folder
 
 ##### get_loaded_program ([ur_dashboard_msgs/GetLoadedProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetLoadedProgram.html))
 
 Get the name of the currently loaded program.
+
+##### get_operational_mode ([ur_dashboard_msgs/GetOperationalMode](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetOperationalMode.html))
+
+**PolyScope 5 | PolyScope X 10.12.0 onwards** Get current operational mode of the robot
+
+##### get_polyscope_version ([ur_dashboard_msgs/GetPolyScopeVersion](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetPolyScopeVersion.html))
+
+**CB3 | PolyScope 5** Get polyScope version of robot
 
 ##### get_programs ([ur_dashboard_msgs/GetPrograms](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetPrograms.html))
 
@@ -146,9 +162,25 @@ PolyScope X robot with version >= 10.12.0.
 
 Service to query the current robot mode
 
+##### get_robot_model ([ur_dashboard_msgs/GetRobotModel](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetRobotModel.html))
+
+**CB3 | PolyScope 5** Get the robot model, in the format URx. It should be noted this call does not differentiate between e-series and CB3, so UR5 and UR5e will both report as UR5
+
 ##### get_safety_mode ([ur_dashboard_msgs/GetSafetyMode](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetSafetyMode.html))
 
 Service to query the current safety mode
+
+##### get_safety_status ([ur_dashboard_msgs/GetSafetyStatus](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetSafetyStatus.html))
+
+**PolyScope 5 only** Get current safety status of the robot system, this is more detailed than get_safety_mode and should be preferred when possible
+
+##### get_serial_number ([ur_dashboard_msgs/GetSerialNumber](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetSerialNumber.html))
+
+**CB3 | PolyScope 5** Get serial number of robot
+
+##### get_user_role ([ur_dashboard_msgs/GetUserRole](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetUserRole.html))
+
+**CB3 only** Get current user role
 
 ##### is_in_remote_control ([ur_dashboard_msgs/IsInRemoteControl](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/IsInRemoteControl.html))
 
@@ -213,6 +245,14 @@ Used when robot gets a safety fault or violation to restart the safety. After sa
 
 **PolyScope X only**: Resume a paused program on a PolyScope X robot. This service is only available on a PolyScope X
 robot with version >= 10.11.0.
+
+##### set_operational_mode ([ur_dashboard_msgs/SetOperationalMode](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/SetOperationalMode.html))
+
+**PolyScope 5 only** Set operational mode of the robot. When this has been called, the teach pendant can not be used to change the operational mode until clear_operational_mode has been called.
+
+##### set_user_role ([ur_dashboard_msgs/SetUserRole](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/SetUserRole.html))
+
+**CB3 only** Set user role on the robot
 
 ##### shutdown ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
