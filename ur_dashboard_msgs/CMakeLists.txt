@@ -11,6 +11,10 @@ set(msg_files
   msg/ProgramState.msg
   msg/RobotMode.msg
   msg/SafetyMode.msg
+  msg/OperationalMode.msg
+  msg/UserRole.msg
+  msg/VersionInformation.msg
+  msg/SafetyStatus.msg
 )
 
 set(srv_files
@@ -28,6 +32,16 @@ set(srv_files
   srv/RawRequest.srv
   srv/IsInRemoteControl.srv
   srv/UploadProgram.srv
+  srv/GetPolyScopeVersion.srv
+  srv/GetSerialNumber.srv
+  srv/GetUserRole.srv
+  srv/SetUserRole.srv
+  srv/SetOperationalMode.srv
+  srv/GetOperationalMode.srv
+  srv/GetRobotModel.srv
+  srv/GetSafetyStatus.srv
+  srv/GenerateFlightReport.srv
+  srv/GenerateSupportFile.srv
 )
 
 set(action_files
