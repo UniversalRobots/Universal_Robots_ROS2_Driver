@@ -1,0 +1,4 @@
+OperationalMode operational_mode
+---
+string answer
+bool success

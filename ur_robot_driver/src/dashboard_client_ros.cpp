@@ -43,6 +43,7 @@
 
 #include <memory>
 #include <string>
+#include <regex>
 
 #include <ur_robot_driver/dashboard_client_ros.hpp>
 
@@ -229,6 +230,23 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         return true;
       });
 
+  // Service to get serial number of the robot
+  get_serial_number_service_ = node->create_service<ur_dashboard_msgs::srv::GetSerialNumber>(
+      "~/get_serial_number", [&](const ur_dashboard_msgs::srv::GetSerialNumber::Request::SharedPtr /*unused*/,
+                                 ur_dashboard_msgs::srv::GetSerialNumber::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetSerialNumberWithResponse(); }, resp);
+
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->serial_number = std::stoull(std::get<std::string>(dashboard_response.data.at("serial_number")));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
   // Service to query the current safety mode
   safety_mode_service_ = node_->create_service<ur_dashboard_msgs::srv::GetSafetyMode>(
       "~/get_safety_mode",
@@ -246,6 +264,10 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         dashboardCallWithChecks([this, req]() { return client_->commandAddToLogWithResponse(req->message); }, resp);
         return true;
       });
+  // Service to get the polyscope version running on the robot
+  get_polyscope_version_service_ = node->create_service<ur_dashboard_msgs::srv::GetPolyScopeVersion>(
+      "~/get_polyscope_version", std::bind(&DashboardClientROS::handleGetPolyScopeVersionQuery, this,
+                                           std::placeholders::_1, std::placeholders::_2));
 
   // General purpose service to send arbitrary messages to the dashboard server
   raw_request_service_ = node_->create_service<ur_dashboard_msgs::srv::RawRequest>(
@@ -344,6 +366,130 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         dashboardCallWithChecks(
             [this, req]() { return client_->commandDownloadProgramWithResponse(req->program_name, req->target_path); },
             resp);
+        return true;
+      });
+
+  // Service to set the user role on the robot (Only valid for CB3 robots)
+  set_user_role_service_ = node->create_service<ur_dashboard_msgs::srv::SetUserRole>(
+      "~/set_user_role", [&](const ur_dashboard_msgs::srv::SetUserRole::Request::SharedPtr req,
+                             ur_dashboard_msgs::srv::SetUserRole::Response::SharedPtr resp) {
+        dashboardCallWithChecks([this, req]() { return client_->commandSetUserRoleWithResponse(req->user_role.role); },
+                                resp);
+        return true;
+      });
+
+  // Service to get the current user role (Only valid for CB3)
+  get_user_role_service_ = node->create_service<ur_dashboard_msgs::srv::GetUserRole>(
+      "~/get_user_role", [&](const ur_dashboard_msgs::srv::GetUserRole::Request::SharedPtr /*unused*/,
+                             ur_dashboard_msgs::srv::GetUserRole::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetUserRoleWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->user_role.role = std::get<std::string>(dashboard_response.data.at("user_role"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to set the operational mode. (e-series only)
+  set_operational_mode_service_ = node->create_service<ur_dashboard_msgs::srv::SetOperationalMode>(
+      "~/set_operational_mode", [&](const ur_dashboard_msgs::srv::SetOperationalMode::Request::SharedPtr req,
+                                    ur_dashboard_msgs::srv::SetOperationalMode::Response::SharedPtr resp) {
+        dashboardCallWithChecks(
+            [this, req]() { return client_->commandSetOperationalModeWithResponse(req->operational_mode.mode); }, resp);
+        return true;
+      });
+
+  // Service to get the current operational mode (e-series only)
+  get_operational_mode_service_ = node->create_service<ur_dashboard_msgs::srv::GetOperationalMode>(
+      "~/get_operational_mode", [&](const ur_dashboard_msgs::srv::GetOperationalMode::Request::SharedPtr /*unused*/,
+                                    ur_dashboard_msgs::srv::GetOperationalMode::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetOperationalModeWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->operational_mode.mode = std::get<std::string>(dashboard_response.data.at("operational_mode"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to get the robot model as a string
+  get_robot_model_service_ = node->create_service<ur_dashboard_msgs::srv::GetRobotModel>(
+      "~/get_robot_model", [&](const ur_dashboard_msgs::srv::GetRobotModel::Request::SharedPtr /*unused*/,
+                               ur_dashboard_msgs::srv::GetRobotModel::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandGetRobotModelWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->robot_model = std::get<std::string>(dashboard_response.data.at("robot_model"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to get robot safety status as a string
+  get_safety_status_service_ = node->create_service<ur_dashboard_msgs::srv::GetSafetyStatus>(
+      "~/get_safety_status", [&](const ur_dashboard_msgs::srv::GetSafetyStatus::Request::SharedPtr /*unused*/,
+                                 ur_dashboard_msgs::srv::GetSafetyStatus::Response::SharedPtr resp) {
+        auto dashboard_response =
+            dashboardCallWithChecks([this]() { return client_->commandSafetyStatusWithResponse(); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                resp->safety_status.status = std::get<std::string>(dashboard_response.data.at("safety_status"));
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to generate flight report, defaults to system type
+  generate_flight_report_service_ = node->create_service<ur_dashboard_msgs::srv::GenerateFlightReport>(
+      "~/generate_flight_report", [&](const ur_dashboard_msgs::srv::GenerateFlightReport::Request::SharedPtr req,
+                                      ur_dashboard_msgs::srv::GenerateFlightReport::Response::SharedPtr resp) {
+        auto dashboard_response = dashboardCallWithChecks(
+            [this, req]() { return client_->commandGenerateFlightReportWithResponse(req->report_type); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                std::string key = "id: ";
+                auto it = dashboard_response.message.find(key);
+                if (it != dashboard_response.message.npos) {
+                  std::string id = dashboard_response.message.substr(it + key.size());
+                  resp->report_id = id;
+                }
+              },
+              resp, dashboard_response);
+        }
+        return true;
+      });
+
+  // Service to generate support file, defaults to saving the file in /programs
+  generate_support_file_service_ = node->create_service<ur_dashboard_msgs::srv::GenerateSupportFile>(
+      "~/generate_support_file", [&](const ur_dashboard_msgs::srv::GenerateSupportFile::Request::SharedPtr req,
+                                     ur_dashboard_msgs::srv::GenerateSupportFile::Response::SharedPtr resp) {
+        auto dashboard_response = dashboardCallWithChecks(
+            [this, req]() { return client_->commandGenerateSupportFileWithResponse(req->dir_path); }, resp);
+        if (resp->success) {
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                std::string key = "Completed successfully: ";
+                auto it = dashboard_response.message.find(key);
+                if (it != dashboard_response.message.npos) {
+                  std::string name = dashboard_response.message.substr(it + key.size());
+                  resp->generated_file_name = name;
+                }
+              },
+              resp, dashboard_response);
+        }
         return true;
       });
 }
@@ -472,6 +618,45 @@ bool DashboardClientROS::handleRemoteControlQuery(
     RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
     resp->answer = e.what();
     resp->success = false;
+  }
+  return true;
+}
+
+bool DashboardClientROS::handleGetPolyScopeVersionQuery(
+    ur_dashboard_msgs::srv::GetPolyScopeVersion::Request::SharedPtr req,
+    ur_dashboard_msgs::srv::GetPolyScopeVersion::Response::SharedPtr resp)
+{
+  auto dashboard_response =
+      dashboardCallWithChecks([this]() { return client_->commandPolyscopeVersionWithResponse(); }, resp);
+  if (resp->success) {
+    handleDashboardResponseData(
+        [dashboard_response, resp]() {
+          std::string version_string = std::get<std::string>(dashboard_response.data.at("polyscope_version"));
+
+          std::regex version_regex(R"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)");
+          std::smatch version_match;
+          if (std::regex_search(version_string, version_match, version_regex)) {
+            int num = 0;
+            int counter = 0;
+            for (auto c : version_match[0].str()) {
+              if (std::isdigit(c)) {
+                num = num * 10 + (c - '0');
+              } else if (c == '.') {
+                if (counter == 0) {
+                  resp->version.major = num;
+                } else if (counter == 1) {
+                  resp->version.minor = num;
+                } else if (counter == 2) {
+                  resp->version.bugfix = num;
+                }
+                counter++;
+                num = 0;
+              }
+            }
+            resp->version.build = num;
+          }
+        },
+        resp, dashboard_response);
   }
   return true;
 }
