@@ -1,0 +1,4 @@
+---
+string answer
+bool success
+SafetyStatus safety_status
