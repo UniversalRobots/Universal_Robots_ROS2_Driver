@@ -62,6 +62,16 @@ from ur_dashboard_msgs.srv import (
     IsProgramRunning,
     Load,
     UploadProgram,
+    GenerateSupportFile,
+    GenerateFlightReport,
+    GetUserRole,
+    GetSerialNumber,
+    GetPolyScopeVersion,
+    GetRobotModel,
+    GetOperationalMode,
+    GetSafetyStatus,
+    SetOperationalMode,
+    SetUserRole,
 )
 from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
 from builtin_interfaces.msg import Duration
@@ -243,6 +253,17 @@ class DashboardInterface(
         "upload_program": UploadProgram,
         "update_program": UploadProgram,
         "download_program": DownloadProgram,
+        "clear_operational_mode": Trigger,
+        "generate_flight_report": GenerateFlightReport,
+        "generate_support_file": GenerateSupportFile,
+        "get_operational_mode": GetOperationalMode,
+        "get_polyscope_version": GetPolyScopeVersion,
+        "get_robot_model": GetRobotModel,
+        "get_safety_status": GetSafetyStatus,
+        "get_serial_number": GetSerialNumber,
+        "get_user_role": GetUserRole,
+        "set_operational_mode": SetOperationalMode,
+        "set_user_role": SetUserRole,
     },
 ):
     def start_robot(self):
@@ -431,9 +452,7 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-def _ursim_action(ursim_version="latest"):
-    ur_type = LaunchConfiguration("ur_type")
-
+def _ursim_action(ursim_version="latest", ur_type="ur5e"):
     return ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
@@ -454,7 +473,7 @@ def _ursim_action(ursim_version="latest"):
     )
 
 
-def generate_dashboard_test_description(ursim_version="latest"):
+def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e"):
     dashboard_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -472,7 +491,7 @@ def generate_dashboard_test_description(ursim_version="latest"):
 
     return LaunchDescription(
         _declare_launch_arguments()
-        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version)]
+        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version, ur_type)]
     )
 
 
