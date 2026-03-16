@@ -287,10 +287,10 @@ ur_controllers::GravityUpdateController::on_configure(const rclcpp_lifecycle::St
 controller_interface::CallbackReturn
 ur_controllers::GravityUpdateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_optional().value_or(0.0) == 0.0) {
-    RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-  }
+  // while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_optional().value_or(0.0) == 0.0) {
+  //   RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
+  //   std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  // }
 
   try {
     auto qos_latched = rclcpp::SystemDefaultsQoS();

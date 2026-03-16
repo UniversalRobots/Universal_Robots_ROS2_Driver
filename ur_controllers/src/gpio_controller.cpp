@@ -99,12 +99,6 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   config.names.emplace_back(tf_prefix + "gpio/analog_output_domain_cmd");
 
-  // Gravity stuff
-  config.names.emplace_back(tf_prefix + "gravity/x");
-  config.names.emplace_back(tf_prefix + "gravity/y");
-  config.names.emplace_back(tf_prefix + "gravity/z");
-  config.names.emplace_back(tf_prefix + "gravity/gravity_async_success");
-
   return config;
 }
 
