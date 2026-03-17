@@ -47,6 +47,7 @@ import rclpy
 from rclpy.node import Node
 
 from controller_manager_msgs.srv import SwitchController
+from ur_msgs.msg import FrictionModelParameters
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
@@ -113,8 +114,10 @@ class FrictionModelTest(unittest.TestCase):
         self._friction_model_interface = FrictionModelInterface(self.node)
 
         res = self._friction_model_interface.set_friction_model_parameters(
-            viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9],
-            coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            parameters=FrictionModelParameters(
+                viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9],
+                coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            ),
         )
         self.assertTrue(res.success)
 
@@ -145,15 +148,19 @@ class FrictionModelTest(unittest.TestCase):
 
         # Too few elements
         res = self._friction_model_interface.set_friction_model_parameters(
-            viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9],
-            coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            parameters=FrictionModelParameters(
+                viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9],
+                coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            ),
         )
         self.assertFalse(res.success)
 
         # Too many elements
         res = self._friction_model_interface.set_friction_model_parameters(
-            viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9, 0.9],
-            coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            parameters=FrictionModelParameters(
+                viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9, 0.9],
+                coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            ),
         )
         self.assertFalse(res.success)
 
@@ -183,8 +190,10 @@ class FrictionModelTest(unittest.TestCase):
         self._friction_model_interface = FrictionModelInterface(self.node)
 
         res = self._friction_model_interface.set_friction_model_parameters(
-            viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9],
-            coulomb_scale=[0.8, 0.8, 0.7],
+            parameters=FrictionModelParameters(
+                viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9],
+                coulomb_scale=[0.8, 0.8, 0.7],
+            ),
         )
         self.assertFalse(res.success)
 
@@ -213,7 +222,9 @@ class FrictionModelTest(unittest.TestCase):
         self._friction_model_interface = FrictionModelInterface(self.node)
 
         res = self._friction_model_interface.set_friction_model_parameters(
-            viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9],
-            coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            parameters=FrictionModelParameters(
+                viscous_scale=[0.9, 0.9, 0.8, 0.9, 0.9, 0.9],
+                coulomb_scale=[0.8, 0.8, 0.7, 0.8, 0.8, 0.8],
+            ),
         )
         self.assertFalse(res.success)

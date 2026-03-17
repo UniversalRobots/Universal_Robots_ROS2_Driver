@@ -171,23 +171,25 @@ bool FrictionModelController::setFrictionModelParameters(
     return false;
   }
 
-  if (req->viscous_scale.size() != 6) {
+  if (req->parameters.viscous_scale.size() != 6) {
     RCLCPP_ERROR(get_node()->get_logger(), "viscous_scale must have exactly 6 elements, got %zu.",
-                 req->viscous_scale.size());
+                 req->parameters.viscous_scale.size());
     resp->success = false;
     return false;
   }
 
-  if (req->coulomb_scale.size() != 6) {
+  if (req->parameters.coulomb_scale.size() != 6) {
     RCLCPP_ERROR(get_node()->get_logger(), "coulomb_scale must have exactly 6 elements, got %zu.",
-                 req->coulomb_scale.size());
+                 req->parameters.coulomb_scale.size());
     resp->success = false;
     return false;
   }
 
   FrictionModelParameters friction_model_parameters;
-  std::copy(req->viscous_scale.begin(), req->viscous_scale.end(), friction_model_parameters.viscous_scale.begin());
-  std::copy(req->coulomb_scale.begin(), req->coulomb_scale.end(), friction_model_parameters.coulomb_scale.begin());
+  std::copy(req->parameters.viscous_scale.begin(), req->parameters.viscous_scale.end(),
+            friction_model_parameters.viscous_scale.begin());
+  std::copy(req->parameters.coulomb_scale.begin(), req->parameters.coulomb_scale.end(),
+            friction_model_parameters.coulomb_scale.begin());
 
   int tries = 0;
   while (!friction_model_params_buffer_.try_set(friction_model_parameters)) {
