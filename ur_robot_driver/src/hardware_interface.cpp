@@ -986,21 +986,25 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   // If there is no interpreting program running on the robot, we do not want to send anything.
   // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
   // this was done externally using the controller_stopper.
+  bool write_success = true;
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
     if (position_controller_running_) {
-      ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
+      write_success &= ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ,
+                                                     receive_timeout_);
 
     } else if (velocity_controller_running_) {
-      ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
+      write_success &= ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ,
+                                                     receive_timeout_);
     } else if (torque_controller_running_) {
-      ur_driver_->writeJointCommand(urcl_torque_commands_, urcl::comm::ControlMode::MODE_TORQUE, receive_timeout_);
+      write_success &=
+          ur_driver_->writeJointCommand(urcl_torque_commands_, urcl::comm::ControlMode::MODE_TORQUE, receive_timeout_);
     } else if (freedrive_mode_controller_running_ && freedrive_activated_) {
-      ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
+      write_success &= ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
     } else if (passthrough_trajectory_controller_running_) {
-      ur_driver_->writeTrajectoryControlMessage(
+      write_success &= ur_driver_->writeTrajectoryControlMessage(
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
           urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
       check_passthrough_trajectory_controller();
@@ -1009,7 +1013,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       handleMoprimCommands();
 
     } else {
-      ur_driver_->writeKeepalive();
+      write_success &= ur_driver_->writeKeepalive();
     }
 
     if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
@@ -1025,8 +1029,11 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     }
 
     packet_read_ = false;
+    if (!write_success) {
+      RCLCPP_ERROR(get_logger(), "Failed to write to hardware, stopping hardware interface");
+      return hardware_interface::return_type::ERROR;
+    }
   }
-
   return hardware_interface::return_type::OK;
 }
 
