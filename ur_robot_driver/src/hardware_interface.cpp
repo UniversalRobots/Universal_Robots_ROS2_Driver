@@ -795,6 +795,12 @@ URPositionHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_
   return stop();
 }
 
+hardware_interface::CallbackReturn URPositionHardwareInterface::on_error(const rclcpp_lifecycle::State& previous_state)
+{
+  RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "on_error");
+  return stop();
+}
+
 hardware_interface::CallbackReturn
 URPositionHardwareInterface::on_shutdown(const rclcpp_lifecycle::State& previous_state)
 {
