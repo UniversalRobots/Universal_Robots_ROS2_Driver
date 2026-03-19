@@ -174,7 +174,7 @@ protected:
   void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
                       std::bitset<N>& data);
 
-  // stop function used by on_shutdown and on_cleanup
+  // stop function used by on_shutdown, on_cleanup and on_error
   hardware_interface::CallbackReturn stop();
 
   void initAsyncIO();
