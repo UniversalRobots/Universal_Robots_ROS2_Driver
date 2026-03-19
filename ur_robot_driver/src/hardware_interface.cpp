@@ -877,6 +877,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   if (!rtde_comm_has_been_started_) {
     ur_driver_->startRTDECommunication();
     rtde_comm_has_been_started_ = true;
+    // Without this the driver will error out immediately, regardless of non_blocking_read_ (because of timeout)
+    return hardware_interface::return_type::OK;
   }
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
@@ -966,12 +968,23 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     hw_moprim_states_[0] = static_cast<uint8_t>(current_moprim_execution_status_.load());
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
 
+    time_since_successful_read = rclcpp::Duration(0, 0);
+
     return hardware_interface::return_type::OK;
   }
 
   if (non_blocking_read_) {
-    RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to read from hardware, but nonblocking read "
-                                                                   "is active");
+    time_since_successful_read += period;
+    if (time_since_successful_read > max_time_between_reads) {
+      std::stringstream ss;
+      ss << "It has been too long since the last successful reading of the hardware. \nTime since last successful "
+            "read: "
+         << time_since_successful_read.seconds() * 1000
+         << " milliseconds \nThe maximum allowed time is: " << max_time_between_reads.seconds() * 1000
+         << " milliseconds";
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), ss.str().c_str());
+      return hardware_interface::return_type::ERROR;
+    }
     return hardware_interface::return_type::OK;
   }
 
