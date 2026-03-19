@@ -630,6 +630,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   non_blocking_read_ = (info_.hardware_parameters["non_blocking_read"] == "true") ||
                        (info_.hardware_parameters["non_blocking_read"] == "True");
 
+  non_blocking_read_timeout_ = rclcpp::Duration::from_seconds(stod(info_.hardware_parameters["non_blocking_read_"
+                                                                                             "timeout"]));
+
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
   const int servoj_gain = stoi(info_.hardware_parameters["servoj_gain"]);
@@ -877,8 +880,6 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   if (!rtde_comm_has_been_started_) {
     ur_driver_->startRTDECommunication();
     rtde_comm_has_been_started_ = true;
-    // Without this the driver will error out immediately, regardless of non_blocking_read_ (because of timeout)
-    return hardware_interface::return_type::OK;
   }
   std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
@@ -968,21 +969,22 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     hw_moprim_states_[0] = static_cast<uint8_t>(current_moprim_execution_status_.load());
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
 
-    time_since_successful_read = rclcpp::Duration(0, 0);
+    time_since_successful_read_ = rclcpp::Duration(0, 0);
 
     return hardware_interface::return_type::OK;
   }
 
   if (non_blocking_read_) {
-    time_since_successful_read += period;
-    if (time_since_successful_read > max_time_between_reads) {
+    time_since_successful_read_ += period;
+    if (non_blocking_read_timeout_ > rclcpp::Duration(0, 0) &&
+        time_since_successful_read_ > non_blocking_read_timeout_) {
       std::stringstream ss;
-      ss << "It has been too long since the last successful reading of the hardware. \nTime since last successful "
-            "read: "
-         << time_since_successful_read.seconds() * 1000
-         << " milliseconds \nThe maximum allowed time is: " << max_time_between_reads.seconds() * 1000
-         << " milliseconds";
+      ss << "Non blocking read timeout exceeded. \n"
+         << "Time since last successful read of the hardware: " << time_since_successful_read_.seconds() * 1000
+         << " milliseconds \n"
+         << "The non blocking read time out is: " << non_blocking_read_timeout_.seconds() * 1000 << " milliseconds";
       RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), ss.str().c_str());
+      // For very small values of non_blocking_read_timeout_ (< 10 ms) this might error on startup
       return hardware_interface::return_type::ERROR;
     }
     return hardware_interface::return_type::OK;

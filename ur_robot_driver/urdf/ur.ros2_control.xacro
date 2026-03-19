@@ -25,6 +25,7 @@
     script_command_port:=50004
     trajectory_port:=50003
     non_blocking_read:=true
+    non_blocking_read_timeout:=0.04
     robot_receive_timeout:=0.04
     rw_rate:=0
     ">
@@ -60,6 +61,7 @@
           <param name="trajectory_port">${trajectory_port}</param>
           <param name="tf_prefix">${tf_prefix}</param>
           <param name="non_blocking_read">${non_blocking_read}</param>
+          <param name="non_blocking_read_timeout">${non_blocking_read_timeout}</param>
           <param name="servoj_gain">2000</param>
           <param name="servoj_lookahead_time">0.03</param>
           <param name="use_tool_communication">${use_tool_communication}</param>

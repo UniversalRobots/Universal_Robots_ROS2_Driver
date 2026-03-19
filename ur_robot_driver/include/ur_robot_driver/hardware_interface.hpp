@@ -204,8 +204,8 @@ protected:
   tf2::Quaternion tcp_rotation_quat_;
   Quaternion tcp_rotation_buffer;
 
-  rclcpp::Duration time_since_successful_read = rclcpp::Duration(0, 0);
-  rclcpp::Duration max_time_between_reads = rclcpp::Duration(0, 4000000);  // 4 ms
+  rclcpp::Duration time_since_successful_read_ = rclcpp::Duration(0, 0);
+  rclcpp::Duration non_blocking_read_timeout_ = rclcpp::Duration(0, 0);
 
   bool packet_read_;
 
