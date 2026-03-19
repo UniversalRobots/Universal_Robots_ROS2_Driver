@@ -182,13 +182,13 @@ protected:
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
-  void start_force_mode();
-  void stop_force_mode();
-  void check_passthrough_trajectory_controller();
+  bool start_force_mode();
+  bool stop_force_mode();
+  bool check_passthrough_trajectory_controller();
   void trajectory_done_callback(urcl::control::TrajectoryResult result);
   bool is_valid_joint_information(std::vector<std::array<double, 6>> data);
   void tool_contact_callback(urcl::control::ToolContactResult);
-  void check_tool_contact_controller();
+  bool check_tool_contact_controller();
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -318,7 +318,7 @@ protected:
   std::atomic_bool build_moprim_sequence_{ false };
   std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> moprim_sequence_;
 
-  void handleMoprimCommands();
+  bool handleMoprimCommands();
   void resetMoprimCmdInterfaces();
   void asyncMoprimCmdThread();
   void processMoprimMotionCmd(const std::array<double, 25>& command);

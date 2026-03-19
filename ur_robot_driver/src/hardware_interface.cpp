@@ -1007,10 +1007,10 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       write_success &= ur_driver_->writeTrajectoryControlMessage(
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
           urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
-      check_passthrough_trajectory_controller();
+      write_success &= check_passthrough_trajectory_controller();
 
     } else if (motion_primitives_forward_controller_running_) {
-      handleMoprimCommands();
+      write_success &= handleMoprimCommands();
 
     } else {
       write_success &= ur_driver_->writeKeepalive();
@@ -1019,13 +1019,13 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
         !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
         !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
-      start_force_mode();
+      write_success &= start_force_mode();
     } else if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
-      stop_force_mode();
+      write_success &= stop_force_mode();
     }
 
     if (tool_contact_controller_running_) {
-      check_tool_contact_controller();
+      write_success &= check_tool_contact_controller();
     }
 
     packet_read_ = false;
@@ -1150,15 +1150,15 @@ void URPositionHardwareInterface::checkAsyncIO()
   }
 }
 
-void URPositionHardwareInterface::check_tool_contact_controller()
+bool URPositionHardwareInterface::check_tool_contact_controller()
 {
   static double cmd_state;
   cmd_state = tool_contact_set_state_;
-
+  bool write_success = true;
   if (ur_driver_ != nullptr) {
     if (cmd_state == 2.0) {
-      bool success = ur_driver_->startToolContact();
-      if (success) {
+      write_success = ur_driver_->startToolContact();
+      if (write_success) {
         // TOOL_CONTACT_EXECUTING
         tool_contact_state_ = 3.0;
         tool_contact_result_ = 3.0;
@@ -1168,8 +1168,8 @@ void URPositionHardwareInterface::check_tool_contact_controller()
       }
 
     } else if (cmd_state == 5.0) {
-      bool success = ur_driver_->endToolContact();
-      if (success) {
+      write_success = ur_driver_->endToolContact();
+      if (write_success) {
         // TOOL_CONTACT_SUCCESS_END
         tool_contact_state_ = 6.0;
       } else {
@@ -1180,6 +1180,7 @@ void URPositionHardwareInterface::check_tool_contact_controller()
       tool_contact_state_ = cmd_state;
     }
   }
+  return write_success;
 }
 
 void URPositionHardwareInterface::tool_contact_callback(urcl::control::ToolContactResult result)
@@ -1535,14 +1536,16 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   return ret_val;
 }
 
-void URPositionHardwareInterface::start_force_mode()
+bool URPositionHardwareInterface::start_force_mode()
 {
+  bool write_success = true;
+
   for (size_t i = 0; i < force_mode_selection_vector_.size(); i++) {
     force_mode_selection_vector_copy_[i] = force_mode_selection_vector_[i];
   }
   /* Check version of robot to ensure that the correct startForceMode is called. */
   if (ur_driver_->getVersion().major < 5) {
-    force_mode_async_success_ =
+    write_success &=
         ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
                                    force_mode_type_, force_mode_limits_, force_mode_damping_);
     if (force_mode_gain_scaling_ != 0.5) {
@@ -1553,11 +1556,11 @@ void URPositionHardwareInterface::start_force_mode()
                                                                      "gain scaling.");
     }
   } else {
-    force_mode_async_success_ =
+    write_success &=
         ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
                                    force_mode_type_, force_mode_limits_, force_mode_damping_, force_mode_gain_scaling_);
   }
-
+  force_mode_async_success_ = static_cast<double>(write_success);
   for (size_t i = 0; i < 6; i++) {
     force_mode_task_frame_[i] = NO_NEW_CMD_;
     force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
@@ -1567,15 +1570,18 @@ void URPositionHardwareInterface::start_force_mode()
   force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
   force_mode_damping_ = NO_NEW_CMD_;
   force_mode_gain_scaling_ = NO_NEW_CMD_;
+  return write_success;
 }
 
-void URPositionHardwareInterface::stop_force_mode()
+bool URPositionHardwareInterface::stop_force_mode()
 {
-  force_mode_async_success_ = ur_driver_->endForceMode();
+  bool write_success = ur_driver_->endForceMode();
+  force_mode_async_success_ = static_cast<double>(write_success);
   force_mode_disable_cmd_ = NO_NEW_CMD_;
+  return write_success;
 }
 
-void URPositionHardwareInterface::check_passthrough_trajectory_controller()
+bool URPositionHardwareInterface::check_passthrough_trajectory_controller()
 {
   static double last_time = 0.0;
   static size_t point_index_received = 0;
@@ -1583,9 +1589,13 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   static bool trajectory_started = false;
   // See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
 
+  // Check every write to the hardware to report back to "write" function
+  bool write_success = true;
+
   // We should abort and are not in state IDLE
   if (passthrough_trajectory_abort_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
-    ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+    write_success &=
+        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
   } else if (passthrough_trajectory_transfer_state_ == 6.0) {
     if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
       RCLCPP_INFO(get_logger(), "Got a new trajectory with %lu points.",
@@ -1617,8 +1627,8 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     if ((passthrough_trajectory_time_from_start_ > 5.0 / static_cast<double>(info_.rw_rate) ||
          point_index_received == passthrough_trajectory_size_ - 1) &&
         !trajectory_started) {
-      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
-                                                trajectory_joint_positions_.size());
+      write_success &= ur_driver_->writeTrajectoryControlMessage(
+          urcl::control::TrajectoryControlMessage::TRAJECTORY_START, trajectory_joint_positions_.size());
       trajectory_started = true;
     }
   } else if (passthrough_trajectory_transfer_state_ == 3.0) {
@@ -1644,12 +1654,12 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       if (is_valid_joint_information(trajectory_joint_positions_)) {
         if (!is_valid_joint_information(trajectory_joint_velocities_) &&
             !is_valid_joint_information(trajectory_joint_accelerations_)) {
-          ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], urcl::vector6d_t{ 0, 0, 0, 0, 0, 0 },
-                                                 trajectory_times_[i]);
+          write_success &= ur_driver_->writeTrajectorySplinePoint(
+              trajectory_joint_positions_[i], urcl::vector6d_t{ 0, 0, 0, 0, 0, 0 }, trajectory_times_[i]);
         } else if (is_valid_joint_information(trajectory_joint_velocities_) &&
                    !is_valid_joint_information(trajectory_joint_accelerations_)) {
-          ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
-                                                 trajectory_times_[i]);
+          write_success &= ur_driver_->writeTrajectorySplinePoint(
+              trajectory_joint_positions_[i], trajectory_joint_velocities_[i], trajectory_times_[i]);
         } else if (!is_valid_joint_information(trajectory_joint_velocities_) &&
                    is_valid_joint_information(trajectory_joint_accelerations_)) {
           RCLCPP_ERROR(get_logger(), "Accelerations but no velocities given. If you want to specify accelerations with "
@@ -1659,8 +1669,9 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 
         } else if (is_valid_joint_information(trajectory_joint_velocities_) &&
                    is_valid_joint_information(trajectory_joint_accelerations_)) {
-          ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
-                                                 trajectory_joint_accelerations_[i], trajectory_times_[i]);
+          write_success &=
+              ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
+                                                     trajectory_joint_accelerations_[i], trajectory_times_[i]);
         }
       } else {
         RCLCPP_ERROR(get_logger(), "Trajectory points without position information are not supported.");
@@ -1672,9 +1683,10 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     if (error) {
       passthrough_trajectory_abort_ = 1.0;
       passthrough_trajectory_transfer_state_ = 5.0;
-      return;
+      return write_success;
     }
   }
+  return write_success;
 }
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
@@ -1699,8 +1711,9 @@ bool URPositionHardwareInterface::is_valid_joint_information(std::vector<std::ar
   return (data.size() > 0 && !std::isnan(data[0][0]));
 }
 
-void URPositionHardwareInterface::handleMoprimCommands()
+bool URPositionHardwareInterface::handleMoprimCommands()
 {
+  bool write_success = true;
   // Check if we have a new command
   if (!std::isnan(hw_moprim_commands_[0])) {
     ready_for_new_moprim_ = false;  // set to false to indicate that the driver is busy handling a command
@@ -1715,8 +1728,8 @@ void URPositionHardwareInterface::handleMoprimCommands()
         resetMoprimCmdInterfaces();
         build_moprim_sequence_ = false;
         moprim_sequence_.clear();  // delete motion sequence
-        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1,
-                                                  urcl::RobotReceiveTimeout::millisec(2000));
+        write_success &= ur_driver_->writeTrajectoryControlMessage(
+            urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1, urcl::RobotReceiveTimeout::millisec(2000));
         current_moprim_execution_status_ = MoprimExecutionState::STOPPING;
         ready_for_new_moprim_ = false;
         break;
@@ -1736,7 +1749,7 @@ void URPositionHardwareInterface::handleMoprimCommands()
         if (!moprim_cmd_queue_.push(hw_moprim_commands_)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to push command to "
                                                                           "moprim_cmd_queue_");
-          return;
+          return write_success;  // Should this stop the driver?
         }
         resetMoprimCmdInterfaces();
         ready_for_new_moprim_ = true;  // set to true to allow sending new commands
@@ -1746,8 +1759,9 @@ void URPositionHardwareInterface::handleMoprimCommands()
   }
   // Send keepalive if current_moprim_execution_status_ is not EXECUTING
   if (ur_driver_ && current_moprim_execution_status_ != MoprimExecutionState::EXECUTING) {
-    ur_driver_->writeKeepalive();
+    write_success &= ur_driver_->writeKeepalive();
   }
+  return write_success;
 }
 
 void URPositionHardwareInterface::resetMoprimCmdInterfaces()
