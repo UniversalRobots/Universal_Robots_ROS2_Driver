@@ -49,7 +49,7 @@ controller_interface::CallbackReturn FrictionModelController::on_init()
     param_listener_ = std::make_shared<friction_model_controller::ParamListener>(get_node());
     params_ = param_listener_->get_params();
   } catch (const std::exception& e) {
-    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    RCLCPP_ERROR(get_node()->get_logger(), "Exception thrown during init stage with message: %s \n", e.what());
     return CallbackReturn::ERROR;
   }
 
@@ -63,6 +63,7 @@ controller_interface::InterfaceConfiguration FrictionModelController::command_in
 
   const std::string tf_prefix = params_.tf_prefix;
 
+  // The order of the following has to match the CommandInterfaces enum!
   for (size_t i = 0; i < 6; ++i) {
     config.names.emplace_back(tf_prefix + "friction_model/viscous_" + std::to_string(i));
   }
@@ -191,38 +192,22 @@ bool FrictionModelController::setFrictionModelParameters(
   std::copy(req->parameters.coulomb_scale.begin(), req->parameters.coulomb_scale.end(),
             friction_model_parameters.coulomb_scale.begin());
 
-  int tries = 0;
-  while (!friction_model_params_buffer_.try_set(friction_model_parameters)) {
-    if (tries > 10) {
-      RCLCPP_ERROR(get_node()->get_logger(), "Could not set friction model parameters in realtime buffer.");
-      resp->success = false;
-      return false;
-    }
-    rclcpp::sleep_for(std::chrono::milliseconds(50));
-    tries++;
-  }
+  friction_model_params_buffer_.set(friction_model_parameters);
 
   change_requested_ = true;
 
-  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for friction scales to be set.");
-  const auto maximum_retries = params_.check_io_successful_retries;
-  int retries = 0;
-  while (async_state_ == ASYNC_WAITING || change_requested_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    retries++;
-
-    if (retries > maximum_retries) {
-      resp->success = false;
-      return false;
-    }
+  RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for friction model parameters to be set.");
+  if (!waitForAsyncCommand([&]() { return async_state_.load(); })) {
+    RCLCPP_WARN(get_node()->get_logger(), "Could not verify that friction model parameters were set. (This might "
+                                          "happen when using the mocked interface)");
   }
 
   resp->success = async_state_ == 1.0;
 
   if (resp->success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Friction scales have been set successfully.");
+    RCLCPP_INFO(get_node()->get_logger(), "Friction model parameters have been set successfully.");
   } else {
-    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the friction scales.");
+    RCLCPP_ERROR(get_node()->get_logger(), "Could not set the friction model parameters.");
     return false;
   }
 
