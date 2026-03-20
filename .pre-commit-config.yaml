@@ -74,7 +74,7 @@ repos:
         language: python
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
         additional_dependencies:
-          - "ament_cppcheck @ git+https://github.com/ament/ament_lint.git@rolling#subdirectory=ament_cppcheck"
+          - "ament_cppcheck @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_cppcheck"
 
   # Maybe use https://github.com/cpplint/cpplint instead
   - repo: local
@@ -88,7 +88,7 @@ repos:
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
         args: ["--linelength=120"]
         additional_dependencies:
-          - "ament_cpplint @ git+https://github.com/ament/ament_lint.git@rolling#subdirectory=ament_cpplint"
+          - "ament_cpplint @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_cpplint"
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v22.1.0'
@@ -106,7 +106,7 @@ repos:
         language: python
         files: CMakeLists.txt$
         additional_dependencies:
-          - "ament_lint_cmake @ git+https://github.com/ament/ament_lint.git@rolling#subdirectory=ament_lint_cmake"
+          - "ament_lint_cmake @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_lint_cmake"
 
   # Copyright
   - repo: local
@@ -119,7 +119,7 @@ repos:
         language: python
         args: ['--exclude', 'ur_robot_driver/doc/conf.py', 'ur_calibration/doc/conf.py']
         additional_dependencies:
-          - "ament_copyright @ git+https://github.com/ament/ament_lint.git@rolling#subdirectory=ament_copyright"
+          - "ament_copyright @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_copyright"
 
   # Docs - RestructuredText hooks
   - repo: https://github.com/PyCQA/doc8
