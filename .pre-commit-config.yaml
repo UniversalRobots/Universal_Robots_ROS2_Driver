@@ -71,8 +71,10 @@ repos:
         description: Static code analysis of C/C++ files.
         stages: [pre-commit]
         entry: env AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1 ament_cppcheck
-        language: system
+        language: python
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+        additional_dependencies:
+          - "ament_cppcheck @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_cppcheck"
 
   # Maybe use https://github.com/cpplint/cpplint instead
   - repo: local
@@ -82,9 +84,11 @@ repos:
         description: Static code analysis of C/C++ files.
         stages: [pre-commit]
         entry: ament_cpplint
-        language: system
+        language: python
         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
         args: ["--linelength=120"]
+        additional_dependencies:
+          - "ament_cpplint @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_cpplint"
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v22.1.0'
@@ -99,8 +103,10 @@ repos:
         description: Check format of CMakeLists.txt files.
         stages: [pre-commit]
         entry: ament_lint_cmake
-        language: system
+        language: python
         files: CMakeLists.txt$
+        additional_dependencies:
+          - "ament_lint_cmake @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_lint_cmake"
 
   # Copyright
   - repo: local
@@ -110,8 +116,10 @@ repos:
         description: Check if copyright notice is available in all files.
         stages: [pre-commit]
         entry: ament_copyright
-        language: system
+        language: python
         args: ['--exclude', 'ur_robot_driver/doc/conf.py', 'ur_calibration/doc/conf.py']
+        additional_dependencies:
+          - "ament_copyright @ git+https://github.com/ament/ament_lint.git@humble#subdirectory=ament_copyright"
 
   # Docs - RestructuredText hooks
   - repo: https://github.com/PyCQA/doc8
