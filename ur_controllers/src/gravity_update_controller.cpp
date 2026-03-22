@@ -48,7 +48,7 @@ controller_interface::CallbackReturn GravityUpdateController::on_init()
     param_listener_ = std::make_shared<gravity_update_controller::ParamListener>(get_node());
     params_ = param_listener_->get_params();
   } catch (const std::exception& e) {
-    fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
+    RCLCPP_ERROR(get_node()->get_logger(), "Exception thrown during init stage with message: %s", e.what());
     return CallbackReturn::ERROR;
   }
 
@@ -105,24 +105,33 @@ ur_controllers::GravityUpdateController::on_configure(const rclcpp_lifecycle::St
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
 
+  // Set up service for receiving gravity updates
+  try {
+    set_gravity_srv_ = get_node()->create_service<ur_msgs::srv::SetGravity>(
+        "~/set_gravity", [this](const ur_msgs::srv::SetGravity::Request::SharedPtr req,
+                                ur_msgs::srv::SetGravity::Response::SharedPtr resp) { setGravity(req, resp); });
+
+  } catch (...) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 controller_interface::CallbackReturn
 ur_controllers::GravityUpdateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  try {
-    set_gravity_srv_ = get_node()->create_service<ur_msgs::srv::SetGravity>(
-        "~/set_gravity",
-        std::bind(&GravityUpdateController::setGravity, this, std::placeholders::_1, std::placeholders::_2));
-  } catch (...) {
-    return LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 controller_interface::CallbackReturn
 ur_controllers::GravityUpdateController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
+{
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn
+ur_controllers::GravityUpdateController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   try {
     set_gravity_srv_.reset();
