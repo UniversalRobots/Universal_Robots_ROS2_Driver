@@ -86,6 +86,24 @@ ur_controllers::GravityUpdateController::state_interface_configuration() const
 controller_interface::return_type ur_controllers::GravityUpdateController::update(const rclcpp::Time& /*time*/,
                                                                                   const rclcpp::Duration& /*period*/)
 {
+  // Check if we have received a gravity update
+  const auto gravity_vector = cmd_gravity_box_.get();
+  if (gravity_vector.has_value()) {
+    // reset success flag
+    std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+
+    std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(gravity_vector->x());
+    std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(gravity_vector->y());
+    std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(gravity_vector->z());
+
+    // Reset gravity vector, so we only change it on the service call
+    cmd_gravity_box_.set(std::nullopt);
+  }
+
+  // Update so the non-RT thread knows the status
+  async_success_box_.set(
+      command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
+
   return controller_interface::return_type::OK;
 }
 
@@ -121,6 +139,9 @@ ur_controllers::GravityUpdateController::on_configure(const rclcpp_lifecycle::St
 controller_interface::CallbackReturn
 ur_controllers::GravityUpdateController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  cmd_gravity_box_.set(std::nullopt);
+  async_success_box_.set(std::nullopt);
+
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -164,22 +185,19 @@ bool GravityUpdateController::setGravity(const ur_msgs::srv::SetGravity::Request
   tf2::fromMsg(tf_to_base_link.transform.rotation, quat);
   tf2::Vector3 transformed_gravity = tf2::quatRotate(quat, anti_gravity);
 
-  // reset success flag
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_X].set_value(transformed_gravity.x());
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Y].set_value(transformed_gravity.y());
-  std::ignore = command_interfaces_[CommandInterfaces::GRAVITY_Z].set_value(transformed_gravity.z());
+  cmd_gravity_box_.set(transformed_gravity);
+  async_success_box_.set(std::nullopt);
 
   if (!waitForAsyncCommand([&]() {
-        return command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+        const auto waiting = async_success_box_.get();
+        return waiting.has_value() ? waiting.value() : ASYNC_WAITING;
       })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that gravity was set. (This might happen when using the "
                                           "mocked interface)");
   }
 
-  resp->success = static_cast<bool>(
-      command_interfaces_[CommandInterfaces::GRAVITY_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
+  const auto success = async_success_box_.get();
+  resp->success = success.has_value() ? static_cast<bool>(success.value()) : false;
 
   if (resp->success) {
     resp->status = "Gravity has been set successfully";

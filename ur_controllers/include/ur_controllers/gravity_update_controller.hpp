@@ -47,6 +47,7 @@
 #include "ur_msgs/srv/set_gravity.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
+#include "realtime_tools/realtime_thread_safe_box.hpp"
 #include "tf2/LinearMath/Quaternion.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_ros/buffer.hpp"
@@ -102,6 +103,9 @@ protected:
   gravity_update_controller::Params params_;
 
   static constexpr double ASYNC_WAITING = 2.0;
+
+  realtime_tools::RealtimeThreadSafeBox<std::optional<tf2::Vector3>> cmd_gravity_box_;
+  realtime_tools::RealtimeThreadSafeBox<std::optional<double>> async_success_box_;
 
   /**
    * @brief wait until a command interface isn't in state ASYNC_WAITING anymore or until the parameter maximum_retries
