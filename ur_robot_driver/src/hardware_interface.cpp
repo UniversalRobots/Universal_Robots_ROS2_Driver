@@ -629,6 +629,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // not used with combined_robot_hw can suppress important errors and affect real-time performance.
   non_blocking_read_ = (info_.hardware_parameters["non_blocking_read"] == "true") ||
                        (info_.hardware_parameters["non_blocking_read"] == "True");
+  if (non_blocking_read_) {
+    get_data_package = [this]() { return ur_driver_->getDataPackage(*data_package_buffer_); };
+  } else {
+    get_data_package = [this]() { return ur_driver_->getDataPackageBlocking(data_package_buffer_); };
+  }
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
@@ -872,13 +877,6 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   if (!rtde_comm_has_been_started_) {
     ur_driver_->startRTDECommunication(non_blocking_read_);
     rtde_comm_has_been_started_ = true;
-  }
-
-  std::function<bool()> get_data_package;
-  if (non_blocking_read_) {
-    get_data_package = [this]() { return ur_driver_->getDataPackage(*data_package_buffer_); };
-  } else {
-    get_data_package = [this]() { return ur_driver_->getDataPackageBlocking(data_package_buffer_); };
   }
 
   if (get_data_package()) {

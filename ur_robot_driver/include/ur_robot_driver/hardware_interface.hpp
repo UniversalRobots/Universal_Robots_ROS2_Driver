@@ -379,6 +379,7 @@ protected:
   std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
 
   std::unique_ptr<urcl::rtde_interface::DataPackage> data_package_buffer_;
+  std::function<bool()> get_data_package;
 };
 }  // namespace ur_robot_driver
 
