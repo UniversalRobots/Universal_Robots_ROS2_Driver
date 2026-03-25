@@ -118,7 +118,7 @@ def launch_setup(context):
         condition=IfCondition(use_tool_communication),
         cmd=[
             tool_comm_path,
-            "--robot-ip", robot_ip,
+            robot_ip,
             "--tcp-port", tool_tcp_port,
             "--device-name", tool_device_name,
         ],
