@@ -135,7 +135,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror)
+  target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror -Wno-error=cpp)
 endif()
 
 # prevent pluginlib from using boost
