@@ -161,7 +161,7 @@ unlock_protective_stop (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_
 Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the cause of the protective stop is resolved before calling this service.
 
 
-update_program (`ur_dashboard_msgs/UpdateProgram <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/UpdateProgram.html>`_)
+update_program (`ur_dashboard_msgs/UpdateProgram <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/UploadProgram.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PolyScope X only**: Update a program on the robot. If the program does not exist or the program
