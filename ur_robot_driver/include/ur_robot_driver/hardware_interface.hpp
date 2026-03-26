@@ -115,7 +115,7 @@ struct Quaternion
 class URPositionHardwareInterface : public hardware_interface::SystemInterface
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface);
+  RCLCPP_SHARED_PTR_DEFINITIONS(URPositionHardwareInterface)
   URPositionHardwareInterface();
   virtual ~URPositionHardwareInterface();
 

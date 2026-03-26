@@ -120,10 +120,13 @@ ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
+<<<<<<< HEAD
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Werror=return-type)
 endif()
 
+=======
+>>>>>>> 2fb2d5a ([ur_controllers] Remove Werror from CMakeLists (#1720))
 # prevent pluginlib from using boost
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 pluginlib_export_plugin_description_file(controller_interface controller_plugins.xml)
