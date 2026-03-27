@@ -637,15 +637,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     driver_config.tool_comm_setup = std::move(tool_comm_setup);
     driver_config.handle_program_state =
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
-<<<<<<< HEAD
-    ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
-=======
     ur_driver_ = std::make_shared<urcl::UrDriver>(driver_config);
     if (ur_driver_->getControlFrequency() != info_.rw_rate) {
       ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, info_.rw_rate);
     }
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
->>>>>>> 14a402f (Use refactored RTDE client in driver (#1726))
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
