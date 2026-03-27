@@ -43,11 +43,8 @@ jobs:
       DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
       CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}
-<<<<<<< HEAD
-=======
       ROSDEP_SKIP_KEYS: ${{ inputs.rosdep_skip_keys }}
       TARGET_CMAKE_ARGS: -DCMAKE_CXX_FLAGS="-Werror -Wall -Wextra -Wpedantic -Wno-error=cpp"
->>>>>>> 2fb2d5a ([ur_controllers] Remove Werror from CMakeLists (#1720))
     steps:
       - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
