@@ -32,6 +32,7 @@ jobs:
             --exclude '^http://192\.168\.56\.101'
             --exclude 'kernel\.org\/pub\/linux\/kernel'
             --exclude 'releases/download/v\$%7BURCAP_VERSION%7D/externalcontrol-\$%7BURCAP_VERSION%7D\.jar'
+            --exclude 'https:\/\/wiki\.linuxfoundation\.org\/realtime\/preempt_rt_versions'
             './**/*.md' './**/*.html' './**/*.rst' './**/*.cpp' './**/*.h' './**/*.py'
       - name: Save lychee cache
         uses: actions/cache/save@v5
