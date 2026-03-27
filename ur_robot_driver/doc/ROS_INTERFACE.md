@@ -266,7 +266,7 @@ Stop program execution on the robot
 
 Dismiss a protective stop to continue robot movements. NOTE: It is the responsibility of the user to ensure the cause of the protective stop is resolved before calling this service.
 
-##### update_program ([ur_dashboard_msgs/UpdateProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/UpdateProgram.html))
+##### update_program ([ur_dashboard_msgs/UploadProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/UploadProgram.html))
 
 **PolyScope X only**: Update a program on the robot. If the program does not exist or the program
 is currently loaded, this service call will fail. This service is only available on a PolyScope X
