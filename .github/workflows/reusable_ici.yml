@@ -43,6 +43,8 @@ jobs:
       DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
       CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}
+      ROSDEP_SKIP_KEYS: ${{ inputs.rosdep_skip_keys }}
+      TARGET_CMAKE_ARGS: -DCMAKE_CXX_FLAGS="-Werror -Wall -Wextra -Wpedantic"
     steps:
       - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
