@@ -184,6 +184,9 @@ def launch_setup(context):
         return Node(
             package="controller_manager",
             executable="spawner",
+            parameters=[
+                ParameterFile(controllers_file, allow_substs=True),
+            ],
             arguments=[
                 "--controller-manager",
                 "/controller_manager",
