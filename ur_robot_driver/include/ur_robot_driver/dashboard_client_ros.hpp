@@ -187,6 +187,9 @@ private:
   bool handleSafetyModeQuery(ur_dashboard_msgs::srv::GetSafetyMode::Request::SharedPtr req,
                              ur_dashboard_msgs::srv::GetSafetyMode::Response::SharedPtr resp);
 
+  bool handleSafetyStatusQuery(ur_dashboard_msgs::srv::GetSafetyStatus::Request::SharedPtr req,
+                               ur_dashboard_msgs::srv::GetSafetyStatus::Response::SharedPtr resp);
+
   bool handleRobotModeQuery(ur_dashboard_msgs::srv::GetRobotMode::Request::SharedPtr req,
                             ur_dashboard_msgs::srv::GetRobotMode::Response::SharedPtr resp);
 
