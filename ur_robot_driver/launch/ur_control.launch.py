@@ -31,20 +31,16 @@
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterFile, ParameterValue
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 
 from launch import LaunchDescription
-<<<<<<< HEAD
-from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
-=======
+
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     OpaqueFunction,
     ExecuteProcess,
 )
-from launch.conditions import IfCondition, UnlessCondition
->>>>>>> b5e3278 (Update driver to use refactored tool communication script (#1721))
 from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import (
@@ -55,12 +51,6 @@ from launch.substitutions import (
     NotSubstitution,
     PathJoinSubstitution,
 )
-<<<<<<< HEAD
-=======
-from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterFile
-from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
->>>>>>> b5e3278 (Update driver to use refactored tool communication script (#1721))
 
 
 def launch_setup(context, *args, **kwargs):
@@ -288,12 +278,14 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    tool_comm_path = PathJoinSubstitution([
-        FindPackagePrefix("ur_client_library"),
-        "lib",
-        "ur_client_library",
-        "tool_communication.py",
-    ])
+    tool_comm_path = PathJoinSubstitution(
+        [
+            FindPackagePrefix("ur_client_library"),
+            "lib",
+            "ur_client_library",
+            "tool_communication.py",
+        ]
+    )
 
     tool_communication_script = ExecuteProcess(
         name="ur_tool_comm",
@@ -301,10 +293,12 @@ def launch_setup(context, *args, **kwargs):
         cmd=[
             tool_comm_path,
             robot_ip,
-            "--tcp-port", tool_tcp_port,
-            "--device-name", tool_device_name,
+            "--tcp-port",
+            tool_tcp_port,
+            "--device-name",
+            tool_device_name,
         ],
-        output="screen"
+        output="screen",
     )
 
     urscript_interface = Node(
