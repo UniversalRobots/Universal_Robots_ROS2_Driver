@@ -39,4 +39,9 @@
       Controller to use the tool contact functionality of the robot.
     </description>
   </class>
+  <class name="ur_controllers/TwistController" type="ur_controllers::TwistController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to move a manipulator's TCP using Cartesian velocities.
+    </description>
+  </class>
 </library>
