@@ -56,6 +56,16 @@ controller_interface::CallbackReturn SineController::on_configure(const rclcpp_l
     command_interfaces.push_back(joint + "/" + params_.interface_name);
   }
 
+  for (const auto joint_index : params_.joint_indices_to_control) {
+    if (joint_index >= command_interfaces.size()) {
+      RCLCPP_ERROR(get_node()->get_logger(),
+                   "Joint index %zu in 'joint_indices_to_control' is out of bounds for the number of joints (%zu)",
+                   joint_index, command_interfaces.size());
+      return controller_interface::CallbackReturn::ERROR;
+    }
+    command_interface_indices.push_back(joint_index);
+  }
+
   amplitude_ = params_.amplitude;
   frequency_ = params_.frequency;
 
@@ -94,7 +104,7 @@ controller_interface::return_type SineController::update(const rclcpp::Time& tim
   double x = (time - start_time_).seconds();
   double sine = amplitude_ * sin(2 * M_PI * frequency_ * x);
 
-  for (auto index = 0ul; index < command_interfaces_.size(); ++index) {
+  for (auto index : command_interface_indices) {
     command_msg_.data[index] = sine;
     command_msg_.header.stamp = time;
     if (!command_interfaces_[index].set_value(sine)) {
@@ -111,6 +121,7 @@ controller_interface::return_type SineController::update(const rclcpp::Time& tim
 
 controller_interface::CallbackReturn SineController::on_activate(const rclcpp_lifecycle::State& /* previous_state */)
 {
+  start_time_ = rclcpp::Time(0);
   return controller_interface::CallbackReturn::SUCCESS;
 }
 

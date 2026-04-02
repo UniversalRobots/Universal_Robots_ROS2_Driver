@@ -235,6 +235,7 @@ sine_controller:
       - $(var tf_prefix)wrist_1_joint
       - $(var tf_prefix)wrist_2_joint
       - $(var tf_prefix)wrist_3_joint
-    interface_name: velocity
-    amplitude: 0.7
-    frequency: 0.5
+    interface_name: position
+    joint_indices_to_control: [5]
+    amplitude: 0.75
+    frequency: 0.2
