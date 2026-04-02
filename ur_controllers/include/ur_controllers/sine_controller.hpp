@@ -74,6 +74,7 @@ public:
 
 private:
   std::vector<std::string> command_interfaces;
+  std::vector<size_t> command_interface_indices;
   std::shared_ptr<sine_controller::ParamListener> param_listener_;
   sine_controller::Params params_;
 

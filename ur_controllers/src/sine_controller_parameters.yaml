@@ -16,6 +16,15 @@ sine_controller:
     read_only: true
   }
 
+  joint_indices_to_control: {
+    type: int_array,
+    description: "Indices of the joints to control (0-based)",
+    validation: {
+      not_empty<>: []
+    },
+    read_only: true
+  }
+
   amplitude: {
     type: double,
     description: "Amplitude of the sine wave (in radians for position, in Nm for effort, in rad/s for velocity)",
