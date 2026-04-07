@@ -34,6 +34,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     OpaqueFunction,
+    ExecuteProcess,
 )
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import AnyLaunchDescriptionSource
@@ -45,7 +46,7 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterFile
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 
 
 def launch_setup(context):
@@ -105,19 +106,27 @@ def launch_setup(context):
         ],
     )
 
-    tool_communication_node = Node(
-        package="ur_robot_driver",
-        condition=IfCondition(use_tool_communication),
-        executable="tool_communication.py",
+    tool_comm_path = PathJoinSubstitution(
+        [
+            FindPackagePrefix("ur_client_library"),
+            "lib",
+            "ur_client_library",
+            "tool_communication.py",
+        ]
+    )
+
+    tool_communication_script = ExecuteProcess(
         name="ur_tool_comm",
-        output="screen",
-        parameters=[
-            {
-                "robot_ip": robot_ip,
-                "tcp_port": tool_tcp_port,
-                "device_name": tool_device_name,
-            }
+        condition=IfCondition(use_tool_communication),
+        cmd=[
+            tool_comm_path,
+            robot_ip,
+            "--tcp-port",
+            tool_tcp_port,
+            "--device-name",
+            tool_device_name,
         ],
+        output="screen",
     )
 
     urscript_interface = Node(
@@ -179,6 +188,9 @@ def launch_setup(context):
         return Node(
             package="controller_manager",
             executable="spawner",
+            parameters=[
+                ParameterFile(controllers_file, allow_substs=True),
+            ],
             arguments=[
                 "--controller-manager",
                 "/controller_manager",
@@ -234,7 +246,7 @@ def launch_setup(context):
         control_node,
         dashboard_client_node,
         robot_state_helper_node,
-        tool_communication_node,
+        tool_communication_script,
         controller_stopper_node,
         urscript_interface,
         rsp,

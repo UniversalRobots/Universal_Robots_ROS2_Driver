@@ -437,19 +437,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   // Service to get robot safety status as a string
   get_safety_status_service_ = node->create_service<ur_dashboard_msgs::srv::GetSafetyStatus>(
-      "~/get_safety_status", [&](const ur_dashboard_msgs::srv::GetSafetyStatus::Request::SharedPtr /*unused*/,
-                                 ur_dashboard_msgs::srv::GetSafetyStatus::Response::SharedPtr resp) {
-        auto dashboard_response =
-            dashboardCallWithChecks([this]() { return client_->commandSafetyStatusWithResponse(); }, resp);
-        if (resp->success) {
-          handleDashboardResponseData(
-              [dashboard_response, resp]() {
-                resp->safety_status.status = std::get<std::string>(dashboard_response.data.at("safety_status"));
-              },
-              resp, dashboard_response);
-        }
-        return true;
-      });
+      "~/get_safety_status",
+      std::bind(&DashboardClientROS::handleSafetyStatusQuery, this, std::placeholders::_1, std::placeholders::_2));
 
   // Service to generate flight report, defaults to system type
   generate_flight_report_service_ = node->create_service<ur_dashboard_msgs::srv::GenerateFlightReport>(
@@ -572,6 +561,68 @@ bool DashboardClientROS::handleSafetyModeQuery(const ur_dashboard_msgs::srv::Get
   return true;
 }
 
+bool DashboardClientROS::handleSafetyStatusQuery(const ur_dashboard_msgs::srv::GetSafetyStatus::Request::SharedPtr req,
+                                                 ur_dashboard_msgs::srv::GetSafetyStatus::Response::SharedPtr resp)
+{
+  auto dashboard_response =
+      dashboardCallWithChecks([this]() { return client_->commandSafetyStatusWithResponse(); }, resp);
+  if (resp->success) {
+    handleDashboardResponseData(
+        [dashboard_response, resp]() {
+          const std::string safety_status_str = std::get<std::string>(dashboard_response.data.at("safety_status"));
+          {
+            // Note: This list implements all safety status values. The Dashboard server
+            // documentation doesn't name all of them, so some of them might not be used.
+            if (safety_status_str == "NORMAL") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::NORMAL;
+            } else if (safety_status_str == "REDUCED") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::REDUCED;
+            } else if (safety_status_str == "PROTECTIVE_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::PROTECTIVE_STOP;
+            } else if (safety_status_str == "RECOVERY") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::RECOVERY;
+            } else if (safety_status_str == "SAFEGUARD_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::SAFEGUARD_STOP;
+            } else if (safety_status_str == "SYSTEM_EMERGENCY_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::SYSTEM_EMERGENCY_STOP;
+            } else if (safety_status_str == "ROBOT_EMERGENCY_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::ROBOT_EMERGENCY_STOP;
+            } else if (safety_status_str == "VIOLATION") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::VIOLATION;
+            } else if (safety_status_str == "FAULT") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::FAULT;
+            } else if (safety_status_str == "VALIDATE_JOINT") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::VALIDATE_JOINT_ID;
+            } else if (safety_status_str == "UNDEFINED_SAFETY_MODE") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::UNDEFINED_SAFETY_MODE;
+            } else if (safety_status_str == "AUTOMATIC_MODE_SAFEGUARD_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::AUTOMATIC_MODE_SAFEGUARD_STOP;
+            } else if (safety_status_str == "SYSTEM_THREE_POSITION_ENABLING_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::SYSTEM_THREE_POSITION_ENABLING_STOP;
+            } else if (safety_status_str == "TP_THREE_POSITION_ENABLING_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::TP_THREE_POSITION_ENABLING_STOP;
+            } else if (safety_status_str == "IMMI_EMERGENCY_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::IMMI_EMERGENCY_STOP;
+            } else if (safety_status_str == "IMMI_SAFEGUARD_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::IMMI_SAFEGUARD_STOP;
+            } else if (safety_status_str == "PROFISAFE_WAITING_FOR_PARAMETERS") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::PROFISAFE_WAITING_FOR_PARAMETERS;
+            } else if (safety_status_str == "PROFISAFE_AUTOMATIC_MODE_SAFEGUARD_STOP") {
+              resp->safety_status.status =
+                  ur_dashboard_msgs::msg::SafetyStatus::PROFISAFE_AUTOMATIC_MODE_SAFEGUARD_STOP;
+            } else if (safety_status_str == "PROFISAFE_SAFEGUARD_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::PROFISAFE_SAFEGUARD_STOP;
+            } else if (safety_status_str == "PROFISAFE_EMERGENCY_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::PROFISAFE_EMERGENCY_STOP;
+            } else if (safety_status_str == "SAFETY_API_SAFEGUARD_STOP") {
+              resp->safety_status.status = ur_dashboard_msgs::msg::SafetyStatus::SAFETY_API_SAFEGUARD_STOP;
+            }
+          }
+        },
+        resp, dashboard_response);
+  }
+  return true;
+}
 bool DashboardClientROS::handleRobotModeQuery(const ur_dashboard_msgs::srv::GetRobotMode::Request::SharedPtr req,
                                               ur_dashboard_msgs::srv::GetRobotMode::Response::SharedPtr resp)
 {
