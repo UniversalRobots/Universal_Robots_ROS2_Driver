@@ -94,13 +94,20 @@ FrictionModelController::on_configure(const rclcpp_lifecycle::State& /*previous_
   param_listener_->refresh_dynamic_parameters();
   params_ = param_listener_->get_params();
 
-  friction_model_params_buffer_.set(FrictionModelParameters{
-      .viscous_scale = { std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN() },
-      .coulomb_scale = { std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
-                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN() } });
+  FrictionModelParameters initial_parameters;
+  initial_parameters.viscous_scale = {
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()
+  };
+
+  initial_parameters.coulomb_scale = {
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+    std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()
+  };
+
+  friction_model_params_buffer_.set(initial_parameters);
 
   try {
     set_friction_model_parameters_srv_ = get_node()->create_service<ur_msgs::srv::SetFrictionModelParameters>(
