@@ -97,7 +97,7 @@ class HandBackControlTest(unittest.TestCase):
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.serversocket.settimeout(0.2)  # timeout for listening
-        self.serversocket.bind(("192.168.56.1", 20957))
+        self.serversocket.bind(("0.0.0.0", 20957))
         self.serversocket.listen(1)
 
     def tearDown(self):
