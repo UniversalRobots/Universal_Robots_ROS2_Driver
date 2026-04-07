@@ -48,6 +48,11 @@ class UrToolCommunication(Node):
     def __init__(self):
         super().__init__("ur_tool_communication")
 
+        self.get_logger().warning(
+            "[DEPRECATION_WARNING] This node is deprecated and will be removed in ROS M. "
+            "Please use the ur_client_library tool_communication.py script directly."
+        )
+
         self.get_logger().info("Initializing tool communication wrapper node")
 
         # IP address of the robot
