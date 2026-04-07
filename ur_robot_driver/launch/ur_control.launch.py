@@ -204,6 +204,7 @@ def launch_setup(context):
         "force_torque_sensor_broadcaster",
         "tcp_pose_broadcaster",
         "ur_configuration_controller",
+        "friction_model_controller",
     ]
     controllers_inactive = [
         "scaled_joint_trajectory_controller",

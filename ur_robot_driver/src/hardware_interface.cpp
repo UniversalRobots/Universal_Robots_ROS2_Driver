@@ -400,6 +400,17 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
 
+  for (size_t i = 0; i < friction_model_viscous_.size(); ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "friction_model", "viscous_" + std::to_string(i), &friction_model_viscous_[i]));
+  }
+  for (size_t i = 0; i < friction_model_coulomb_.size(); ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "friction_model", "coulomb_" + std::to_string(i), &friction_model_coulomb_[i]));
+  }
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "friction_model", "async_success",
+                                                                       &friction_model_async_success_));
+
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_x", &force_mode_task_frame_[0]);
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_y", &force_mode_task_frame_[1]);
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_z", &force_mode_task_frame_[2]);
@@ -931,6 +942,9 @@ void URPositionHardwareInterface::initAsyncIO()
 
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+
+  friction_model_viscous_.fill(NO_NEW_CMD_);
+  friction_model_coulomb_.fill(NO_NEW_CMD_);
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
@@ -998,6 +1012,12 @@ void URPositionHardwareInterface::checkAsyncIO()
     payload_async_success_ = ur_driver_->setPayload(payload_mass_, payload_center_of_gravity_);
     payload_mass_ = NO_NEW_CMD_;
     payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  }
+
+  if (!std::isnan(friction_model_viscous_[0]) && ur_driver_ != nullptr) {
+    friction_model_async_success_ = ur_driver_->setFrictionScales(friction_model_viscous_, friction_model_coulomb_);
+    friction_model_viscous_.fill(NO_NEW_CMD_);
+    friction_model_coulomb_.fill(NO_NEW_CMD_);
   }
 
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
