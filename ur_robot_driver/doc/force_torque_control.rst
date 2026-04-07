@@ -7,8 +7,7 @@ Force and Torque Control
 
 This page provides an overview of the force and torque control capabilities available in this
 driver. In ROS 2, joint torque control is also referred to as **effort control**. The driver
-supports both direct joint-level torque control and Cartesian force/torque control, with impedance
-control planned for a future release.
+supports both direct joint-level torque control and Cartesian force/torque control.
 
 For position and velocity based control, see :ref:`position_velocity_control`.
 
@@ -66,12 +65,12 @@ default in the driver's launch file.
 
 .. note::
 
-   The friction model controller is only relevant for effort control and future impedance control
-   modes. While it is technically compatible with all motion controllers, adjusting friction
-   parameters only has an effect during direct torque control.
+   The friction model controller is only relevant for effort control. While it is technically
+   compatible with all motion controllers, adjusting friction parameters only has an effect during
+   direct torque control.
 
-Cartesian Force/Torque Control
-------------------------------
+Force Mode Controller
+---------------------
 
 The :ref:`force_mode_controller <force_mode_controller>` provides Cartesian-space force and torque
 control using the robot's built-in admittance control mode. This interfaces the URScript function
@@ -155,11 +154,3 @@ The ``ur_robot_driver/examples/force_mode.py`` example demonstrates how to:
 2. Move the robot to a starting pose
 3. Activate force mode with a specified wrench, task frame, and selection vector
 4. Deactivate force mode after a set duration
-
-Impedance Control
------------------
-
-.. note::
-
-   Impedance controllers are planned for a future release. This section will be expanded when they
-   become available.

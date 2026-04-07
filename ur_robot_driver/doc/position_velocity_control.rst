@@ -140,8 +140,7 @@ Currently supported motion types:
 The underlying `Universal Robots Client Library
 <https://github.com/UniversalRobots/Universal_Robots_Client_Library>`_ supports additional motion
 types such as moveP (process move with constant TCP velocity), optiMoveJ, optiMoveL, and spline
-motions. These are not yet exposed through the ``control_msgs`` motion primitive interface but may
-be added in future releases.
+motions. These are not yet exposed through the ``control_msgs`` motion primitive interface.
 
 Key features:
 
@@ -167,26 +166,12 @@ To activate:
 An example demonstrating motion primitive usage is available at
 ``ur_robot_driver/examples/send_dummy_motion_primitives_ur10e.py``.
 
-Cartesian Force/Torque Overlay (Force Mode)
--------------------------------------------
+Force Mode Controller
+---------------------
 
 The :ref:`force_mode_controller <force_mode_controller>` can be combined with any of the position
-control modes above to add Cartesian force/torque constraints during motion. This uses the robot's
-built-in admittance control mode.
-
-When force mode is active alongside a position controller:
-
-* In **compliant axes** (selected via the selection vector), the robot adjusts its position to
-  achieve the specified force or torque.
-* In **non-compliant axes**, motion commands from the position controller execute normally.
-
-This enables applications such as polishing, grinding, or assembly where the robot needs to
-maintain a specific force while following a trajectory.
-
-See the :ref:`force_torque_control` page for more details on force mode and the
-:ref:`force_mode_controller <force_mode_controller>` documentation for the full service interface.
-
-An example demonstrating force mode usage is available at ``ur_robot_driver/examples/force_mode.py``.
+control modes above to add Cartesian force/torque constraints during motion. See the
+:ref:`force_torque_control` page for full details.
 
 Controller Compatibility
 ------------------------
