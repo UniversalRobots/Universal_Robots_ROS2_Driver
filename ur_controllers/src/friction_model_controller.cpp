@@ -108,6 +108,7 @@ controller_interface::CallbackReturn
 FrictionModelController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   change_requested_ = false;
+  async_result_ = false;
   async_state_ = std::numeric_limits<double>::quiet_NaN();
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -128,8 +129,13 @@ FrictionModelController::on_cleanup(const rclcpp_lifecycle::State& /*previous_st
 controller_interface::return_type FrictionModelController::update(const rclcpp::Time& /*time*/,
                                                                   const rclcpp::Duration& /*period*/)
 {
-  async_state_ =
-      command_interfaces_[friction_model::FRICTION_MODEL_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+  if (async_state_ == ASYNC_WAITING) {
+    async_state_ =
+        command_interfaces_[friction_model::FRICTION_MODEL_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+    if (async_state_ != ASYNC_WAITING) {
+      async_result_ = async_state_ == 1.0;
+    }
+  }
 
   if (change_requested_) {
     const auto params = friction_model_params_buffer_.try_get();
@@ -151,6 +157,7 @@ controller_interface::return_type FrictionModelController::update(const rclcpp::
 
     write_successful &= command_interfaces_[friction_model::FRICTION_MODEL_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     async_state_ = ASYNC_WAITING;
+    async_result_ = false;
 
     if (!write_successful) {
       RCLCPP_ERROR(get_node()->get_logger(), "Could not write to command interfaces.");
@@ -197,12 +204,12 @@ bool FrictionModelController::setFrictionModelParameters(
   change_requested_ = true;
 
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for friction model parameters to be set.");
-  if (!waitForAsyncCommand([&]() { return async_state_.load(); })) {
+  if (!waitForAsyncCommand([&]() { return async_result_.load(); })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that friction model parameters were set. (This might "
                                           "happen when using the mocked interface)");
   }
 
-  resp->success = async_state_ == 1.0;
+  resp->success = async_result_.load();
 
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Friction model parameters have been set successfully.");
@@ -218,7 +225,7 @@ bool FrictionModelController::waitForAsyncCommand(std::function<double(void)> ge
 {
   const auto maximum_retries = params_.check_io_successful_retries;
   int retries = 0;
-  while (get_value() == ASYNC_WAITING) {
+  while (get_value() == false) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     retries++;
 

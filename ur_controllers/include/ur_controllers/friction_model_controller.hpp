@@ -37,6 +37,7 @@
 
 #pragma once
 #include <array>
+#include <memory>
 
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -104,6 +105,7 @@ private:
   realtime_tools::RealtimeThreadSafeBox<FrictionModelParameters> friction_model_params_buffer_;
   std::atomic<bool> change_requested_;
   std::atomic<double> async_state_;
+  std::atomic<bool> async_result_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   bool waitForAsyncCommand(std::function<double(void)> get_value);
