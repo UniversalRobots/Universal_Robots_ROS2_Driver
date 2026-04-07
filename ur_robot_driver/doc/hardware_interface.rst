@@ -50,3 +50,12 @@ comfortably used through the ``ros2 control`` `command line tool
 
 E.g. ``ros2 control list_hardware_components`` will list all hardware components, including the UR
 hardware interface with its interfaces as listed above.
+
+The following pages describe the available controllers grouped by control mode:
+
+.. toctree::
+   :maxdepth: 1
+
+   position_velocity_control
+   force_torque_control
+   utility_controllers

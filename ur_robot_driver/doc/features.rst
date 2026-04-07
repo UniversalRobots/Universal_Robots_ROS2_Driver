@@ -16,6 +16,8 @@ Feature list and roadmap
      - yes (:ref:`scaled_jtc`)
    * - joint-velocity-based control
      - yes\ :raw-html-m2r:`<sup>1</sup>`
+   * - joint-effort-based control (torque control)
+     - yes (:ref:`force_torque_control`)
    * - Cartesian position-based control
      - no
    * - Cartesian twist-based control

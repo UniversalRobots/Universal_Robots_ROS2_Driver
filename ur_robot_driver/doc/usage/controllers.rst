@@ -124,6 +124,13 @@ Type: :ref:`ur_controllers/ForceModeController <force_mode_controller>`
 
 Allows utilizing the robot's builtin *Force Mode*.
 
+friction_model_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Type: :ref:`ur_controllers/FrictionModelController <friction_model_controller>`
+
+Allows setting per-joint viscous and Coulomb friction scale factors for direct torque control.
+
 freedrive_mode_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
