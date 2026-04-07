@@ -119,10 +119,3 @@ ur_configuration_controller
 Type: ``ur_controllers/URConfigurationController``
 
 Provides access to UR-specific robot configuration data. This controller is always active.
-
-motion_primitive_forward_controller
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Type: ``motion_primitives_controllers/MotionPrimitivesForwardController``
-
-Forwards motion primitives to the robot controller for execution.

@@ -111,6 +111,62 @@ To activate:
    $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
      --activate forward_velocity_controller
 
+Motion Primitives
+-----------------
+
+The ``motion_primitive_forward_controller`` provides a high-level motion interface that forwards
+motion primitives directly to the robot controller for execution. Instead of streaming individual
+joint commands or interpolating trajectories on the ROS PC, this controller sends complete motion
+descriptions (such as linear joint moves or linear Cartesian moves) to the robot, which executes
+them using its built-in motion planner.
+
+motion_primitive_forward_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Type: ``motion_primitives_controllers/MotionPrimitivesForwardController``
+
+This controller accepts sequences of motion primitives via the
+``~/motion_sequence [control_msgs/action/ExecuteMotionPrimitiveSequence]`` action interface. Each
+motion primitive in the sequence specifies a motion type, target pose or joint positions, velocity,
+acceleration, blend radius, and move time.
+
+Currently supported motion types:
+
+* ``LINEAR_JOINT``: Joint-space point-to-point move to target joint positions (moveJ).
+* ``LINEAR_CARTESIAN``: Cartesian-space linear move to a target TCP pose (moveL).
+* ``CIRCULAR_CARTESIAN``: Circular move in Cartesian space through a via-point to a target pose
+  (moveC).
+
+The underlying `Universal Robots Client Library
+<https://github.com/UniversalRobots/Universal_Robots_Client_Library>`_ supports additional motion
+types such as moveP (process move with constant TCP velocity), optiMoveJ, optiMoveL, and spline
+motions. These are not yet exposed through the ``control_msgs`` motion primitive interface but may
+be added in future releases.
+
+Key features:
+
+* Motion primitives are executed natively by the robot controller, so the ROS PC has no realtime
+  requirements during execution.
+* Sequences of motion primitives can be blended together using blend radii for smooth, continuous
+  motion.
+* Can be combined with the :ref:`force_mode_controller <force_mode_controller>` for motion under
+  force constraints.
+* Can be combined with the :ref:`tool_contact_controller <tool_contact_controller>` to stop motion
+  on tool contact.
+* Mutually exclusive with all other motion controllers (``joint_trajectory_controller``,
+  ``passthrough_trajectory_controller``, ``forward_position_controller``,
+  ``forward_velocity_controller``, ``forward_effort_controller``, ``freedrive_mode_controller``).
+
+To activate:
+
+.. code-block:: console
+
+   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+     --activate motion_primitive_forward_controller
+
+An example demonstrating motion primitive usage is available at
+``ur_robot_driver/examples/send_dummy_motion_primitives_ur10e.py``.
+
 Cartesian Force/Torque Overlay (Force Mode)
 -------------------------------------------
 
@@ -154,3 +210,6 @@ The following table summarizes how position and velocity controllers can be comb
    * - ``forward_velocity_controller``
      - Mutually exclusive with other motion controllers. Can combine with
        ``force_mode_controller``.
+   * - ``motion_primitive_forward_controller``
+     - Mutually exclusive with other motion controllers. Can combine with
+       ``force_mode_controller`` and ``tool_contact_controller``.
