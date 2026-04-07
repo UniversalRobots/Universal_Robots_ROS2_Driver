@@ -35,6 +35,7 @@
  */
 //----------------------------------------------------------------------
 
+#include <algorithm>
 #include <limits>
 #include <lifecycle_msgs/msg/state.hpp>
 #include <rclcpp/logging.hpp>
@@ -93,6 +94,14 @@ FrictionModelController::on_configure(const rclcpp_lifecycle::State& /*previous_
   param_listener_->refresh_dynamic_parameters();
   params_ = param_listener_->get_params();
 
+  friction_model_params_buffer_.set(FrictionModelParameters{
+      .viscous_scale = { std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN() },
+      .coulomb_scale = { std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(),
+                         std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN() } });
+
   try {
     set_friction_model_parameters_srv_ = get_node()->create_service<ur_msgs::srv::SetFrictionModelParameters>(
         "~/set_friction_model_parameters", std::bind(&FrictionModelController::setFrictionModelParameters, this,
@@ -110,6 +119,16 @@ FrictionModelController::on_activate(const rclcpp_lifecycle::State& /*previous_s
   change_requested_ = false;
   async_result_ = false;
   async_state_ = std::numeric_limits<double>::quiet_NaN();
+
+  auto current_params = friction_model_params_buffer_.get();
+  if (std::all_of(current_params.viscous_scale.begin(), current_params.viscous_scale.end(),
+                  [](double v) { return std::isfinite(v); }) &&
+      std::all_of(current_params.coulomb_scale.begin(), current_params.coulomb_scale.end(),
+                  [](double v) { return std::isfinite(v); })) {
+    RCLCPP_INFO(get_node()->get_logger(), "Restoring friction model parameters from before deactivation. If this is "
+                                          "not desired, please set new parameters using the service.");
+    change_requested_ = true;
+  }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
