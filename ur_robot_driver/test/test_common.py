@@ -73,7 +73,7 @@ from ur_dashboard_msgs.srv import (
     SetOperationalMode,
     SetUserRole,
 )
-from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
+from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode, SetFrictionModelParameters
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
@@ -345,6 +345,15 @@ class ForceModeInterface(
     namespace="/force_mode_controller",
     initial_services={},
     services={"start_force_mode": SetForceMode, "stop_force_mode": Trigger},
+):
+    pass
+
+
+class FrictionModelInterface(
+    _ServiceInterface,
+    namespace="/friction_model_controller",
+    initial_services={},
+    services={"set_friction_model_parameters": SetFrictionModelParameters},
 ):
     pass
 
