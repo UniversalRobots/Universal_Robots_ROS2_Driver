@@ -7,17 +7,12 @@ Force and Torque Control
 
 This page provides an overview of the force and torque control capabilities available in this
 driver. In ROS 2, joint torque control is also referred to as **effort control**. The driver
-supports both direct joint-level torque control and Cartesian force/torque control.
+supports both direct joint-level torque control and the robot's built-in Cartesian force-mode control.
 
 For position and velocity based control, see :ref:`position_velocity_control`.
 
 For utility controllers such as freedrive, tool contact detection, and I/O control, see
 :ref:`utility_controllers`.
-
-.. note::
-
-   Joint torque control requires PolyScope >= 5.23.0 (CB series) or >= 10.10.0 (e-Series and
-   newer).
 
 Joint Torque Control
 --------------------
@@ -31,8 +26,12 @@ forward_effort_controller
 
 Type: `forward_command_controller/ForwardCommandController <https://control.ros.org/rolling/doc/ros2_controllers/forward_command_controller/doc/userdoc.html>`_ with ``interface_name: effort``
 
-This controller streams target joint efforts (torques) directly to the robot. The user is
+This controller streams target joint efforts (torques) directly to the robot using the URScript function ``direct_torque(...)``. The user is
 responsible for sending commands that are safe and achievable.
+
+.. note::
+
+   This controller requires PolyScope >= 5.25.1 (CB series) or >= 10.12.1 (e-Series and newer).
 
 To activate this controller, deactivate any active motion controller first:
 
@@ -47,7 +46,7 @@ with one value per joint.
 .. warning::
 
    This controller is mutually exclusive with position and velocity controllers. Only one
-   joint-level streaming controller can be active at a time.
+   motion controller can be active at a time.
 
 Friction Compensation
 ^^^^^^^^^^^^^^^^^^^^^
@@ -73,7 +72,7 @@ Force Mode Controller
 ---------------------
 
 The :ref:`force_mode_controller <force_mode_controller>` provides Cartesian-space force and torque
-control using the robot's built-in admittance control mode. This interfaces the URScript function
+control using the robot's built-in force mode. This interfaces the URScript function
 ``force_mode(...)``.
 
 Unlike direct joint torque control, force mode operates in Cartesian space: you specify forces and
@@ -93,6 +92,13 @@ The controller provides two services:
 * ``~/start_force_mode [ur_msgs/srv/SetForceMode]``
 * ``~/stop_force_mode [std_srvs/srv/Trigger]``
 
+.. tip::
+
+   The robot's force/torque sensor is a relative sensor, meaning it measures changes in force and
+   torque rather than absolute values. For best performance, zero the sensor using the
+   ``~/zero_ftsensor`` service on the :ref:`io_and_status_controller <io_and_status_controller>`
+   before activating force mode and before the tool makes contact with the environment.
+
 See the :ref:`force_mode_controller <force_mode_controller>` documentation for full details on
 parameters, the service interface, and the meaning of each field.
 
@@ -102,7 +108,7 @@ Force/Torque Sensing
 --------------------
 
 The robot's TCP force/torque sensor is an independent sensing capability. It is **not required**
-for joint torque control or force mode to function. However, it can be useful alongside torque
+for joint torque control to function. However, it can be useful alongside torque
 control for monitoring contact forces or implementing sensor-based control strategies.
 
 force_torque_sensor_broadcaster
