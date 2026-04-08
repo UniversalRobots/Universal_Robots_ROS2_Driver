@@ -5,8 +5,8 @@ repositories:
     version: master
   Universal_Robots_ROS2_Description:
     type: git
-    url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git
-    version: humble
+    url: https://github.com/urfeex/Universal_Robots_ROS2_Description.git
+    version: friction_scales
   ur_msgs:
     type: git
     url: https://github.com/ros-industrial/ur_msgs.git
