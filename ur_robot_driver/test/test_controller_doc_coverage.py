@@ -31,9 +31,9 @@
 
 Every controller listed in the controller_manager configuration must be mentioned
 in at least one of the control mode documentation pages:
-  - ur_robot_driver/doc/position_velocity_control.rst
-  - ur_robot_driver/doc/force_torque_control.rst
-  - ur_robot_driver/doc/utility_controllers.rst
+  - ur_robot_driver/doc/usage/position_velocity_control.rst
+  - ur_robot_driver/doc/usage/force_torque_control.rst
+  - ur_robot_driver/doc/usage/utility_controllers.rst
 """
 
 import re
@@ -45,9 +45,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CONTROLLERS_YAML = REPO_ROOT / "ur_robot_driver" / "config" / "ur_controllers.yaml"
 
 DOC_PAGES = [
-    REPO_ROOT / "ur_robot_driver" / "doc" / "position_velocity_control.rst",
-    REPO_ROOT / "ur_robot_driver" / "doc" / "force_torque_control.rst",
-    REPO_ROOT / "ur_robot_driver" / "doc" / "utility_controllers.rst",
+    REPO_ROOT / "ur_robot_driver" / "doc" / "usage" / "position_velocity_control.rst",
+    REPO_ROOT / "ur_robot_driver" / "doc" / "usage" / "force_torque_control.rst",
+    REPO_ROOT / "ur_robot_driver" / "doc" / "usage" / "utility_controllers.rst",
 ]
 
 

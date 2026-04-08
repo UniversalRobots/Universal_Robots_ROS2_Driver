@@ -1,4 +1,4 @@
-:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/utility_controllers.rst
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/usage/utility_controllers.rst
 
 .. _utility_controllers:
 
@@ -13,6 +13,18 @@ For position and velocity based control, see :ref:`position_velocity_control`.
 
 For force and torque based control, see :ref:`force_torque_control`.
 
+
+joint_state_broadcaster
+-----------------------
+
+Type: `joint_state_broadcaster/JointStateBroadcaster <https://control.ros.org/rolling/doc/ros2_controllers/joint_state_broadcaster/doc/userdoc.html>`_
+
+Publishes all joints' positions, velocities, and motor currents as ``sensor_msgs/JointState`` on the ``joint_states`` topic. This broadcaster is read-only and can run alongside any other controller.
+
+.. note::
+
+   The effort field contains the currents reported by the joints and not the actual efforts in a
+   physical sense.
 
 speed_scaling_state_broadcaster
 -------------------------------

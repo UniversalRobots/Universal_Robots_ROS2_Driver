@@ -1,4 +1,4 @@
-:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/position_velocity_control.rst
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/usage/position_velocity_control.rst
 
 .. _position_velocity_control:
 

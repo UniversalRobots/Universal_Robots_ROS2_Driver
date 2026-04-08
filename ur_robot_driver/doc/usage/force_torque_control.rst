@@ -1,4 +1,4 @@
-:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/force_torque_control.rst
+:github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/usage/force_torque_control.rst
 
 .. _force_torque_control:
 
@@ -31,7 +31,8 @@ forward_effort_controller
 
 Type: `forward_command_controller/ForwardCommandController <https://control.ros.org/rolling/doc/ros2_controllers/forward_command_controller/doc/userdoc.html>`_ with ``interface_name: effort``
 
-This controller streams target joint efforts (torques) directly to the robot using the URScript function ``direct_torque(...)``. The user is
+This controller streams target joint efforts (torques) directly to the robot using the URScript function ``direct_torque(...)``. The robot automatically
+compensates for gravity, so the provided target torques should not include gravity compensation. The user is
 responsible for sending commands that are safe and achievable.
 
 .. note::
