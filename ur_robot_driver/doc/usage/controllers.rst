@@ -17,15 +17,17 @@ How do controllers get loaded and started?
 ------------------------------------------
 
 As this driver uses `ros2_control <https://control.ros.org>`_ all controllers are managed by the
-controller_manager. During startup, a default set of running controllers is loaded and started,
-another set is loaded in stopped mode. Stopped controllers won't be usable right away, but they
-need to be started individually.
+controller_manager. During startup, a default set of running controllers is loaded and activated,
+another set is loaded in inactive mode. Inactive controllers won't be usable right away, but they
+need to be activated individually.
 
 Controllers that are actually writing to some command interfaces (e.g. joint positions) will claim
 those interfaces. Only one controller claiming a certain interface can be active at one point.
 
 Controllers can be switched either through the controller_manager's service calls, through the
-`rqt_controller_manager <https://control.ros.org/rolling/doc/ros2_control/controller_manager/doc/userdoc.html#rqt-controller-manager>`_ gui or through the ``ros2 control`` verb from the package ``ros-${ROS_DISTRO}-ros2controlcli`` package.
+`rqt_controller_manager
+<https://control.ros.org/rolling/doc/ros2_control/controller_manager/doc/userdoc.html#rqt-controller-manager>`_
+gui or through the ``ros2 control`` verb from the ``ros-${ROS_DISTRO}-ros2controlcli`` package.
 
 For example, to switch from the default ``scaled_joint_trajectory_controller`` to the
 ``forward_position_controller`` you can call
