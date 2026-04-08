@@ -50,3 +50,8 @@ comfortably used through the ``ros2 control`` `command line tool
 
 E.g. ``ros2 control list_hardware_components`` will list all hardware components, including the UR
 hardware interface with its interfaces as listed above.
+
+When the launch files from this driver are used, a predefined set of controllers is already loaded.
+See :ref:`usage_controllers` for a description of the available controllers grouped by control mode.
+
+Users can also load other controllers that use the interfaces provided by the hardware interface.
