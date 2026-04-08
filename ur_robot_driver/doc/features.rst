@@ -9,7 +9,7 @@ Feature list and roadmap
    :header-rows: 1
 
    * - Feature
-     - ROS2 Driver
+     - ROS 2 Driver
    * - joint-position-based control
      - yes
    * - scaled joint-position-based control
