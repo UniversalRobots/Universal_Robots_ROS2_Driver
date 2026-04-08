@@ -463,3 +463,29 @@ The controller provides one action for enabling tool contact. For the controller
   .. code-block::
 
      ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact
+
+.. _ur_configuration_controller:
+
+ur_controllers/URConfigurationController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller provides access to UR-specific robot configuration data. Currently, it provides a
+service to query the robot's software version.
+
+Parameters
+""""""""""
+
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name          | Type   | Default value | Description                                                                           |
+|                         |        |               |                                                                                       |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``           | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+* ``~/get_software_version [ur_msgs/srv/GetRobotSoftwareVersion]``: Get the robot's software
+  version. The response contains the major, minor and patch version of the robot's software, as
+  well as the build number if available. For example, for a robot running PolyScope 5.12.1 the
+  response would be major version 5, minor version 12 and patch version 1.

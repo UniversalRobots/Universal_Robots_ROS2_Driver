@@ -118,6 +118,6 @@ controller.
 ur_configuration_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Type: ``ur_controllers/URConfigurationController``
+Type: :ref:`ur_controllers/URConfigurationController <ur_configuration_controller>`
 
 Provides access to UR-specific robot configuration data. This controller is always active.
