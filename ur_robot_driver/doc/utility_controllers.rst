@@ -79,6 +79,34 @@ Type: `pose_broadcaster/PoseBroadcaster <https://control.ros.org/rolling/doc/ros
 Publishes the robot's TCP pose. This broadcaster is read-only and can run alongside any other
 controller.
 
+The robot's TCP pose is published both as a ``geometry_msgs/PoseStamped`` on the ``tcp_pose_broadcaster/pose`` topic and as a
+``tf2`` transform with the frame name ``tool0_controller`` with ``base`` as a
+parent.
+
+Thus, the transformation from ``base`` to ``tool0_controller`` doesn't use the URDF model and
+forward kinematics in ROS, but instead directly uses the robot's internal kinematics and sensors
+(which will always use the robot's calibration).
+
+.. note::
+   When setting a tool on the robot's teach pendant, this will affect the tcp pose as published by
+   this controller, as the robot will take the tool's geometry into account when calculating the
+   TCP pose.
+
+   Setting up the :ref:`URDF with the robot's calibration <ur_calibration>` will make the ``tool0``
+   and ``tool0_controller`` frames align exactly given no tool is setup on the robot.
+
+   All frames mentioned will be prefixed with the robot's ``tf_prefix`` if it is set. It has been
+   omitted here for readability.
+
+.. figure:: tcp_frames.png
+   :align: center
+   :alt: tcp frames (tool0 and tool0_controller)
+
+   The ``tool0_controller`` frame is published with ``base`` as parent directly, while
+   ``tool0`` is attached to the URDF model chain. When a TCP is setup on the robot, the
+   ``tool0_controller`` frame will take that into account (as on the right, where the tool has a
+   z-offset of 110 mm).
+
 ur_configuration_controller
 ----------------------------
 
