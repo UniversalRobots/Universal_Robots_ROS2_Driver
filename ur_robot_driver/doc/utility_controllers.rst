@@ -25,8 +25,10 @@ Publishes the current actual execution speed as reported by the robot. Values ar
 between 0 and 1. This broadcaster is read-only and can run alongside any other controller.
 
 The speed scaling value reflects the combined effect of the speed slider on the teach pendant and
-any controller-imposed speed limits. It is used by the ``joint_trajectory_controller`` and the
-``passthrough_trajectory_controller`` to scale trajectory execution.
+any controller-imposed speed limits. It is used by the ``joint_trajectory_controller`` to scale
+trajectory execution on the ROS PC. For the ``passthrough_trajectory_controller`` and the
+``motion_primitive_forward_controller``, speed scaling is handled directly by the robot controller
+since it performs the interpolation in these modes.
 
 I/O and Status
 --------------

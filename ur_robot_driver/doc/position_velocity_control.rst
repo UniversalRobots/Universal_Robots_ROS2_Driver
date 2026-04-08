@@ -68,49 +68,6 @@ Key features:
 See the :ref:`passthrough_trajectory_controller <passthrough_trajectory_controller>` documentation
 for full details on parameters, tolerances, and implementation.
 
-Streaming Control
------------------
-
-Streaming controllers allow direct, real-time control of joint positions or velocities. These are
-useful for servoing applications (such as ``moveit_servo``), teleoperation, or any scenario
-requiring continuous, low-latency joint commands.
-
-.. warning::
-
-   With streaming controllers, the user is responsible for sending commands that are safe and
-   achievable. The robot will try to follow commands as fast as possible without trajectory
-   planning.
-
-forward_position_controller
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Type: `forward_command_controller/ForwardCommandController <https://control.ros.org/rolling/doc/ros2_controllers/forward_command_controller/doc/userdoc.html>`_ with ``interface_name: position``
-
-Streams target joint positions directly to the robot. The robot moves to each target position as
-fast as possible. Useful for servoing applications such as ``moveit_servo``.
-
-To activate:
-
-.. code-block:: console
-
-   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
-     --activate forward_position_controller
-
-forward_velocity_controller
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Type: `forward_command_controller/ForwardCommandController <https://control.ros.org/rolling/doc/ros2_controllers/forward_command_controller/doc/userdoc.html>`_ with ``interface_name: velocity``
-
-Streams target joint velocities directly to the robot. Useful for servoing applications such as
-``moveit_servo``.
-
-To activate:
-
-.. code-block:: console
-
-   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
-     --activate forward_velocity_controller
-
 Motion Primitives
 -----------------
 
@@ -165,6 +122,55 @@ To activate:
 
 An example demonstrating motion primitive usage is available at
 ``ur_robot_driver/examples/send_dummy_motion_primitives_ur10e.py``.
+
+Streaming Control
+-----------------
+
+Streaming controllers allow direct, real-time control of joint positions or velocities. These are
+useful for servoing applications (such as ``moveit_servo``), teleoperation, or any scenario
+requiring continuous, low-latency joint commands.
+
+.. warning::
+
+   With streaming controllers, the user is responsible for sending commands that are safe and
+   achievable. The robot will try to follow commands as fast as possible without trajectory
+   planning.
+
+.. note::
+
+   The robot will scale down the execution speed if its safety limits require it. Unlike the
+   trajectory-based controllers, streaming controllers do not automatically account for this
+   scaling. Monitor the :ref:`speed_scaling_state_broadcaster <speed_scaling_state_broadcaster>` to
+   detect when the robot is scaling down and adapt your commands accordingly.
+
+forward_position_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Type: `forward_command_controller/ForwardCommandController <https://control.ros.org/rolling/doc/ros2_controllers/forward_command_controller/doc/userdoc.html>`_ with ``interface_name: position``
+
+Streams target joint positions directly to the robot. The robot moves to each target position as
+fast as possible. This interfaces the URScript function ``servoj(...)``.
+
+To activate:
+
+.. code-block:: console
+
+   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+     --activate forward_position_controller
+
+forward_velocity_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Type: `forward_command_controller/ForwardCommandController <https://control.ros.org/rolling/doc/ros2_controllers/forward_command_controller/doc/userdoc.html>`_ with ``interface_name: velocity``
+
+Streams target joint velocities directly to the robot. This interfaces the URScript function ``speedj(...)``.
+
+To activate:
+
+.. code-block:: console
+
+   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+     --activate forward_velocity_controller
 
 Force Mode Controller
 ---------------------
