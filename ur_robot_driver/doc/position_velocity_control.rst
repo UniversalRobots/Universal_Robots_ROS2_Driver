@@ -30,7 +30,7 @@ The ``joint_trajectory_controller`` is the default motion controller in the driv
 trajectories via the ``FollowJointTrajectory`` action interface and interpolates them on the ROS
 control PC.
 
-Key features:
+**Key features:**
 
 * **Speed scaling** support: The controller respects the robot's speed scaling, including the speed
   slider on the teach pendant, emergency stops, safeguard stops, and program pauses. Trajectory
@@ -52,12 +52,12 @@ trajectory to the robot controller for interpolation and execution. This signifi
 realtime requirements on the ROS PC, making it possible to run a stable driver connection without a
 real-time patched kernel.
 
-Key features:
+**Key features:**
 
 * **Reduced realtime requirements** on the ROS PC.
 * **Speed scaling** support: Handles speed scaling, emergency stops, safeguard stops, and program
   pauses.
-* Used with **MoveIt** and other trajectory planners. Trajectories planned with MoveIt will be
+* Can be used with **MoveIt** and other trajectory planners. Trajectories planned with MoveIt will be
   executed following the trajectory exactly.
 * Uses the same ``FollowJointTrajectory`` action interface as the ``joint_trajectory_controller``.
 * Can be combined with the :ref:`force_mode_controller <force_mode_controller>` for motion under
