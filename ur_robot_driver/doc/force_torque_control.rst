@@ -21,6 +21,11 @@ Direct joint-level torque control lets you command torque values to each of the 
 This is useful for implementing custom compliance, force control strategies, or research
 applications that require direct torque-level access.
 
+Custom controllers should best be implemented as ros2_control controllers by using the driver's
+exposed effort interfaces. The ``forward_effort_controller`` explained below is more of an
+easy-to-use example of how to send direct torque commands to the robot, rather than a building
+block for an application.
+
 forward_effort_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -31,7 +36,7 @@ responsible for sending commands that are safe and achievable.
 
 .. note::
 
-   This controller requires PolyScope >= 5.25.1 (CB series) or >= 10.12.1 (e-Series and newer).
+   This controller requires PolyScope >= 5.25.1 (PolyScope 5) or >= 10.12.1 (PolyScope X).
 
 To activate this controller, deactivate any active motion controller first:
 
@@ -48,6 +53,11 @@ with one value per joint.
    This controller is mutually exclusive with position and velocity controllers. Only one
    motion controller can be active at a time.
 
+.. note::
+
+   The ``effort`` field in ``sensor_msgs/JointState`` (published by the ``joint_state_broadcaster``)
+   contains motor currents, not physical joint torques.
+
 Friction Compensation
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -59,8 +69,9 @@ internal friction compensation the robot applies during torque control mode. Eac
 in the range [0, 1], where 0 means no compensation and 1 means full compensation.
 
 The controller exposes the ``~/set_friction_model_parameters`` service
-(``ur_msgs/srv/SetFrictionModelParameters``) to configure these values. It is started as active by
-default in the driver's launch file.
+(`ur_msgs/srv/SetFrictionModelParameters
+<https://docs.ros.org/en/rolling/p/ur_msgs/srv/SetFrictionModelParameters.html>`_) to configure
+these values. It is started as active by default in the driver's launch file.
 
 .. note::
 
@@ -104,6 +115,29 @@ parameters, the service interface, and the meaning of each field.
 
 An example demonstrating force mode usage is available at ``ur_robot_driver/examples/force_mode.py``.
 
+Freedrive Mode Controller
+-------------------------
+
+Type: :ref:`ur_controllers/FreedriveModeController <freedrive_mode_controller>`
+
+Allows manually moving the robot's joints without any active control. This controller cannot be
+combined with any other motion controller.
+
+Freedrive mode is activated by publishing ``True`` messages on the
+``~/enable_freedrive_mode`` topic (``std_msgs/msg/Bool``). Messages must be sent continuously to
+keep freedrive active -- if no message is received within the ``inactive_timeout`` (default: 1
+second), freedrive mode is automatically deactivated.
+
+.. code-block:: console
+
+   $ ros2 topic pub --rate 2 /freedrive_mode_controller/enable_freedrive_mode \
+     std_msgs/msg/Bool "{data: true}"
+
+To deactivate, either publish ``False``, deactivate the controller, or simply stop publishing.
+
+See the :ref:`freedrive_mode_controller <freedrive_mode_controller>` documentation for full
+details.
+
 Force/Torque Sensing
 --------------------
 
@@ -122,10 +156,6 @@ Publishes the TCP wrench (forces and torques) as reported by the robot's built-i
 The sensor can be zeroed using the ``~/zero_ftsensor`` service on the
 :ref:`io_and_status_controller <io_and_status_controller>`.
 
-.. note::
-
-   The ``effort`` field in ``sensor_msgs/JointState`` (published by the ``joint_state_broadcaster``)
-   contains motor currents, not physical joint torques.
 
 Controller Compatibility
 ------------------------

@@ -52,35 +52,6 @@ Key services include:
 See the :ref:`io_and_status_controller <io_and_status_controller>` documentation for the full list
 of topics and services.
 
-Freedrive Mode
---------------
-
-freedrive_mode_controller
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Type: :ref:`ur_controllers/FreedriveModeController <freedrive_mode_controller>`
-
-Allows manually moving the robot's joints without any active control. This controller cannot be
-combined with any other motion controller.
-
-Freedrive mode is activated by publishing ``True`` messages on the
-``~/enable_freedrive_mode`` topic (``std_msgs/msg/Bool``). Messages must be sent continuously to
-keep freedrive active -- if no message is received within the ``inactive_timeout`` (default: 1
-second), freedrive mode is automatically deactivated.
-
-.. code-block:: console
-
-   $ ros2 topic pub --rate 2 /freedrive_mode_controller/enable_freedrive_mode \
-     std_msgs/msg/Bool "{data: true}"
-
-To deactivate, either publish ``False``, deactivate the controller, or simply stop publishing.
-
-See the :ref:`freedrive_mode_controller <freedrive_mode_controller>` documentation for full
-details.
-
-Tool Contact Detection
-----------------------
-
 tool_contact_controller
 ^^^^^^^^^^^^^^^^^^^^^^^
 
