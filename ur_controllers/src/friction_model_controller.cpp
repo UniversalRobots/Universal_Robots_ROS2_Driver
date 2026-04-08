@@ -156,39 +156,31 @@ controller_interface::return_type FrictionModelController::update(const rclcpp::
                                                                   const rclcpp::Duration& /*period*/)
 {
   if (async_state_ == ASYNC_WAITING) {
-    async_state_ =
-        command_interfaces_[friction_model::FRICTION_MODEL_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+    async_state_ = command_interfaces_[friction_model::FRICTION_MODEL_ASYNC_SUCCESS].get_value();
     if (async_state_ != ASYNC_WAITING) {
       async_result_ = async_state_ == 1.0;
     }
   }
 
   if (change_requested_) {
-    const auto params = friction_model_params_buffer_.try_get();
+    const auto params = friction_model_params_buffer_.tryGet();
     if (!params) {
       RCLCPP_WARN(get_node()->get_logger(), "Could not get friction model parameters from realtime buffer. Retrying in "
                                             "next update cycle.");
       return controller_interface::return_type::OK;
     }
 
-    bool write_successful = true;
     for (size_t i = 0; i < 6; ++i) {
-      write_successful &=
-          command_interfaces_[friction_model::FRICTION_MODEL_VISCOUS_0 + i].set_value(params->viscous_scale[i]);
+      command_interfaces_[friction_model::FRICTION_MODEL_VISCOUS_0 + i].set_value(params->viscous_scale[i]);
     }
     for (size_t i = 0; i < 6; ++i) {
-      write_successful &=
-          command_interfaces_[friction_model::FRICTION_MODEL_COULOMB_0 + i].set_value(params->coulomb_scale[i]);
+      command_interfaces_[friction_model::FRICTION_MODEL_COULOMB_0 + i].set_value(params->coulomb_scale[i]);
     }
 
-    write_successful &= command_interfaces_[friction_model::FRICTION_MODEL_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+    command_interfaces_[friction_model::FRICTION_MODEL_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     async_state_ = ASYNC_WAITING;
     async_result_ = false;
 
-    if (!write_successful) {
-      RCLCPP_ERROR(get_node()->get_logger(), "Could not write to command interfaces.");
-      return controller_interface::return_type::ERROR;
-    }
     change_requested_ = false;
   }
 
@@ -199,7 +191,7 @@ bool FrictionModelController::setFrictionModelParameters(
     const ur_msgs::srv::SetFrictionModelParameters::Request::SharedPtr req,
     ur_msgs::srv::SetFrictionModelParameters::Response::SharedPtr resp)
 {
-  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Controller is not running.");
     resp->success = false;
     return false;

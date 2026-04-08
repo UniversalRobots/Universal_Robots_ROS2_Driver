@@ -556,4 +556,3 @@ class ControllerSwitchTest(unittest.TestCase):
                 ],
             ).ok
         )
->>>>>>> 37887bb (Friction model controller (#1704))

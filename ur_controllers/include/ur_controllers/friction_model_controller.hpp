@@ -41,7 +41,7 @@
 
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <realtime_tools/realtime_thread_safe_box.hpp>
+#include <realtime_tools/realtime_box_best_effort.hpp>
 #include <ur_msgs/srv/set_friction_model_parameters.hpp>
 
 #include "ur_controllers/friction_model_controller_parameters.hpp"
@@ -102,7 +102,7 @@ private:
   std::shared_ptr<friction_model_controller::ParamListener> param_listener_;
   friction_model_controller::Params params_;
 
-  realtime_tools::RealtimeThreadSafeBox<FrictionModelParameters> friction_model_params_buffer_;
+  realtime_tools::RealtimeBoxBestEffort<FrictionModelParameters> friction_model_params_buffer_;
   std::atomic<bool> change_requested_;
   std::atomic<double> async_state_;
   std::atomic<bool> async_result_;
