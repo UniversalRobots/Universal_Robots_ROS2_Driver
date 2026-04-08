@@ -172,13 +172,6 @@ To activate:
    $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
      --activate forward_velocity_controller
 
-Force Mode Controller
----------------------
-
-The :ref:`force_mode_controller <force_mode_controller>` can be combined with any of the position
-control modes above to add Cartesian force/torque constraints during motion. See the
-:ref:`force_torque_control` page for full details.
-
 Controller Compatibility
 ------------------------
 
