@@ -2,6 +2,13 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use integer representation of SafetyStatus.msg (`#1734 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1734>`_)
+* Services to support various dashboard calls (`#1674 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1674>`_)
+* Dashboard client new x commands (`#1679 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1679>`_)
+* Contributors: Felix Exner, URJala
+
 4.5.0 (2026-01-13)
 ------------------
 
