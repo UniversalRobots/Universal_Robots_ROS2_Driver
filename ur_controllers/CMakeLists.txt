@@ -177,6 +177,31 @@ if(BUILD_TESTING)
     controller_manager
     ros2_control_test_assets
   )
+  ament_add_gmock(test_load_scaled_joint_trajectory_controller
+    test/test_load_scaled_joint_trajectory_controller.cpp
+  )
+  target_link_libraries(test_load_scaled_joint_trajectory_controller
+    ${PROJECT_NAME}
+  )
+  ament_target_dependencies(test_load_scaled_joint_trajectory_controller
+    controller_manager
+    ros2_control_test_assets
+  )
+  ament_add_gmock(test_scaled_joint_trajectory_controller_sampling
+    test/test_scaled_joint_trajectory_controller_sampling.cpp
+  )
+  target_link_libraries(test_scaled_joint_trajectory_controller_sampling
+    ${PROJECT_NAME}
+  )
+  ament_target_dependencies(test_scaled_joint_trajectory_controller_sampling
+    controller_interface
+    hardware_interface
+    joint_trajectory_controller
+    lifecycle_msgs
+    rclcpp
+    rclcpp_lifecycle
+    trajectory_msgs
+  )
 endif()
 
 ament_package()
