@@ -1,5 +1,5 @@
-Forthcoming
------------
+5.0.0 (2026-04-09)
+------------------
 * Improved controller usage documentation (`#1754 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1754>`_)
 * Friction model controller (`#1704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1704>`_)
 * Add deprecation warning for tool comm script (`#1747 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1747>`_)
