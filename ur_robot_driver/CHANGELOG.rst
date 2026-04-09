@@ -1,3 +1,19 @@
+Forthcoming
+-----------
+* Friction model controller (backport `#1704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1704>`_) (`#1750 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1750>`_)
+* Update driver to use refactored tool communication script (backport `#1721 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1721>`_) (`#1744 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1744>`_)
+* Use integer representation of SafetyStatus.msg (backport `#1734 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1734>`_) (`#1741 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1741>`_)
+* [Docs] Fix linked service definition for update_program service (`#1730 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1730>`_)
+* [ur_controllers] Remove Werror from CMakeLists (backport `#1720 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1720>`_) (`#1727 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1727>`_)
+* Use refactored RTDE client in driver (backport `#1726 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1726>`_) (`#1731 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1731>`_)
+* Services to support various dashboard calls (backport `#1674 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1674>`_) (`#1708 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1708>`_)
+* Dashboard client new x commands (backport `#1679 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1679>`_) (`#1694 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1694>`_)
+* Use a secondary program to confirm urscript_interface initialization (backport `#1685 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1685>`_) (`#1697 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1697>`_)
+* Add component lifecycle test to CMakeLists.txt (backport `#1684 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1684>`_) (`#1687 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1687>`_)
+* Update ft frame_id to tool0_controller (backport `#1652 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1652>`_) (`#1653 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1653>`_)
+* [Driver Tests] Unlock protective stop during test case setup (backport `#1641 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1641>`_) (`#1646 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1646>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 2.12.0 (2026-01-13)
 -------------------
 * Fix flange-to-TCP wrench transformation (backport `#1615 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1615>`_) (`#1635 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1635>`_)
