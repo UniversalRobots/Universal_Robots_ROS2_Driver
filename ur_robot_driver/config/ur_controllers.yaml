@@ -30,6 +30,9 @@ controller_manager:
     force_mode_controller:
       type: ur_controllers/ForceModeController
 
+    friction_model_controller:
+      type: ur_controllers/FrictionModelController
+
     freedrive_mode_controller:
       type: ur_controllers/FreedriveModeController
 
@@ -179,6 +182,10 @@ forward_position_controller:
       - $(var tf_prefix)wrist_3_joint
 
 force_mode_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+friction_model_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
 

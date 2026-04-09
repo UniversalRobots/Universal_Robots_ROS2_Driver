@@ -1,0 +1,5 @@
+---
+friction_model_controller:
+  ros__parameters:
+    tf_prefix: ""
+    check_io_successful_retries: 10

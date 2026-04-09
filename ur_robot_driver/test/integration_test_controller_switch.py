@@ -56,6 +56,7 @@ ALL_CONTROLLERS = [
     "passthrough_trajectory_controller",
     "force_mode_controller",
     "freedrive_mode_controller",
+    "friction_model_controller",
 ]
 
 
@@ -478,6 +479,80 @@ class ControllerSwitchTest(unittest.TestCase):
                 activate_controllers=[
                     "tool_contact_controller",
                     "freedrive_mode_controller",
+                ],
+            ).ok
+        )
+
+    def test_friction_model_compatibility(self):
+        """Test that friction_model_controller is compatible with all motion controllers."""
+        # Deactivate all writing controllers
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=ALL_CONTROLLERS,
+            ).ok
+        )
+
+        time.sleep(3)
+
+        # friction_model + scaled_joint_trajectory_controller
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "friction_model_controller",
+                ],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                deactivate_controllers=[
+                    "scaled_joint_trajectory_controller",
+                    "friction_model_controller",
+                ],
+            ).ok
+        )
+
+        # friction_model + passthrough_trajectory_controller
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "passthrough_trajectory_controller",
+                    "friction_model_controller",
+                ],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                deactivate_controllers=[
+                    "passthrough_trajectory_controller",
+                    "friction_model_controller",
+                ],
+            ).ok
+        )
+
+        # friction_model + force_mode + passthrough_trajectory_controller (all three)
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "passthrough_trajectory_controller",
+                    "force_mode_controller",
+                    "friction_model_controller",
+                ],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                deactivate_controllers=[
+                    "passthrough_trajectory_controller",
+                    "force_mode_controller",
+                    "friction_model_controller",
                 ],
             ).ok
         )
