@@ -1,5 +1,5 @@
-Forthcoming
------------
+4.6.0 (2026-04-09)
+------------------
 * Friction model controller (backport `#1704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1704>`_) (`#1752 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1752>`_)
 * Update driver to use refactored tool communication script (backport `#1721 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1721>`_) (`#1746 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1746>`_)
 * Use integer representation of SafetyStatus.msg (backport `#1734 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1734>`_) (`#1743 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1743>`_)
