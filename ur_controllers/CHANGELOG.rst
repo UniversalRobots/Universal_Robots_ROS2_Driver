@@ -2,6 +2,15 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.0 (2026-04-09)
+------------------
+* Improved controller usage documentation (`#1754 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1754>`_)
+* Friction model controller (`#1704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1704>`_)
+* Remove Werror from CMakeLists (`#1720 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1720>`_)
+* Do not install moveit dependencies (`#1671 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1671>`_)
+* Add deprecation warning for scaled JTC (`#1660 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1660>`_)
+* Contributors: Felix Exner, Rune Søe-Knudsen
+
 4.5.0 (2026-01-13)
 ------------------
 * Ensure latched qos is reliable (`#1594 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1594>`_)
