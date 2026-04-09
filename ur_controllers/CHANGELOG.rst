@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.8.0 (2026-04-09)
+------------------
 * Friction model controller (backport `#1704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1704>`_) (`#1751 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1751>`_)
 * Remove Werror from CMakeLists (backport `#1720 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1720>`_) (`#1728 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1728>`_)
 * Contributors: mergify[bot]
