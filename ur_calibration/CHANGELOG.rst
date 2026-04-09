@@ -2,6 +2,11 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ensure calibration library in ur_calibration is always built as static (backport of `#1667 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1667>`_) (`#1670 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1670>`_)
+* Contributors: mergify[bot]
+
 4.5.0 (2026-01-13)
 ------------------
 
