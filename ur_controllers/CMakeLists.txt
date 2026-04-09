@@ -208,6 +208,7 @@ if(BUILD_TESTING)
     rclcpp
     rclcpp_lifecycle
     trajectory_msgs
+  )
   ament_add_gmock(test_load_friction_model_controller
     test/test_load_friction_model_controller.cpp
   )
