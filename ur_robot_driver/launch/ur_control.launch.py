@@ -73,9 +73,11 @@ def launch_setup(context):
         executable="ros2_control_node",
         parameters=[
             LaunchConfiguration("update_rate_config_file"),
-            ParameterFile(controllers_file, allow_substs=True),
+            {"synchronize_by_hardware": LaunchConfiguration("blocking_read")},
+            {"overruns.print_warnings": False},
             # We use the tf_prefix as substitution in there, so that's why we keep it as an
             # argument for this launchfile
+            ParameterFile(controllers_file, allow_substs=True),
         ],
         output="screen",
     )
@@ -529,6 +531,13 @@ def generate_launch_description():
                 LaunchConfiguration("ur_type"),
                 "_update_rate.yaml",
             ],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "blocking_read",
+            default_value="false",
+            description="Block in read() effectively synchronizing the driver with the robot controller.",
         )
     )
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

@@ -73,6 +73,7 @@ def generate_launch_description():
     reverse_port = LaunchConfiguration("reverse_port")
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
+    blocking_read = LaunchConfiguration("blocking_read")
 
     script_filename = PathJoinSubstitution(
         [
@@ -184,6 +185,8 @@ def generate_launch_description():
             "trajectory_port:=",
             trajectory_port,
             " ",
+            "blocking_read:=",
+            blocking_read,
         ]
     )
     robot_description = {
@@ -440,6 +443,13 @@ def generate_launch_description():
             "trajectory_port",
             default_value="50003",
             description="Port that will be opened for trajectory control.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "blocking_read",
+            default_value="false",
+            description="Block in read() effectively synchronizing the driver with the robot controller.",
         )
     )
 
