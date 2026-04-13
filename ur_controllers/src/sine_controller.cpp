@@ -98,10 +98,14 @@ controller_interface::InterfaceConfiguration SineController::state_interface_con
 
 controller_interface::return_type SineController::update(const rclcpp::Time& time, const rclcpp::Duration& /* period */)
 {
-  if (start_time_.nanoseconds() == 0) {
-    start_time_ = time;
-  }
-  double x = (time - start_time_).seconds();
+  // if (start_time_.nanoseconds() == 0) {
+  // start_time_ = time;
+
+  //}
+  // double x = (time - start_time_).seconds();
+  double x = start_time_.seconds();
+  const auto cycle_time = rclcpp::Duration(std::chrono::milliseconds(2));
+  start_time_ += cycle_time;
   double sine = amplitude_ * sin(2 * M_PI * frequency_ * x);
 
   for (auto index : command_interface_indices) {
