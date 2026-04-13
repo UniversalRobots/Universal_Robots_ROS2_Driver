@@ -1,5 +1,7 @@
 :github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_controllers/doc/index.rst
 
+.. _ur_controllers:
+
 ur_controllers
 ==============
 
@@ -349,6 +351,38 @@ gain_scaling
    Force mode gain scaling factor. Scales the gain in force mode. scaling parameter is in range [0;2], default is 0.5.
    A value larger than 1 can make force mode unstable, e.g. in case of collisions or pushing against hard surfaces.
 
+.. _friction_model_controller:
+
+ur_controllers/FrictionModelController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller allows setting per-joint viscous and Coulomb friction scale factors for direct
+torque control. The friction model scales control how much internal friction compensation the robot
+applies during direct torque control mode.
+
+Parameters
+""""""""""
+
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+| Parameter name                     | Type   | Default value | Description                                                          |
+|                                    |        |               |                                                                      |
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+| ``tf_prefix``                      | string | <empty>       | Urdf prefix of the corresponding arm                                 |
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+| ``check_io_successful_retries``    | int    | 10            | Amount of retries for checking if setting friction scales was        |
+|                                    |        |               | successful                                                           |
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+The controller provides a service for setting friction scale factors. To use this service, the
+controller has to be in ``active`` state.
+
+* ``~/set_friction_model_parameters [ur_msgs/srv/SetFrictionModelParameters]``: Set per-joint viscous and Coulomb
+  friction scale factors for direct torque control. Each array must contain exactly one value for each joint in
+  range [0-1] where 0 means no compensation and 1 means full compensation.
+
 .. _freedrive_mode_controller:
 
 ur_controllers/FreedriveModeController
@@ -429,3 +463,29 @@ The controller provides one action for enabling tool contact. For the controller
   .. code-block::
 
      ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact
+
+.. _ur_configuration_controller:
+
+ur_controllers/URConfigurationController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller provides access to UR-specific robot configuration data. Currently, it provides a
+service to query the robot's software version.
+
+Parameters
+""""""""""
+
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name          | Type   | Default value | Description                                                                           |
+|                         |        |               |                                                                                       |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``           | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+* ``~/get_software_version [ur_msgs/srv/GetRobotSoftwareVersion]``: Get the robot's software
+  version. The response contains the major, minor and patch version of the robot's software, as
+  well as the build number if available. For example, for a robot running PolyScope 5.12.1 the
+  response would be major version 5, minor version 12 and patch version 1.
