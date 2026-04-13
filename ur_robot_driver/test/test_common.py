@@ -578,11 +578,20 @@ def generate_driver_test_description(
         OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
     )
 
+    inspect_ursim = ExecuteProcess(
+        cmd=["docker", "inspect", "ursim"],
+        name="inspect_ursim",
+        output="screen",
+    )
+    inspect_starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_dashboard_server, on_exit=inspect_ursim)
+    )
+
     ursim_starter = _ursim_action(
         ursim_version=ursim_version, ur_type=ur_type, program_folder=ursim_program_folder
     )
 
     return LaunchDescription(
         _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, ursim_starter, driver_starter]
+        + [ReadyToTest(), wait_dashboard_server, ursim_starter, driver_starter, inspect_starter]
     )
