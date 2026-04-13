@@ -63,6 +63,11 @@ generate_parameter_library(
 )
 
 generate_parameter_library(
+  friction_model_controller_parameters
+  src/friction_model_controller_parameters.yaml
+)
+
+generate_parameter_library(
   gpio_controller_parameters
   src/gpio_controller_parameters.yaml
 )
@@ -100,6 +105,7 @@ generate_parameter_library(
 add_library(${PROJECT_NAME} SHARED
   src/tool_contact_controller.cpp
   src/force_mode_controller.cpp
+  src/friction_model_controller.cpp
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
   src/freedrive_mode_controller.cpp
@@ -114,6 +120,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
   tool_contact_controller_parameters
   force_mode_controller_parameters
+  friction_model_controller_parameters
   gpio_controller_parameters
   gravity_update_controller_parameters
   speed_scaling_state_broadcaster_parameters
@@ -190,6 +197,14 @@ if(BUILD_TESTING)
     test/test_load_freedrive_mode_controller.cpp
   )
   target_link_libraries(test_load_freedrive_mode_controller
+    ${PROJECT_NAME}
+    controller_manager::controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  ament_add_gmock(test_load_friction_model_controller
+    test/test_load_friction_model_controller.cpp
+  )
+  target_link_libraries(test_load_friction_model_controller
     ${PROJECT_NAME}
     controller_manager::controller_manager
     ros2_control_test_assets::ros2_control_test_assets

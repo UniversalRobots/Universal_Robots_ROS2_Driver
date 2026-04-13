@@ -274,10 +274,15 @@ protected:
   urcl::vector6d_t passthrough_trajectory_accelerations_;
   double passthrough_trajectory_time_from_start_;
 
-  // payload stuff
+  // Payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
   double payload_mass_;
   double payload_async_success_;
+
+  // Friction model parameters
+  urcl::vector6d_t friction_model_viscous_;
+  urcl::vector6d_t friction_model_coulomb_;
+  double friction_model_async_success_;
 
   // force mode parameters
   urcl::vector6d_t force_mode_task_frame_;
@@ -381,6 +386,9 @@ protected:
   const std::string TOOL_CONTACT_GPIO = "tool_contact";
 
   std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
+
+  std::unique_ptr<urcl::rtde_interface::DataPackage> data_package_buffer_;
+  std::function<bool()> get_data_package;
 };
 }  // namespace ur_robot_driver
 

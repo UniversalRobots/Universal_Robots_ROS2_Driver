@@ -9,13 +9,15 @@ Feature list and roadmap
    :header-rows: 1
 
    * - Feature
-     - ROS2 Driver
+     - ROS 2 Driver
    * - joint-position-based control
      - yes
    * - scaled joint-position-based control
      - yes (:ref:`scaled_jtc`)
    * - joint-velocity-based control
      - yes\ :raw-html-m2r:`<sup>1</sup>`
+   * - joint-effort-based control (torque control)
+     - yes (:ref:`force_torque_control`)
    * - Cartesian position-based control
      - no
    * - Cartesian twist-based control

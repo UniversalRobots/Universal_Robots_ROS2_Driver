@@ -2,6 +2,11 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.0.0 (2026-04-09)
+------------------
+* Add sim_time to servo launch file (`#1651 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1651>`_)
+* Contributors: Jennifer Buehler
+
 4.5.0 (2026-01-13)
 ------------------
 

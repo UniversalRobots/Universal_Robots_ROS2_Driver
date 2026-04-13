@@ -218,6 +218,22 @@
         <command_interface name="z"/>
         <command_interface name="gravity_async_success"/>
       </gpio>
+      
+      <gpio name="${tf_prefix}friction_model">
+        <command_interface name="viscous_0"/>
+        <command_interface name="viscous_1"/>
+        <command_interface name="viscous_2"/>
+        <command_interface name="viscous_3"/>
+        <command_interface name="viscous_4"/>
+        <command_interface name="viscous_5"/>
+        <command_interface name="coulomb_0"/>
+        <command_interface name="coulomb_1"/>
+        <command_interface name="coulomb_2"/>
+        <command_interface name="coulomb_3"/>
+        <command_interface name="coulomb_4"/>
+        <command_interface name="coulomb_5"/>
+        <command_interface name="async_success"/>
+      
 
       <gpio name="${tf_prefix}resend_robot_program">
         <command_interface name="resend_robot_program_cmd"/>

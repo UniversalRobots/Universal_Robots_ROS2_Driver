@@ -437,6 +437,17 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
 
+  for (size_t i = 0; i < friction_model_viscous_.size(); ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "friction_model", "viscous_" + std::to_string(i), &friction_model_viscous_[i]));
+  }
+  for (size_t i = 0; i < friction_model_coulomb_.size(); ++i) {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "friction_model", "coulomb_" + std::to_string(i), &friction_model_coulomb_[i]));
+  }
+  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "friction_model", "async_success",
+                                                                       &friction_model_async_success_));
+
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_x", &force_mode_task_frame_[0]);
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_y", &force_mode_task_frame_[1]);
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_z", &force_mode_task_frame_[2]);
@@ -638,6 +649,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // not used with combined_robot_hw can suppress important errors and affect real-time performance.
   non_blocking_read_ = (info_.hardware_parameters["non_blocking_read"] == "true") ||
                        (info_.hardware_parameters["non_blocking_read"] == "True");
+  if (non_blocking_read_) {
+    get_data_package = [this]() { return ur_driver_->getDataPackage(*data_package_buffer_); };
+  } else {
+    get_data_package = [this]() { return ur_driver_->getDataPackageBlocking(data_package_buffer_); };
+  }
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
@@ -735,6 +751,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     if (ur_driver_->getControlFrequency() != info_.rw_rate) {
       ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, info_.rw_rate);
     }
+    data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
@@ -878,42 +895,40 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   // We want to start the rtde comm the latest point possible due to the delay times arising from setting up the
   // communication with multiple arms
   if (!rtde_comm_has_been_started_) {
-    ur_driver_->startRTDECommunication();
+    ur_driver_->startRTDECommunication(non_blocking_read_);
     rtde_comm_has_been_started_ = true;
   }
-  std::unique_ptr<rtde::DataPackage> data_pkg = ur_driver_->getDataPackage();
 
-  if (data_pkg) {
+  if (get_data_package()) {
     packet_read_ = true;
-    readData(data_pkg, "actual_q", urcl_joint_positions_);
-    readData(data_pkg, "actual_qd", urcl_joint_velocities_);
-    readData(data_pkg, "actual_current", urcl_joint_efforts_);
-
-    readData(data_pkg, "target_speed_fraction", target_speed_fraction_);
-    readData(data_pkg, "speed_scaling", speed_scaling_);
-    readData(data_pkg, "runtime_state", runtime_state_);
-    readData(data_pkg, "actual_TCP_force", urcl_ft_sensor_measurements_);
-    readData(data_pkg, "actual_TCP_pose", urcl_tcp_pose_);
-    readData(data_pkg, "target_TCP_pose", urcl_target_tcp_pose_);
-    readData(data_pkg, "standard_analog_input0", standard_analog_input_[0]);
-    readData(data_pkg, "standard_analog_input1", standard_analog_input_[1]);
-    readData(data_pkg, "standard_analog_output0", standard_analog_output_[0]);
-    readData(data_pkg, "standard_analog_output1", standard_analog_output_[1]);
-    readData(data_pkg, "tool_mode", tool_mode_);
-    readData(data_pkg, "tool_analog_input0", tool_analog_input_[0]);
-    readData(data_pkg, "tool_analog_input1", tool_analog_input_[1]);
-    readData(data_pkg, "tool_output_voltage", tool_output_voltage_);
-    readData(data_pkg, "tool_output_current", tool_output_current_);
-    readData(data_pkg, "tool_temperature", tool_temperature_);
-    readData(data_pkg, "robot_mode", robot_mode_);
-    readData(data_pkg, "safety_mode", safety_mode_);
-    readBitsetData<uint32_t>(data_pkg, "robot_status_bits", robot_status_bits_);
-    readBitsetData<uint32_t>(data_pkg, "safety_status_bits", safety_status_bits_);
-    readBitsetData<uint64_t>(data_pkg, "actual_digital_input_bits", actual_dig_in_bits_);
-    readBitsetData<uint64_t>(data_pkg, "actual_digital_output_bits", actual_dig_out_bits_);
-    readBitsetData<uint32_t>(data_pkg, "analog_io_types", analog_io_types_);
-    readBitsetData<uint32_t>(data_pkg, "tool_analog_input_types", tool_analog_input_types_);
-    readData(data_pkg, "tcp_offset", tcp_offset_);
+    readData(data_package_buffer_, "actual_q", urcl_joint_positions_);
+    readData(data_package_buffer_, "actual_qd", urcl_joint_velocities_);
+    readData(data_package_buffer_, "actual_current", urcl_joint_efforts_);
+    readData(data_package_buffer_, "target_speed_fraction", target_speed_fraction_);
+    readData(data_package_buffer_, "speed_scaling", speed_scaling_);
+    readData(data_package_buffer_, "runtime_state", runtime_state_);
+    readData(data_package_buffer_, "actual_TCP_force", urcl_ft_sensor_measurements_);
+    readData(data_package_buffer_, "actual_TCP_pose", urcl_tcp_pose_);
+    readData(data_package_buffer_, "target_TCP_pose", urcl_target_tcp_pose_);
+    readData(data_package_buffer_, "standard_analog_input0", standard_analog_input_[0]);
+    readData(data_package_buffer_, "standard_analog_input1", standard_analog_input_[1]);
+    readData(data_package_buffer_, "standard_analog_output0", standard_analog_output_[0]);
+    readData(data_package_buffer_, "standard_analog_output1", standard_analog_output_[1]);
+    readData(data_package_buffer_, "tool_mode", tool_mode_);
+    readData(data_package_buffer_, "tool_analog_input0", tool_analog_input_[0]);
+    readData(data_package_buffer_, "tool_analog_input1", tool_analog_input_[1]);
+    readData(data_package_buffer_, "tool_output_voltage", tool_output_voltage_);
+    readData(data_package_buffer_, "tool_output_current", tool_output_current_);
+    readData(data_package_buffer_, "tool_temperature", tool_temperature_);
+    readData(data_package_buffer_, "robot_mode", robot_mode_);
+    readData(data_package_buffer_, "safety_mode", safety_mode_);
+    readBitsetData<uint32_t>(data_package_buffer_, "robot_status_bits", robot_status_bits_);
+    readBitsetData<uint32_t>(data_package_buffer_, "safety_status_bits", safety_status_bits_);
+    readBitsetData<uint64_t>(data_package_buffer_, "actual_digital_input_bits", actual_dig_in_bits_);
+    readBitsetData<uint64_t>(data_package_buffer_, "actual_digital_output_bits", actual_dig_out_bits_);
+    readBitsetData<uint32_t>(data_package_buffer_, "analog_io_types", analog_io_types_);
+    readBitsetData<uint32_t>(data_package_buffer_, "tool_analog_input_types", tool_analog_input_types_);
+    readData(data_package_buffer_, "tcp_offset", tcp_offset_);
 
     // required transforms
     extractToolPose();
@@ -1050,6 +1065,8 @@ void URPositionHardwareInterface::initAsyncIO()
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
 
   gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  friction_model_viscous_.fill(NO_NEW_CMD_);
+  friction_model_coulomb_.fill(NO_NEW_CMD_);
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
@@ -1123,6 +1140,11 @@ void URPositionHardwareInterface::checkAsyncIO()
       ur_driver_ != nullptr) {
     gravity_async_success_ = ur_driver_->setGravity(gravity_vector_);
     gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  }
+  if (!std::isnan(friction_model_viscous_[0]) && ur_driver_ != nullptr) {
+    friction_model_async_success_ = ur_driver_->setFrictionScales(friction_model_viscous_, friction_model_coulomb_);
+    friction_model_viscous_.fill(NO_NEW_CMD_);
+    friction_model_coulomb_.fill(NO_NEW_CMD_);
   }
 
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
