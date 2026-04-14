@@ -44,4 +44,9 @@
       Controller to use the tool contact functionality of the robot.
     </description>
   </class>
+  <class name="ur_controllers/SineController" type="ur_controllers::SineController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to send a sine wave motion to a set of joints.
+    </description>
+  </class>
 </library>

@@ -33,6 +33,7 @@
   <xacro:arg name="reverse_port" default="50001"/>
   <xacro:arg name="script_sender_port" default="50002"/>
   <xacro:arg name="trajectory_port" default="50003"/>
+  <xacro:arg name="blocking_read" default="false" />
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />
   <xacro:arg name="tool_voltage" default="0" />
@@ -54,6 +55,8 @@
 
   <!-- convert to property to use substitution in function -->
   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
+
+  <xacro:property name="blocking_read" default="$(arg blocking_read)"/>
 
   <!-- create link fixed to the "world" -->
   <link name="world" />
@@ -101,6 +104,7 @@
     reverse_port="$(arg reverse_port)"
     script_sender_port="$(arg script_sender_port)"
     trajectory_port="$(arg trajectory_port)"
+    non_blocking_read="${not blocking_read}"
   />
 
 </robot>
