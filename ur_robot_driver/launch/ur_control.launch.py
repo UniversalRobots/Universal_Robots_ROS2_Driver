@@ -73,7 +73,11 @@ def launch_setup(context):
         executable="ros2_control_node",
         parameters=[
             LaunchConfiguration("update_rate_config_file"),
-            {"synchronize_by_hardware": LaunchConfiguration("blocking_read")},
+            {
+                "hardware_synchronization.use_blocking_read_write": LaunchConfiguration(
+                    "blocking_read"
+                )
+            },
             {"overruns.print_warnings": False},
             # We use the tf_prefix as substitution in there, so that's why we keep it as an
             # argument for this launchfile
