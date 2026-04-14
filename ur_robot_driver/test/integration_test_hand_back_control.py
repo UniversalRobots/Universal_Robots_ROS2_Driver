@@ -58,6 +58,8 @@ def generate_test_description():
     program_folder = os.path.join(
         os.path.dirname(__file__), "resources", "ursim", "e-series", "ur5e", "programs"
     )
+    print(f"Using URSim program folder: {program_folder}")
+    print(f"Available files in program folder: {os.listdir(program_folder)}")
     return generate_driver_test_description(
         headless_mode=False, ursim_program_folder=program_folder
     )

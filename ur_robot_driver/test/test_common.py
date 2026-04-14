@@ -580,7 +580,7 @@ def generate_driver_test_description(
 
     inspect_ursim = ExecuteProcess(
         # cmd=["docker", "inspect", "ursim"],
-        cmd=["docker", "exec", "ursim", "ls", "/ursim/programs"],
+        cmd=["docker", "exec", "ursim", "ls", "-l", "/ursim/programs"],
         name="inspect_ursim",
         output="screen",
     )
