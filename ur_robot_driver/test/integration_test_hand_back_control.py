@@ -31,6 +31,7 @@ import logging
 import os
 import socket
 import sys
+import subprocess
 import time
 import unittest
 
@@ -55,19 +56,35 @@ from test_common import (  # noqa: E402
 
 @pytest.mark.launch_test
 def generate_test_description():
-    program_folder = os.path.join(
-        os.path.dirname(__file__), "resources", "ursim", "e-series", "ur5e", "programs"
-    )
-    print(f"Using URSim program folder: {program_folder}")
-    print(f"Available files in program folder: {os.listdir(program_folder)}")
-    return generate_driver_test_description(
-        headless_mode=False, ursim_program_folder=program_folder
-    )
+    return generate_driver_test_description(headless_mode=False)
+
+
+def copy_to_docker_container(container_name, src_path, dest_path):
+    print(f"Copying {src_path} to container '{container_name}' at {dest_path}")
+    subprocess.run(["docker", "cp", src_path, f"{container_name}:{dest_path}"], check=True)
 
 
 class HandBackControlTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        try:
+            copy_to_docker_container(
+                "ursim",
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "resources",
+                    "ursim",
+                    "e-series",
+                    "ur5e",
+                    "programs",
+                    "hand_back_control_test_prog.urp",
+                ),
+                "/ursim/programs/hand_back_control_test_prog.urp",
+            )
+            subprocess.run(["docker", "exec", "ursim", "ls", "-l", "/ursim/programs"], check=True)
+
+        except Exception as e:
+            logging.error(f"Failed to copy program to Docker container: {e}")
         rclpy.init()
         cls.node = Node("hand_back_control_test")
         time.sleep(1)
