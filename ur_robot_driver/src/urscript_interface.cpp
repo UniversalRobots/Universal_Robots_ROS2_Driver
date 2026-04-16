@@ -36,6 +36,7 @@
 //----------------------------------------------------------------------
 
 #include <ur_client_library/comm/stream.h>
+#include <ur_client_library/primary/primary_client.h>
 #include <ur_client_library/primary/primary_package.h>
 
 #include <memory>
@@ -46,42 +47,38 @@
 class URScriptInterface : public rclcpp::Node
 {
 public:
-  URScriptInterface()
-    : Node("urscript_interface")
-    , m_script_sub(this->create_subscription<std_msgs::msg::String>(
-          "~/script_command", 1, [this](const std_msgs::msg::String::SharedPtr msg) {
-            auto program_with_newline = msg->data + '\n';
-
-            RCLCPP_INFO_STREAM(this->get_logger(), program_with_newline);
-
-            size_t len = program_with_newline.size();
-            const auto* data = reinterpret_cast<const uint8_t*>(program_with_newline.c_str());
-            size_t written;
-
-            if (m_secondary_stream->write(data, len, written)) {
-              URCL_LOG_INFO("Sent program to robot:\n%s", program_with_newline.c_str());
-              return true;
-            }
-            URCL_LOG_ERROR("Could not send program to robot");
-            return false;
-          }))
+  URScriptInterface() : Node("urscript_interface")
   {
     this->declare_parameter("robot_ip", rclcpp::PARAMETER_STRING);
-    m_secondary_stream = std::make_unique<urcl::comm::URStream<urcl::primary_interface::PrimaryPackage>>(
-        this->get_parameter("robot_ip").as_string(), urcl::primary_interface::UR_SECONDARY_PORT);
-    m_secondary_stream->connect();
+    m_script_sub = this->create_subscription<std_msgs::msg::String>(
+        "~/script_command", 1, [this](const std_msgs::msg::String::SharedPtr msg) {
+          if (m_primary_client == nullptr) {
+            RCLCPP_ERROR(this->get_logger(), "Primary client not initialized yet");
+            return false;
+          }
+          if (m_primary_client->sendScript(msg->data)) {
+            URCL_LOG_INFO("Sent program to robot:\n%s", msg->data.c_str());
+            return true;
+          }
 
-    auto program_with_newline = std::string("sec urscript_interface_initialization:\ntextmsg(\"urscript_interface "
-                                            "connected\")\nend\n");
-    size_t len = program_with_newline.size();
-    const auto* data = reinterpret_cast<const uint8_t*>(program_with_newline.c_str());
-    size_t written;
-    m_secondary_stream->write(data, len, written);
+          URCL_LOG_ERROR("Could not send program to robot");
+          return false;
+        });
+    m_primary_client = std::make_unique<urcl::primary_interface::PrimaryClient>(
+        this->get_parameter("robot_ip").as_string(), m_notifier);
+    m_primary_client->start();
+
+    auto program_with_newline = std::string("sec "
+                                            "urscript_interface_initialization():\ntextmsg(\"urscript_interface "
+                                            "connected\")\nend");
+    m_primary_client->sendScript(program_with_newline);
   }
 
 private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_script_sub;
-  std::unique_ptr<urcl::comm::URStream<urcl::primary_interface::PrimaryPackage>> m_secondary_stream;
+  std::unique_ptr<urcl::primary_interface::PrimaryClient> m_primary_client;
+  urcl::comm::INotifier m_notifier;
+  // std::unique_ptr<urcl::comm::URStream<urcl::primary_interface::PrimaryPackage>> m_secondary_stream;
 };
 
 int main(int argc, char** argv)
