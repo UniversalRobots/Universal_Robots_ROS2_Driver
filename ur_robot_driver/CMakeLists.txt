@@ -138,6 +138,7 @@ add_executable(urscript_interface
 target_link_libraries(urscript_interface PUBLIC
   rclcpp::rclcpp
   ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
   ur_client_library::urcl
 )
 

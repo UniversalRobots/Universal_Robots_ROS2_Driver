@@ -41,8 +41,46 @@
 
 #include <memory>
 
+#include <rclcpp/parameter_value.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
+#include <std_srvs/srv/trigger.hpp>
+
+class ErrorCodeConsumer : public urcl::comm::IConsumer<urcl::primary_interface::PrimaryPackage>
+{
+public:
+  virtual bool consume(std::shared_ptr<urcl::primary_interface::PrimaryPackage> pkg)
+  {
+    auto error_msg = std::dynamic_pointer_cast<urcl::primary_interface::ErrorCodeMessage>(pkg);
+    if (error_msg != nullptr) {
+      if (error_msg->message_code_ == 210)  // Socket is read-only
+      {
+        RCLCPP_WARN(rclcpp::get_logger("urscript_interface"), "Received error code 210. The script code that caused "
+                                                              "this error code to be sent to the client was not "
+                                                              "executed on the robot. This can be the robot not being "
+                                                              "in remote control mode or the client has not been "
+                                                              "reconnected when switching from remote to local control "
+                                                              "mode. Reconnection is required to be able to send "
+                                                              "script code to the robot again.");
+        reconnect_required_ = true;
+      }
+    }
+    return true;
+  }
+
+  bool isReconnectRequired() const
+  {
+    return reconnect_required_;
+  }
+
+  void clearReconnectRequired()
+  {
+    reconnect_required_ = false;
+  }
+
+private:
+  std::atomic<bool> reconnect_required_{ false };
+};
 
 class URScriptInterface : public rclcpp::Node
 {
@@ -50,13 +88,14 @@ public:
   URScriptInterface() : Node("urscript_interface")
   {
     this->declare_parameter("robot_ip", rclcpp::PARAMETER_STRING);
-    m_script_sub = this->create_subscription<std_msgs::msg::String>(
+    this->declare_parameter("reconnect_automatically", true);
+    script_sub_ = this->create_subscription<std_msgs::msg::String>(
         "~/script_command", 1, [this](const std_msgs::msg::String::SharedPtr msg) {
-          if (m_primary_client == nullptr) {
+          if (primary_client_ == nullptr) {
             RCLCPP_ERROR(this->get_logger(), "Primary client not initialized yet");
             return false;
           }
-          if (m_primary_client->sendScript(msg->data)) {
+          if (primary_client_->sendScript(msg->data)) {
             URCL_LOG_INFO("Sent program to robot:\n%s", msg->data.c_str());
             return true;
           }
@@ -64,21 +103,46 @@ public:
           URCL_LOG_ERROR("Could not send program to robot");
           return false;
         });
-    m_primary_client = std::make_unique<urcl::primary_interface::PrimaryClient>(
-        this->get_parameter("robot_ip").as_string(), m_notifier);
-    m_primary_client->start();
+    error_code_consumer_ = std::make_shared<ErrorCodeConsumer>();
+    reconnect();
 
-    auto program_with_newline = std::string("sec "
-                                            "urscript_interface_initialization():\ntextmsg(\"urscript_interface "
-                                            "connected\")\nend");
-    m_primary_client->sendScript(program_with_newline);
+    reconnect_srv_ =
+        create_service<std_srvs::srv::Trigger>("~/reconnect", [this](std_srvs::srv::Trigger::Request::SharedPtr req,
+                                                                     std_srvs::srv::Trigger::Response::SharedPtr resp) {
+          return this->reconnectSrvCallback(req, resp);
+        });
+    reconnect_timer_ = create_wall_timer(std::chrono::seconds(1), [this]() {
+      if (get_parameter("reconnect_automatically").as_bool() && error_code_consumer_->isReconnectRequired()) {
+        RCLCPP_INFO(this->get_logger(), "Reconnect required. Reconnecting primary interface client...");
+        reconnect();
+        error_code_consumer_->clearReconnectRequired();
+      }
+    });
   }
 
 private:
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_script_sub;
-  std::unique_ptr<urcl::primary_interface::PrimaryClient> m_primary_client;
-  urcl::comm::INotifier m_notifier;
-  // std::unique_ptr<urcl::comm::URStream<urcl::primary_interface::PrimaryPackage>> m_secondary_stream;
+  bool reconnectSrvCallback(std_srvs::srv::Trigger::Request::SharedPtr req,
+                            std_srvs::srv::Trigger::Response::SharedPtr resp)
+  {
+    reconnect();
+    resp->success = true;
+    return true;
+  }
+
+  void reconnect()
+  {
+    primary_client_ = std::make_unique<urcl::primary_interface::PrimaryClient>(
+        this->get_parameter("robot_ip").as_string(), notifier_);
+    primary_client_->addPrimaryConsumer(error_code_consumer_);
+    primary_client_->start();
+  }
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr script_sub_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reconnect_srv_;
+  rclcpp::TimerBase::SharedPtr reconnect_timer_;
+  std::unique_ptr<urcl::primary_interface::PrimaryClient> primary_client_;
+  urcl::comm::INotifier notifier_;
+  std::shared_ptr<ErrorCodeConsumer> error_code_consumer_;
 };
 
 int main(int argc, char** argv)
