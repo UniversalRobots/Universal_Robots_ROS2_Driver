@@ -67,6 +67,10 @@ def copy_to_docker_container(container_name, src_path, dest_path):
 class HandBackControlTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        rclpy.init()
+        cls.node = Node("hand_back_control_test")
+        time.sleep(1)
+        cls.init_robot(cls)
         try:
             copy_to_docker_container(
                 "ursim",
@@ -85,10 +89,6 @@ class HandBackControlTest(unittest.TestCase):
 
         except Exception as e:
             logging.error(f"Failed to copy program to Docker container: {e}")
-        rclpy.init()
-        cls.node = Node("hand_back_control_test")
-        time.sleep(1)
-        cls.init_robot(cls)
 
     @classmethod
     def tearDownClass(cls):
