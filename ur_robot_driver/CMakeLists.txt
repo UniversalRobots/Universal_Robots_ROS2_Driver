@@ -223,6 +223,7 @@ install(PROGRAMS
   examples/force_mode.py
   examples/send_dummy_motion_primitives_ur10e.py
   examples/move_until_example.py
+  examples/urscript_sender_example.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
