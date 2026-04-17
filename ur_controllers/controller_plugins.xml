@@ -44,4 +44,9 @@
       Controller to use the tool contact functionality of the robot.
     </description>
   </class>
+  <class name="ur_controllers/GravityUpdateController" type="ur_controllers::GravityUpdateController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to set the gravity direction of the robot.
+    </description>
+  </class>
 </library>
