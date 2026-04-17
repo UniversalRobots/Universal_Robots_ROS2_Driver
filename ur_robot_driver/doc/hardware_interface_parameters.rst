@@ -30,6 +30,15 @@ non_blocking_read (default: "true")
 If set to false, the ROS control cycle will wait for the robot to send a status update. Tests have
 shown that better real-time performance is achievable when setting this to ``true``. Required to be
 set to ``true`` when combining with other hardware components.
+When set to ``false``, the hardware interface will be stopped if it fails to read an RTDE package from the robot.
+when set to ``true``, the hardware interface will be stopped if it fails to read an RTDE package within the configured timeout (see non_blocking_read_timeout).
+
+non_blocking_read_timeout (default: 0.04 (seconds))
+---------------------------------------------------
+
+Timeout value to be used when non_blocking_read is ``true``.
+If the value is 0 (or less) the timeout will be disabled.
+Note: for values <0.010 the driver might fail on startup, especially if used with URSim.
 
 output_recipe_filename (Required)
 ---------------------------------
