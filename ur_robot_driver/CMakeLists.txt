@@ -296,6 +296,10 @@ if(BUILD_TESTING)
       TIMEOUT
         800
     )
+    add_launch_test(test/integration_test_hand_back_control.py
+      TIMEOUT
+        800
+    )
     add_launch_test(test/integration_test_tool_contact.py
       TIMEOUT
         800

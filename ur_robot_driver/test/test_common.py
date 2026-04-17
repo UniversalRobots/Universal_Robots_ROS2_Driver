@@ -326,6 +326,7 @@ class IoStatusInterface(
     initial_services={"set_io": SetIO},
     services={
         "resend_robot_program": Trigger,
+        "hand_back_control": Trigger,
     },
 ):
     pass
@@ -461,7 +462,12 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-def _ursim_action(ursim_version="latest", ur_type="ur5e"):
+def _ursim_action(ursim_version="latest", ur_type="ur5e", program_folder=None):
+    args = ["-m", ur_type, "-v", ursim_version]
+
+    if program_folder is not None:
+        args += ["-p", program_folder]
+
     return ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
@@ -472,11 +478,8 @@ def _ursim_action(ursim_version="latest", ur_type="ur5e"):
                     "start_ursim.sh",
                 ]
             ),
-            "-m",
-            ur_type,
-            "-v",
-            ursim_version,
-        ],
+        ]
+        + args,
         name="start_ursim",
         output="screen",
     )
@@ -543,6 +546,10 @@ def generate_driver_test_description(
     tf_prefix="",
     initial_joint_controller="scaled_joint_trajectory_controller",
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+    headless_mode=True,
+    ursim_version="latest",
+    ur_type="ur5e",
+    ursim_program_folder=None,
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -552,7 +559,7 @@ def generate_driver_test_description(
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
         "initial_joint_controller": initial_joint_controller,
-        "headless_mode": "true",
+        "headless_mode": "true" if headless_mode else "false",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
@@ -580,7 +587,11 @@ def generate_driver_test_description(
         OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
     )
 
+    ursim_starter = _ursim_action(
+        ursim_version=ursim_version, ur_type=ur_type, program_folder=ursim_program_folder
+    )
+
     return LaunchDescription(
         _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, _ursim_action(), driver_starter]
+        + [ReadyToTest(), wait_dashboard_server, ursim_starter, driver_starter]
     )

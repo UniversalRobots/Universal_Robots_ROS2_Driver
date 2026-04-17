@@ -347,7 +347,8 @@ protected:
   std::array<double, 4> robot_status_bits_copy_;
   std::array<double, 11> safety_status_bits_copy_;
 
-  bool robot_program_running_;
+  std::atomic<bool> robot_program_running_;
+  std::atomic<bool> stop_requested_;
   bool non_blocking_read_;
   double robot_program_running_copy_;
 
