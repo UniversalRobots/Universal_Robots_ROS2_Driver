@@ -85,6 +85,19 @@ class HandBackControlTest(unittest.TestCase):
                 ),
                 "/ursim/programs/hand_back_control_test_prog.urp",
             )
+            copy_to_docker_container(
+                "ursim",
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "resources",
+                    "ursim",
+                    "e-series",
+                    "ur5e",
+                    "programs",
+                    "default.installation",
+                ),
+                "/ursim/programs/default.installation",
+            )
             subprocess.run(["docker", "exec", "ursim", "ls", "-l", "/ursim/programs"], check=True)
 
         except Exception as e:
