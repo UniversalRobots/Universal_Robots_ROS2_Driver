@@ -27,3 +27,5 @@ robot_status_bits
 safety_status_bits
 actual_current
 tcp_offset
+payload
+payload_cog
