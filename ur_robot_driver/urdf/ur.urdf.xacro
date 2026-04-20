@@ -101,6 +101,7 @@
     reverse_port="$(arg reverse_port)"
     script_sender_port="$(arg script_sender_port)"
     trajectory_port="$(arg trajectory_port)"
+    ur_type="$(arg ur_type)"
   />
 
 </robot>
