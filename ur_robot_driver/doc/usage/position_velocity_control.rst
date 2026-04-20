@@ -117,7 +117,7 @@ To activate:
 
 .. code-block:: console
 
-   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+   $ ros2 control switch_controllers --deactivate joint_trajectory_controller \
      --activate motion_primitive_forward_controller
 
 An example demonstrating motion primitive usage is available at
@@ -155,7 +155,7 @@ To activate:
 
 .. code-block:: console
 
-   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+   $ ros2 control switch_controllers --deactivate joint_trajectory_controller \
      --activate forward_position_controller
 
 forward_velocity_controller
@@ -169,7 +169,7 @@ To activate:
 
 .. code-block:: console
 
-   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+   $ ros2 control switch_controllers --deactivate joint_trajectory_controller \
      --activate forward_velocity_controller
 
 Controller Compatibility

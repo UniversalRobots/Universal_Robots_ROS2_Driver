@@ -59,7 +59,7 @@ from test_common import (  # noqa: E402
 @pytest.mark.launch_test
 @launch_testing.parametrize(
     "tf_prefix, initial_joint_controller",
-    [("", "scaled_joint_trajectory_controller"), ("my_ur_", "passthrough_trajectory_controller")],
+    [("", "joint_trajectory_controller"), ("my_ur_", "passthrough_trajectory_controller")],
 )
 def generate_test_description(tf_prefix, initial_joint_controller):
     return generate_driver_test_description(

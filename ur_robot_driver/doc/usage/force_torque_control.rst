@@ -43,7 +43,7 @@ To activate this controller, deactivate any active motion controller first:
 
 .. code-block:: console
 
-   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+   $ ros2 control switch_controllers --deactivate joint_trajectory_controller \
      --activate forward_effort_controller
 
 The controller accepts commands on its ``~/commands`` topic as ``std_msgs/msg/Float64MultiArray``

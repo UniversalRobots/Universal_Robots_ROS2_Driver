@@ -13,7 +13,7 @@ Feature list and roadmap
    * - joint-position-based control
      - yes
    * - scaled joint-position-based control
-     - yes (:ref:`scaled_jtc`)
+     - yes
    * - joint-velocity-based control
      - yes\ :raw-html-m2r:`<sup>1</sup>`
    * - joint-effort-based control (torque control)
