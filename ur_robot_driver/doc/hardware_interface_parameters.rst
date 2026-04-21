@@ -31,6 +31,11 @@ If set to false, the ROS control cycle will wait for the robot to send a status 
 shown that better real-time performance is achievable when setting this to ``true``. Required to be
 set to ``true`` when combining with other hardware components.
 
+primary_configuration_timeout (default: "1000")
+----------------------------------------------------------
+
+Timeout in milliseconds for waiting for primary client configuration data. This parameter controls how long the driver waits for the robot to provide its configuration data during initialization.
+
 output_recipe_filename (Required)
 ---------------------------------
 
