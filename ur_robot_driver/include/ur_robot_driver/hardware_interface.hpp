@@ -43,7 +43,6 @@
 #define UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
 
 // System
-#include <ur_client_library/ur/datatypes.h>
 #include <limits>
 #include <memory>
 #include <string>
@@ -100,13 +99,6 @@ enum StoppingInterface
   STOP_TORQUE,
 };
 
-enum class RobotSeries
-{
-  CB3_SERIES,
-  E_SERIES,
-  UR_SERIES,
-};
-
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
 // interfaces.
 struct Quaternion
@@ -132,12 +124,10 @@ struct Quaternion
 struct RobotTypeWithSeries
 {
   urcl::RobotType robot_type;
-  RobotSeries robot_series;
+  urcl::RobotSeries robot_series;
 };
 
 RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str);
-
-bool seriesMatchesVersion(const RobotSeries, const urcl::VersionInformation& version);
 
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main

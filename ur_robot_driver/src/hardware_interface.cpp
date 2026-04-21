@@ -63,48 +63,32 @@ namespace ur_robot_driver
 RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str)
 {
   if (robot_type_str == "ur3") {
-    return { urcl::RobotType::UR3, RobotSeries::CB3_SERIES };
+    return { urcl::RobotType::UR3, urcl::RobotSeries::CB3 };
   } else if (robot_type_str == "ur3e") {
-    return { urcl::RobotType::UR3, RobotSeries::E_SERIES };
+    return { urcl::RobotType::UR3, urcl::RobotSeries::E_SERIES };
   } else if (robot_type_str == "ur5") {
-    return { urcl::RobotType::UR5, RobotSeries::CB3_SERIES };
+    return { urcl::RobotType::UR5, urcl::RobotSeries::CB3 };
   } else if (robot_type_str == "ur5e") {
-    return { urcl::RobotType::UR5, RobotSeries::E_SERIES };
+    return { urcl::RobotType::UR5, urcl::RobotSeries::E_SERIES };
   } else if (robot_type_str == "ur10") {
-    return { urcl::RobotType::UR10, RobotSeries::CB3_SERIES };
+    return { urcl::RobotType::UR10, urcl::RobotSeries::CB3 };
   } else if (robot_type_str == "ur10e") {
-    return { urcl::RobotType::UR10, RobotSeries::E_SERIES };
+    return { urcl::RobotType::UR10, urcl::RobotSeries::E_SERIES };
   } else if (robot_type_str == "ur16") {
-    return { urcl::RobotType::UR16, RobotSeries::E_SERIES };
+    return { urcl::RobotType::UR16, urcl::RobotSeries::E_SERIES };
   } else if (robot_type_str == "ur15") {
-    return { urcl::RobotType::UR15, RobotSeries::UR_SERIES };
+    return { urcl::RobotType::UR15, urcl::RobotSeries::UR_SERIES };
   } else if (robot_type_str == "ur18") {
-    return { urcl::RobotType::UR18, RobotSeries::UR_SERIES };
+    return { urcl::RobotType::UR18, urcl::RobotSeries::UR_SERIES };
   } else if (robot_type_str == "ur20") {
-    return { urcl::RobotType::UR20, RobotSeries::UR_SERIES };
+    return { urcl::RobotType::UR20, urcl::RobotSeries::UR_SERIES };
   } else if (robot_type_str == "ur30") {
-    return { urcl::RobotType::UR30, RobotSeries::UR_SERIES };
+    return { urcl::RobotType::UR30, urcl::RobotSeries::UR_SERIES };
   } else if (robot_type_str == "ur8long") {
-    return { urcl::RobotType::UR8LONG, RobotSeries::UR_SERIES };
+    return { urcl::RobotType::UR8LONG, urcl::RobotSeries::UR_SERIES };
   } else {
     throw std::invalid_argument("Unknown robot type: " + robot_type_str);
   }
-}
-
-bool seriesMatchesVersion(const RobotSeries series, const urcl::VersionInformation& version)
-{
-  switch (series) {
-    case RobotSeries::CB3_SERIES:
-    {
-      return version.major == 3;
-    }
-    case RobotSeries::E_SERIES:
-    case RobotSeries::UR_SERIES:
-    {
-      return 5 <= version.major;
-    }
-  }
-  return false;
 }
 
 URPositionHardwareInterface::URPositionHardwareInterface()
@@ -811,8 +795,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   std::string ur_type = info_.hardware_parameters["ur_type"];
   auto expected_type = robotTypeFromString(ur_type);
   auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
+  auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
 
-  if (robot_type != expected_type.robot_type || !seriesMatchesVersion(expected_type.robot_series, version_info_)) {
+  if (robot_type != expected_type.robot_type || expected_type.robot_series != robot_series) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
                         "The connected robot is of type '"
                             << robotTypeString(robot_type) << "' and version " << version_info_
