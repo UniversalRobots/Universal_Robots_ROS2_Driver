@@ -4,7 +4,7 @@ ur_robot_driver
 ^^^^^^^^^^^^^^^
 
 Since the ``scaled_joint_trajectory_controller`` has been removed in ROS Lyrical Luth, the default
-controller is now the ``joint_trajectory_controller``.
+controller is now the ``joint_trajectory_controller``. The reason for this is the scaling capabilities now has been merged upstream to ``joint_trajectory_controller``. Thus, making the ``scaled_joint_trajectory_controller`` redundant.
 
 User applications will most likely have to change the target action server for execution motions
 
