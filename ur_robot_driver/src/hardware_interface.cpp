@@ -70,9 +70,13 @@ RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str)
     return { urcl::RobotType::UR5, urcl::RobotSeries::CB3 };
   } else if (robot_type_str == "ur5e") {
     return { urcl::RobotType::UR5, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur7e") {  // UR7e reports as UR5
+    return { urcl::RobotType::UR5, urcl::RobotSeries::E_SERIES };
   } else if (robot_type_str == "ur10") {
     return { urcl::RobotType::UR10, urcl::RobotSeries::CB3 };
   } else if (robot_type_str == "ur10e") {
+    return { urcl::RobotType::UR10, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur12e") {  // UR12e reports as UR10
     return { urcl::RobotType::UR10, urcl::RobotSeries::E_SERIES };
   } else if (robot_type_str == "ur16") {
     return { urcl::RobotType::UR16, urcl::RobotSeries::E_SERIES };
