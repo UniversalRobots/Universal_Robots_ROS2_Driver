@@ -33,12 +33,12 @@ Controllers can be switched either through the controller_manager's service call
 <https://control.ros.org/rolling/doc/ros2_control/controller_manager/doc/userdoc.html#rqt-controller-manager>`_
 gui or through the ``ros2 control`` verb from the ``ros-${ROS_DISTRO}-ros2controlcli`` package.
 
-For example, to switch from the default ``scaled_joint_trajectory_controller`` to the
+For example, to switch from the default ``joint_trajectory_controller`` to the
 ``forward_position_controller`` you can call
 
 .. code-block:: console
 
-   $ ros2 control switch_controllers --deactivate scaled_joint_trajectory_controller \
+   $ ros2 control switch_controllers --deactivate joint_trajectory_controller \
      --activate forward_position_controller
    [INFO 2024-09-23 20:32:04.373] [_ros2cli_1207798]: waiting for service /controller_manager/switch_controller to become available...
    Successfully switched controllers
