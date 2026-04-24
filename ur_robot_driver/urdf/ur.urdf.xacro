@@ -33,6 +33,7 @@
   <xacro:arg name="reverse_port" default="50001"/>
   <xacro:arg name="script_sender_port" default="50002"/>
   <xacro:arg name="trajectory_port" default="50003"/>
+  <xacro:arg name="primary_configuration_timeout" default="1000"/>
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />
   <xacro:arg name="tool_voltage" default="0" />
@@ -93,6 +94,7 @@
     tool_device_name="$(arg tool_device_name)"
     tool_tcp_port="$(arg tool_tcp_port)"
     robot_ip="$(arg robot_ip)"
+    primary_configuration_timeout="$(arg primary_configuration_timeout)"
     script_filename="$(arg script_filename)"
     output_recipe_filename="$(arg output_recipe_filename)"
     input_recipe_filename="$(arg input_recipe_filename)"

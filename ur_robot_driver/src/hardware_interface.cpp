@@ -656,6 +656,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   const bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
                                       (info_.hardware_parameters["use_tool_communication"] == "True");
 
+  // Timeout for waiting for primary client configuration data
+  const int primary_configuration_timeout = std::stoi(info_.hardware_parameters["primary_configuration_timeout"]);
+
   // Hash of the calibration reported by the robot. This is used for validating the robot
   // description is using the correct calibration. If the robot's calibration doesn't match this
   // hash, an error will be printed. You can use the robot as usual, however Cartesian poses of the
@@ -734,6 +737,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     driver_config.reverse_ip = reverse_ip;
     driver_config.servoj_gain = static_cast<uint32_t>(servoj_gain);
     driver_config.servoj_lookahead_time = servoj_lookahead_time;
+    driver_config.primary_configuration_timeout =  std::chrono::milliseconds(static_cast<int>(primary_configuration_timeout));
     driver_config.non_blocking_read = non_blocking_read_;
     driver_config.tool_comm_setup = std::move(tool_comm_setup);
     driver_config.handle_program_state =
