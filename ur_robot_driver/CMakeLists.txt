@@ -138,6 +138,7 @@ add_executable(urscript_interface
 target_link_libraries(urscript_interface PUBLIC
   rclcpp::rclcpp
   ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
   ur_client_library::urcl
 )
 
@@ -223,6 +224,7 @@ install(PROGRAMS
   examples/force_mode.py
   examples/send_dummy_motion_primitives_ur10e.py
   examples/move_until_example.py
+  examples/urscript_sender_example.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
