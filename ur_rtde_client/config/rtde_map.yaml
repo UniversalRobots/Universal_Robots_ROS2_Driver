@@ -1,0 +1,194 @@
+rtde_variables:
+  DOUBLE_to_Float64:
+    rtde_type: "DOUBLE"
+    output_type: "example_interfaces/Float64"
+    variables:
+      - "speed_scaling"
+      - "target_speed_fraction"
+      - "actual_momentum"
+      - "actual_main_voltage"
+      - "actual_robot_voltage"
+      - "actual_robot_current"
+      - "standard_analog_input0"
+      - "standard_analog_input1"
+      - "standard_analog_output0"
+      - "standard_analog_output1"
+      - "io_current"
+      - "input_double_register_<0-47>"
+      - "output_double_register_<0-47>"
+      - "actual_robot_energy_consumed"
+      - "actual_robot_braking_energy_dissipated"
+      - "euromap67_24V_voltage"
+      - "euromap67_24V_current"
+      - "tool_analog_input0"
+      - "tool_analog_input1"
+      - "tool_output_current"
+      - "tcp_force_scalar"
+      - "joint_position_deviation_ratio"
+      - "collision_detection_ratio"
+      - "payload"
+
+  INT32_to_INT32:
+    rtde_type: "INT32"
+    output_type: "example_interfaces/Int32"
+    variables:
+      - "input_int_register_<0-47>"
+      - "output_int_register_<0-47>"
+      - "encoder0_raw"
+      - "encoder1_raw"
+      - "tool_output_voltage"
+      - "time_scale_source"
+
+  BOOL_to_BOOL:
+    rtde_type: "BOOL"
+    output_type: "example_interfaces/Bool"
+    variables:
+      - "input_bit_register_<64-127>"
+      - "output_bit_register_<64-127>"
+
+  VECTOR6INT_to_Int32MultiArray:
+    rtde_type: "VECTOR6INT"
+    output_type: "example_interfaces/Int32MultiArray"
+    variables:
+      - "joint_mode"
+
+  VECTOR3D_to_GeometryMsgVector3:
+    rtde_type: "VECTOR3D"
+    output_type: "geometry_msgs/Vector3Stamped"
+    variables:
+      - "target_gravity"
+
+  VECTOR6D_to_GeometryMsgTwist:
+    rtde_type: "VECTOR6D"
+    output_type: "geometry_msgs/TwistStamped"
+    variables:
+      - "actual_TCP_speed"
+      - "target_TCP_speed"
+
+  VECTOR6D_to_GeometryMsgWrench:
+    rtde_type: "VECTOR6D"
+    output_type: "geometry_msgs/WrenchStamped"
+    variables:
+      - "actual_TCP_force"
+      - "ft_raw_wrench"
+      - "wrench_calc_from_currents"
+
+  VECTOR6D_to_GeometryMsgAccel:
+    rtde_type: "VECTOR6D"
+    output_type: "geometry_msgs/AccelStamped"
+    variables:
+      - "actual_TCP_acceleration"
+      - "target_TCP_acceleration"
+      - "actual_tool_accelerometer"
+
+  VECTOR6D_to_GeometryMsgPose:
+    rtde_type: "VECTOR6D"
+    output_type: "geometry_msgs/PoseStamped"
+    variables:
+      - "actual_TCP_pose"
+      - "target_TCP_pose"
+      - "tcp_offset"
+
+  VECTOR3D_to_GeometryMsgTwist:
+    rtde_type: "VECTOR3D"
+    output_type: "geometry_msgs/TwistStamped"
+    variables:
+      - "elbow_velocity"
+
+  VECTOR3D_to_GeometryMsgPoint:
+    rtde_type: "VECTOR3D"
+    output_type: "geometry_msgs/PointStamped"
+    variables:
+      - "elbow_position"
+      - "payload_cog"
+
+  VECTOR6D_to_GeometryMsgInertia:
+    rtde_type: "VECTOR6D"
+    output_type: "geometry_msgs/InertiaStamped"
+    variables:
+      - "payload_inertia"
+
+  DOUBLE_to_Temperature:
+    rtde_type: "DOUBLE"
+    output_type: "sensor_msgs/Temperature"
+    variables:
+      - "tool_temperature"
+
+  VECTOR6D_to_Float64MultiArray:
+    rtde_type: "VECTOR6D"
+    output_type: "example_interfaces/Float64MultiArray"
+    variables:
+      - "target_q"
+      - "target_qd"
+      - "target_qdd"
+      - "target_current"
+      - "target_moment"
+      - "actual_q"
+      - "actual_qd"
+      - "actual_current"
+      - "actual_current_window"
+      - "actual_current_as_torque"
+      - "joint_control_output"
+      - "joint_temperatures"
+      - "actual_joint_voltage"
+      - "target_base_acceleration"
+
+  DOUBLE_to_BuiltinInterfaces:
+    rtde_type: "DOUBLE"
+    output_type: "builtin_interfaces/Time"
+    variables:
+      - "timestamp"
+      - "actual_execution_time"
+      - "target_execution_time"
+
+  UINT64_to_ByteMultiArray:
+    rtde_type: "UINT64"
+    output_type: "example_interfaces/ByteMultiArray"
+    variables:
+      - "actual_digital_input_bits"
+      - "actual_configurable_digital_input_bits"
+      - "actual_digital_output_bits"
+      - "actual_configurable_digital_output_bits"
+
+  UINT32_to_ByteMultiArray:
+    rtde_type: "UINT32"
+    output_type: "example_interfaces/ByteMultiArray"
+    variables:
+      - "robot_status_bits"
+      - "safety_status_bits"
+      - "analog_io_types"
+      - "input_bit_registers0_to_31"
+      - "input_bit_registers32_to_63"
+      - "output_bit_registers0_to_31"
+      - "output_bit_registers32_to_63"
+      - "euromap67_input_bits"
+      - "euromap67_output_bits"
+      - "tool_analog_input_types"
+
+  UINT32_to_UINT32:
+    rtde_type: "UINT32"
+    output_type: "example_interfaces/UInt32"
+    variables:
+      - "runtime_state"
+      - "tool_mode"
+      - "script_control_line"
+
+  UINT8_to_UINT8:
+    rtde_type: "UINT8"
+    output_type: "example_interfaces/UInt8"
+    variables:
+      - "tool_output_mode"
+      - "tool_digital_output0_mode"
+      - "tool_digital_output1_mode"
+
+  INT32_to_ROBOT_MODE:
+    rtde_type: "INT32"
+    output_type: "ur_dashboard_msgs/RobotMode"
+    variables:
+      - "robot_mode"
+
+  INT32_to_SAFETY_MODE:
+    rtde_type: "INT32"
+    output_type: "ur_dashboard_msgs/SafetyMode"
+    variables:
+      - "safety_mode"

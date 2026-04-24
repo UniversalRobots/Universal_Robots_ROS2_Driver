@@ -1,0 +1,15 @@
+<launch>
+  <arg name="robot_ip" default="none"/>
+  <arg name="output_recipe" default="[none]"/>
+
+  <node
+    pkg="ur_rtde_client"
+    exec="rtde_client_node"
+    name="rtde_client_node"
+    output="screen">
+
+    <param name="robot_ip" value="$(var robot_ip)"/>
+    <param name="output_recipe" value="$(var output_recipe)"/>
+
+  </node>
+</launch>
