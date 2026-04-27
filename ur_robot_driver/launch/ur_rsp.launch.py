@@ -45,6 +45,7 @@ from launch.substitutions import (
 
 def generate_launch_description():
     ur_type = LaunchConfiguration("ur_type")
+    verify_robot_model = LaunchConfiguration("verify_robot_model")
     robot_ip = LaunchConfiguration("robot_ip")
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
@@ -123,6 +124,9 @@ def generate_launch_description():
             " ",
             "ur_type:=",
             ur_type,
+            " ",
+            "verify_robot_model:=",
+            verify_robot_model,
             " ",
             "script_filename:=",
             script_filename,
@@ -215,6 +219,14 @@ def generate_launch_description():
                 "ur20",
                 "ur30",
             ],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "verify_robot_model",
+            default_value="true",
+            description="Whether the robot model should be verified against the actual robot. "
+            "This is recommended to be true, but can be set to false for faster startup.",
         )
     )
     declared_arguments.append(

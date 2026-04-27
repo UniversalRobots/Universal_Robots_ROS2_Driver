@@ -801,14 +801,22 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
   auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
 
-  if (robot_type != expected_type.robot_type || expected_type.robot_series != robot_series) {
-    RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
-                        "The connected robot is of type '"
-                            << robotTypeString(robot_type) << "' and version " << version_info_
-                            << " but the driver was configured for type '" << ur_type
-                            << "'. Please check the 'ur_type' parameter and make sure it matches your "
-                               "actual robot. This can lead to critical inaccuracies of tcp positions.");
-    return hardware_interface::CallbackReturn::ERROR;
+  bool verify_robot_model = false;
+  if (info_.hardware_parameters.find("verify_robot_model") != info_.hardware_parameters.end()) {
+    verify_robot_model =
+        (info_.hardware_parameters["verify_robot_model"] == "true") || (info_.hardware_parameters["verify_robot_"
+                                                                                                  "model"] == "True");
+  }
+  if (verify_robot_model) {
+    if (robot_type != expected_type.robot_type || expected_type.robot_series != robot_series) {
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
+                          "The connected robot is of type '"
+                              << robotTypeString(robot_type) << "' and version " << version_info_
+                              << " but the driver was configured for type '" << ur_type
+                              << "'. Please check the 'ur_type' parameter and make sure it matches your "
+                                 "actual robot. This can lead to critical inaccuracies of tcp positions.");
+      return hardware_interface::CallbackReturn::ERROR;
+    }
   }
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checksum: '%s'.",

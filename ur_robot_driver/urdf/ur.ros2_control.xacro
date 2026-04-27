@@ -28,6 +28,7 @@
     non_blocking_read:=true
     robot_receive_timeout:=0.04
     rw_rate:=0
+    verify_robot_model:=true
     ">
     <!-- rw_rate of 0 uses the rate of the controller_manager -->
 
@@ -75,6 +76,7 @@
           <param name="tool_device_name">${tool_device_name}</param>
           <param name="tool_tcp_port">${tool_tcp_port}</param>
           <param name="robot_receive_timeout">${robot_receive_timeout}</param>
+          <param name="verify_robot_model">${verify_robot_model}</param>
         </xacro:unless>
       </hardware>
 
