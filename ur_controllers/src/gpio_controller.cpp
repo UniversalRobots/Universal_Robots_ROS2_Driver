@@ -566,17 +566,20 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
     return false;
   }
 
-  if (!waitForPayloadRtdeMatch(static_cast<double>(req->mass), req->center_of_gravity.x, req->center_of_gravity.y,
-                               req->center_of_gravity.z)) {
-    RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog do not match the "
-                                          "request yet. (This might "
-                                          "happen when using the mocked interface.)");
-    resp->success = false;
-    RCLCPP_ERROR(get_node()->get_logger(), "Payload RTDE verification failed");
-    return false;
-  }
+  if (params_.verify_payload_on_set) {
+    if (!waitForPayloadRtdeMatch(static_cast<double>(req->mass), req->center_of_gravity.x, req->center_of_gravity.y,
+                                 req->center_of_gravity.z)) {
+      RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog do not match "
+                                            "the "
+                                            "request yet. (This might "
+                                            "happen when using the mocked interface.)");
+      resp->success = false;
+      RCLCPP_ERROR(get_node()->get_logger(), "Payload RTDE verification failed");
+      return false;
+    }
 
-  RCLCPP_INFO(get_node()->get_logger(), "Payload has been set and verified against RTDE feedback");
+    RCLCPP_INFO(get_node()->get_logger(), "Payload has been set and verified against RTDE feedback");
+  }
   return true;
 }
 
