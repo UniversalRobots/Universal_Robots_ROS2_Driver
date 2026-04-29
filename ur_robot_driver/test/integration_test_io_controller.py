@@ -36,6 +36,7 @@ import unittest
 import launch_testing
 import pytest
 import rclpy
+from geometry_msgs.msg import Vector3
 from rclpy.node import Node
 from ur_msgs.msg import IOStates
 
@@ -130,3 +131,31 @@ class IOControllerTest(unittest.TestCase):
 
         # Clean up io subscription
         self.node.destroy_subscription(io_states_sub)
+
+    def test_set_payload(self):
+        """
+        Test that setting a payload succeeds and the value is verified against RTDE feedback.
+
+        With ``verify_payload_on_set`` enabled (default for the real driver), the
+        controller only reports success after the requested payload mass and
+        center-of-gravity have been confirmed via the RTDE state interfaces.
+        """
+        # Set a non-default payload so we can detect the change reliably
+        mass = 1.5
+        cog = Vector3(x=0.01, y=0.02, z=0.03)
+
+        logging.info("Setting payload to mass=%f, cog=(%f, %f, %f)", mass, cog.x, cog.y, cog.z)
+        result = self._io_status_controller_interface.set_payload(mass=mass, center_of_gravity=cog)
+        self.assertTrue(
+            result.success,
+            "set_payload returned success=False. With verify_payload_on_set=true the "
+            "controller only returns success once the RTDE feedback matches the request.",
+        )
+
+        # Reset the payload to zero and verify again. This makes sure the verification
+        # logic also detects subsequent changes and is not just matching the initial state.
+        logging.info("Resetting payload to zero")
+        result = self._io_status_controller_interface.set_payload(
+            mass=0.0, center_of_gravity=Vector3(x=0.0, y=0.0, z=0.0)
+        )
+        self.assertTrue(result.success, "Resetting payload via set_payload failed")
