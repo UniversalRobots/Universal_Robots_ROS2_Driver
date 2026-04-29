@@ -3,19 +3,46 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 jobs:
   coverage:
     name: coverage build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: ubuntu:noble
+      # Mount the host's docker socket so the integration tests can start
+      # URSim via `docker run` from inside this container.
+      # NOTE: GitHub Actions does not allow `--network` in `container.options`
+      # (see https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container).
+      # We therefore attach the job container to `ursim_net` from inside the
+      # very first step, see "Attach to ursim_net" below.
+      options: -v /var/run/docker.sock:/var/run/docker.sock
     strategy:
       fail-fast: false
     env:
       ROS_DISTRO: rolling
       ros_version: 2
     steps:
+      - name: Install integration test runtime dependencies
+        # docker.io provides the `docker` CLI inside the container so we can
+        # talk to the host daemon through the mounted socket. netcat-openbsd
+        # and curl are used by the integration tests / wait scripts.
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            docker.io netcat-openbsd curl sudo ca-certificates
+      - name: Create ursim_net and attach the job container to it
+        # The integration tests start URSim on 192.168.56.0/24 and expect it
+        # to be reachable on 192.168.56.101. Because GitHub Actions puts our
+        # job container on its own auto-generated network, we create the
+        # ursim_net on the host docker daemon and then connect our running
+        # container to it so the driver under test can reach URSim.
+        run: |
+          docker network create --subnet=192.168.56.0/24 ursim_net
+          docker network connect ursim_net "$(hostname)"
       - uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
@@ -29,10 +56,17 @@ jobs:
             ur_calibration
             ur_controllers
             ur_robot_driver
+          # Enable the integration tests so the coverage report reflects
+          # what is actually exercised by our launch_testing-based suite.
           colcon-defaults: |
             {
               "build": {
-                "mixin": ["coverage-gcc", "coverage-pytest"]
+                "cmake-args": [
+                  "-DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON",
+                  "-DCMAKE_CXX_FLAGS='--coverage'",
+                  "-DCMAKE_C_FLAGS='--coverage'",
+                  "-DCMAKE_BUILD_TYPE=Debug"
+                ]
               },
               "test": {
                 "mixin": ["coverage-pytest"]
