@@ -73,7 +73,13 @@ from ur_dashboard_msgs.srv import (
     SetOperationalMode,
     SetUserRole,
 )
-from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode, SetFrictionModelParameters
+from ur_msgs.srv import (
+    SetIO,
+    SetPayload,
+    GetRobotSoftwareVersion,
+    SetForceMode,
+    SetFrictionModelParameters,
+)
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
@@ -326,6 +332,7 @@ class IoStatusInterface(
     initial_services={"set_io": SetIO},
     services={
         "resend_robot_program": Trigger,
+        "set_payload": SetPayload,
     },
 ):
     pass

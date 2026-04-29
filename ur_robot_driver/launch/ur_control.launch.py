@@ -188,6 +188,13 @@ def launch_setup(context):
         return Node(
             package="controller_manager",
             executable="spawner",
+<<<<<<< HEAD
+=======
+            parameters=[
+                {"verify_payload_on_set": NotSubstitution(use_mock_hardware)},
+                ParameterFile(controllers_file, allow_substs=True),
+            ],
+>>>>>>> fbf5704 (Check payload state in gpio_controller (#1770))
             arguments=[
                 "--controller-manager",
                 "/controller_manager",
