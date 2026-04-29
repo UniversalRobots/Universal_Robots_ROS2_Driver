@@ -58,13 +58,15 @@ jobs:
           colcon-defaults: |
             {
               "build": {
-                "mixin": ["coverage-gcc", "coverage-pytest"],
+                "cmake-args": [
+                  "-DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON",
+                  "-DCMAKE_CXX_FLAGS='--coverage'"
+                ]
               },
               "test": {
                 "mixin": ["coverage-pytest"]
               }
             }
-          extra-cmake-args: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
           skip-tests: false
       - uses: codecov/codecov-action@v6
