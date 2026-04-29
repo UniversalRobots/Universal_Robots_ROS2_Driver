@@ -63,7 +63,9 @@ jobs:
               "build": {
                 "cmake-args": [
                   "-DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON",
-                  "-DCMAKE_CXX_FLAGS='--coverage'"
+                  "-DCMAKE_CXX_FLAGS='--coverage'",
+                  "-DCMAKE_C_FLAGS='--coverage'",
+                  "-DCMAKE_BUILD_TYPE=Debug"
                 ]
               },
               "test": {
