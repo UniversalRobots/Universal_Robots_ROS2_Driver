@@ -341,6 +341,23 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
 
+<<<<<<< HEAD
+=======
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "payload", "mass", &rtde_payload_mass_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "cog.x", &rtde_payload_cog_[0]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "cog.y", &rtde_payload_cog_[1]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]));
+
+  // Motion primitives stuff
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                   "execution_status", &hw_moprim_states_[0]));
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+                                                                   "ready_for_new_primitive", &hw_moprim_states_[1]));
+
+>>>>>>> fbf5704 (Check payload state in gpio_controller (#1770))
   return state_interfaces;
 }
 
@@ -816,6 +833,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     readBitsetData<uint32_t>(data_package_buffer_, "analog_io_types", analog_io_types_);
     readBitsetData<uint32_t>(data_package_buffer_, "tool_analog_input_types", tool_analog_input_types_);
     readData(data_package_buffer_, "tcp_offset", tcp_offset_);
+    readData(data_package_buffer_, "payload", rtde_payload_mass_);
+    readData(data_package_buffer_, "payload_cog", rtde_payload_cog_);
 
     // required transforms
     extractToolPose();
