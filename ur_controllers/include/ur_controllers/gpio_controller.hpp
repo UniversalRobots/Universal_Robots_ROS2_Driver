@@ -102,6 +102,10 @@ enum StateInterfaces
   SAFETY_STATUS_BITS = 58,
   INITIALIZED_FLAG = 69,
   PROGRAM_RUNNING = 70,
+  PAYLOAD_STATE_MASS = 71,
+  PAYLOAD_STATE_COG_X = 72,
+  PAYLOAD_STATE_COG_Y = 73,
+  PAYLOAD_STATE_COG_Z = 74,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -196,6 +200,8 @@ protected:
    * have been reached
    */
   bool waitForAsyncCommand(std::function<double(void)> get_value);
+
+  bool waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz);
 };
 }  // namespace ur_controllers
 
