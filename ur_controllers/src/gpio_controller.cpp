@@ -37,6 +37,7 @@
 
 #include "ur_controllers/gpio_controller.hpp"
 
+#include <cmath>
 #include <string>
 
 namespace ur_controllers
@@ -159,6 +160,11 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
 
   // program running
   config.names.emplace_back(tf_prefix + "gpio/program_running");
+
+  config.names.emplace_back(tf_prefix + "payload/mass");
+  config.names.emplace_back(tf_prefix + "payload/cog.x");
+  config.names.emplace_back(tf_prefix + "payload/cog.y");
+  config.names.emplace_back(tf_prefix + "payload/cog.z");
 
   return config;
 }
@@ -530,13 +536,25 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
 
   resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value());
 
-  if (resp->success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Payload has been set successfully");
-  } else {
+  if (!resp->success) {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not set the payload");
     return false;
   }
 
+  if (params_.verify_payload_on_set) {
+    if (!waitForPayloadRtdeMatch(static_cast<double>(req->mass), req->center_of_gravity.x, req->center_of_gravity.y,
+                                 req->center_of_gravity.z)) {
+      RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog do not match "
+                                            "the "
+                                            "request yet. (This might "
+                                            "happen when using the mocked interface.)");
+      resp->success = false;
+      RCLCPP_ERROR(get_node()->get_logger(), "Payload RTDE verification failed");
+      return false;
+    }
+
+    RCLCPP_INFO(get_node()->get_logger(), "Payload has been set and verified against RTDE feedback");
+  }
   return true;
 }
 
@@ -586,6 +604,28 @@ bool GPIOController::waitForAsyncCommand(std::function<double(void)> get_value)
       return false;
   }
   return true;
+}
+
+bool GPIOController::waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz)
+{
+  constexpr double tol_mass = 1e-3;
+  constexpr double tol_cog = 1e-4;
+  const auto maximum_retries = params_.check_io_successfull_retries;
+
+  for (int retries = 0; retries <= maximum_retries; ++retries) {
+    const auto m = state_interfaces_[StateInterfaces::PAYLOAD_STATE_MASS].get_optional();
+    const auto sx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_X].get_optional();
+    const auto sy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Y].get_optional();
+    const auto sz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Z].get_optional();
+    if (m && sx && sy && sz) {
+      if (std::abs(*m - mass) <= tol_mass && std::abs(*sx - cx) <= tol_cog && std::abs(*sy - cy) <= tol_cog &&
+          std::abs(*sz - cz) <= tol_cog) {
+        return true;
+      }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  return false;
 }
 
 }  // namespace ur_controllers
