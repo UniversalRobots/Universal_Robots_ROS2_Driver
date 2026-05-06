@@ -341,8 +341,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
 
-<<<<<<< HEAD
-=======
   state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "payload", "mass", &rtde_payload_mass_));
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "payload", "cog.x", &rtde_payload_cog_[0]));
@@ -351,13 +349,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]));
 
-  // Motion primitives stuff
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                   "execution_status", &hw_moprim_states_[0]));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                   "ready_for_new_primitive", &hw_moprim_states_[1]));
-
->>>>>>> fbf5704 (Check payload state in gpio_controller (#1770))
   return state_interfaces;
 }
 
