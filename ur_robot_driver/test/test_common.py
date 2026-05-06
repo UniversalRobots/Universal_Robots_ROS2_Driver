@@ -622,6 +622,7 @@ def generate_driver_test_description_for_model(
         "headless_mode": "true",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
+        "verify_robot_model": "true",
     }
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
