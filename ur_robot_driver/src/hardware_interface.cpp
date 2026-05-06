@@ -60,6 +60,41 @@ namespace rtde = urcl::rtde_interface;
 namespace ur_robot_driver
 {
 
+RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str)
+{
+  if (robot_type_str == "ur3") {
+    return { urcl::RobotType::UR3, urcl::RobotSeries::CB3 };
+  } else if (robot_type_str == "ur3e") {
+    return { urcl::RobotType::UR3, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur5") {
+    return { urcl::RobotType::UR5, urcl::RobotSeries::CB3 };
+  } else if (robot_type_str == "ur5e") {
+    return { urcl::RobotType::UR5, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur7e") {  // UR7e reports as UR5
+    return { urcl::RobotType::UR5, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur10") {
+    return { urcl::RobotType::UR10, urcl::RobotSeries::CB3 };
+  } else if (robot_type_str == "ur10e") {
+    return { urcl::RobotType::UR10, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur12e") {  // UR12e reports as UR10
+    return { urcl::RobotType::UR10, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur16e") {
+    return { urcl::RobotType::UR16, urcl::RobotSeries::E_SERIES };
+  } else if (robot_type_str == "ur15") {
+    return { urcl::RobotType::UR15, urcl::RobotSeries::UR_SERIES };
+  } else if (robot_type_str == "ur18") {
+    return { urcl::RobotType::UR18, urcl::RobotSeries::UR_SERIES };
+  } else if (robot_type_str == "ur20") {
+    return { urcl::RobotType::UR20, urcl::RobotSeries::UR_SERIES };
+  } else if (robot_type_str == "ur30") {
+    return { urcl::RobotType::UR30, urcl::RobotSeries::UR_SERIES };
+  } else if (robot_type_str == "ur8long") {
+    return { urcl::RobotType::UR8LONG, urcl::RobotSeries::UR_SERIES };
+  } else {
+    throw std::invalid_argument("Unknown robot type: " + robot_type_str);
+  }
+}
+
 URPositionHardwareInterface::URPositionHardwareInterface()
 {
   mode_compatibility_[hardware_interface::HW_IF_POSITION][hardware_interface::HW_IF_VELOCITY] = false;
@@ -761,6 +796,36 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   }
   // Timeout before the reverse interface will be dropped by the robot
   receive_timeout_ = urcl::RobotReceiveTimeout::sec(std::stof(info_.hardware_parameters["robot_receive_timeout"]));
+  //
+  // Export version information to state interfaces
+  version_info_ = ur_driver_->getVersion();
+  get_robot_software_version_major_ = version_info_.major;
+  get_robot_software_version_minor_ = version_info_.minor;
+  get_robot_software_version_build_ = version_info_.build;
+  get_robot_software_version_bugfix_ = version_info_.bugfix;
+
+  std::string ur_type = info_.hardware_parameters["ur_type"];
+  auto expected_type = robotTypeFromString(ur_type);
+  auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
+  auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
+
+  bool verify_robot_model = false;
+  if (info_.hardware_parameters.find("verify_robot_model") != info_.hardware_parameters.end()) {
+    verify_robot_model =
+        (info_.hardware_parameters["verify_robot_model"] == "true") || (info_.hardware_parameters["verify_robot_"
+                                                                                                  "model"] == "True");
+  }
+  if (verify_robot_model) {
+    if (robot_type != expected_type.robot_type || expected_type.robot_series != robot_series) {
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
+                          "The connected robot is of type '"
+                              << robotTypeString(robot_type) << "' and version " << version_info_
+                              << " but the driver was configured for type '" << ur_type
+                              << "'. Please check the 'ur_type' parameter and make sure it matches your "
+                                 "actual robot. This can lead to critical inaccuracies of tcp positions.");
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+  }
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checksum: '%s'.",
               calibration_checksum.c_str());
@@ -778,13 +843,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                         "[https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_calibration/"
                         "README.md] for details.");
   }
-
-  // Export version information to state interfaces
-  version_info_ = ur_driver_->getVersion();
-  get_robot_software_version_major_ = version_info_.major;
-  get_robot_software_version_minor_ = version_info_.minor;
-  get_robot_software_version_build_ = version_info_.build;
-  get_robot_software_version_bugfix_ = version_info_.bugfix;
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing InstructionExecutor");
   instruction_executor_ = std::make_shared<urcl::InstructionExecutor>(ur_driver_);
