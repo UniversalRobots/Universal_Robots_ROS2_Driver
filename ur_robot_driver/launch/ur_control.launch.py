@@ -305,6 +305,7 @@ def launch_setup(context, *args, **kwargs):
         package="ur_robot_driver",
         executable="urscript_interface",
         parameters=[{"robot_ip": robot_ip}],
+        condition=UnlessCondition(use_fake_hardware),
         output="screen",
     )
 
