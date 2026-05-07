@@ -613,15 +613,13 @@ bool GPIOController::waitForPayloadRtdeMatch(double mass, double cx, double cy, 
   const auto maximum_retries = params_.check_io_successfull_retries;
 
   for (int retries = 0; retries <= maximum_retries; ++retries) {
-    const auto m = state_interfaces_[StateInterfaces::PAYLOAD_STATE_MASS].get_optional();
-    const auto sx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_X].get_optional();
-    const auto sy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Y].get_optional();
-    const auto sz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Z].get_optional();
-    if (m && sx && sy && sz) {
-      if (std::abs(*m - mass) <= tol_mass && std::abs(*sx - cx) <= tol_cog && std::abs(*sy - cy) <= tol_cog &&
-          std::abs(*sz - cz) <= tol_cog) {
-        return true;
-      }
+    const auto m = state_interfaces_[StateInterfaces::PAYLOAD_STATE_MASS].get_value();
+    const auto sx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_X].get_value();
+    const auto sy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Y].get_value();
+    const auto sz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Z].get_value();
+    if (std::abs(m - mass) <= tol_mass && std::abs(sx - cx) <= tol_cog && std::abs(sy - cy) <= tol_cog &&
+        std::abs(sz - cz) <= tol_cog) {
+      return true;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }

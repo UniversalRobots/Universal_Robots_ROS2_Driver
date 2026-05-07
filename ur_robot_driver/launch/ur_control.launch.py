@@ -235,6 +235,7 @@ def launch_setup(context, *args, **kwargs):
             robot_description,
             update_rate_config_file,
             ParameterFile(initial_joint_controllers, allow_substs=True),
+            {"verify_payload_on_set": NotSubstitution(use_fake_hardware)},
         ],
         output="screen",
         condition=IfCondition(use_fake_hardware),
@@ -247,6 +248,7 @@ def launch_setup(context, *args, **kwargs):
             robot_description,
             update_rate_config_file,
             ParameterFile(initial_joint_controllers, allow_substs=True),
+            {"verify_payload_on_set": NotSubstitution(use_fake_hardware)},
         ],
         output="screen",
         condition=UnlessCondition(use_fake_hardware),
@@ -367,10 +369,6 @@ def launch_setup(context, *args, **kwargs):
         return Node(
             package="controller_manager",
             executable="spawner",
-            parameters=[
-                {"verify_payload_on_set": NotSubstitution(use_fake_hardware)},
-                ParameterFile(controllers_file, allow_substs=True),
-            ],
             arguments=[
                 "--controller-manager",
                 "/controller_manager",
