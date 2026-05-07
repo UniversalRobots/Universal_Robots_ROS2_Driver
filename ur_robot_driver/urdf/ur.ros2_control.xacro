@@ -210,6 +210,11 @@
         <command_interface name="cog.y"/>
         <command_interface name="cog.z"/>
         <command_interface name="payload_async_success"/>
+
+        <state_interface name="mass"/>
+        <state_interface name="cog.x"/>
+        <state_interface name="cog.y"/>
+        <state_interface name="cog.z"/>
       </gpio>
 
       <gpio name="${tf_prefix}friction_model">

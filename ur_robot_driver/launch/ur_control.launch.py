@@ -187,6 +187,10 @@ def launch_setup(context):
         return Node(
             package="controller_manager",
             executable="spawner",
+            parameters=[
+                {"verify_payload_on_set": NotSubstitution(use_mock_hardware)},
+                ParameterFile(controllers_file, allow_substs=True),
+            ],
             arguments=[
                 "--controller-manager",
                 "/controller_manager",

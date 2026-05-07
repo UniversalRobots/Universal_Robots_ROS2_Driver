@@ -35,6 +35,7 @@ import unittest
 import launch_testing
 import pytest
 import rclpy
+from geometry_msgs.msg import Vector3
 from rclpy.node import Node
 from control_msgs.action import FollowJointTrajectory
 from controller_manager_msgs.srv import SwitchController
@@ -120,3 +121,26 @@ class MockHWTest(unittest.TestCase):
 
     def test_illegal_trajectory(self, tf_prefix):
         sjtc_illegal_trajectory_test(self, tf_prefix)
+
+    def test_set_payload(self):
+        """
+        Test that ``set_payload`` succeeds with mock hardware.
+
+        Mock hardware does not feed back the payload via RTDE, so the controller
+        is launched with ``verify_payload_on_set:=false`` (set automatically by
+        ``ur_control.launch.py`` when ``use_mock_hardware:=true``). The service
+        should therefore return success without performing the RTDE verification.
+        """
+        result = self._io_status_controller_interface.set_payload(
+            mass=1.5, center_of_gravity=Vector3(x=0.01, y=0.02, z=0.03)
+        )
+        self.assertTrue(
+            result.success,
+            "set_payload returned success=False on mock hardware. The controller "
+            "should be launched with verify_payload_on_set=false in this case.",
+        )
+
+        result = self._io_status_controller_interface.set_payload(
+            mass=0.0, center_of_gravity=Vector3(x=0.0, y=0.0, z=0.0)
+        )
+        self.assertTrue(result.success, "Resetting payload via set_payload failed on mock hardware")
