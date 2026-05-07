@@ -9,6 +9,15 @@ option(
   OFF
 )
 
+# This test spins up a fresh URSim container for every supported robot model
+# (and one model-mismatch case), which takes a long time. It is therefore kept
+# behind its own flag so a normal integration-test run is not slowed down by it.
+option(
+  UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST
+  "Run the integration test that runs the driver against URSim for every supported robot model"
+  OFF
+)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall)
   add_compile_options(-Wextra)
@@ -304,5 +313,11 @@ if(BUILD_TESTING)
       TIMEOUT
         800
     )
+    if(${UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST})
+      add_launch_test(test/integration_test_robot_models.py
+        TIMEOUT
+          2700
+      )
+    endif()
   endif()
 endif()
