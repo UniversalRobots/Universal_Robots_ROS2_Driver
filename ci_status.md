@@ -122,18 +122,18 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
       <a href='https://build.ros2.org/job/Kbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/'><img src='https://build.ros2.org/job/Kbin_uN64__ur_robot_driver__ubuntu_noble_amd64__binary/badge/icon?subject=uN64_ur_robot_driver'></a>
     </td>
     <td> <!-- lyrical -->
-      <a href='https://build.ros2.org/job/Lbin_uR64__ur_calibration__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_calibration__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_calibration'></a><br/>
-      <a href='https://build.ros2.org/job/Lbin_uR64__ur_controllers__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_controllers__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_controllers'></a>
-      <a href='https://build.ros2.org/job/Lbin_uR64__ur_dashboard_msgs__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_dashboard_msgs__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_dashboard_msgs'></a>
-      <a href='https://build.ros2.org/job/Lbin_uR64__ur_moveit_config__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_moveit_config__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_moveit_config'></a>
-      <a href='https://build.ros2.org/job/Lbin_uR64__ur_robot_driver__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_robot_driver__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_robot_driver'></a>
+      <a href='https://build.ros2.org/job/Lbin_uR64__ur_calibration__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_calibration__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Lbin_uR64__ur_controllers__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_controllers__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Lbin_uR64__ur_dashboard_msgs__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_dashboard_msgs__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Lbin_uR64__ur_moveit_config__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_moveit_config__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Lbin_uR64__ur_robot_driver__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Lbin_uR64__ur_robot_driver__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_robot_driver'></a>
     </td>
     <td> <!-- rolling -->
-      <a href='https://build.ros2.org/job/Rbin_uR64__ur_calibration__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_calibration__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_calibration'></a><br/>
-      <a href='https://build.ros2.org/job/Rbin_uR64__ur_controllers__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_controllers__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_controllers'></a>
-      <a href='https://build.ros2.org/job/Rbin_uR64__ur_dashboard_msgs__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_dashboard_msgs__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_dashboard_msgs'></a>
-      <a href='https://build.ros2.org/job/Rbin_uR64__ur_moveit_config__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_moveit_config__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_moveit_config'></a>
-      <a href='https://build.ros2.org/job/Rbin_uR64__ur_robot_driver__ubuntu_questing_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_robot_driver__ubuntu_questing_amd64__binary/badge/icon?subject=uR64_ur_robot_driver'></a>
+      <a href='https://build.ros2.org/job/Rbin_uR64__ur_calibration__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_calibration__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_calibration'></a><br/>
+      <a href='https://build.ros2.org/job/Rbin_uR64__ur_controllers__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_controllers__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_controllers'></a>
+      <a href='https://build.ros2.org/job/Rbin_uR64__ur_dashboard_msgs__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_dashboard_msgs__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_dashboard_msgs'></a>
+      <a href='https://build.ros2.org/job/Rbin_uR64__ur_moveit_config__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_moveit_config__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_moveit_config'></a>
+      <a href='https://build.ros2.org/job/Rbin_uR64__ur_robot_driver__ubuntu_resolute_amd64__binary/'><img src='https://build.ros2.org/job/Rbin_uR64__ur_robot_driver__ubuntu_resolute_amd64__binary/badge/icon?subject=uR64_ur_robot_driver'></a>
     </td>
   </tr>
 </table>
