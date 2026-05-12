@@ -1,5 +1,5 @@
-Forthcoming
------------
+6.0.0 (2026-05-12)
+------------------
 * [driver] Remove deprecated packages from package.xml (`#1785 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1785>`_)
 * Verify the robot type on startup (`#1771 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1771>`_)
 * Check payload state in gpio_controller (`#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_)
