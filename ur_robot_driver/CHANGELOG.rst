@@ -1,3 +1,11 @@
+Forthcoming
+-----------
+* [driver] Remove deprecated packages from package.xml (`#1785 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1785>`_)
+* Verify the robot type on startup (`#1771 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1771>`_)
+* Check payload state in gpio_controller (`#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_)
+* BREAKING: Remove scaled joint trajectory controller (`#1769 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1769>`_)
+* Contributors: Felix Exner
+
 5.0.0 (2026-04-09)
 ------------------
 * Improved controller usage documentation (`#1754 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1754>`_)
