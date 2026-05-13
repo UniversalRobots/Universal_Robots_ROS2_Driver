@@ -93,10 +93,23 @@ Type: :ref:`ur_controllers/GPIOController <io_and_status_controller>`
 
 Allows setting I/O ports, controlling some UR-specific functionality and publishes status information about the robot.
 
+<<<<<<< HEAD
 forward_velocity_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Type: `velocity_controllers/JointGroupVelocityController <https://control.ros.org/rolling/doc/ros2_controllers/position_controllers/doc/userdoc.html#position-controllers-jointgrouppositioncontroller>`_
+=======
+forward_effort_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Type: `effort_controllers/JointGroupEffortController <https://control.ros.org/kilted/doc/ros2_controllers/effort_controllers/doc/userdoc.html#effort-controllers-jointgroupeffortcontroller>`_
+
+Allows setting target joint efforts (torques) directly. The user is therefore responsible for sending commands that are achievable. This controller is useful when implementing compliance or force control strategies.
+
+forward_velocity_controller
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Type: `velocity_controllers/JointGroupVelocityController <https://control.ros.org/kilted/doc/ros2_controllers/velocity_controllers/doc/userdoc.html#velocity-controllers-jointgroupvelocitycontroller>`_
+>>>>>>> 70cc8b0 (Update README and ci_status pages (#1784))
 
 Allows setting target joint positions directly. The robot tries to reach the target position as
 fast as possible. The user is therefore responsible for sending commands that are achievable. This
@@ -105,7 +118,11 @@ controller is particularly useful when doing servoing such as ``moveit_servo``.
 forward_position_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+<<<<<<< HEAD
 Type: `position_controllers/JointGroupPositionController <https://control.ros.org/rolling/doc/ros2_controllers/velocity_controllers/doc/userdoc.html#velocity-controllers-jointgroupvelocitycontroller>`_
+=======
+Type: `position_controllers/JointGroupPositionController <https://control.ros.org/kilted/doc/ros2_controllers/position_controllers/doc/userdoc.html#position-controllers-jointgrouppositioncontroller>`_
+>>>>>>> 70cc8b0 (Update README and ci_status pages (#1784))
 
 Allows setting target joint velocities directly. The user is responsible for sending commands that
 are achievable. This controller is particularly useful when doing servoing such as
