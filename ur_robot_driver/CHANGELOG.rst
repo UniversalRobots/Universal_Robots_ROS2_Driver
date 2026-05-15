@@ -1,5 +1,5 @@
-Forthcoming
------------
+4.7.0 (2026-05-15)
+------------------
 * Update README and ci_status pages (`#1784 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1784>`_)
 * Kilted verify robot model (`#1779 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1779>`_)
 * Check payload state in gpio_controller (backport `#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_) (`#1777 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1777>`_)
