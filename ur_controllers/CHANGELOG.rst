@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.7.0 (2026-05-15)
+------------------
 * Check payload state in gpio_controller (backport `#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_) (`#1777 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1777>`_)
 * Contributors: mergify[bot]
 
