@@ -754,18 +754,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                         "README.md] for details.");
   }
 
-<<<<<<< HEAD
-  // Export version information to state interfaces
-  version_info_ = ur_driver_->getVersion();
-  get_robot_software_version_major_ = version_info_.major;
-  get_robot_software_version_minor_ = version_info_.minor;
-  get_robot_software_version_build_ = version_info_.build;
-  get_robot_software_version_bugfix_ = version_info_.bugfix;
-=======
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing InstructionExecutor");
-  instruction_executor_ = std::make_shared<urcl::InstructionExecutor>(ur_driver_);
->>>>>>> f30e3e8 (Kilted verify robot model (#1779))
-
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
