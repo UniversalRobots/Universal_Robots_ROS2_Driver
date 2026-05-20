@@ -79,6 +79,7 @@ class JTCClient(rclpy.node.Node):
     def __init__(self):
         super().__init__("jtc_client")
         self.declare_parameter("controller_name", "joint_trajectory_controller")
+        self.declare_parameter("tf_prefix", "")
         self.declare_parameter(
             "joints",
             [
@@ -92,7 +93,10 @@ class JTCClient(rclpy.node.Node):
         )
 
         controller_name = self.get_parameter("controller_name").value + "/follow_joint_trajectory"
-        self.joints = self.get_parameter("joints").value
+        self.tf_prefix = self.get_parameter("tf_prefix").value
+        self.joints = [
+            self.tf_prefix + joint_name for joint_name in self.get_parameter("joints").value
+        ]
 
         if self.joints is None or len(self.joints) == 0:
             raise Exception('"joints" parameter is required')
