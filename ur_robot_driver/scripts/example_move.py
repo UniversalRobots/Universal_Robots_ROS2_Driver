@@ -34,6 +34,7 @@
 # real-life applications, we do recommend to use something like MoveIt!
 
 import time
+import sys
 
 import rclpy
 from rclpy.action import ActionClient
@@ -204,15 +205,19 @@ class JTCClient(rclpy.node.Node):
 def main(args=None):
     rclpy.init(args=args)
 
+    exit_code = 0
+
     jtc_client = JTCClient()
     try:
         rclpy.spin(jtc_client)
     except RuntimeError as err:
         jtc_client.get_logger().error(str(err))
+        exit_code = 1
     except SystemExit:
         rclpy.logging.get_logger("jtc_client").info("Done")
 
     rclpy.shutdown()
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
