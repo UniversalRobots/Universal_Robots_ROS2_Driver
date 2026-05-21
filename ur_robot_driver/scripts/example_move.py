@@ -34,6 +34,7 @@
 # real-life applications, we do recommend to use something like MoveIt!
 
 import time
+import sys
 
 import rclpy
 from rclpy.action import ActionClient
@@ -77,7 +78,12 @@ class JTCClient(rclpy.node.Node):
 
     def __init__(self):
         super().__init__("jtc_client")
+<<<<<<< HEAD
         self.declare_parameter("controller_name", "scaled_joint_trajectory_controller")
+=======
+        self.declare_parameter("controller_name", "joint_trajectory_controller")
+        self.declare_parameter("tf_prefix", "")
+>>>>>>> 1b68559 (Fail example move on error (#1795))
         self.declare_parameter(
             "joints",
             [
@@ -91,7 +97,10 @@ class JTCClient(rclpy.node.Node):
         )
 
         controller_name = self.get_parameter("controller_name").value + "/follow_joint_trajectory"
-        self.joints = self.get_parameter("joints").value
+        self.tf_prefix = self.get_parameter("tf_prefix").value
+        self.joints = [
+            self.tf_prefix + joint_name for joint_name in self.get_parameter("joints").value
+        ]
 
         if self.joints is None or len(self.joints) == 0:
             raise Exception('"joints" parameter is required')
@@ -204,15 +213,19 @@ class JTCClient(rclpy.node.Node):
 def main(args=None):
     rclpy.init(args=args)
 
+    exit_code = 0
+
     jtc_client = JTCClient()
     try:
         rclpy.spin(jtc_client)
     except RuntimeError as err:
         jtc_client.get_logger().error(str(err))
+        exit_code = 1
     except SystemExit:
         rclpy.logging.get_logger("jtc_client").info("Done")
 
     rclpy.shutdown()
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
