@@ -155,6 +155,7 @@ def launch_setup(context):
                     "speed_scaling_state_broadcaster",
                     "tcp_pose_broadcaster",
                     "ur_configuration_controller",
+                    "gravity_update_controller",
                 ]
             },
         ],
@@ -209,6 +210,7 @@ def launch_setup(context):
         "force_torque_sensor_broadcaster",
         "tcp_pose_broadcaster",
         "ur_configuration_controller",
+        "gravity_update_controller",
         "friction_model_controller",
     ]
     controllers_inactive = [
