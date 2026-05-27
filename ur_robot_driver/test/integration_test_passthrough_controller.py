@@ -70,14 +70,32 @@ HOME = {
     "wrist_2_joint": 0.0,
     "wrist_3_joint": 0.0,
 }
-waypts = [[HOME[joint] + i * pi / 4 for joint in ROBOT_JOINTS] for i in [0, -1, 1]]
+waypts = [[HOME[joint] + i * pi / 4 for joint in ROBOT_JOINTS] for i in [0.25, 0.5, 1, 0]]
 time_vec = [
-    Duration(sec=4, nanosec=0),
-    Duration(sec=8, nanosec=0),
-    Duration(sec=12, nanosec=0),
+    Duration(sec=3, nanosec=0),   
+    Duration(sec=6, nanosec=0),   
+    Duration(sec=9, nanosec=0),   
+    Duration(sec=12, nanosec=0),  
 ]
 TEST_TRAJECTORY = [(time_vec[i], waypts[i]) for i in range(len(waypts))]
 
+waypts_vel = [
+    [0.0561 for _ in ROBOT_JOINTS],   
+    [0.1683 for _ in ROBOT_JOINTS],   
+    [-0.1402 for _ in ROBOT_JOINTS],    
+    [0.0 for _ in ROBOT_JOINTS],       
+]
+
+waypts_acc = [
+    [-0.0561 for _ in ROBOT_JOINTS],    
+    [0.1309 for _ in ROBOT_JOINTS],   
+    [-0.3366 for _ in ROBOT_JOINTS],    
+    [0.0 for _ in ROBOT_JOINTS],   
+]
+
+TEST_TRAJECTORY_FULL = [
+    (time_vec[i], waypts[i], waypts_vel[i], waypts_acc[i]) for i in range(len(waypts))
+]
 
 class PassthroughControllerTest(unittest.TestCase):
     @classmethod
@@ -161,6 +179,80 @@ class PassthroughControllerTest(unittest.TestCase):
             )
             self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
+    def test_cubic_trajectory(self, tf_prefix):
+        # Full cubic trajectory
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["joint_trajectory_controller"],
+            ).ok
+        )
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(
+                    positions=pos,
+                    time_from_start=times,
+                    velocities=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                )
+                for (times, pos) in TEST_TRAJECTORY
+            ],
+            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+        )
+        goal_time_tolerance = Duration(sec=1, nanosec=0)
+        goal_tolerance = [
+            JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
+        ]
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+
+    def test_cubic_trajectory_with_velocities(self, tf_prefix):
+        # Full cubic trajectory with vel and acc
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["joint_trajectory_controller"],
+            ).ok
+        )
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(
+                    positions=pos,
+                    time_from_start=times,
+                    velocities=vel, 
+                )
+                for (times, pos, vel, _) in TEST_TRAJECTORY_FULL
+            ],
+            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+        )
+        goal_time_tolerance = Duration(sec=1, nanosec=0)
+        goal_tolerance = [
+            JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
+        ]
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
     def test_quintic_trajectory(self, tf_prefix):
         # Full quintic trajectory
         self.assertTrue(
@@ -179,6 +271,44 @@ class PassthroughControllerTest(unittest.TestCase):
                     accelerations=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 )
                 for (times, pos) in TEST_TRAJECTORY
+            ],
+            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+        )
+        goal_time_tolerance = Duration(sec=1, nanosec=0)
+        goal_tolerance = [
+            JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
+        ]
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
+    def test_quintic_trajectory_with_velocities(self, tf_prefix):
+        # Full quintic trajectory with vel and acc
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["joint_trajectory_controller"],
+            ).ok
+        )
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(
+                    positions=pos,
+                    time_from_start=times,
+                    velocities=vel,
+                    accelerations=acc,
+                )
+                for (times, pos, vel, acc) in TEST_TRAJECTORY_FULL
             ],
             joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
         )
