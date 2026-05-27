@@ -75,12 +75,13 @@ With this, we can spin up a driver using
 
 When we now move the robot in Polyscope, the robot's RViz visualization should move accordingly.
 
-For details on the (PolyScopr 5 and CB3) Docker image, please see the more detailed guide :ref:`here <ursim_docker>`.
+For details on the (PolyScope 5 and CB3) Docker image, please see the more detailed guide :ref:`here <ursim_docker>`.
 
 .. note::
    Although effort control is supported in PolyScope >= 5.23.0 / 10.10.0, it has no physical effect in URSim. 
    The controller manager will accept the effort interfaces, but the simulated robot will remain stationary.
 
+Mock hardware
 -------------
 
 The package can simulate hardware with the ros2_control ``MockSystem``. This emulator enables an
