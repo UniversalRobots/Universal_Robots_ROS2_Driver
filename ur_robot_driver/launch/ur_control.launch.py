@@ -35,7 +35,9 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
     ExecuteProcess,
+    RegisterEventHandler,
 )
+from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.substitutions import (
@@ -234,6 +236,22 @@ def launch_setup(context):
         controller_spawner(controllers_inactive, active=False),
     ]
 
+    hardware_awaiter_node = Node(
+        package="ur_robot_driver",
+        executable="ur_hardware_awaiter.py",
+        parameters=[
+            {"robot_ip": robot_ip},
+            ],
+        output="screen",
+    )
+
+    spawn_controllers_event = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=hardware_awaiter_node,
+            on_exit=controller_spawners, 
+        )
+    )
+
     rsp = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(description_launchfile),
         launch_arguments={
@@ -252,7 +270,15 @@ def launch_setup(context):
         rsp,
         rviz_node,
         trajectory_until_node,
-    ] + controller_spawners
+    ] 
+
+    if use_mock_hardware.perform(context) == "true":
+        nodes_to_start.extend(controller_spawners)
+    else:
+        nodes_to_start.extend([
+            hardware_awaiter_node,  
+            spawn_controllers_event,
+        ])
 
     return nodes_to_start
 
