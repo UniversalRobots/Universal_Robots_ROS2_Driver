@@ -252,7 +252,11 @@ def launch_setup(context):
             on_exit=lambda event, context: (
                 controller_spawners 
                 if event.returncode == 0 
-                else [LogInfo(msg=f"ur_hardware_awaiter node failed or was killed (Exit code {event.returncode}). Aborting controller spawners.")]
+                else [
+                    LogInfo(
+                        msg=f"ur_hardware_awaiter node failed or was killed (Exit code {event.returncode}). Aborting controller spawners."
+                    )
+                ]
             )
         )
     )
@@ -275,15 +279,17 @@ def launch_setup(context):
         rsp,
         rviz_node,
         trajectory_until_node,
-    ] 
+    ]
 
     if use_mock_hardware.perform(context) == "true":
         nodes_to_start.extend(controller_spawners)
     else:
-        nodes_to_start.extend([
-            hardware_awaiter_node,  
-            spawn_controllers_event,
-        ])
+        nodes_to_start.extend(
+            [
+                hardware_awaiter_node,  
+                spawn_controllers_event,
+            ]
+        )
 
     return nodes_to_start
 
