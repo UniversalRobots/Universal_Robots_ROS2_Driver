@@ -2,6 +2,7 @@
 import sys
 import socket
 import rclpy
+from rclpy.duration import Duration
 from rclpy.node import Node
 from controller_manager_msgs.srv import ListControllers
 
@@ -21,10 +22,14 @@ class UrHardwareAwaiter(Node):
         self.declare_parameter('robot_ip', '192.168.56.101')
         self.declare_parameter('check_interval', 10.0) 
         self.declare_parameter('connection_timeout', 1.0)
+        self.declare_parameter('service_response_timeout', 5.0)
 
         self.robot_ip = self.get_parameter('robot_ip').value
         self.check_interval = self.get_parameter('check_interval').value
         self.connection_timeout = self.get_parameter('connection_timeout').value
+        self.service_response_timeout = self.get_parameter('service_response_timeout').value
+        self.service_call_future = None
+        self.service_call_deadline = None
 
         self.ur_ports = [30001, 30002, 30004]
         self.ur_ready = False
@@ -59,6 +64,19 @@ class UrHardwareAwaiter(Node):
         """
 
         if self.waiting_for_service_response:
+            if self.service_call_future is not None and self.service_call_future.done():
+                return
+
+            if self.service_call_deadline is not None and self.get_clock().now() > self.service_call_deadline:
+                self.get_logger().warning(
+                    "Service call timeout after %.1f seconds. Resetting and retrying...",
+                    self.service_response_timeout,
+                )
+                if self.service_call_future is not None:
+                    self.service_call_future.cancel()
+                self.waiting_for_service_response = False
+                self.service_call_future = None
+                self.service_call_deadline = None
             return
 
         if not self.check_tcp_connection():
@@ -71,10 +89,11 @@ class UrHardwareAwaiter(Node):
 
         self.get_logger().info("Service found in registry. Pinging to verify it is responsive...")
         self.waiting_for_service_response = True
-        
+
         req = ListControllers.Request()
-        call = self.client.call_async(req)
-        call.add_done_callback(self.service_response_callback)
+        self.service_call_future = self.client.call_async(req)
+        self.service_call_deadline = self.get_clock().now() + Duration(seconds=self.service_response_timeout)
+        self.service_call_future.add_done_callback(self.service_response_callback)
 
     def service_response_callback(self, call):
         """
@@ -83,27 +102,26 @@ class UrHardwareAwaiter(Node):
         """
 
         try:
-            call.result() 
+            call.result()
             self.get_logger().info("Service responded successfully. Controller spawner is unblocked.")
             self.ur_ready = True
             self.timer.cancel()
-            
-            raise SystemExit
-            
+            if rclpy.ok():
+                rclpy.shutdown()
+
         except Exception as e:
             self.get_logger().warning(f"Service call failed: {e}. Retrying...")
             self.waiting_for_service_response = False
+            self.service_call_future = None
+            self.service_call_deadline = None
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = UrHardwareAwaiter()
-    
-    try:
-        rclpy.spin(node)
-    except SystemExit:
-        pass 
-        
+
+    rclpy.spin(node)
+
     exit_code = 0 if node.ur_ready else 1
     node.destroy_node()
     if rclpy.ok():
