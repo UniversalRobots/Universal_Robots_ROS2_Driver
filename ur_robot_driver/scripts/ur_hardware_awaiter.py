@@ -30,6 +30,7 @@ class UrHardwareAwaiter(Node):
         self.service_response_timeout = self.get_parameter('service_response_timeout').value
         self.service_call_future = None
         self.service_call_deadline = None
+        self.watchdog_timer = None
 
         self.ur_ports = [30001, 30002, 30004]
         self.ur_ready = False
@@ -64,19 +65,6 @@ class UrHardwareAwaiter(Node):
         """
 
         if self.waiting_for_service_response:
-            if self.service_call_future is not None and self.service_call_future.done():
-                return
-
-            if self.service_call_deadline is not None and self.get_clock().now() > self.service_call_deadline:
-                self.get_logger().warning(
-                    "Service call timeout after %.1f seconds. Resetting and retrying...",
-                    self.service_response_timeout,
-                )
-                if self.service_call_future is not None:
-                    self.service_call_future.cancel()
-                self.waiting_for_service_response = False
-                self.service_call_future = None
-                self.service_call_deadline = None
             return
 
         if not self.check_tcp_connection():
@@ -93,7 +81,50 @@ class UrHardwareAwaiter(Node):
         req = ListControllers.Request()
         self.service_call_future = self.client.call_async(req)
         self.service_call_deadline = self.get_clock().now() + Duration(seconds=self.service_response_timeout)
+        self.start_service_watchdog()
         self.service_call_future.add_done_callback(self.service_response_callback)
+
+    def start_service_watchdog(self):
+        """
+        Initializes and starts a periodic watchdog timer with a bounded 
+        interval to monitor the active asynchronous service request.
+        """
+        if self.watchdog_timer is not None:
+            self.watchdog_timer.cancel()
+
+        interval = 0.1 if self.service_response_timeout < 0.5 else 0.5
+        self.watchdog_timer = self.create_timer(interval, self.service_watchdog_callback)
+
+    def stop_service_watchdog(self):
+        """
+        Cancels the active watchdog timer and cleans up its reference 
+        to halt background execution.
+        """
+        if self.watchdog_timer is not None:
+            self.watchdog_timer.cancel()
+            self.watchdog_timer = None
+
+    def service_watchdog_callback(self):
+        """
+        Periodic callback that evaluates the active service call against its deadline, 
+        canceling the pending future and resetting state guards upon timeout.
+        """
+        if not self.waiting_for_service_response:
+            return
+
+        if self.service_call_future is None or self.service_call_future.done():
+            return
+
+        if self.get_clock().now() > self.service_call_deadline:
+            self.get_logger().warning(
+                "Service call timeout after %.1f seconds. Resetting and retrying...",
+                self.service_response_timeout,
+            )
+            self.service_call_future.cancel()
+            self.waiting_for_service_response = False
+            self.service_call_future = None
+            self.service_call_deadline = None
+            self.stop_service_watchdog()
 
     def service_response_callback(self, call):
         """
@@ -103,17 +134,24 @@ class UrHardwareAwaiter(Node):
 
         try:
             call.result()
-            self.get_logger().info("Service responded successfully. Controller spawner is unblocked.")
-            self.ur_ready = True
-            self.timer.cancel()
-            if rclpy.ok():
-                rclpy.shutdown()
-
         except Exception as e:
             self.get_logger().warning(f"Service call failed: {e}. Retrying...")
             self.waiting_for_service_response = False
             self.service_call_future = None
             self.service_call_deadline = None
+            self.stop_service_watchdog()
+            return
+
+        self.get_logger().info("Service responded successfully. Controller spawner is unblocked.")
+        self.ur_ready = True
+        self.waiting_for_service_response = False
+        self.service_call_future = None
+        self.service_call_deadline = None
+        self.stop_service_watchdog()
+        self.timer.cancel()
+        
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 def main(args=None):
