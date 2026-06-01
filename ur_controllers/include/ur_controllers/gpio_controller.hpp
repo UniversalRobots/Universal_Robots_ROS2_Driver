@@ -57,6 +57,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "realtime_tools/realtime_publisher.hpp"
 #include "ur_controllers/gpio_controller_parameters.hpp"
 
 namespace ur_controllers
@@ -174,11 +175,12 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
 
-  std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
-  std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
-  std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
-  std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
-  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Bool>> program_state_pub_;
+  // Publishing in realtime ros2_control loop, so these are wrapped in non-blocking tries to prevent controller overrun
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>> io_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>> program_state_pub_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;

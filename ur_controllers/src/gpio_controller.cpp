@@ -226,7 +226,7 @@ void GPIOController::publishIO()
         static_cast<uint8_t>(state_interfaces_[i + StateInterfaces::ANALOG_IO_TYPES + 2].get_optional().value_or(0.0));
   }
 
-  io_pub_->publish(io_msg_);
+  io_pub_->try_publish(io_msg_);
 }
 
 void GPIOController::publishToolData()
@@ -247,7 +247,7 @@ void GPIOController::publishToolData()
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_optional().value_or(0.0));
   tool_data_msg_.tool_temperature =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_optional().value_or(0.0));
-  tool_data_pub_->publish(tool_data_msg_);
+  tool_data_pub_->try_publish(tool_data_msg_);
 }
 
 void GPIOController::publishRobotMode()
@@ -256,7 +256,7 @@ void GPIOController::publishRobotMode()
 
   if (robot_mode_msg_.mode != robot_mode) {
     robot_mode_msg_.mode = robot_mode;
-    robot_mode_pub_->publish(robot_mode_msg_);
+    robot_mode_pub_->try_publish(robot_mode_msg_);
   }
 }
 
@@ -266,7 +266,7 @@ void GPIOController::publishSafetyMode()
 
   if (safety_mode_msg_.mode != safety_mode) {
     safety_mode_msg_.mode = safety_mode;
-    safety_mode_pub_->publish(safety_mode_msg_);
+    safety_mode_pub_->try_publish(safety_mode_msg_);
   }
 }
 
@@ -277,7 +277,7 @@ void GPIOController::publishProgramRunning()
   bool program_running = program_running_value == 1.0 ? true : false;
   if (program_running_msg_.data != program_running) {
     program_running_msg_.data = program_running;
-    program_state_pub_->publish(program_running_msg_);
+    program_state_pub_->try_publish(program_running_msg_);
   }
 }
 
@@ -293,17 +293,21 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     auto qos_latched = rclcpp::SystemDefaultsQoS();
     qos_latched.transient_local();
     qos_latched.reliable();
-    // register publisher
-    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
+    // register publishers with realtime publishers to prevent blocking on publish
+    io_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>>(
+        get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS()));
 
-    tool_data_pub_ =
-        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
+    tool_data_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>>(
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS()));
 
-    robot_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched);
+    robot_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>>(
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched));
 
-    safety_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", qos_latched);
+    safety_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>>(
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", qos_latched));
 
-    program_state_pub_ = get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched);
+    program_state_pub_ = std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>>(
+        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched));
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
         "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
     set_analog_output_srv_ = get_node()->create_service<ur_msgs::srv::SetAnalogOutput>(
