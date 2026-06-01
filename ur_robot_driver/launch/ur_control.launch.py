@@ -242,7 +242,7 @@ def launch_setup(context):
         executable="ur_hardware_awaiter.py",
         parameters=[
             {"robot_ip": robot_ip},
-            ],
+        ],
         output="screen",
     )
 
@@ -250,14 +250,14 @@ def launch_setup(context):
         event_handler=OnProcessExit(
             target_action=hardware_awaiter_node,
             on_exit=lambda event, context: (
-                controller_spawners 
-                if event.returncode == 0 
+                controller_spawners
+                if event.returncode == 0
                 else [
                     LogInfo(
                         msg=f"ur_hardware_awaiter node failed or was killed (Exit code {event.returncode}). Aborting controller spawners."
                     )
                 ]
-            )
+            ),
         )
     )
 
@@ -286,7 +286,7 @@ def launch_setup(context):
     else:
         nodes_to_start.extend(
             [
-                hardware_awaiter_node,  
+                hardware_awaiter_node,
                 spawn_controllers_event,
             ]
         )

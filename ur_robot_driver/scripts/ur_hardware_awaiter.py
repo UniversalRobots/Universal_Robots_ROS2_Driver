@@ -6,21 +6,23 @@ from rclpy.duration import Duration
 from rclpy.node import Node
 from controller_manager_msgs.srv import ListControllers
 
+
 class UrHardwareAwaiter(Node):
     """
     Blocks controller deployment in the launcher until ALL UR robot control interfaces
     are fully initialized AND the ROS 2 controller_manager service actually responds.
     """
+
     def __init__(self):
         """
         Initializes the node, declares parameters, sets up the ROS 2 service client,
         configures the periodic timer, and triggers the initial instant hardware check.
         """
-        
-        super().__init__('ur_hardware_awaiter')
-        
+
+        super().__init__("ur_hardware_awaiter")
+
         self.declare_parameter("robot_ip", "192.168.56.101")
-        self.declare_parameter("check_interval", 10.0) 
+        self.declare_parameter("check_interval", 10.0)
         self.declare_parameter("connection_timeout", 1.0)
         self.declare_parameter("service_response_timeout", 5.0)
 
@@ -37,9 +39,9 @@ class UrHardwareAwaiter(Node):
         self.waiting_for_service_response = False
 
         self.client = self.create_client(ListControllers, "/controller_manager/list_controllers")
-        
+
         self.get_logger().info(f"Awaiting robot initialization at IP {self.robot_ip}...")
-        
+
         self.timer = self.create_timer(self.check_interval, self.check_status_callback)
 
         self.check_status_callback()
@@ -172,6 +174,6 @@ def main(args=None):
         rclpy.shutdown()
     sys.exit(exit_code)
 
+
 if __name__ == "__main__":
     main()
-    
