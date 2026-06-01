@@ -36,6 +36,7 @@ from launch.actions import (
     OpaqueFunction,
     ExecuteProcess,
     RegisterEventHandler,
+    LogInfo,
 )
 from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition, UnlessCondition
@@ -248,7 +249,11 @@ def launch_setup(context):
     spawn_controllers_event = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=hardware_awaiter_node,
-            on_exit=controller_spawners, 
+            on_exit=lambda event, context: (
+                controller_spawners 
+                if event.returncode == 0 
+                else [LogInfo(msg=f"ur_hardware_awaiter node failed or was killed (Exit code {event.returncode}). Aborting controller spawners.")]
+            )
         )
     )
 
