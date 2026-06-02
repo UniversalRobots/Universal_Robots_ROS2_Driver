@@ -75,7 +75,7 @@ class UrHardwareAwaiter(Node):
             )
             return
 
-        if not self.client.wait_for_service(timeout_sec=0.1):
+        if not self.client.service_is_ready():
             self.get_logger().info(
                 "Sockets ready, but ROS 2 controller_manager service is not up yet..."
             )
@@ -139,6 +139,9 @@ class UrHardwareAwaiter(Node):
         Processes the outcome of the asynchronous service call, evaluating success
         to either unblock the lifecycle launcher or reset guards for future retries.
         """
+
+        if self.service_call_future != call:
+            return
 
         try:
             call.result()
