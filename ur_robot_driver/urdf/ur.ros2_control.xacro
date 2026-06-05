@@ -213,12 +213,25 @@
         <command_interface name="cog.x"/>
         <command_interface name="cog.y"/>
         <command_interface name="cog.z"/>
+        <command_interface name="inertia.ixx"/>
+        <command_interface name="inertia.iyy"/>
+        <command_interface name="inertia.izz"/>
+        <command_interface name="inertia.ixy"/>
+        <command_interface name="inertia.ixz"/>
+        <command_interface name="inertia.iyz"/>
+        <command_interface name="transition_time"/>
         <command_interface name="payload_async_success"/>
 
         <state_interface name="mass"/>
         <state_interface name="cog.x"/>
         <state_interface name="cog.y"/>
         <state_interface name="cog.z"/>
+        <state_interface name="inertia.ixx"/>
+        <state_interface name="inertia.iyy"/>
+        <state_interface name="inertia.izz"/>
+        <state_interface name="inertia.ixy"/>
+        <state_interface name="inertia.ixz"/>
+        <state_interface name="inertia.iyz"/>
       </gpio>
 
       <gpio name="${tf_prefix}friction_model">

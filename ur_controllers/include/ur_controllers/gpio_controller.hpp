@@ -81,6 +81,13 @@ enum CommandInterfaces
   HAND_BACK_CONTROL_CMD = 33,
   HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
   ANALOG_OUTPUTS_DOMAIN = 35,
+  PAYLOAD_INERTIA_IXX = 36,
+  PAYLOAD_INERTIA_IYY = 37,
+  PAYLOAD_INERTIA_IZZ = 38,
+  PAYLOAD_INERTIA_IXY = 39,
+  PAYLOAD_INERTIA_IXZ = 40,
+  PAYLOAD_INERTIA_IYZ = 41,
+  PAYLOAD_TRANSITION_TIME = 42,
 };
 
 enum StateInterfaces
@@ -106,6 +113,13 @@ enum StateInterfaces
   PAYLOAD_STATE_COG_X = 72,
   PAYLOAD_STATE_COG_Y = 73,
   PAYLOAD_STATE_COG_Z = 74,
+  PAYLOAD_STATE_INERTIA_IXX = 75,
+  PAYLOAD_STATE_INERTIA_IYY = 76,
+  PAYLOAD_STATE_INERTIA_IZZ = 77,
+  PAYLOAD_STATE_INERTIA_IXY = 78,
+  PAYLOAD_STATE_INERTIA_IXZ = 79,
+  PAYLOAD_STATE_INERTIA_IYZ = 80,
+  PAYLOAD_STATE_TRANSITION_TIME = 81,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -201,7 +215,8 @@ protected:
    */
   bool waitForAsyncCommand(std::function<double(void)> get_value);
 
-  bool waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz);
+  bool waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz, double ixx, double iyy, double izz,
+                               double ixy, double ixz, double iyz, double transition_time);
 };
 }  // namespace ur_controllers
 

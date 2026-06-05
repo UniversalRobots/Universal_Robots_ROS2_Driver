@@ -414,7 +414,18 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       hardware_interface::StateInterface(tf_prefix + "payload", "cog.y", &rtde_payload_cog_[1]));
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]));
-
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixx", &rtde_payload_inertia_[0]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.iyy", &rtde_payload_inertia_[1]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.izz", &rtde_payload_inertia_[2]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixy", &rtde_payload_inertia_[3]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixz", &rtde_payload_inertia_[4]));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.iyz", &rtde_payload_inertia_[5]));
   // Motion primitives stuff
   state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                    "execution_status", &hw_moprim_states_[0]));
@@ -477,6 +488,20 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
       hardware_interface::CommandInterface(tf_prefix + "payload", "cog.y", &payload_center_of_gravity_[1]));
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "cog.z", &payload_center_of_gravity_[2]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixx", &payload_inertia_[0]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.iyy", &payload_inertia_[1]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.izz", &payload_inertia_[2]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixy", &payload_inertia_[3]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixz", &payload_inertia_[4]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.iyz", &payload_inertia_[5]));
+  command_interfaces.emplace_back(
+      hardware_interface::CommandInterface(tf_prefix + "payload", "transition_time", &payload_transition_time_));
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
 
@@ -988,6 +1013,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     readData(data_package_buffer_, "tcp_offset", tcp_offset_);
     readData(data_package_buffer_, "payload", rtde_payload_mass_);
     readData(data_package_buffer_, "payload_cog", rtde_payload_cog_);
+    readData(data_package_buffer_, "payload_inertia", rtde_payload_inertia_);
 
     // required transforms
     extractToolPose();
@@ -1122,6 +1148,8 @@ void URPositionHardwareInterface::initAsyncIO()
 
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  payload_inertia_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  payload_transition_time_ = NO_NEW_CMD_;
 
   friction_model_viscous_.fill(NO_NEW_CMD_);
   friction_model_coulomb_.fill(NO_NEW_CMD_);
@@ -1189,9 +1217,22 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) &&
       !std::isnan(payload_center_of_gravity_[1]) && !std::isnan(payload_center_of_gravity_[2]) &&
       ur_driver_ != nullptr) {
-    payload_async_success_ = ur_driver_->setPayload(payload_mass_, payload_center_of_gravity_);
+    urcl::vector6d_t inertia = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+    if (!std::isnan(payload_inertia_[0]) && !std::isnan(payload_inertia_[1]) && !std::isnan(payload_inertia_[2]) &&
+        !std::isnan(payload_inertia_[3]) && !std::isnan(payload_inertia_[4]) && !std::isnan(payload_inertia_[5])) {
+      inertia = payload_inertia_;
+    }
+
+    const double transition_time = std::isnan(payload_transition_time_) ? 0.0 : payload_transition_time_;
+
+    payload_async_success_ =
+        ur_driver_->setTargetPayload(payload_mass_, payload_center_of_gravity_, inertia, transition_time);
+
     payload_mass_ = NO_NEW_CMD_;
     payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+    payload_inertia_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+    payload_transition_time_ = NO_NEW_CMD_;
   }
 
   if (!std::isnan(friction_model_viscous_[0]) && ur_driver_ != nullptr) {
