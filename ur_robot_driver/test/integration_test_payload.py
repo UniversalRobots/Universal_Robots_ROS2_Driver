@@ -89,9 +89,20 @@ class RobotDriverTest(unittest.TestCase):
         # Reset payload to a known zero state before each test
         self._call_set_payload(mass=0.0)
 
-    def _call_set_payload(self, mass=0.0, cx=0.0, cy=0.0, cz=0.0,
-                          ixx=0.0, ixy=0.0, ixz=0.0, iyy=0.0, iyz=0.0, izz=0.0,
-                          transition_time=0.0):
+    def _call_set_payload(
+        self,
+        mass=0.0,
+        cx=0.0,
+        cy=0.0,
+        cz=0.0,
+        ixx=0.0,
+        ixy=0.0,
+        ixz=0.0,
+        iyy=0.0,
+        iyz=0.0,
+        izz=0.0,
+        transition_time=0.0
+    ):
         """Call the set_payload service and return the response."""
         req = SetPayload.Request()
         req.mass = float(mass)
@@ -113,16 +124,26 @@ class RobotDriverTest(unittest.TestCase):
     def test_set_payload_mass_and_cog_only(self, tf_prefix):
         """Setting only mass and COG (no inertia) should succeed."""
         res = self._call_set_payload(
-            mass=1.0, cx=0.1, cy=0.0, cz=0.2,
+            mass=1.0,
+            cx=0.1,
+            cy=0.0,
+            cz=0.2,
         )
         self.assertTrue(res.success)
 
     def test_set_payload_with_inertia(self, tf_prefix):
         """Setting mass, COG and full inertia matrix should succeed."""
         res = self._call_set_payload(
-            mass=1.0, cx=0.1, cy=0.0, cz=0.2,
-            ixx=0.01, iyy=0.01, izz=0.02,
-            ixy=0.0, ixz=0.0, iyz=0.0,
+            mass=1.0,
+            cx=0.1,
+            cy=0.0,
+            cz=0.2,
+            ixx=0.01,
+            iyy=0.01,
+            izz=0.02,
+            ixy=0.0,
+            ixz=0.0,
+            iyz=0.0,
             transition_time=0.0,
         )
         self.assertTrue(res.success)
@@ -131,8 +152,13 @@ class RobotDriverTest(unittest.TestCase):
         """Setting payload with transition_time > 0 should succeed.
         The service should wait for the transition to complete before verifying."""
         res = self._call_set_payload(
-            mass=1.0, cx=0.0, cy=0.0, cz=0.1,
-            ixx=0.01, iyy=0.01, izz=0.02,
+            mass=1.0,
+            cx=0.0,
+            cy=0.0,
+            cz=0.1,
+            ixx=0.01,
+            iyy=0.01,
+            izz=0.02,
             transition_time=1.0,
         )
         self.assertTrue(res.success)
@@ -140,15 +166,52 @@ class RobotDriverTest(unittest.TestCase):
     def test_set_payload_updates_sequentially(self, tf_prefix):
         """Multiple sequential set_payload calls should all succeed."""
         payloads = [
-            {"mass": 0.5, "cx": 0.0, "cy": 0.0, "cz": 0.1, "ixx": 0.005, "iyy": 0.005, "izz": 0.01},
-            {"mass": 1.0, "cx": 0.1, "cy": 0.0, "cz": 0.2, "ixx": 0.01, "iyy": 0.01, "izz": 0.02},
-            {"mass": 2.0, "cx": 0.05, "cy": 0.05, "cz": 0.15, "ixx": 0.02, "iyy": 0.02, "izz": 0.04},
-            {"mass": 0.0, "cx": 0.0, "cy": 0.0, "cz": 0.0, "ixx": 0.0, "iyy": 0.0, "izz": 0.0},
+            {
+                "mass": 0.5,
+                "cx": 0.0,
+                "cy": 0.0,
+                "cz": 0.1,
+                "ixx": 0.005,
+                "iyy": 0.005,
+                "izz": 0.01
+            },
+            {
+                "mass": 1.0,
+                "cx": 0.1,
+                "cy": 0.0,
+                "cz": 0.2,
+                "ixx": 0.01,
+                "iyy": 0.01,
+                "izz": 0.02
+            },
+            {
+                "mass": 2.0,
+                "cx": 0.05,
+                "cy": 0.05,
+                "cz": 0.15,
+                "ixx": 0.02,
+                "iyy": 0.02,
+                "izz": 0.04
+            },
+            {
+                "mass": 0.0,
+                "cx": 0.0,
+                "cy": 0.0,
+                "cz": 0.0,
+                "ixx": 0.0,
+                "iyy": 0.0,
+                "izz": 0.0
+            },
         ]
         for p in payloads:
             res = self._call_set_payload(
-                mass=p["mass"], cx=p["cx"], cy=p["cy"], cz=p["cz"],
-                ixx=p["ixx"], iyy=p["iyy"], izz=p["izz"],
+                mass=p["mass"],
+                cx=p["cx"],
+                cy=p["cy"],
+                cz=p["cz"],
+                ixx=p["ixx"],
+                iyy=p["iyy"],
+                izz=p["izz"],
                 transition_time=0.0
             )
             self.assertTrue(res.success, f"set_payload failed for m={p['mass']}")
