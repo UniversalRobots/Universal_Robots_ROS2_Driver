@@ -628,16 +628,16 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->payload.m));
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->payload.com.x);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->payload.com.y);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->payload.com.z);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXX].set_value(req->payload.ixx);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYY].set_value(req->payload.iyy);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IZZ].set_value(req->payload.izz);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXY].set_value(req->payload.ixy);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXZ].set_value(req->payload.ixz);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYZ].set_value(req->payload.iyz);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->mass));
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXX].set_value(req->ixx);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYY].set_value(req->iyy);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IZZ].set_value(req->izz);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXY].set_value(req->ixy);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXZ].set_value(req->ixz);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYZ].set_value(req->iyz);
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_TRANSITION_TIME].set_value(
       static_cast<double>(req->transition_time));
 
@@ -657,9 +657,9 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   }
 
   if (params_.verify_payload_on_set) {
-    if (!waitForPayloadRtdeMatch(static_cast<double>(req->payload.m), req->payload.com.x, req->payload.com.y,
-                                 req->payload.com.z, req->payload.ixx, req->payload.iyy, req->payload.izz,
-                                 req->payload.ixy, req->payload.ixz, req->payload.iyz, req->transition_time)) {
+    if (!waitForPayloadRtdeMatch(static_cast<double>(req->mass), req->center_of_gravity.x, req->center_of_gravity.y,
+                                 req->center_of_gravity.z, req->ixx, req->iyy, req->izz, req->ixy, req->ixz, req->iyz,
+                                 req->transition_time)) {
       RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog / "
                                             "payload_inertia do not match "
                                             "the "
