@@ -101,7 +101,7 @@ class RobotDriverTest(unittest.TestCase):
         iyy=0.0,
         iyz=0.0,
         izz=0.0,
-        transition_time=0.0
+        transition_time=0.0,
     ):
         """Call the set_payload service and return the response."""
         req = SetPayload.Request()
@@ -166,24 +166,8 @@ class RobotDriverTest(unittest.TestCase):
     def test_set_payload_updates_sequentially(self, tf_prefix):
         """Multiple sequential set_payload calls should all succeed."""
         payloads = [
-            {
-                "mass": 0.5,
-                "cx": 0.0,
-                "cy": 0.0,
-                "cz": 0.1,
-                "ixx": 0.005,
-                "iyy": 0.005,
-                "izz": 0.01
-            },
-            {
-                "mass": 1.0,
-                "cx": 0.1,
-                "cy": 0.0,
-                "cz": 0.2,
-                "ixx": 0.01,
-                "iyy": 0.01,
-                "izz": 0.02
-            },
+            {"mass": 0.5, "cx": 0.0, "cy": 0.0, "cz": 0.1, "ixx": 0.005, "iyy": 0.005, "izz": 0.01},
+            {"mass": 1.0, "cx": 0.1, "cy": 0.0, "cz": 0.2, "ixx": 0.01, "iyy": 0.01, "izz": 0.02},
             {
                 "mass": 2.0,
                 "cx": 0.05,
@@ -191,17 +175,9 @@ class RobotDriverTest(unittest.TestCase):
                 "cz": 0.15,
                 "ixx": 0.02,
                 "iyy": 0.02,
-                "izz": 0.04
+                "izz": 0.04,
             },
-            {
-                "mass": 0.0,
-                "cx": 0.0,
-                "cy": 0.0,
-                "cz": 0.0,
-                "ixx": 0.0,
-                "iyy": 0.0,
-                "izz": 0.0
-            },
+            {"mass": 0.0, "cx": 0.0, "cy": 0.0, "cz": 0.0, "ixx": 0.0, "iyy": 0.0, "izz": 0.0},
         ]
         for p in payloads:
             res = self._call_set_payload(
@@ -212,6 +188,6 @@ class RobotDriverTest(unittest.TestCase):
                 ixx=p["ixx"],
                 iyy=p["iyy"],
                 izz=p["izz"],
-                transition_time=0.0
+                transition_time=0.0,
             )
             self.assertTrue(res.success, f"set_payload failed for m={p['mass']}")
