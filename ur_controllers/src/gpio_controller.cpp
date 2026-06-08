@@ -45,11 +45,12 @@ namespace ur_controllers
 namespace
 {
 // Publishes only when `field` changes, and commits the new value into `msg` only on a successful
-// try_publish. If the publish is dropped (lock contention), `msg` is left unchanged so the change is
-// retried on the next cycle rather than being silently lost.
+// try_publish.
+// If the publish is dropped (e.g. lock contention), `msg` is left unchanged and the change is retried on the next
+// cycle.
 template <typename MsgT, typename FieldT, typename ValueT>
 void try_publish_on_change(const std::shared_ptr<realtime_tools::RealtimePublisher<MsgT>>& pub, MsgT& msg,
-                           FieldT MsgT::*field, ValueT new_value)
+                           FieldT MsgT::* field, ValueT new_value)
 {
   if (msg.*field != new_value) {
     MsgT candidate = msg;
