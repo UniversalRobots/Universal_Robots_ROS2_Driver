@@ -42,6 +42,25 @@
 
 namespace ur_controllers
 {
+namespace
+{
+// Publishes only when `field` changes, and commits the new value into `msg` only on a successful
+// try_publish. If the publish is dropped (lock contention), `msg` is left unchanged so the change is
+// retried on the next cycle rather than being silently lost.
+template <typename MsgT, typename FieldT, typename ValueT>
+void try_publish_on_change(const std::shared_ptr<realtime_tools::RealtimePublisher<MsgT>>& pub, MsgT& msg,
+                           FieldT MsgT::*field, ValueT new_value)
+{
+  if (msg.*field != new_value) {
+    MsgT candidate = msg;
+    candidate.*field = new_value;
+    if (pub->try_publish(candidate)) {
+      msg.*field = new_value;
+    }
+  }
+}
+}  // namespace
+
 controller_interface::CallbackReturn GPIOController::on_init()
 {
   try {
@@ -253,27 +272,13 @@ void GPIOController::publishToolData()
 void GPIOController::publishRobotMode()
 {
   auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_optional().value_or(0.0));
-
-  if (robot_mode_msg_.mode != robot_mode) {
-    auto msg = robot_mode_msg_;
-    msg.mode = robot_mode;
-    if (robot_mode_pub_->try_publish(msg)) {
-      robot_mode_msg_.mode = robot_mode;
-    }
-  }
+  try_publish_on_change(robot_mode_pub_, robot_mode_msg_, &ur_dashboard_msgs::msg::RobotMode::mode, robot_mode);
 }
 
 void GPIOController::publishSafetyMode()
 {
   auto safety_mode = static_cast<uint8_t>(state_interfaces_[StateInterfaces::SAFETY_MODE].get_optional().value_or(0.0));
-
-  if (safety_mode_msg_.mode != safety_mode) {
-    auto msg = safety_mode_msg_;
-    msg.mode = safety_mode;
-    if (safety_mode_pub_->try_publish(msg)) {
-      safety_mode_msg_.mode = safety_mode;
-    }
-  }
+  try_publish_on_change(safety_mode_pub_, safety_mode_msg_, &ur_dashboard_msgs::msg::SafetyMode::mode, safety_mode);
 }
 
 void GPIOController::publishProgramRunning()
@@ -281,13 +286,7 @@ void GPIOController::publishProgramRunning()
   auto program_running_value =
       static_cast<uint8_t>(state_interfaces_[StateInterfaces::PROGRAM_RUNNING].get_optional().value_or(0.0));
   bool program_running = program_running_value == 1.0 ? true : false;
-  if (program_running_msg_.data != program_running) {
-    auto msg = program_running_msg_;
-    msg.data = program_running;
-    if (program_state_pub_->try_publish(msg)) {
-      program_running_msg_.data = program_running;
-    }
-  }
+  try_publish_on_change(program_state_pub_, program_running_msg_, &std_msgs::msg::Bool::data, program_running);
 }
 
 controller_interface::CallbackReturn
