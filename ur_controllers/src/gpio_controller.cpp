@@ -216,6 +216,29 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
 
+  try {
+    auto qos_latched = rclcpp::SystemDefaultsQoS();
+    qos_latched.transient_local();
+    qos_latched.reliable();
+    // register publishers outside the realtime update loop
+    io_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>>(
+        get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS()));
+
+    tool_data_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>>(
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS()));
+
+    robot_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>>(
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched));
+
+    safety_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>>(
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", qos_latched));
+
+    program_state_pub_ = std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>>(
+        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched));
+  } catch (...) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
@@ -299,24 +322,6 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
   }
 
   try {
-    auto qos_latched = rclcpp::SystemDefaultsQoS();
-    qos_latched.transient_local();
-    qos_latched.reliable();
-    // register publishers with realtime publishers to prevent blocking on publish
-    io_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>>(
-        get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS()));
-
-    tool_data_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>>(
-        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS()));
-
-    robot_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>>(
-        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched));
-
-    safety_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>>(
-        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", qos_latched));
-
-    program_state_pub_ = std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>>(
-        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched));
     set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
         "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
     set_analog_output_srv_ = get_node()->create_service<ur_msgs::srv::SetAnalogOutput>(
@@ -350,15 +355,26 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  // Publishers survive deactivation: on_deactivate also runs inside the realtime update loop. Destroying publisher
+  // joins a worker thread that may be mid-publish, so teardown is in on_cleanup.
   try {
-    // reset publisher
+    set_io_srv_.reset();
+    set_speed_slider_srv_.reset();
+  } catch (...) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn
+ur_controllers::GPIOController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/)
+{
+  try {
     io_pub_.reset();
     tool_data_pub_.reset();
     robot_mode_pub_.reset();
     safety_mode_pub_.reset();
     program_state_pub_.reset();
-    set_io_srv_.reset();
-    set_speed_slider_srv_.reset();
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
