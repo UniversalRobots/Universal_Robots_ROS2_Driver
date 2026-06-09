@@ -39,6 +39,7 @@ import rclpy
 from rclpy.node import Node
 
 from geometry_msgs.msg import Vector3
+from builtin_interfaces.msg import Duration
 from ur_msgs.srv import SetPayload
 
 sys.path.append(os.path.dirname(__file__))
@@ -113,7 +114,9 @@ class RobotDriverTest(unittest.TestCase):
         req.iyy = float(iyy)
         req.iyz = float(iyz)
         req.izz = float(izz)
-        req.transition_time = float(transition_time)
+        seconds = int(transition_time)
+        nanoseconds = int(round((transition_time - seconds) * 1e9))
+        req.transition_time = Duration(sec=seconds, nanosec=nanoseconds)
 
         future = self._set_payload_client.call_async(req)
         rclpy.spin_until_future_complete(self.node, future)
