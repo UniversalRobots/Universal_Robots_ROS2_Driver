@@ -570,8 +570,9 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXY].set_value(req->payload.ixy);
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXZ].set_value(req->payload.ixz);
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYZ].set_value(req->payload.iyz);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_TRANSITION_TIME].set_value(
-      static_cast<double>(req->transition_time));
+  double transition_time_seconds =
+      static_cast<double>(req->transition_time.sec) + (static_cast<double>(req->transition_time.nanosec) * 1e-9);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_TRANSITION_TIME].set_value(transition_time_seconds);
 
   if (!waitForAsyncCommand([&]() {
         return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
@@ -591,7 +592,7 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   if (params_.verify_payload_on_set) {
     if (!waitForPayloadRtdeMatch(static_cast<double>(req->payload.m), req->payload.com.x, req->payload.com.y,
                                  req->payload.com.z, req->payload.ixx, req->payload.iyy, req->payload.izz,
-                                 req->payload.ixy, req->payload.ixz, req->payload.iyz, req->transition_time)) {
+                                 req->payload.ixy, req->payload.ixz, req->payload.iyz, transition_time_seconds)) {
       RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog / "
                                             "payload_inertia do not match "
                                             "the "
