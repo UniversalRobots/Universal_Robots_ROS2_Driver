@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28.3)
 project(ur_robot_driver)
 
 # Default to off as this only works in environments where a new docker container can be started with the appropriate networking, which
