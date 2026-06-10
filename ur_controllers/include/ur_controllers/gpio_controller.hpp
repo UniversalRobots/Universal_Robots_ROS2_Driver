@@ -129,6 +129,11 @@ public:
   CallbackReturn on_init() override;
 
 private:
+  // Rejects a service request when the controller is not active.
+  // Returns true if the controller is active and the request may proceed.
+  template <typename ResponseT>
+  bool ensureActive(const ResponseT& resp);
+
   bool setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp);
 
   bool setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::SharedPtr req,

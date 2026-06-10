@@ -38,6 +38,7 @@
 #include "ur_controllers/gpio_controller.hpp"
 
 #include <cmath>
+#include <lifecycle_msgs/msg/state.hpp>
 #include <string>
 
 namespace ur_controllers
@@ -64,6 +65,17 @@ bool try_publish_on_change(realtime_tools::RealtimePublisher<MsgT>& pub, MsgT& m
   return true;
 }
 }  // namespace
+
+template <typename ResponseT>
+bool GPIOController::ensureActive(const ResponseT& resp)
+{
+  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Controller is not running.");
+    resp->success = false;
+    return false;
+  }
+  return true;
+}
 
 controller_interface::CallbackReturn GPIOController::on_init()
 {
@@ -238,6 +250,32 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 
     program_state_pub_ = std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>>(
         get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched));
+
+    // register services outside the realtime update loop; calls are rejected while the controller is not active
+    set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
+        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+    set_analog_output_srv_ = get_node()->create_service<ur_msgs::srv::SetAnalogOutput>(
+        "~/set_analog_output",
+        std::bind(&GPIOController::setAnalogOutput, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
+        "~/set_speed_slider",
+        std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
+
+    resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/resend_robot_program",
+        std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
+
+    hand_back_control_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/hand_back_control",
+        std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
+        "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+
+    tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/zero_ftsensor",
+        std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -324,43 +362,27 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 
-  try {
-    set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
-        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
-    set_analog_output_srv_ = get_node()->create_service<ur_msgs::srv::SetAnalogOutput>(
-        "~/set_analog_output",
-        std::bind(&GPIOController::setAnalogOutput, this, std::placeholders::_1, std::placeholders::_2));
-
-    set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
-        "~/set_speed_slider",
-        std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
-
-    resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/resend_robot_program",
-        std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
-
-    hand_back_control_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/hand_back_control",
-        std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
-
-    set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
-        "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
-
-    tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/zero_ftsensor",
-        std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
-  } catch (...) {
-    return LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  // Publishers survive deactivation: on_deactivate also runs inside the realtime update loop. Destroying publisher
-  // joins a worker thread that may be mid-publish, so teardown is in on_cleanup.
+  // Nothing to tear down here. Publishers and services are created in on_configure and released in on_cleanup.
+  // on_activate/on_deactivate run inside the realtime update loop, so we keep DDS entity creation/destruction out of
+  // them to avoid stalling the controller_manager update cycle.
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn
+ur_controllers::GPIOController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/)
+{
   try {
+    io_pub_.reset();
+    tool_data_pub_.reset();
+    robot_mode_pub_.reset();
+    safety_mode_pub_.reset();
+    program_state_pub_.reset();
     set_io_srv_.reset();
     set_analog_output_srv_.reset();
     set_speed_slider_srv_.reset();
@@ -374,23 +396,12 @@ ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*p
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::CallbackReturn
-ur_controllers::GPIOController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/)
-{
-  try {
-    io_pub_.reset();
-    tool_data_pub_.reset();
-    robot_mode_pub_.reset();
-    safety_mode_pub_.reset();
-    program_state_pub_.reset();
-  } catch (...) {
-    return LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
-  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
-}
-
 bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= 17) {
     // io async success
     std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
@@ -450,6 +461,10 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::SharedPtr req,
                                      ur_msgs::srv::SetAnalogOutput::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   std::string domain_string = "UNKNOWN";
   switch (req->data.domain) {
     case ur_msgs::msg::Analog::CURRENT:
@@ -493,6 +508,10 @@ bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::Sha
 bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                                     ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   if (req->speed_slider_fraction >= 0.01 && req->speed_slider_fraction <= 1.0) {
     RCLCPP_INFO(get_node()->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction * 100.0);
     // reset success flag
@@ -523,6 +542,10 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
 bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                         std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   // call the service in the hardware
@@ -552,6 +575,10 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
 bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                      std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   // call the service in the hardware
@@ -580,6 +607,10 @@ bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr 
 bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                                 ur_msgs::srv::SetPayload::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
@@ -623,6 +654,10 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
 bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                   std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   // call the service in the hardware
