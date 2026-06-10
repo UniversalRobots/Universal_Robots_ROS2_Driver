@@ -362,7 +362,12 @@ ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*p
   // joins a worker thread that may be mid-publish, so teardown is in on_cleanup.
   try {
     set_io_srv_.reset();
+    set_analog_output_srv_.reset();
     set_speed_slider_srv_.reset();
+    resend_robot_program_srv_.reset();
+    hand_back_control_srv_.reset();
+    set_payload_srv_.reset();
+    tare_sensor_srv_.reset();
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
