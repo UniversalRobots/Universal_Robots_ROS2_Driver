@@ -368,9 +368,9 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  // Nothing to tear down here. Publishers and services are created in on_configure and released in on_cleanup.
-  // on_activate/on_deactivate run inside the realtime update loop, so we keep DDS entity creation/destruction out of
-  // them to avoid stalling the controller_manager update cycle.
+  // No teardown. Publishers and services are created in on_configure and released in on_cleanup.
+  // on_activate/on_deactivate run inside the realtime update loop, so we keep DDS management separate to avoid
+  // stalling the controller_manager update cycle.
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
