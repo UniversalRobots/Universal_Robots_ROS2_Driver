@@ -237,24 +237,24 @@ def launch_setup(context):
         controller_spawner(controllers_inactive, active=False),
     ]
 
-    hardware_awaiter_node = Node(
+    controller_manager_awaiter = Node(
         package="ur_robot_driver",
-        executable="ur_hardware_awaiter.py",
+        executable="ur_controller_manager_awaiter.py",
         parameters=[
-            {"robot_ip": robot_ip},
+            {"use_mock_hardware": use_mock_hardware},
         ],
         output="screen",
     )
 
     spawn_controllers_event = RegisterEventHandler(
         event_handler=OnProcessExit(
-            target_action=hardware_awaiter_node,
+            target_action=controller_manager_awaiter,
             on_exit=lambda event, context: (
                 controller_spawners
                 if event.returncode == 0
                 else [
                     LogInfo(
-                        msg=f"ur_hardware_awaiter node failed or was killed (Exit code {event.returncode}). Aborting controller spawners."
+                        msg=f"ur_controller_manager_awaiter node failed or was killed (Exit code {event.returncode}). Aborting controller spawners."
                     )
                 ]
             ),
@@ -279,17 +279,9 @@ def launch_setup(context):
         rsp,
         rviz_node,
         trajectory_until_node,
+        controller_manager_awaiter,
+        spawn_controllers_event,
     ]
-
-    if use_mock_hardware.perform(context) == "true":
-        nodes_to_start.extend(controller_spawners)
-    else:
-        nodes_to_start.extend(
-            [
-                hardware_awaiter_node,
-                spawn_controllers_event,
-            ]
-        )
 
     return nodes_to_start
 
