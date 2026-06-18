@@ -9,9 +9,9 @@ from controller_manager_msgs.srv import ListControllers
 def main(args=None):
     """
     Waits for the controller manager service to start and respond successfully.
+
     This ensures the robot controllers only start when the system is fully ready.
     """
-
     rclpy.init(args=args)
     node = Node("ur_controller_manager_awaiter")
 
