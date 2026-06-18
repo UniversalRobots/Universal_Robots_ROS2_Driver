@@ -128,7 +128,6 @@ ur_controllers::GravityUpdateController::on_configure(const rclcpp_lifecycle::St
     set_gravity_srv_ = get_node()->create_service<ur_msgs::srv::SetGravity>(
         "~/set_gravity", [this](const ur_msgs::srv::SetGravity::Request::SharedPtr req,
                                 ur_msgs::srv::SetGravity::Response::SharedPtr resp) { setGravity(req, resp); });
-
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -165,6 +164,11 @@ ur_controllers::GravityUpdateController::on_cleanup(const rclcpp_lifecycle::Stat
 bool GravityUpdateController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
                                          ur_msgs::srv::SetGravity::Response::SharedPtr resp)
 {
+  if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+    resp->success = false;
+    resp->status = "Controller is not active";
+    return false;
+  }
   // Check transform
   const std::string base_frame_name = params_.tf_prefix + "base";
   geometry_msgs::msg::TransformStamped tf_to_base_link;
