@@ -72,30 +72,31 @@ HOME = {
 }
 waypts = [[HOME[joint] + i * pi / 4 for joint in ROBOT_JOINTS] for i in [0.25, 0.5, 1, 0]]
 time_vec = [
-    Duration(sec=3, nanosec=0),   
-    Duration(sec=6, nanosec=0),   
-    Duration(sec=9, nanosec=0),   
-    Duration(sec=12, nanosec=0),  
+    Duration(sec=3, nanosec=0),
+    Duration(sec=6, nanosec=0),
+    Duration(sec=9, nanosec=0),
+    Duration(sec=12, nanosec=0),
 ]
 TEST_TRAJECTORY = [(time_vec[i], waypts[i]) for i in range(len(waypts))]
 
 waypts_vel = [
-    [0.0561 for _ in ROBOT_JOINTS],   
-    [0.1683 for _ in ROBOT_JOINTS],   
-    [-0.1402 for _ in ROBOT_JOINTS],    
-    [0.0 for _ in ROBOT_JOINTS],       
+    [0.0561 for _ in ROBOT_JOINTS],
+    [0.1683 for _ in ROBOT_JOINTS],
+    [-0.1402 for _ in ROBOT_JOINTS],
+    [0.0 for _ in ROBOT_JOINTS],
 ]
 
 waypts_acc = [
-    [-0.0561 for _ in ROBOT_JOINTS],    
-    [0.1309 for _ in ROBOT_JOINTS],   
-    [-0.3366 for _ in ROBOT_JOINTS],    
-    [0.0 for _ in ROBOT_JOINTS],   
+    [-0.0561 for _ in ROBOT_JOINTS],
+    [0.1309 for _ in ROBOT_JOINTS],
+    [-0.3366 for _ in ROBOT_JOINTS],
+    [0.0 for _ in ROBOT_JOINTS],
 ]
 
 TEST_TRAJECTORY_FULL = [
     (time_vec[i], waypts[i], waypts_vel[i], waypts_acc[i]) for i in range(len(waypts))
 ]
+
 
 class PassthroughControllerTest(unittest.TestCase):
     @classmethod
@@ -216,7 +217,6 @@ class PassthroughControllerTest(unittest.TestCase):
             )
             self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
-
     def test_cubic_trajectory_with_velocities(self, tf_prefix):
         # Full cubic trajectory with vel and acc
         self.assertTrue(
@@ -231,7 +231,7 @@ class PassthroughControllerTest(unittest.TestCase):
                 JointTrajectoryPoint(
                     positions=pos,
                     time_from_start=times,
-                    velocities=vel, 
+                    velocities=vel,
                 )
                 for (times, pos, vel, _) in TEST_TRAJECTORY_FULL
             ],
