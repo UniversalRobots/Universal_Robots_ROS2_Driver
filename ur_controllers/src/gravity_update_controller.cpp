@@ -161,13 +161,13 @@ ur_controllers::GravityUpdateController::on_cleanup(const rclcpp_lifecycle::Stat
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-bool GravityUpdateController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
+void GravityUpdateController::setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
                                          ur_msgs::srv::SetGravity::Response::SharedPtr resp)
 {
   if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
     resp->success = false;
     resp->status = "Controller is not active";
-    return false;
+    return;
   }
   // Check transform
   const std::string base_frame_name = params_.tf_prefix + "base";
@@ -177,7 +177,7 @@ bool GravityUpdateController::setGravity(const ur_msgs::srv::SetGravity::Request
   } catch (const tf2::TransformException& ex) {
     resp->success = false;
     resp->status = ex.what();
-    return false;
+    return;
   }
 
   // The passed gravity vector is the direction of gravity (towards the Earth)
@@ -209,7 +209,7 @@ bool GravityUpdateController::setGravity(const ur_msgs::srv::SetGravity::Request
     resp->status = "Could not set the gravity";
   }
 
-  return resp->success;
+  return;
 }
 
 bool GravityUpdateController::waitForAsyncCommand(std::function<double(void)> get_value)

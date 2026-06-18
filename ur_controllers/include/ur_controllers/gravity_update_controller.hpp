@@ -89,7 +89,7 @@ public:
   CallbackReturn on_init() override;
 
 private:
-  bool setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
+  void setGravity(const ur_msgs::srv::SetGravity::Request::SharedPtr req,
                   ur_msgs::srv::SetGravity::Response::SharedPtr resp);
 
 protected:
