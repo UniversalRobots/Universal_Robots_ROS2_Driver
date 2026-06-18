@@ -9,7 +9,7 @@ jobs:
     name: coverage build
     runs-on: ubuntu-22.04
     container:
-      image: ubuntu:noble
+      image: ubuntu:resolute
     strategy:
       fail-fast: false
     env:

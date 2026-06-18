@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.0 (2026-05-12)
+------------------
+* BREAKING: Remove scaled joint trajectory controller (`#1769 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1769>`_)
+* [Doc moveit_config] Add a note about joint_limits.yaml (`#1764 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1764>`_)
+* Contributors: Felix Exner
+
 5.0.0 (2026-04-09)
 ------------------
 * Add sim_time to servo launch file (`#1651 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1651>`_)

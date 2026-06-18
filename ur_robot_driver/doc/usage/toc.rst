@@ -44,7 +44,7 @@ Sending commands to controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once the driver is started, you can use it like any other ROS robot arm driver by sending
-trajectories to the ``/scaled_joint_trajectory_controller/follow_joint_trajectory`` action. If
+trajectories to the ``/joint_trajectory_controller/follow_joint_trajectory`` action. If
 you're new to that, please have a look at the section ":ref:`move_the_robot`".
 
 Robot frames

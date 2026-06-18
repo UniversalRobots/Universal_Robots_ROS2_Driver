@@ -57,6 +57,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/duration.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "realtime_tools/realtime_publisher.hpp"
 #include "ur_controllers/gpio_controller_parameters.hpp"
 
 namespace ur_controllers
@@ -102,6 +103,10 @@ enum StateInterfaces
   SAFETY_STATUS_BITS = 58,
   INITIALIZED_FLAG = 69,
   PROGRAM_RUNNING = 70,
+  PAYLOAD_STATE_MASS = 71,
+  PAYLOAD_STATE_COG_X = 72,
+  PAYLOAD_STATE_COG_Y = 73,
+  PAYLOAD_STATE_COG_Z = 74,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -119,9 +124,16 @@ public:
 
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
+  CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) override;
+
   CallbackReturn on_init() override;
 
 private:
+  // Rejects a service request when the controller is not active.
+  // Returns true if the controller is active and the request may proceed.
+  template <typename ResponseT>
+  bool ensureActive(const ResponseT& resp);
+
   bool setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp);
 
   bool setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::SharedPtr req,
@@ -170,11 +182,12 @@ protected:
   rclcpp::Service<ur_msgs::srv::SetPayload>::SharedPtr set_payload_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
 
-  std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::IOStates>> io_pub_;
-  std::shared_ptr<rclcpp::Publisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
-  std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
-  std::shared_ptr<rclcpp::Publisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
-  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Bool>> program_state_pub_;
+  // Publishing in realtime ros2_control loop, so these are wrapped in non-blocking tries to prevent controller overrun
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>> io_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>> program_state_pub_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;
@@ -196,6 +209,8 @@ protected:
    * have been reached
    */
   bool waitForAsyncCommand(std::function<double(void)> get_value);
+
+  bool waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz);
 };
 }  // namespace ur_controllers
 

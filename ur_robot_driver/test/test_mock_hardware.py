@@ -35,6 +35,7 @@ import unittest
 import launch_testing
 import pytest
 import rclpy
+from geometry_msgs.msg import Vector3
 from rclpy.node import Node
 from control_msgs.action import FollowJointTrajectory
 from controller_manager_msgs.srv import SwitchController
@@ -78,9 +79,9 @@ class MockHWTest(unittest.TestCase):
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._configuration_controller_interface = ConfigurationInterface(self.node)
 
-        self._scaled_follow_joint_trajectory = ActionInterface(
+        self._follow_joint_trajectory = ActionInterface(
             self.node,
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            "/joint_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
 
@@ -99,19 +100,19 @@ class MockHWTest(unittest.TestCase):
             self._configuration_controller_interface.get_robot_software_version().major, 1
         )
 
-    def test_start_scaled_jtc_controller(self):
+    def test_start_jtc_controller(self):
         # Deactivate controller, if it is not already
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
-                deactivate_controllers=["scaled_joint_trajectory_controller"],
+                deactivate_controllers=["joint_trajectory_controller"],
             ).ok
         )
         # Activate controller
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.STRICT,
-                activate_controllers=["scaled_joint_trajectory_controller"],
+                activate_controllers=["joint_trajectory_controller"],
             ).ok
         )
 
@@ -120,3 +121,26 @@ class MockHWTest(unittest.TestCase):
 
     def test_illegal_trajectory(self, tf_prefix):
         sjtc_illegal_trajectory_test(self, tf_prefix)
+
+    def test_set_payload(self):
+        """
+        Test that ``set_payload`` succeeds with mock hardware.
+
+        Mock hardware does not feed back the payload via RTDE, so the controller
+        is launched with ``verify_payload_on_set:=false`` (set automatically by
+        ``ur_control.launch.py`` when ``use_mock_hardware:=true``). The service
+        should therefore return success without performing the RTDE verification.
+        """
+        result = self._io_status_controller_interface.set_payload(
+            mass=1.5, center_of_gravity=Vector3(x=0.01, y=0.02, z=0.03)
+        )
+        self.assertTrue(
+            result.success,
+            "set_payload returned success=False on mock hardware. The controller "
+            "should be launched with verify_payload_on_set=false in this case.",
+        )
+
+        result = self._io_status_controller_interface.set_payload(
+            mass=0.0, center_of_gravity=Vector3(x=0.0, y=0.0, z=0.0)
+        )
+        self.assertTrue(result.success, "Resetting payload via set_payload failed on mock hardware")

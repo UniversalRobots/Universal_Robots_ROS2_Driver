@@ -121,6 +121,14 @@ struct Quaternion
   double w;
 };
 
+struct RobotTypeWithSeries
+{
+  urcl::RobotType robot_type;
+  urcl::RobotSeries robot_series;
+};
+
+RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str);
+
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
  * driver. It contains the read and write methods of the main control loop and registers various ROS
@@ -278,6 +286,8 @@ protected:
   urcl::vector3d_t payload_center_of_gravity_;
   double payload_mass_;
   double payload_async_success_;
+  double rtde_payload_mass_ = 0.0;
+  urcl::vector3d_t rtde_payload_cog_{ 0.0, 0.0, 0.0 };
 
   // Friction model parameters
   urcl::vector6d_t friction_model_viscous_;

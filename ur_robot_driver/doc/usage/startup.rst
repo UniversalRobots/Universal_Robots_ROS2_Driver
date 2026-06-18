@@ -34,7 +34,7 @@ Other important arguments are:
 * ``use_mock_hardware`` (default: *false* ) - Use simple hardware emulator from ros2_control. Useful for testing launch files, descriptions, etc.
 * ``headless_mode`` (default: *false*) - Start driver in :ref:`headless_mode`.
 * ``launch_rviz`` (default: *true*) - Start RViz together with the driver.
-* ``initial_joint_controller`` (default: *scaled_joint_trajectory_controller*) - Use this if you
+* ``initial_joint_controller`` (default: *joint_trajectory_controller*) - Use this if you
   want to start the robot with another controller.
 
   .. note::

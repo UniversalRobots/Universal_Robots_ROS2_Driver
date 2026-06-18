@@ -105,7 +105,6 @@ class FrictionModelTest(unittest.TestCase):
                     "friction_model_controller",
                 ],
                 deactivate_controllers=[
-                    "scaled_joint_trajectory_controller",
                     "joint_trajectory_controller",
                 ],
             ).ok
@@ -138,7 +137,6 @@ class FrictionModelTest(unittest.TestCase):
                     "friction_model_controller",
                 ],
                 deactivate_controllers=[
-                    "scaled_joint_trajectory_controller",
                     "joint_trajectory_controller",
                 ],
             ).ok
@@ -181,7 +179,6 @@ class FrictionModelTest(unittest.TestCase):
                     "friction_model_controller",
                 ],
                 deactivate_controllers=[
-                    "scaled_joint_trajectory_controller",
                     "joint_trajectory_controller",
                 ],
             ).ok
@@ -213,7 +210,6 @@ class FrictionModelTest(unittest.TestCase):
                 activate_controllers=[],
                 deactivate_controllers=[
                     "friction_model_controller",
-                    "scaled_joint_trajectory_controller",
                     "joint_trajectory_controller",
                 ],
             ).ok

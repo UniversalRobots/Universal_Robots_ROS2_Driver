@@ -109,7 +109,7 @@ ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur10e robot_ip:=192.16
 ```
 **(optional) switching control mode**
 ```
-ros2 control switch_controllers --activate motion_primitive_forward_controller --deactivate scaled_joint_trajectory_controller
+ros2 control switch_controllers --activate motion_primitive_forward_controller --deactivate joint_trajectory_controller
 ```
 **Send motion primitives from python script**
 > [!WARNING]

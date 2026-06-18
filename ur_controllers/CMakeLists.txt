@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28.3)
 project(ur_controllers)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -83,11 +83,6 @@ generate_parameter_library(
 )
 
 generate_parameter_library(
-  scaled_joint_trajectory_controller_parameters
-  src/scaled_joint_trajectory_controller_parameters.yaml
-)
-
-generate_parameter_library(
   freedrive_mode_controller_parameters
   src/freedrive_mode_controller_parameters.yaml
 )
@@ -106,7 +101,6 @@ add_library(${PROJECT_NAME} SHARED
   src/tool_contact_controller.cpp
   src/force_mode_controller.cpp
   src/friction_model_controller.cpp
-  src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
   src/freedrive_mode_controller.cpp
   src/gpio_controller.cpp
@@ -124,7 +118,6 @@ target_link_libraries(${PROJECT_NAME}
   gpio_controller_parameters
   gravity_update_controller_parameters
   speed_scaling_state_broadcaster_parameters
-  scaled_joint_trajectory_controller_parameters
   freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters

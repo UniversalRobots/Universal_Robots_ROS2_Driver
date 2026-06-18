@@ -72,7 +72,7 @@ def generate_test_description(launch_dashboard_client):
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(120),
-        "initial_joint_controller": "scaled_joint_trajectory_controller",
+        "initial_joint_controller": "joint_trajectory_controller",
         "headless_mode": "true",
         "launch_dashboard_client": launch_dashboard_client,
         "start_joint_controller": "false",
