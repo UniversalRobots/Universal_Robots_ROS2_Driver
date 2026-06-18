@@ -14,6 +14,7 @@ def main(args=None):
     """
     rclpy.init(args=args)
     node = Node("ur_controller_manager_awaiter")
+    success = False
 
     use_mock_hardware = node.declare_parameter("use_mock_hardware", False).value
     check_interval = node.declare_parameter("check_interval", 10.0).value
@@ -42,6 +43,7 @@ def main(args=None):
             try:
                 future.result()
                 node.get_logger().info("Service responded successfully! Unblocking spawners...")
+                success = True
                 break
             except Exception as e:
                 node.get_logger().warning(f"Service call failed: {e}. Retrying...")
@@ -55,7 +57,7 @@ def main(args=None):
 
     node.destroy_node()
     rclpy.shutdown()
-    sys.exit(0)
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
