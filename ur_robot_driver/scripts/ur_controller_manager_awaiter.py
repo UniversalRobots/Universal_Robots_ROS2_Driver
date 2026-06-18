@@ -46,7 +46,9 @@ def main(args=None):
             except Exception as e:
                 node.get_logger().warning(f"Service call failed: {e}. Retrying...")
         else:
-            node.get_logger().warning(f"Timeout: Service did not respond within {timeout}s. Canceling and retrying...")
+            node.get_logger().warning(
+                f"Timeout: Service did not respond within {timeout}s. Canceling and retrying..."
+            )
             future.cancel()
 
         time.sleep(0.5)
