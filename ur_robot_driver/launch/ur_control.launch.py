@@ -279,8 +279,8 @@ def launch_setup(context):
         rsp,
         rviz_node,
         trajectory_until_node,
-        controller_manager_awaiter,
         spawn_controllers_event,
+        controller_manager_awaiter,
     ]
 
     return nodes_to_start
