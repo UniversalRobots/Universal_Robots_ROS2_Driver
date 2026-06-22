@@ -67,7 +67,6 @@ controller_interface::CallbackReturn SpeedScalingStateBroadcaster::on_init()
 
     RCLCPP_INFO(get_node()->get_logger(), "Loading UR SpeedScalingStateBroadcaster with tf_prefix: %s",
                 params_.tf_prefix.c_str());
-
   } catch (std::exception& e) {
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return controller_interface::CallbackReturn::ERROR;
@@ -140,7 +139,7 @@ controller_interface::return_type SpeedScalingStateBroadcaster::update(const rcl
     speed_scaling_state_msg_.data = state_interfaces_[0].get_value() * 100.0;
 
     // publish
-    speed_scaling_state_publisher_->try_publish(speed_scaling_state_msg_);
+    speed_scaling_state_publisher_->tryPublish(speed_scaling_state_msg_);
   }
   return controller_interface::return_type::OK;
 }
