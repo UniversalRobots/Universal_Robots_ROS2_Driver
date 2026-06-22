@@ -35,30 +35,30 @@
  */
 //----------------------------------------------------------------------
 
-#include "ur_controllers/gpio_controller.hpp"
-
 #include <cmath>
-#include <lifecycle_msgs/msg/state.hpp>
 #include <string>
+
+#include <lifecycle_msgs/msg/state.hpp>
+#include "ur_controllers/gpio_controller.hpp"
 
 namespace ur_controllers
 {
 namespace
 {
 // Publishes only when `field` changes, and commits the new value into `msg` only on a successful
-// try_publish.
+// tryPublish.
 // If the publish is dropped (e.g. lock contention), `msg` is left unchanged and the change is retried on the next
 // cycle.
 template <typename MsgT, typename FieldT>
-bool try_publish_on_change(realtime_tools::RealtimePublisher<MsgT>& pub, MsgT& msg, FieldT MsgT::* field,
-                           const FieldT& new_value)
+bool tryPublish_on_change(realtime_tools::RealtimePublisher<MsgT>& pub, MsgT& msg, FieldT MsgT::* field,
+                          const FieldT& new_value)
 {
   if (msg.*field == new_value) {
     return true;
   }
   MsgT candidate = msg;
   candidate.*field = new_value;
-  if (!pub.try_publish(candidate)) {
+  if (!pub.tryPublish(candidate)) {
     return false;
   }
   msg.*field = new_value;
@@ -69,7 +69,7 @@ bool try_publish_on_change(realtime_tools::RealtimePublisher<MsgT>& pub, MsgT& m
 template <typename ResponseT>
 bool GPIOController::ensureActive(const ResponseT& resp)
 {
-  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+  if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Controller is not running.");
     resp->success = false;
     return false;
@@ -310,7 +310,7 @@ void GPIOController::publishIO()
         static_cast<uint8_t>(state_interfaces_[i + StateInterfaces::ANALOG_IO_TYPES + 2].get_value());
   }
 
-  io_pub_->try_publish(io_msg_);
+  io_pub_->tryPublish(io_msg_);
 }
 
 void GPIOController::publishToolData()
@@ -327,50 +327,29 @@ void GPIOController::publishToolData()
       static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_value());
   tool_data_msg_.tool_current = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_value());
   tool_data_msg_.tool_temperature =
-<<<<<<< HEAD
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_value());
-  tool_data_pub_->publish(tool_data_msg_);
-=======
-      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_optional().value_or(0.0));
-  tool_data_pub_->try_publish(tool_data_msg_);
->>>>>>> a7adb80 (Make GPIO controller publishers realtime safe (#1807))
+  tool_data_pub_->tryPublish(tool_data_msg_);
 }
 
 void GPIOController::publishRobotMode()
 {
-<<<<<<< HEAD
   auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_value());
 
-  if (robot_mode_msg_.mode != robot_mode) {
-    robot_mode_msg_.mode = robot_mode;
-    robot_mode_pub_->publish(robot_mode_msg_);
-  }
-=======
-  auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_optional().value_or(0.0));
-  try_publish_on_change(*robot_mode_pub_, robot_mode_msg_, &ur_dashboard_msgs::msg::RobotMode::mode, robot_mode);
->>>>>>> a7adb80 (Make GPIO controller publishers realtime safe (#1807))
+  tryPublish_on_change(*robot_mode_pub_, robot_mode_msg_, &ur_dashboard_msgs::msg::RobotMode::mode, robot_mode);
 }
 
 void GPIOController::publishSafetyMode()
 {
-<<<<<<< HEAD
   auto safety_mode = static_cast<uint8_t>(state_interfaces_[StateInterfaces::SAFETY_MODE].get_value());
 
-  if (safety_mode_msg_.mode != safety_mode) {
-    safety_mode_msg_.mode = safety_mode;
-    safety_mode_pub_->publish(safety_mode_msg_);
-  }
-=======
-  auto safety_mode = static_cast<uint8_t>(state_interfaces_[StateInterfaces::SAFETY_MODE].get_optional().value_or(0.0));
-  try_publish_on_change(*safety_mode_pub_, safety_mode_msg_, &ur_dashboard_msgs::msg::SafetyMode::mode, safety_mode);
->>>>>>> a7adb80 (Make GPIO controller publishers realtime safe (#1807))
+  tryPublish_on_change(*safety_mode_pub_, safety_mode_msg_, &ur_dashboard_msgs::msg::SafetyMode::mode, safety_mode);
 }
 
 void GPIOController::publishProgramRunning()
 {
   auto program_running_value = static_cast<uint8_t>(state_interfaces_[StateInterfaces::PROGRAM_RUNNING].get_value());
   bool program_running = program_running_value == 1.0 ? true : false;
-  try_publish_on_change(*program_state_pub_, program_running_msg_, &std_msgs::msg::Bool::data, program_running);
+  tryPublish_on_change(*program_state_pub_, program_running_msg_, &std_msgs::msg::Bool::data, program_running);
 }
 
 controller_interface::CallbackReturn
