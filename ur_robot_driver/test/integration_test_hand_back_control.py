@@ -56,7 +56,10 @@ from test_common import (  # noqa: E402
 
 @pytest.mark.launch_test
 def generate_test_description():
-    return generate_driver_test_description(headless_mode=False)
+    # When set, use a shared urcap folder to be mounted to the ursim container
+    # This is especially useful when running the test in a Docker DooD setup.
+    urcap_folder = os.environ.get("UR_CI_URCAP_FOLDER")
+    return generate_driver_test_description(headless_mode=False, urcap_folder=urcap_folder)
 
 
 def copy_to_docker_container(container_name, src_path, dest_path):

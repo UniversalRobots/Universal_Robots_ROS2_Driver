@@ -471,7 +471,13 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-def _ursim_action(ursim_version="latest", ur_type="ur5e", container_name=None, program_folder=None):
+def _ursim_action(
+    ursim_version="latest",
+    ur_type="ur5e",
+    container_name=None,
+    program_folder=None,
+    urcap_folder=None,
+):
     cmd = [
         PathJoinSubstitution(
             [
@@ -490,6 +496,8 @@ def _ursim_action(ursim_version="latest", ur_type="ur5e", container_name=None, p
         cmd += ["-n", container_name]
     if program_folder is not None:
         cmd += ["-p", program_folder]
+    if urcap_folder is not None:
+        cmd += ["-u", urcap_folder]
     return ExecuteProcess(
         cmd=cmd,
         name="start_ursim",
@@ -562,6 +570,7 @@ def generate_driver_test_description(
     ursim_version="latest",
     ur_type="ur5e",
     ursim_program_folder=None,
+    urcap_folder=None,
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -600,7 +609,10 @@ def generate_driver_test_description(
     )
 
     ursim_starter = _ursim_action(
-        ursim_version=ursim_version, ur_type=ur_type, program_folder=ursim_program_folder
+        ursim_version=ursim_version,
+        ur_type=ur_type,
+        program_folder=ursim_program_folder,
+        urcap_folder=urcap_folder,
     )
 
     return LaunchDescription(
