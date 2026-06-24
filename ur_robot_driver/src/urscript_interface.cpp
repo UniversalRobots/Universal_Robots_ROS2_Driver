@@ -35,53 +35,156 @@
  */
 //----------------------------------------------------------------------
 
-#include <ur_client_library/comm/stream.h>
-#include <ur_client_library/primary/primary_package.h>
+#include <ur_client_library/primary/primary_client.h>
 
-#include <memory>
+#include <chrono>
+
+#include <ur_msgs/action/send_script.hpp>
 
 #include <rclcpp/rclcpp.hpp>
+#include "rclcpp_action/rclcpp_action.hpp"
 #include <std_msgs/msg/string.hpp>
+
+using SendScript = ur_msgs::action::SendScript;
 
 class URScriptInterface : public rclcpp::Node
 {
 public:
-  URScriptInterface()
-    : Node("urscript_interface")
-    , m_script_sub(this->create_subscription<std_msgs::msg::String>(
-          "~/script_command", 1, [this](const std_msgs::msg::String::SharedPtr msg) {
-            auto program_with_newline = msg->data + '\n';
-
-            RCLCPP_INFO_STREAM(this->get_logger(), program_with_newline);
-
-            size_t len = program_with_newline.size();
-            const auto* data = reinterpret_cast<const uint8_t*>(program_with_newline.c_str());
-            size_t written;
-
-            if (m_secondary_stream->write(data, len, written)) {
-              URCL_LOG_INFO("Sent program to robot:\n%s", program_with_newline.c_str());
-              return true;
-            }
-            URCL_LOG_ERROR("Could not send program to robot");
-            return false;
-          }))
+  URScriptInterface() : Node("urscript_interface")
   {
     this->declare_parameter("robot_ip", rclcpp::PARAMETER_STRING);
-    m_secondary_stream = std::make_unique<urcl::comm::URStream<urcl::primary_interface::PrimaryPackage>>(
-        this->get_parameter("robot_ip").as_string(), urcl::primary_interface::UR_SECONDARY_PORT);
-    m_secondary_stream->connect();
 
-    auto program_with_newline = std::string("sec urscript_interface_initialization:\ntextmsg(\"urscript_interface "
+    primary_client_ =
+        std::make_unique<urcl::primary_interface::PrimaryClient>(this->get_parameter("robot_ip").as_string(), notif_);
+    // TODO(JALA): make configurable?
+    primary_client_->start(10, std::chrono::seconds(1));
+
+    script_sub_ = create_subscription<std_msgs::msg::String>(
+        "~/script_command", 1, std::bind(&URScriptInterface::script_callback, this, std::placeholders::_1));
+    send_script_server_ = rclcpp_action::create_server<SendScript>(
+        this, "~/execute_script",
+        std::bind(&URScriptInterface::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
+        std::bind(&URScriptInterface::handle_cancel, this, std::placeholders::_1),
+        std::bind(&URScriptInterface::handle_accepted, this, std::placeholders::_1));
+    auto program_with_newline = std::string("sec urscript_interface_initialization():\ntextmsg(\"urscript_interface "
                                             "connected\")\nend\n");
-    size_t len = program_with_newline.size();
-    const auto* data = reinterpret_cast<const uint8_t*>(program_with_newline.c_str());
-    size_t written;
-    m_secondary_stream->write(data, len, written);
+    primary_client_->sendScript(program_with_newline);
   }
 
 private:
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_script_sub;
-  std::unique_ptr<urcl::comm::URStream<urcl::primary_interface::PrimaryPackage>> m_secondary_stream;
+  // Use non-blocking interface
+  bool script_callback(const std_msgs::msg::String::SharedPtr msg)
+  {
+    if (primary_client_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Primary client not initialized yet");
+      return false;
+    }
+    if (busy) {
+      RCLCPP_ERROR(get_logger(), "Script interface is executing action, ignoring topic");
+      return false;
+    }
+    if (primary_client_->sendScript(msg->data)) {
+      URCL_LOG_INFO("Sent program to robot:\n%s", msg->data.c_str());
+      return true;
+    } else {
+      URCL_LOG_ERROR("Could not send program to robot");
+      return false;
+    }
+  }
+
+  rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID& uuid,
+                                          std::shared_ptr<const SendScript::Goal> goal)
+  {
+    if (primary_client_ == nullptr) {
+      RCLCPP_ERROR(get_logger(), "Primary client not initialized yet");
+      return rclcpp_action::GoalResponse::REJECT;
+    }
+
+    if (busy) {
+      RCLCPP_ERROR(get_logger(), "Action server is busy");
+      return rclcpp_action::GoalResponse::REJECT;
+    }
+    busy = true;
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+  }
+
+  rclcpp_action::CancelResponse
+  handle_cancel(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
+  {
+    // We dont currently have a way to cancel an executing script
+    return rclcpp_action::CancelResponse::REJECT;
+  }
+
+  void handle_accepted(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
+  {
+    std::thread{ std::bind(&URScriptInterface::execute, this, std::placeholders::_1), goal_handle }.detach();
+  }
+
+  void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
+  {
+    auto goal = goal_handle->get_goal();
+    std::string code = goal->script_code;
+    std::string name = goal->script_name;
+    auto timeout = goal->start_timeout;
+    auto chrono_timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::seconds(timeout.sec) + std::chrono::nanoseconds(timeout.nanosec));
+    // A ROS duration can be negative, would not make sense here
+    if (chrono_timeout < std::chrono::milliseconds(0)) {
+      chrono_timeout = std::chrono::milliseconds(0);
+    }
+    bool fail_on_warnings = goal->fail_on_warnings;
+
+    bool retry = goal->retry_on_readonly_interface;
+
+    try {
+      primary_client_->sendScriptBlocking(code, name, chrono_timeout, fail_on_warnings, retry);
+    }
+
+    catch (const urcl::UrException& exc) {
+      RCLCPP_ERROR(get_logger(), "Script did not execute successfully. Error message:");
+      RCLCPP_ERROR(get_logger(), exc.what());
+      auto res = std::make_shared<SendScript::Result>();
+      res->success = false;
+      res->message = exc.what();
+      goal_handle->abort(res);
+      busy = false;
+      return;
+    }
+
+    catch (const std::exception& exc) {
+      RCLCPP_ERROR(get_logger(), "Unexpected exception caught during script execution:");
+      RCLCPP_ERROR(get_logger(), exc.what());
+      auto res = std::make_shared<SendScript::Result>();
+      res->success = false;
+      res->message = exc.what();
+      goal_handle->abort(res);
+      busy = false;
+      return;
+    }
+
+    catch (...) {
+      RCLCPP_ERROR(get_logger(), "Unknown exception caught during script execution");
+      auto res = std::make_shared<SendScript::Result>();
+      res->success = false;
+      res->message = "Unknown exception";
+      goal_handle->abort(res);
+      busy = false;
+      return;
+    }
+
+    auto res = std::make_shared<SendScript::Result>();
+    res->success = true;
+    res->message = "Script executed successfully";
+    goal_handle->succeed(res);
+    busy = false;
+    return;
+  }
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr script_sub_;
+  rclcpp_action::Server<SendScript>::SharedPtr send_script_server_;
+  std::unique_ptr<urcl::primary_interface::PrimaryClient> primary_client_;
+  urcl::comm::INotifier notif_;
+  std::atomic<bool> busy = false;
 };
 
 int main(int argc, char** argv)
