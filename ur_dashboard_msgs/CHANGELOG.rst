@@ -2,6 +2,11 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update safety status msg with new IO plane stop (backport `#1817 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1817>`_) (`#1818 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1818>`_)
+* Contributors: mergify[bot]
+
 2.13.1 (2026-05-15)
 -------------------
 
