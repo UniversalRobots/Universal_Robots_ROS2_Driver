@@ -192,10 +192,7 @@ void GravityUpdateController::setGravity(const ur_msgs::srv::SetGravity::Request
   cmd_gravity_box_.set(transformed_gravity);
   async_success_box_.set(std::nullopt);
 
-  if (!waitForAsyncCommand([&]() {
-        const auto waiting = async_success_box_.get();
-        return waiting.has_value() ? waiting.value() : ASYNC_WAITING;
-      })) {
+  if (!waitForAsyncCommand([&]() { return async_success_box_.get().value_or(ASYNC_WAITING); })) {
     RCLCPP_WARN(get_node()->get_logger(), "Could not verify that gravity was set. (This might happen when using the "
                                           "mocked interface)");
   }
