@@ -123,7 +123,7 @@ private:
   void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
   {
     auto goal = goal_handle->get_goal();
-    std::string code = goal->script_code;
+    std::string code = goal->program;
     std::string name = goal->script_name;
     auto timeout = goal->start_timeout;
     auto chrono_timeout = std::chrono::duration_cast<std::chrono::milliseconds>(

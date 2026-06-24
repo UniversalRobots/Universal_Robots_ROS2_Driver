@@ -150,7 +150,7 @@ class URScriptInterfaceTest(unittest.TestCase):
 
     def test_send_script_action(self):
         goal_msg = SendScript.Goal()
-        goal_msg.script_code = 'textmsg("hello")'
+        goal_msg.program = 'textmsg("hello")'
         goal_msg.script_name = "test_send_script_action"
         goal_msg.start_timeout = Duration(sec=10, nanosec=0)
         goal_msg.fail_on_warnings = False
@@ -172,7 +172,7 @@ class URScriptInterfaceTest(unittest.TestCase):
 
     def test_reject_goals_when_busy(self):
         goal_msg = SendScript.Goal()
-        goal_msg.script_code = "sleep(5.)"
+        goal_msg.program = "sleep(5.)"
         goal_msg.script_name = "test_reject_goals"
         goal_msg.start_timeout = Duration(sec=1, nanosec=0)
         goal_msg.fail_on_warnings = False
@@ -186,7 +186,7 @@ class URScriptInterfaceTest(unittest.TestCase):
         self.assertTrue(goal_handle.accepted, "SendScript goal was rejected")
         time.sleep(1)
 
-        goal_msg.script_code = 'textmsg("Should be rejected")'
+        goal_msg.program = 'textmsg("Should be rejected")'
         send_goal_future = self.client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self.node, send_goal_future, timeout_sec=15)
         self.assertIsNotNone(send_goal_future.result(), "Failed to send SendScript goal")
@@ -203,7 +203,7 @@ class URScriptInterfaceTest(unittest.TestCase):
 
     def test_reject_cancel(self):
         goal_msg = SendScript.Goal()
-        goal_msg.script_code = "sleep(5.)"
+        goal_msg.program = "sleep(5.)"
         goal_msg.script_name = "test_reject_cancel"
         goal_msg.start_timeout = Duration(sec=1, nanosec=0)
         goal_msg.fail_on_warnings = False
