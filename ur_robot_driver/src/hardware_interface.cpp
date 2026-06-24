@@ -155,18 +155,8 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   trajectory_joint_positions_.reserve(32768);
   trajectory_joint_velocities_.reserve(32768);
   trajectory_joint_accelerations_.reserve(32768);
-<<<<<<< HEAD
-=======
   stop_requested_ = false;
 
-  // Motion primitives stuff
-  async_moprim_thread_shutdown_ = false;
-  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
-  ready_for_new_moprim_ = false;
-  motion_primitives_forward_controller_running_ = false;
-  hw_moprim_states_.fill(std::numeric_limits<double>::quiet_NaN());
-  hw_moprim_commands_.fill(std::numeric_limits<double>::quiet_NaN());
->>>>>>> a8048f8 (Explicitly send MODE_STOPPED when returning control to the robot (#1678))
   for (size_t i = 0; i < 6; i++) {
     force_mode_task_frame_[i] = NO_NEW_CMD_;
     force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
