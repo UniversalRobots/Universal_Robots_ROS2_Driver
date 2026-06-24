@@ -65,3 +65,32 @@ To prevent interrupting the main program, you can send certain commands as `seco
        textmsg(\"This is a log message\")
 
      end"}'
+
+Scripts with feedback
+---------------------
+An action server is available, where it is possible to send URScript code and get feedback on whether the script code was executed successfully, and if not, what went wrong.
+The action server is available at:
+``/urscript_interface/execute_script``
+
+The action definition can be seen at `ur_msgs/action/SendScript.action <https://github.com/ros-industrial/ur_msgs/blob/humble-devel/action/SendScript.action/>`_
+
+This action server is a ROS wrapper around the `URCL primary client's <https://github.com/UniversalRobots/Universal_Robots_Client_Library/blob/master/doc/architecture/primary_client.rst/>`_
+SendScriptBlocking method, and the meaning of parameters can be seen there.
+The action will only be reported as successful, if the script is executed successfully.
+If the script is not executed, a message explaining what went wrong will be made available in the action result.
+While the action server is waiting for a script to finish execution, it will reject any further action goals, and the ``/urscript_interface/script_command`` topic will also be ignored during this time.
+Requests to cancel a script that is being executed will also be rejected.
+
+.. note::
+  The previous note about restarting the external control URCap also applies when using the action server.
+
+The action server can be called from the command line like this:
+
+.. code-block:: bash
+
+  ros2 action send_goal /urscript_interface/execute_script ur_msgs/action/SendScript '{
+    program: "textmsg(\"cmd line example\")",
+    script_name: "cmd_line_example",
+    start_timeout: {sec: 1.0, nanosec: 0},
+    fail_on_warnings: true,
+    retry_on_readonly_interface: true}'
