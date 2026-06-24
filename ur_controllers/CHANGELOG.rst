@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.13.2 (2026-06-24)
+-------------------
 * Use a realtime_tools::RealtimePublisher for publishing the state (backport `#1822 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1822>`_) (`#1823 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1823>`_)
 * Make GPIO controller publishers realtime safe (backport `#1807 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1807>`_) (`#1827 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1827>`_)
 * Contributors: mergify[bot]
