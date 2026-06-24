@@ -155,6 +155,18 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& sys
   trajectory_joint_positions_.reserve(32768);
   trajectory_joint_velocities_.reserve(32768);
   trajectory_joint_accelerations_.reserve(32768);
+<<<<<<< HEAD
+=======
+  stop_requested_ = false;
+
+  // Motion primitives stuff
+  async_moprim_thread_shutdown_ = false;
+  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+  ready_for_new_moprim_ = false;
+  motion_primitives_forward_controller_running_ = false;
+  hw_moprim_states_.fill(std::numeric_limits<double>::quiet_NaN());
+  hw_moprim_commands_.fill(std::numeric_limits<double>::quiet_NaN());
+>>>>>>> a8048f8 (Explicitly send MODE_STOPPED when returning control to the robot (#1678))
   for (size_t i = 0; i < 6; i++) {
     force_mode_task_frame_[i] = NO_NEW_CMD_;
     force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
@@ -891,7 +903,12 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
-    if (position_controller_running_) {
+    if (stop_requested_) {
+      ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_STOPPED);
+      stop_requested_ = false;
+      robot_program_running_ = false;  // We reset that here, as well to avoid a race condition
+                                       // between the reverse interface callback and the next write.
+    } else if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
 
     } else if (velocity_controller_running_) {
@@ -1006,7 +1023,7 @@ void URPositionHardwareInterface::checkAsyncIO()
   }
 
   if (!std::isnan(hand_back_control_cmd_) && ur_driver_ != nullptr) {
-    robot_program_running_ = false;
+    stop_requested_ = true;
     hand_back_control_async_success_ = true;
     hand_back_control_cmd_ = NO_NEW_CMD_;
   }
