@@ -473,9 +473,6 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-<<<<<<< HEAD
-def _ursim_action(ursim_version="latest", ur_type="ur5e"):
-=======
 def _ursim_action(
     ursim_version="latest",
     ur_type="ur5e",
@@ -503,22 +500,8 @@ def _ursim_action(
         cmd += ["-p", program_folder]
     if urcap_folder is not None:
         cmd += ["-u", urcap_folder]
->>>>>>> a8048f8 (Explicitly send MODE_STOPPED when returning control to the robot (#1678))
     return ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [
-                    FindPackagePrefix("ur_client_library"),
-                    "lib",
-                    "ur_client_library",
-                    "start_ursim.sh",
-                ]
-            ),
-            "-m",
-            ur_type,
-            "-v",
-            ursim_version,
-        ],
+        cmd=cmd,
         name="start_ursim",
         output="screen",
     )
