@@ -105,11 +105,11 @@ class HandBackControlTest(unittest.TestCase):
 
         self._follow_joint_trajectory = ActionInterface(
             self.node,
-            "/joint_trajectory_controller/follow_joint_trajectory",
+            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
 
-        self._controller_manager_interface.wait_for_controller("joint_trajectory_controller")
+        self._controller_manager_interface.wait_for_controller("scaled_joint_trajectory_controller")
 
     def setUp(self):
         self._dashboard_interface.start_robot()
@@ -164,13 +164,13 @@ class HandBackControlTest(unittest.TestCase):
 
         self._dashboard_interface.play()
         self._controller_manager_interface.wait_for_controller(
-            "joint_trajectory_controller", "active"
+            "scaled_joint_trajectory_controller", "active"
         )
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
                 deactivate_controllers=["passthrough_trajectory_controller"],
-                activate_controllers=["joint_trajectory_controller"],
+                activate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
 
