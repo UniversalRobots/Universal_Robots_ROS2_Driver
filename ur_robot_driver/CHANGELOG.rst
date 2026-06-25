@@ -1,3 +1,16 @@
+2.13.2 (2026-06-24)
+-------------------
+* Explicitly send MODE_STOPPED when returning control to the robot (backport `#1678 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1678>`_) (`#1830 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1830>`_)
+* Fail example move on error (backport `#1795 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1795>`_) (`#1796 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1796>`_)
+* Contributors: mergify[bot]
+
+2.13.1 (2026-05-15)
+-------------------
+* Update README and ci_status pages (backport `#1784 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1784>`_) (`#1787 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1787>`_)
+* Check payload state in gpio_controller (backport `#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_) (`#1775 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1775>`_)
+* Only start urscript_interface node when not running mock_hw (`#1782 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1782>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 2.13.0 (2026-04-09)
 -------------------
 * Friction model controller (backport `#1704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1704>`_) (`#1750 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1750>`_)

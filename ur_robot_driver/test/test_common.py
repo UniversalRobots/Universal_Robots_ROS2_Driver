@@ -249,6 +249,7 @@ class DashboardInterface(
         "load_installation": Load,
         "load_program": Load,
         "close_popup": Trigger,
+        "close_safety_popup": Trigger,
         "get_loaded_program": GetLoadedProgram,
         "program_state": GetProgramState,
         "program_running": IsProgramRunning,
@@ -273,6 +274,9 @@ class DashboardInterface(
     },
 ):
     def start_robot(self):
+        self._check_call(self.close_popup())
+        self._check_call(self.close_safety_popup())
+        self._check_call(self.stop())
         self._check_call(self.power_off())
         self._check_call(self.power_on())
         self._check_call(self.brake_release())
@@ -333,6 +337,7 @@ class IoStatusInterface(
     services={
         "resend_robot_program": Trigger,
         "set_payload": SetPayload,
+        "hand_back_control": Trigger,
     },
 ):
     pass
@@ -468,7 +473,13 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-def _ursim_action(ursim_version="latest", ur_type="ur5e", container_name=None):
+def _ursim_action(
+    ursim_version="latest",
+    ur_type="ur5e",
+    container_name=None,
+    program_folder=None,
+    urcap_folder=None,
+):
     cmd = [
         PathJoinSubstitution(
             [
@@ -485,6 +496,10 @@ def _ursim_action(ursim_version="latest", ur_type="ur5e", container_name=None):
     ]
     if container_name is not None:
         cmd += ["-n", container_name]
+    if program_folder is not None:
+        cmd += ["-p", program_folder]
+    if urcap_folder is not None:
+        cmd += ["-u", urcap_folder]
     return ExecuteProcess(
         cmd=cmd,
         name="start_ursim",
@@ -553,6 +568,11 @@ def generate_driver_test_description(
     tf_prefix="",
     initial_joint_controller="scaled_joint_trajectory_controller",
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+    headless_mode=True,
+    ursim_version="latest",
+    ur_type="ur5e",
+    ursim_program_folder=None,
+    urcap_folder=None,
 ):
     ur_type = LaunchConfiguration("ur_type")
 
@@ -562,7 +582,7 @@ def generate_driver_test_description(
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
         "initial_joint_controller": initial_joint_controller,
-        "headless_mode": "true",
+        "headless_mode": "true" if headless_mode else "false",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
@@ -590,9 +610,16 @@ def generate_driver_test_description(
         OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
     )
 
+    ursim_starter = _ursim_action(
+        ursim_version=ursim_version,
+        ur_type=ur_type,
+        program_folder=ursim_program_folder,
+        urcap_folder=urcap_folder,
+    )
+
     return LaunchDescription(
         _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, _ursim_action(), driver_starter]
+        + [ReadyToTest(), wait_dashboard_server, ursim_starter, driver_starter]
     )
 
 
