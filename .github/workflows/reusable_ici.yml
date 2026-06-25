@@ -40,7 +40,16 @@ jobs:
     name: ${{ inputs.ros_distro }} ${{ inputs.ros_repo }}
     runs-on: ubuntu-latest
     env:
-      DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock --network ursim_net'
+      # /tmp/ur_test_artifacts: collection point for test artifacts (e.g. VNC
+      #     snapshots) written from inside the ICI container.
+      # /tmp/ursim_urcaps: shared storage for the External Control URCap.
+      #     Mounted at the same path in the ICI container AND used as the bind
+      #     source for the URSim container that start_ursim.sh launches via the
+      #     host docker daemon, so the URCap downloaded inside the ICI container
+      #     is actually visible to URSim's /urcaps mount.
+      # Both paths are kept outside ${{ github.workspace }} so they do not
+      # collide with industrial_ci's read-only bind-mount of TARGET_REPO_PATH.
+      DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock -v /tmp/ur_test_artifacts:/test_artifacts -v /tmp/ursim_urcaps:/tmp/ursim_urcaps -e UR_TEST_ARTIFACTS_DIR=/test_artifacts -e UR_CI_URCAP_FOLDER=/tmp/ursim_urcaps --network ursim_net --ip 192.168.56.1'
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
       CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}
       ROSDEP_SKIP_KEYS: ${{ inputs.rosdep_skip_keys }}
@@ -48,14 +57,22 @@ jobs:
     steps:
       - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Checkout ${{ inputs.ref_for_scheduled_build }} on scheduled build
         if: ${{ github.event_name == 'schedule' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref_for_scheduled_build }}
-      - run: docker network create --subnet=192.168.56.0/24 ursim_net
+      - run: docker network create --subnet=192.168.56.0/24 --gateway 192.168.56.254 ursim_net
         if: ${{ !env.ACT }}
+      - name: Create shared host directories
+        run: |
+          mkdir -p /tmp/ur_test_artifacts /tmp/ursim_urcaps
+          # Allow the container (running as root) to write here while keeping
+          # the directory readable by the runner user for upload-artifact, and
+          # writable by the host docker daemon when it bind-mounts /tmp/ursim_urcaps
+          # into the URSim container.
+          chmod 777 /tmp/ur_test_artifacts /tmp/ursim_urcaps
       - name: Cache ccache
         uses: actions/cache@v5
         with:
