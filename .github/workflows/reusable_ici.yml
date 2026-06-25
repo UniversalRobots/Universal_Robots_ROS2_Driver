@@ -86,5 +86,5 @@ jobs:
           UPSTREAM_WORKSPACE: ${{ inputs.upstream_workspace }}
           ROS_DISTRO: ${{ inputs.ros_distro }}
           ROS_REPO: ${{ inputs.ros_repo }}
-          CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
+          CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release') && ' -DUR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST=ON' || '' }}
           ADDITIONAL_DEBS: docker.io netcat-openbsd curl  # Needed for integration tests
