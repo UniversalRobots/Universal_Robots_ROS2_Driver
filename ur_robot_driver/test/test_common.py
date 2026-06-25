@@ -574,8 +574,6 @@ def generate_driver_test_description(
     ursim_program_folder=None,
     urcap_folder=None,
 ):
-    ur_type = LaunchConfiguration("ur_type")
-
     launch_arguments = {
         "robot_ip": "192.168.56.101",
         "ur_type": ur_type,
