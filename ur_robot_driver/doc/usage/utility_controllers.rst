@@ -125,3 +125,24 @@ ur_configuration_controller
 Type: :ref:`ur_controllers/URConfigurationController <ur_configuration_controller>`
 
 Provides access to UR-specific robot configuration data. This controller is always active.
+
+gravity_update_controller
+-------------------------
+
+Type: :ref:`ur_controllers/GravityUpdateController <gravity_update_controller>`
+
+Updates the gravity vector used by the robot for gravity compensation. This is useful when the
+robot is mounted in a non-standard orientation, such as on a wall or ceiling.
+
+The controller exposes the ``~/set_gravity`` service
+(`ur_msgs/srv/SetGravity <https://docs.ros.org/en/rolling/p/ur_msgs/srv/SetGravity.html>`_) to
+set the gravity direction. The vector in the request points towards the Earth's center and can be
+expressed in any frame transformable to the robot's ``base`` frame. It is started as active by
+default in the driver's launch file.
+
+.. code-block:: console
+
+   $ ros2 service call /gravity_update_controller/set_gravity ur_msgs/srv/SetGravity \
+     "{gravity: {header: {frame_id: 'base'}, vector: {x: 0.0, y: 0.0, z: -9.82}}}"
+
+See the :ref:`gravity_update_controller <gravity_update_controller>` documentation for full details.
