@@ -714,11 +714,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   get_robot_software_version_build_ = version_info_.build;
   get_robot_software_version_bugfix_ = version_info_.bugfix;
 
-  std::string ur_type = info_.hardware_parameters["ur_type"];
-  auto expected_type = robotTypeFromString(ur_type);
-  auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
-  auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
-
   bool verify_robot_model = false;
   if (info_.hardware_parameters.find("verify_robot_model") != info_.hardware_parameters.end()) {
     verify_robot_model =
@@ -726,6 +721,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                                                                                                   "model"] == "True");
   }
   if (verify_robot_model) {
+    std::string ur_type = info_.hardware_parameters["ur_type"];
+    auto expected_type = robotTypeFromString(ur_type);
+    auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
+    auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
+
     if (robot_type != expected_type.robot_type || expected_type.robot_series != robot_series) {
       RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
                           "The connected robot is of type '"
