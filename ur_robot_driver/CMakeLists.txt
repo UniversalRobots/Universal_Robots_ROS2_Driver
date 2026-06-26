@@ -15,7 +15,7 @@ option(
 option(
   UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST
   "Run the integration test that runs the driver against URSim for every supported robot model"
-  OFF
+  ON
 )
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
