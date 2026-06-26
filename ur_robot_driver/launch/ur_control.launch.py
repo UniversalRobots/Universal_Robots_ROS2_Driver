@@ -706,7 +706,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "verify_robot_model",
-            default_value="true",
+            default_value="false",
             description="Whether the robot model should be verified against the actual robot. "
             "This is recommended to be true, but can be set to false for faster startup.",
         )
