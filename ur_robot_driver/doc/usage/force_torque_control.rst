@@ -80,6 +80,20 @@ these values. It is started as active by default in the driver's launch file.
    compatible with all motion controllers, adjusting friction parameters only has an effect during
    direct torque control.
 
+Gravity Compensation
+^^^^^^^^^^^^^^^^^^^^
+
+When the robot is mounted in a non-standard orientation, the gravity vector used for internal
+gravity compensation must be updated using the
+:ref:`gravity_update_controller <gravity_update_controller>`.
+
+The controller exposes the ``~/set_gravity`` service
+(`ur_msgs/srv/SetGravity
+<https://docs.ros.org/en/rolling/p/ur_msgs/srv/SetGravity.html>`_) to set the gravity direction
+experienced by the robot. The vector in the request points towards the Earth's center and can be
+expressed in any frame transformable to the robot's ``base`` frame. It is started as active by
+default in the driver's launch file.
+
 Force Mode Controller
 ---------------------
 
@@ -176,6 +190,8 @@ The following table summarizes how torque-related controllers can be combined:
        ``passthrough_trajectory_controller``, ``forward_position_controller``, etc.)
    * - ``friction_model_controller``
      - All controllers (only affects torque control behavior).
+   * - ``gravity_update_controller``
+     - All controllers (updates robot-internal gravity compensation).
    * - ``force_torque_sensor_broadcaster``
      - All controllers (read-only broadcaster).
 

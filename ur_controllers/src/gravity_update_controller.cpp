@@ -29,6 +29,8 @@
 //----------------------------------------------------------------------
 /*!\file
  *
+ * \brief Implementation of GravityUpdateController.
+ *
  * \author  Adam Pettinger adam.l.pettinger@gmail.com
  * \date    2026-03-13
  *

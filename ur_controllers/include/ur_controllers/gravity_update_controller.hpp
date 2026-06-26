@@ -29,6 +29,11 @@
 //----------------------------------------------------------------------
 /*!\file
  *
+ * \brief Controller for updating the robot's gravity vector via ros2_control.
+ *
+ * Exposes the ~/set_gravity service (ur_msgs/srv/SetGravity). Incoming gravity directions are
+ * transformed into the robot base frame and written to the gravity command interfaces.
+ *
  * \author  Adam Pettinger adam.l.pettinger@gmail.com
  * \date    2026-03-13
  *
@@ -98,7 +103,7 @@ protected:
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
-  // Parameters from ROS for gpio_controller
+  // Parameters from ROS for gravity_update_controller
   std::shared_ptr<gravity_update_controller::ParamListener> param_listener_;
   gravity_update_controller::Params params_;
 
