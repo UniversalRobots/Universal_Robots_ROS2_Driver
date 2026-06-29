@@ -461,3 +461,98 @@ The controller provides one action for enabling tool contact. For the controller
   .. code-block::
 
      ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact
+
+.. _ur_configuration_controller:
+
+ur_controllers/URConfigurationController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller provides access to UR-specific robot configuration data. Currently, it provides a
+service to query the robot's software version.
+
+Parameters
+""""""""""
+
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name          | Type   | Default value | Description                                                                           |
+|                         |        |               |                                                                                       |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``           | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+* ``~/get_software_version [ur_msgs/srv/GetRobotSoftwareVersion]``: Get the robot's software
+  version. The response contains the major, minor and patch version of the robot's software, as
+  well as the build number if available. For example, for a robot running PolyScope 5.12.1 the
+  response would be major version 5, minor version 12 and patch version 1.
+
+.. _gravity_update_controller:
+
+ur_controllers/GravityUpdateController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller updates the gravity vector used by the robot controller. The robot uses this
+vector for gravity compensation during motion and torque control. By default, the robot assumes a
+gravity vector pointing straight down in its base frame (typically ``[0, 0, -9.82]`` m/s² in a
+standard floor-mounted setup).
+
+Use this controller when the robot is mounted in a non-standard orientation, for example on a wall
+or ceiling, or when the base frame does not align with the physical gravity direction. The
+controller forwards the requested gravity vector to the robot through the URScript ``set_gravity()``
+function.
+
+The service accepts the gravity direction in any frame that can be transformed to the robot's
+``base`` frame. The controller rotates the vector into the base frame and forwards it to the
+hardware interface.
+
+.. note::
+
+   The service expects the **direction of gravity**, pointing towards the Earth's center. The
+   controller negates this vector internally before sending it to the robot, as the underlying UR
+   client library expects an anti-gravity vector (pointing away from the Earth's center).
+
+Parameters
+""""""""""
+
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+| Parameter name                      | Type   | Default value | Description                                                         |
+|                                     |        |               |                                                                     |
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``tf_prefix``                       | string | <empty>       | Urdf prefix of the corresponding arm                                |
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``check_io_successfull_retries``    | int    | 10            | Amount of retries for checking if setting gravity was successful    |
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+The controller provides a service for setting the gravity vector. To use this service, the
+controller has to be in ``active`` state.
+
+* ``~/set_gravity [ur_msgs/srv/SetGravity]``: Set the gravity direction experienced by the robot.
+
+The request contains a ``geometry_msgs/Vector3Stamped`` named ``gravity``. The vector specifies
+the direction of gravity (towards the Earth's center) and ``header.frame_id`` specifies the frame
+in which the vector is expressed. Any frame that can be transformed to the robot's ``base`` frame
+can be used.
+
+Example for a standard floor-mounted robot (gravity pointing down in the ``base`` frame):
+
+.. code-block:: console
+
+   ros2 service call /gravity_update_controller/set_gravity ur_msgs/srv/SetGravity \
+     "{gravity: {header: {frame_id: 'base'}, vector: {x: 0.0, y: 0.0, z: -9.82}}}"
+
+Example for a ceiling-mounted robot (gravity pointing up in the ``base`` frame):
+
+.. code-block:: console
+
+   ros2 service call /gravity_update_controller/set_gravity ur_msgs/srv/SetGravity \
+     "{gravity: {header: {frame_id: 'base'}, vector: {x: 0.0, y: 0.0, z: 9.82}}}"
+
+.. note::
+
+   When using the mocked hardware interface, the service may report failure even though the command
+   was accepted, because the mock does not emulate the asynchronous success feedback from the robot.
