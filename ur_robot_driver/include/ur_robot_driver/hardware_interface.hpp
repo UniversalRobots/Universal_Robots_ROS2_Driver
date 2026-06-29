@@ -292,6 +292,10 @@ protected:
   double force_mode_damping_;
   double force_mode_gain_scaling_;
 
+  // Gravity stuff
+  urcl::vector3d_t gravity_vector_;
+  double gravity_async_success_;
+
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;
   std::array<double, 18> actual_dig_in_bits_copy_;
