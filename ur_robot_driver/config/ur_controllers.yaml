@@ -211,15 +211,7 @@ tcp_pose_broadcaster:
 tool_contact_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
-<<<<<<< HEAD
-=======
-
-
-motion_primitive_forward_controller:
-  ros__parameters:
-    tf_prefix: "$(var tf_prefix)"
 
 gravity_update_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
->>>>>>> f11fee8 (Allow updating robot gravity (#1606))

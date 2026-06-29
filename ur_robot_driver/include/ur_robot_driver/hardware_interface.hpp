@@ -292,52 +292,10 @@ protected:
   double force_mode_damping_;
   double force_mode_gain_scaling_;
 
-<<<<<<< HEAD
-=======
   // Gravity stuff
   urcl::vector3d_t gravity_vector_;
   double gravity_async_success_;
 
-  //*************** Motion primitives stuff ***************
-  std::shared_ptr<urcl::InstructionExecutor> instruction_executor_;
-
-  // Async thread handling
-  std::shared_ptr<std::thread> async_moprim_cmd_thread_;
-  std::atomic_bool async_moprim_thread_shutdown_;
-  realtime_tools::LockFreeSPSCQueue<std::array<double, 25>, 1024> moprim_cmd_queue_;
-  std::array<double, 25> current_moprim_command_;
-
-  // Status for communication with controller
-  bool motion_primitives_forward_controller_running_;
-  using MoprimExecutionState = motion_primitives_controllers::ExecutionState;
-  std::atomic<MoprimExecutionState> current_moprim_execution_status_;
-  std::atomic_bool ready_for_new_moprim_;
-
-  // Command and state interfaces for the motion primitives
-  // 25 Commands: motion_type + 6 joints + 2*7 positions (goal and via) + blend_radius + velocity + acceleration +
-  // move_time
-  std::array<double, 25> hw_moprim_commands_;
-  // 2 States: execution_status, ready_for_new_primitive
-  std::array<double, 2> hw_moprim_states_;
-
-  // flag to put all following primitives into a motion sequence instead of sending single primitives
-  std::atomic_bool build_moprim_sequence_{ false };
-  std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> moprim_sequence_;
-
-  void handleMoprimCommands();
-  void resetMoprimCmdInterfaces();
-  void asyncMoprimCmdThread();
-  void processMoprimMotionCmd(const std::array<double, 25>& command);
-  bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
-                                double& move_time);
-  bool getMoprimVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
-                          double& move_time);
-  void quaternionToRotVec(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz);
-
-  const std::string HW_IF_MOTION_PRIMITIVES = "motion_primitive";
-  //*************** End Motion primitives stuff ***************
-
->>>>>>> f11fee8 (Allow updating robot gravity (#1606))
   // copy of non double values
   std::array<double, 18> actual_dig_out_bits_copy_;
   std::array<double, 18> actual_dig_in_bits_copy_;

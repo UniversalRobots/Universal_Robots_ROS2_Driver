@@ -456,8 +456,6 @@ The controller provides one action for enabling tool contact. For the controller
   .. code-block::
 
      ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact
-<<<<<<< HEAD
-=======
 
 .. _ur_configuration_controller:
 
@@ -553,4 +551,3 @@ Example for a ceiling-mounted robot (gravity pointing up in the ``base`` frame):
 
    When using the mocked hardware interface, the service may report failure even though the command
    was accepted, because the mock does not emulate the asynchronous success feedback from the robot.
->>>>>>> f11fee8 (Allow updating robot gravity (#1606))
