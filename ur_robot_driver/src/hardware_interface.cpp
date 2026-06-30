@@ -829,9 +829,10 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     if (robot_type != expected_type.robot_type || expected_type.robot_series != robot_series) {
       RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"),
                           "The connected robot is of type '"
-                              << robotTypeString(robot_type) << "' and version " << version_info_
-                              << " but the driver was configured for type '" << ur_type
-                              << "'. Please check the 'ur_type' parameter and make sure it matches your "
+                              << robotTypeString(robot_type) << "' and version " << version_info_ << " ("
+                              << robotSeriesString(robot_series) << ") but the driver was configured for type '"
+                              << ur_type << "' (" << robotSeriesString(expected_type.robot_series)
+                              << "). Please check the 'ur_type' parameter and make sure it matches your "
                                  "actual robot. This can lead to critical inaccuracies of tcp positions.");
       return hardware_interface::CallbackReturn::ERROR;
     }
