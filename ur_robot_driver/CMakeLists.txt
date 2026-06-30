@@ -228,6 +228,7 @@ install(PROGRAMS
   scripts/wait_for_robot_description
   scripts/example_move.py
   scripts/start_ursim.sh
+  scripts/ur_controller_manager_awaiter.py
   examples/examples.py
   examples/force_mode.py
   examples/send_dummy_motion_primitives_ur10e.py
