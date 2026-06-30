@@ -46,7 +46,9 @@ from launch.actions import (
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from launch_testing.actions import ReadyToTest
 from rclpy.action import ActionClient
@@ -625,9 +627,7 @@ def generate_driver_test_description(
 
 def generate_driver_test_description_for_model(
     ur_type,
-    tf_prefix="",
-    initial_joint_controller="joint_trajectory_controller",
-    controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+    hw_name="ur",
     ursim_version="latest",
     ursim_type=None,
 ):
@@ -647,28 +647,59 @@ def generate_driver_test_description_for_model(
     if ursim_type is None:
         ursim_type = ur_type
 
-    launch_arguments = {
-        "robot_ip": "192.168.56.101",
-        "ur_type": ur_type,
-        "launch_rviz": "false",
-        "controller_spawner_timeout": str(controller_spawner_timeout),
-        "initial_joint_controller": initial_joint_controller,
-        "headless_mode": "true",
-        "launch_dashboard_client": "true",
-        "start_joint_controller": "false",
-        "verify_robot_model": "true",
-    }
-    if tf_prefix:
-        launch_arguments["tf_prefix"] = tf_prefix
-
-    robot_driver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
-            )
-        ),
-        launch_arguments=launch_arguments.items(),
+    script_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_client_library"), "resources", "external_control.urscript"]
     )
+    input_recipe_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
+    )
+    output_recipe_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_robot_driver"), "resources", "rtde_output_recipe.txt"]
+    )
+
+    robot_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("ur_description"), "urdf", "ur.urdf.xacro"]),
+            " ",
+            "robot_ip:=",
+            "192.168.56.101",
+            " ",
+            "name:=",
+            hw_name,
+            " ",
+            "script_filename:=",
+            script_filename,
+            " ",
+            "input_recipe_filename:=",
+            input_recipe_filename,
+            " ",
+            "output_recipe_filename:=",
+            output_recipe_filename,
+            " ",
+            "headless_mode:=true",
+            " ",
+            "ur_type:=",
+            ur_type,
+            " ",
+            "verify_robot_model:=true",
+        ]
+    )
+    robot_description = {
+        "robot_description": ParameterValue(value=robot_description_content, value_type=str)
+    }
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[
+            robot_description,
+            {"update_rate": 125},  # that fits all models
+            {"hardware_components_initial_state": {"unconfigured": ["ur"]}},
+        ],
+        output="screen",
+    )
+
     wait_dashboard_server = ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
@@ -679,7 +710,7 @@ def generate_driver_test_description_for_model(
         output="screen",
     )
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+        OnProcessExit(target_action=wait_dashboard_server, on_exit=control_node)
     )
 
     # Use a per-model container name so leftover containers from a previous
@@ -687,8 +718,7 @@ def generate_driver_test_description_for_model(
     container_name = f"ursim_{ursim_type}"
 
     return LaunchDescription(
-        _declare_launch_arguments()
-        + [
+        [
             ReadyToTest(),
             wait_dashboard_server,
             _ursim_action(
