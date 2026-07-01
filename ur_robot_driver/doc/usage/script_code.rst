@@ -70,25 +70,31 @@ Scripts with execution monitoring
 ---------------------------------
 The action server at ``/urscript_interface/execute_script`` allows executing script programs and getting the information when execution is done and whether there was an error during execution.
 
-The action definition can be seen at `ur_msgs/action/SendScript.action <https://docs.ros.org/en/rolling/p/ur_msgs/action/SendScript.html/>`_
+The ``SendScript`` action definition can be seen in the `ur_msgs action definitions <https://docs.ros.org/en/rolling/p/ur_msgs/__action_definitions.html/>`_
 
 This action server is a ROS wrapper around the `URCL primary client's <https://github.com/UniversalRobots/Universal_Robots_Client_Library/blob/master/doc/architecture/primary_client.rst/>`_
-SendScriptBlocking method, and the meaning of parameters can be seen there.
-The action will only be reported as successful, if the script is executed successfully.
-If the script is not executed, a message explaining what went wrong will be made available in the action result.
+SendScriptBlocking method, and the meaning of parameters can be seen there. The ``retry_on_readonly_interface`` parameter has been made a parameter of the ``urscript_interface`` node, and can be interacted with as such.
+The action will be reported as successful if no errors occur during script execution. See :ref:`script-cancel` for additional info about when the action might be reported as successful.
+If an error is detected, a message explaining what went wrong will be made available in the action result.
 While the action server is waiting for a script to finish execution, it will reject any further action goals, and the ``/urscript_interface/script_command`` topic will also be ignored during this time.
-Requests to cancel a script that is being executed will also be rejected.
 
 .. note::
   The previous note about restarting the external control URCap also applies when using the action server.
 
+.. _script-cancel:
+
+Script cancellation
+^^^^^^^^^^^^^^^^^^^
+If script execution is canceled through the ROS2 action interface, the running script will be stopped, and the action will be reported as canceled. If script execution is stopped via the teach pendant or **any** other non-ROS means, the corresponding ROS action will be reported as successful, as the action server can not distinguish between successful programs and programs that were stopped outside of ROS.
+
+Command line example
+^^^^^^^^^^^^^^^^^^^^
 The action server can be called from the command line like this:
 
 .. code-block:: bash
 
   ros2 action send_goal /urscript_interface/execute_script ur_msgs/action/SendScript '{
-    program: "textmsg(\"cmd line example\")",
+    program: "popup(\"cmd line example\")",
     script_name: "cmd_line_example",
     start_timeout: {sec: 1.0, nanosec: 0},
-    fail_on_warnings: true,
-    retry_on_readonly_interface: true}'
+    fail_on_warnings: true}'

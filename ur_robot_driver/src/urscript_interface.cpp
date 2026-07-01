@@ -38,6 +38,7 @@
 #include <ur_client_library/primary/primary_client.h>
 
 #include <chrono>
+#include <thread>
 
 #include <ur_msgs/action/send_script.hpp>
 
@@ -53,6 +54,7 @@ public:
   URScriptInterface() : Node("urscript_interface")
   {
     this->declare_parameter("robot_ip", rclcpp::PARAMETER_STRING);
+    this->declare_parameter("retry_on_readonly_interface", true);
 
     primary_client_ =
         std::make_unique<urcl::primary_interface::PrimaryClient>(this->get_parameter("robot_ip").as_string(), notif_);
@@ -67,6 +69,13 @@ public:
         std::bind(&URScriptInterface::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
         std::bind(&URScriptInterface::handle_cancel, this, std::placeholders::_1),
         std::bind(&URScriptInterface::handle_accepted, this, std::placeholders::_1));
+  }
+
+  ~URScriptInterface() override
+  {
+    if (execute_thread_.joinable()) {
+      execute_thread_.join();
+    }
   }
 
 private:
@@ -103,19 +112,34 @@ private:
       return rclcpp_action::GoalResponse::REJECT;
     }
     busy = true;
+
+    if (execute_thread_.joinable()) {
+      // Should return immediately, as we are not busy
+      execute_thread_.join();
+    }
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
   rclcpp_action::CancelResponse
   handle_cancel(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
   {
-    // We dont currently have a way to cancel an executing script
-    return rclcpp_action::CancelResponse::REJECT;
+    try {
+      primary_client_->commandStop();
+    } catch (const urcl::UrException& exc) {
+      RCLCPP_ERROR(get_logger(), "Caught UR exception while trying to cancel goal:");
+      RCLCPP_ERROR(get_logger(), exc.what());
+      return rclcpp_action::CancelResponse::REJECT;
+    } catch (const std::exception& exc) {
+      RCLCPP_ERROR(get_logger(), "Caught unexpected exception while trying to cancel goal:");
+      RCLCPP_ERROR(get_logger(), exc.what());
+      return rclcpp_action::CancelResponse::REJECT;
+    }
+    return rclcpp_action::CancelResponse::ACCEPT;
   }
 
   void handle_accepted(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
   {
-    execute_thread_ = std::thread([&]() { this->execute(goal_handle); });
+    execute_thread_ = std::thread([this, goal_handle]() { this->execute(goal_handle); });
   }
 
   void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
@@ -131,7 +155,7 @@ private:
 
     try {
       primary_client_->sendScriptBlocking(goal->program, goal->script_name, chrono_timeout, goal->fail_on_warnings,
-                                          goal->retry_on_readonly_interface);
+                                          this->get_parameter("retry_on_readonly_interface").as_bool());
     }
 
     catch (const urcl::UrException& exc) {
@@ -157,9 +181,15 @@ private:
     }
 
     auto res = std::make_shared<SendScript::Result>();
-    res->success = true;
-    res->message = "Script executed successfully";
-    goal_handle->succeed(res);
+    if (goal_handle->is_canceling()) {
+      res->success = false;
+      res->message = "Script execution canceled";
+      goal_handle->canceled(res);
+    } else {
+      res->success = true;
+      res->message = "Script executed successfully";
+      goal_handle->succeed(res);
+    }
     busy = false;
     return;
   }

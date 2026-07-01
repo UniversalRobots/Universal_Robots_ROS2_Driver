@@ -154,7 +154,6 @@ class URScriptInterfaceTest(unittest.TestCase):
         goal_msg.script_name = "test_send_script_action"
         goal_msg.start_timeout = Duration(sec=10, nanosec=0)
         goal_msg.fail_on_warnings = False
-        goal_msg.retry_on_readonly_interface = False
 
         send_goal_future = self.client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self.node, send_goal_future, timeout_sec=15)
@@ -176,7 +175,6 @@ class URScriptInterfaceTest(unittest.TestCase):
         goal_msg.script_name = "test_reject_goals"
         goal_msg.start_timeout = Duration(sec=1, nanosec=0)
         goal_msg.fail_on_warnings = False
-        goal_msg.retry_on_readonly_interface = False
 
         send_goal_future = self.client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self.node, send_goal_future, timeout_sec=15)
@@ -201,13 +199,12 @@ class URScriptInterfaceTest(unittest.TestCase):
         result = result_future.result().result
         self.assertTrue(result.success, f"SendScript action failed: {result.message}")
 
-    def test_reject_cancel(self):
+    def test_cancel_goal(self):
         goal_msg = SendScript.Goal()
         goal_msg.program = "sleep(5.)"
         goal_msg.script_name = "test_reject_cancel"
         goal_msg.start_timeout = Duration(sec=1, nanosec=0)
         goal_msg.fail_on_warnings = False
-        goal_msg.retry_on_readonly_interface = False
 
         send_goal_future = self.client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self.node, send_goal_future, timeout_sec=15)
@@ -219,11 +216,17 @@ class URScriptInterfaceTest(unittest.TestCase):
 
         cancel_future = goal_handle.cancel_goal_async()
         rclpy.spin_until_future_complete(self.node, cancel_future)
-        self.assertEqual(cancel_future.result().return_code, CancelGoal_Response.ERROR_REJECTED)
+        self.assertEqual(cancel_future.result().return_code, CancelGoal_Response.ERROR_NONE)
 
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future, timeout_sec=30)
         self.assertIsNotNone(result_future.result(), "No result from SendScript action")
 
         result = result_future.result().result
-        self.assertTrue(result.success, f"SendScript action failed: {result.message}")
+        self.assertFalse(result.success, f"SendScript action failed: {result.message}")
+
+    def test_ready_after_cancel(self):
+        # send goal and cancel
+        self.test_cancel_goal()
+        # Test if server is ready again
+        self.test_send_script_action()
