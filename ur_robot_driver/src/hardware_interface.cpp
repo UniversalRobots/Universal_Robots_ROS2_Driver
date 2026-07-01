@@ -833,6 +833,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                               << " but the driver was configured for type '" << ur_type
                               << "'. Please check the 'ur_type' parameter and make sure it matches your "
                                  "actual robot. This can lead to critical inaccuracies of tcp positions.");
+      ur_driver_.reset();
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
