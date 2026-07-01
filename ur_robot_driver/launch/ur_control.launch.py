@@ -89,6 +89,7 @@ def launch_setup(context, *args, **kwargs):
     reverse_port = LaunchConfiguration("reverse_port")
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
+    verify_robot_model = LaunchConfiguration("verify_robot_model")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -205,6 +206,11 @@ def launch_setup(context, *args, **kwargs):
             "trajectory_port:=",
             trajectory_port,
             " ",
+            "ur_type:=",
+            ur_type,
+            " ",
+            "verify_robot_model:=",
+            verify_robot_model,
         ]
     )
     robot_description = {
@@ -697,4 +703,13 @@ def generate_launch_description():
             description="Port that will be opened for trajectory control.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "verify_robot_model",
+            default_value="false",
+            description="Whether the robot model should be verified against the actual robot. "
+            "This is recommended to be true, but can be set to false for faster startup.",
+        )
+    )
+
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
