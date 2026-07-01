@@ -129,11 +129,9 @@ private:
       } catch (const urcl::UrException& exc) {
         RCLCPP_ERROR(get_logger(), "Caught UR exception while trying to cancel goal:");
         RCLCPP_ERROR(get_logger(), exc.what());
-        return rclcpp_action::CancelResponse::ACCEPT;
       } catch (const std::exception& exc) {
         RCLCPP_ERROR(get_logger(), "Caught unexpected exception while trying to cancel goal:");
         RCLCPP_ERROR(get_logger(), exc.what());
-        return rclcpp_action::CancelResponse::ACCEPT;
       }
       return rclcpp_action::CancelResponse::ACCEPT;
     } else {
