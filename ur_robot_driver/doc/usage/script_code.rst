@@ -66,8 +66,8 @@ To prevent interrupting the main program, you can send certain commands as `seco
 
      end"}'
 
-Scripts with feedback
----------------------
+Scripts with execution monitoring
+---------------------------------
 An action server is available, where it is possible to send URScript code and get feedback on whether the script code was executed successfully, and if not, what went wrong.
 The action server is available at:
 ``/urscript_interface/execute_script``
