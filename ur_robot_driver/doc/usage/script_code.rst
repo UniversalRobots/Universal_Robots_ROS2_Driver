@@ -68,11 +68,9 @@ To prevent interrupting the main program, you can send certain commands as `seco
 
 Scripts with execution monitoring
 ---------------------------------
-An action server is available, where it is possible to send URScript code and get feedback on whether the script code was executed successfully, and if not, what went wrong.
-The action server is available at:
-``/urscript_interface/execute_script``
+The action server at ``/urscript_interface/execute_script`` allows executing script programs and getting the information when execution is done and whether there was an error during execution.
 
-The action definition can be seen at `ur_msgs/action/SendScript.action <https://github.com/ros-industrial/ur_msgs/blob/humble-devel/action/SendScript.action/>`_
+The action definition can be seen at `ur_msgs/action/SendScript.action <https://docs.ros.org/en/rolling/p/ur_msgs/action/SendScript.html/>`_
 
 This action server is a ROS wrapper around the `URCL primary client's <https://github.com/UniversalRobots/Universal_Robots_Client_Library/blob/master/doc/architecture/primary_client.rst/>`_
 SendScriptBlocking method, and the meaning of parameters can be seen there.

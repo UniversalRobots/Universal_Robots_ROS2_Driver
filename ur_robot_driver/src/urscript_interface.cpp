@@ -56,19 +56,17 @@ public:
 
     primary_client_ =
         std::make_unique<urcl::primary_interface::PrimaryClient>(this->get_parameter("robot_ip").as_string(), notif_);
-    // TODO(JALA): make configurable?
-    primary_client_->start(10, std::chrono::seconds(1));
+
+    primary_client_->start(10, std::chrono::seconds(10));
 
     script_sub_ = create_subscription<std_msgs::msg::String>(
         "~/script_command", 1, std::bind(&URScriptInterface::script_callback, this, std::placeholders::_1));
+
     send_script_server_ = rclcpp_action::create_server<SendScript>(
         this, "~/execute_script",
         std::bind(&URScriptInterface::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
         std::bind(&URScriptInterface::handle_cancel, this, std::placeholders::_1),
         std::bind(&URScriptInterface::handle_accepted, this, std::placeholders::_1));
-    auto program_with_newline = std::string("sec urscript_interface_initialization():\ntextmsg(\"urscript_interface "
-                                            "connected\")\nend\n");
-    primary_client_->sendScript(program_with_newline);
   }
 
 private:
@@ -117,14 +115,12 @@ private:
 
   void handle_accepted(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
   {
-    std::thread{ std::bind(&URScriptInterface::execute, this, std::placeholders::_1), goal_handle }.detach();
+    execute_thread_ = std::thread([&]() { this->execute(goal_handle); });
   }
 
   void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
   {
     auto goal = goal_handle->get_goal();
-    std::string code = goal->program;
-    std::string name = goal->script_name;
     auto timeout = goal->start_timeout;
     auto chrono_timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::seconds(timeout.sec) + std::chrono::nanoseconds(timeout.nanosec));
@@ -132,12 +128,10 @@ private:
     if (chrono_timeout < std::chrono::milliseconds(0)) {
       chrono_timeout = std::chrono::milliseconds(0);
     }
-    bool fail_on_warnings = goal->fail_on_warnings;
-
-    bool retry = goal->retry_on_readonly_interface;
 
     try {
-      primary_client_->sendScriptBlocking(code, name, chrono_timeout, fail_on_warnings, retry);
+      primary_client_->sendScriptBlocking(goal->program, goal->script_name, chrono_timeout, goal->fail_on_warnings,
+                                          goal->retry_on_readonly_interface);
     }
 
     catch (const urcl::UrException& exc) {
@@ -162,16 +156,6 @@ private:
       return;
     }
 
-    catch (...) {
-      RCLCPP_ERROR(get_logger(), "Unknown exception caught during script execution");
-      auto res = std::make_shared<SendScript::Result>();
-      res->success = false;
-      res->message = "Unknown exception";
-      goal_handle->abort(res);
-      busy = false;
-      return;
-    }
-
     auto res = std::make_shared<SendScript::Result>();
     res->success = true;
     res->message = "Script executed successfully";
@@ -185,6 +169,7 @@ private:
   std::unique_ptr<urcl::primary_interface::PrimaryClient> primary_client_;
   urcl::comm::INotifier notif_;
   std::atomic<bool> busy = false;
+  std::thread execute_thread_;
 };
 
 int main(int argc, char** argv)
