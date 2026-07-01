@@ -73,7 +73,7 @@ The action server at ``/urscript_interface/execute_script`` allows executing scr
 The ``SendScript`` action definition can be seen in the `ur_msgs action definitions <https://docs.ros.org/en/rolling/p/ur_msgs/__action_definitions.html/>`_
 
 This action server is a ROS wrapper around the `URCL primary client's <https://github.com/UniversalRobots/Universal_Robots_Client_Library/blob/master/doc/architecture/primary_client.rst/>`_
-SendScriptBlocking method, and the meaning of parameters can be seen there. The ``retry_on_readonly_interface`` parameter has been made a parameter of the ``urscript_interface`` node, and can be interacted with as such.
+SendScriptBlocking method, and the meaning of parameters can be seen there. 
 The action will be reported as successful if no errors occur during script execution. See :ref:`script-cancel` for additional info about when the action might be reported as successful.
 If an error is detected, a message explaining what went wrong will be made available in the action result.
 While the action server is waiting for a script to finish execution, it will reject any further action goals, and the ``/urscript_interface/script_command`` topic will also be ignored during this time.
@@ -98,3 +98,18 @@ The action server can be called from the command line like this:
     script_name: "cmd_line_example",
     start_timeout: {sec: 1.0, nanosec: 0},
     fail_on_warnings: true}'
+    
+Parameters
+^^^^^^^^^^
+- ``robot_ip`` (string, **required**)
+
+  The IP address at which the robot is reachable.
+
+- ``retry_on_readonly_interface`` (boolean, default: ``true``)
+
+  When the client is currently connected to a read-only interface (because the robot is not in
+  remote_control mode / was put to local control mode since the client connected) script code will
+  not be accepted by the primary interface.
+  
+  When set to ``true`` the client will attempt to reconnect to the primary interface and send the 
+  script again once. This mechanism is only active when using the action interface.
