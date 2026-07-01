@@ -123,18 +123,23 @@ private:
   rclcpp_action::CancelResponse
   handle_cancel(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
   {
-    try {
-      primary_client_->commandStop();
-    } catch (const urcl::UrException& exc) {
-      RCLCPP_ERROR(get_logger(), "Caught UR exception while trying to cancel goal:");
-      RCLCPP_ERROR(get_logger(), exc.what());
-      return rclcpp_action::CancelResponse::REJECT;
-    } catch (const std::exception& exc) {
-      RCLCPP_ERROR(get_logger(), "Caught unexpected exception while trying to cancel goal:");
-      RCLCPP_ERROR(get_logger(), exc.what());
+    if (goal_handle->is_executing()) {
+      try {
+        primary_client_->commandStop();
+      } catch (const urcl::UrException& exc) {
+        RCLCPP_ERROR(get_logger(), "Caught UR exception while trying to cancel goal:");
+        RCLCPP_ERROR(get_logger(), exc.what());
+        return rclcpp_action::CancelResponse::ACCEPT;
+      } catch (const std::exception& exc) {
+        RCLCPP_ERROR(get_logger(), "Caught unexpected exception while trying to cancel goal:");
+        RCLCPP_ERROR(get_logger(), exc.what());
+        return rclcpp_action::CancelResponse::ACCEPT;
+      }
+      return rclcpp_action::CancelResponse::ACCEPT;
+    } else {
+      RCLCPP_ERROR(get_logger(), "Received cancel request for inactive goal, rejecting");
       return rclcpp_action::CancelResponse::REJECT;
     }
-    return rclcpp_action::CancelResponse::ACCEPT;
   }
 
   void handle_accepted(const std::shared_ptr<rclcpp_action::ServerGoalHandle<SendScript>> goal_handle)
