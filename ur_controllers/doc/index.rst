@@ -15,6 +15,7 @@ robot family. Currently this contains:
 * A **io_and_status_controller** that allows setting I/O ports, controlling some UR-specific
   functionality and publishes status information about the robot.
 * A **tool_contact_controller** that exposes an action to enable the tool contact function on the robot.
+* A **twist_controller** that streams Cartesian TCP velocities to the robot.
 
 About this package
 ------------------
@@ -209,6 +210,109 @@ Implementation details / dataflow
 * When the hardware reports that execution has been aborted (The ``passthrough_trajectory_abort``
   command interface), the action will be aborted.
 * When the action is preempted, execution on the hardware is preempted.
+
+.. _twist_controller:
+
+ur_controllers/TwistController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller streams Cartesian TCP velocities to the robot. It accepts velocity commands on a
+topic and forwards them to the hardware interface, which executes them using the URScript function
+``speedl(...)``.
+
+Unlike the ``forward_velocity_controller``, which commands joint-space velocities via ``speedj``,
+this controller commands tool-space velocities in the robot's ``base`` frame.
+
+.. warning::
+
+   With the twist controller, the user is responsible for sending commands that are safe and
+   achievable. The robot will try to follow commands as fast as possible without trajectory
+   planning.
+
+.. note::
+
+   The robot will scale down the execution speed if its safety limits require it. Unlike
+   trajectory-based controllers, the twist controller does not automatically account for this
+   scaling. Monitor the :ref:`speed_scaling_state_broadcaster <speed_scaling_state_broadcaster>` to
+   detect when the robot is scaling down and adapt your commands accordingly.
+
+Parameters
+""""""""""
+
++---------------+--------+---------------+----------------------------------------+
+| Parameter name| Type   | Default value | Description                            |
+|               |        |               |                                        |
++---------------+--------+---------------+----------------------------------------+
+| ``tf_prefix`` | string | <empty>       | Urdf prefix of the corresponding arm   |
++---------------+--------+---------------+----------------------------------------+
+
+Topic interface / usage
+"""""""""""""""""""""""
+
+The controller provides the ``~/twist`` topic of type ``geometry_msgs/msg/TwistStamped`` for
+streaming velocity commands. To use this topic, the controller has to be in ``active`` state.
+
+The ``header.frame_id`` must be the robot's base frame (``base`` or ``${tf_prefix}base`` when using
+a prefixed robot). Commands in other frames are currently ignored.
+
+Linear velocities are given in m/s and angular velocities in rad/s. Both are expressed in the
+robot's ``base`` frame.
+
+When the controller is activated or deactivated, all velocity commands are reset to zero. While
+active, the last received command is held until a new message arrives.
+
+To activate the controller, first deactivate any other motion controller that claims the same
+hardware interfaces:
+
+.. code-block:: console
+
+   ros2 control switch_controllers --deactivate joint_trajectory_controller \
+     --activate twist_controller
+
+Example command to move the TCP slowly along the base x axis:
+
+.. code-block:: console
+
+   ros2 topic pub --rate 50 /twist_controller/twist geometry_msgs/msg/TwistStamped \
+     "{header: {frame_id: 'base'}, twist: {linear: {x: 0.05}}}"
+
+.. note::
+
+   For continuous motion, publish commands at a steady rate. When you stop publishing, the robot
+   will continue executing the last received velocity until you send a zero twist or deactivate the
+   controller.
+
+Controller compatibility
+""""""""""""""""""""""""
+
+The twist controller is mutually exclusive with all other motion controllers
+(``joint_trajectory_controller``, ``passthrough_trajectory_controller``,
+``forward_position_controller``, ``forward_velocity_controller``, ``forward_effort_controller``,
+``freedrive_mode_controller``, ``motion_primitive_forward_controller``, and
+``force_mode_controller``). It can be combined with the
+:ref:`tool_contact_controller <tool_contact_controller>`.
+
+Interfaces
+""""""""""
+
+In order to use this controller, the hardware has to export command interfaces for Cartesian
+velocities:
+
+.. code:: xml
+
+   <gpio name="${tf_prefix}twist">
+     <command_interface name="linear_velocity_x"/>
+     <command_interface name="linear_velocity_y"/>
+     <command_interface name="linear_velocity_z"/>
+     <command_interface name="angular_velocity_x"/>
+     <command_interface name="angular_velocity_y"/>
+     <command_interface name="angular_velocity_z"/>
+   </gpio>
+
+.. note::
+
+   The hardware component ensures that the twist command interfaces cannot be activated in
+   parallel to other streaming or trajectory command interfaces.
 
 .. _force_mode_controller:
 
