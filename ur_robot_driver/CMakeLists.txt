@@ -73,12 +73,17 @@ target_link_libraries(ur_robot_driver_plugin PUBLIC
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
   ur_client_library::urcl
-  motion_primitives_controllers::motion_primitives_controllers
 )
+# NOTE: only headers (enums) are used from motion_primitives_controllers. Linking
+# against its shared library causes it to be eagerly loaded as a DT_NEEDED
+# dependency of this plugin, which breaks class_loader's registration of the
+# MotionPrimitivesForwardController controller (results in
+# "MultiLibraryClassLoader: no factory exists for it" at runtime).
 target_include_directories(
   ur_robot_driver_plugin
   PRIVATE
   include
+  ${motion_primitives_controllers_INCLUDE_DIRS}
 )
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
 
