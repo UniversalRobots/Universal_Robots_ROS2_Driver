@@ -58,6 +58,8 @@ jobs:
       - name: Checkout ${{ github.ref_name }} since build is not scheduled
         if: ${{ github.event_name != 'schedule' }}
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Checkout ${{ inputs.ref_for_scheduled_build }} on scheduled build
         if: ${{ github.event_name == 'schedule' }}
         uses: actions/checkout@v7
@@ -81,11 +83,36 @@ jobs:
           restore-keys: |
             ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}
             ccache-${{ env.CACHE_PREFIX }}
+      - name: Detect robot models test changes
+        id: robot_models_changes
+        run: |
+          changed=false
+          set -o pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if git diff --name-only "origin/${{ github.event.pull_request.base.ref }}"...HEAD \
+                | grep -Fxq 'ur_robot_driver/test/integration_test_robot_models.py'; then
+              changed=true
+            fi
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            if git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" \
+                | grep -Fxq 'ur_robot_driver/test/integration_test_robot_models.py'; then
+              changed=true
+            fi
+          fi
+          echo "changed=${changed}" | tee "$GITHUB_OUTPUT"
       - uses: 'ros-industrial/industrial_ci@master'
         env:
           UPSTREAM_WORKSPACE: ${{ inputs.upstream_workspace }}
           ROS_DISTRO: ${{ inputs.ros_distro }}
           ROS_REPO: ${{ inputs.ros_repo }}
-          CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
-          # ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release') && '-DUR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST=ON' || '' }}
           ADDITIONAL_DEBS: docker.io netcat-openbsd curl  # Needed for integration tests
+<<<<<<< HEAD
+=======
+          OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
+          CMAKE_ARGS: >-
+            -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
+            ${{ (
+              (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release'))
+              || steps.robot_models_changes.outputs.changed == 'true'
+            ) && '-DUR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST=ON' || '' }}
+>>>>>>> 956851a (Update model test (#1848))
