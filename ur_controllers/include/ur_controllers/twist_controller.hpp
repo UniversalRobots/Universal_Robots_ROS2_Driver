@@ -61,7 +61,7 @@ private:
 
   using TwistStamped = geometry_msgs::msg::TwistStamped;
 
-  bool subscriber_is_active_ = false;
+  std::atomic<bool> subscriber_is_active_ = false;
   rclcpp::Subscription<TwistStamped>::SharedPtr twist_command_subscriber_ = nullptr;
 
   realtime_tools::RealtimeThreadSafeBox<TwistStamped> received_twist_msg_;
