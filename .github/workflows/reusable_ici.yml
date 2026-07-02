@@ -106,13 +106,9 @@ jobs:
           ROS_DISTRO: ${{ inputs.ros_distro }}
           ROS_REPO: ${{ inputs.ros_repo }}
           ADDITIONAL_DEBS: docker.io netcat-openbsd curl  # Needed for integration tests
-<<<<<<< HEAD
-=======
-          OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
           CMAKE_ARGS: >-
             -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
             ${{ (
               (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release'))
               || steps.robot_models_changes.outputs.changed == 'true'
             ) && '-DUR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST=ON' || '' }}
->>>>>>> 956851a (Update model test (#1848))
