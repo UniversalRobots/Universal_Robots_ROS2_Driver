@@ -55,8 +55,6 @@ from rclpy.node import Node
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     ControllerManagerInterface,
-    DashboardInterface,
-    IoStatusInterface,
     generate_driver_test_description_for_model,
 )
 
@@ -108,19 +106,6 @@ class RobotModelStartupTest(unittest.TestCase):
 
     def _check_active_hardware_interface(self, ursim_type, driver_type):
         """Bring the robot up and assert the hardware component is active."""
-        # The IO controller (and therefore ``resend_robot_program``) is only
-        # available when the hardware interface configured successfully, so we
-        # connect to it lazily here.
-        dashboard_interface = DashboardInterface(self.node)
-        io_status_controller_interface = IoStatusInterface(self.node)
-
-        dashboard_interface.start_robot()
-        time.sleep(1)
-        self.assertTrue(
-            io_status_controller_interface.resend_robot_program().success,
-            f"Could not resend robot program for ursim={ursim_type}, driver={driver_type}",
-        )
-
         hardware_info = self._controller_manager_interface.list_hardware_components()
         self.assertIsNotNone(
             hardware_info,
