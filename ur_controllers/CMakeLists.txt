@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28.3)
 project(ur_controllers)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -73,6 +73,11 @@ generate_parameter_library(
 )
 
 generate_parameter_library(
+  gravity_update_controller_parameters
+  src/gravity_update_controller_parameters.yaml
+)
+
+generate_parameter_library(
   speed_scaling_state_broadcaster_parameters
   src/speed_scaling_state_broadcaster_parameters.yaml
 )
@@ -99,6 +104,7 @@ add_library(${PROJECT_NAME} SHARED
   src/speed_scaling_state_broadcaster.cpp
   src/freedrive_mode_controller.cpp
   src/gpio_controller.cpp
+  src/gravity_update_controller.cpp
   src/passthrough_trajectory_controller.cpp
   src/ur_configuration_controller.cpp)
 
@@ -110,6 +116,7 @@ target_link_libraries(${PROJECT_NAME}
   force_mode_controller_parameters
   friction_model_controller_parameters
   gpio_controller_parameters
+  gravity_update_controller_parameters
   speed_scaling_state_broadcaster_parameters
   freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters

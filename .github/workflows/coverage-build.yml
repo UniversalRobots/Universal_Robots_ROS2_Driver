@@ -9,7 +9,7 @@ jobs:
     name: coverage build
     runs-on: ubuntu-22.04
     container:
-      image: ubuntu:noble
+      image: ubuntu:resolute
     strategy:
       fail-fast: false
     env:
@@ -20,7 +20,7 @@ jobs:
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
           use-ros2-testing: true
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ros-tooling/action-ros-ci@v0.4
         with:
           target-ros2-distro: ${{ env.ROS_DISTRO }}
@@ -40,7 +40,7 @@ jobs:
             }
           colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
           skip-tests: false
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: true
           file: ros_ws/lcov/total_coverage.info

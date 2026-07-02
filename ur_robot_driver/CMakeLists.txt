@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28.3)
 project(ur_robot_driver)
 
 # Default to off as this only works in environments where a new docker container can be started with the appropriate networking, which
@@ -73,12 +73,17 @@ target_link_libraries(ur_robot_driver_plugin PUBLIC
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
   ur_client_library::urcl
-  motion_primitives_controllers::motion_primitives_controllers
 )
+# NOTE: only headers (enums) are used from motion_primitives_controllers. Linking
+# against its shared library causes it to be eagerly loaded as a DT_NEEDED
+# dependency of this plugin, which breaks class_loader's registration of the
+# MotionPrimitivesForwardController controller (results in
+# "MultiLibraryClassLoader: no factory exists for it" at runtime).
 target_include_directories(
   ur_robot_driver_plugin
   PRIVATE
   include
+  ${motion_primitives_controllers_INCLUDE_DIRS}
 )
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
 
@@ -306,6 +311,10 @@ if(BUILD_TESTING)
         800
     )
     add_launch_test(test/integration_test_io_controller.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_hand_back_control.py
       TIMEOUT
         800
     )

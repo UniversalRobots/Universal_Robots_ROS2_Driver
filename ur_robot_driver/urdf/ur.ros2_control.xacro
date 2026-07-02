@@ -234,6 +234,13 @@
         <state_interface name="inertia.iyz"/>
       </gpio>
 
+      <gpio name="${tf_prefix}gravity">
+        <command_interface name="x"/>
+        <command_interface name="y"/>
+        <command_interface name="z"/>
+        <command_interface name="gravity_async_success"/>
+      </gpio>
+
       <gpio name="${tf_prefix}friction_model">
         <command_interface name="viscous_0"/>
         <command_interface name="viscous_1"/>

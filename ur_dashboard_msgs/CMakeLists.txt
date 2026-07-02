@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28.3)
 project(ur_dashboard_msgs)
 
 find_package(ament_cmake REQUIRED)

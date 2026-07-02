@@ -310,6 +310,10 @@ protected:
   double force_mode_damping_;
   double force_mode_gain_scaling_;
 
+  // Gravity stuff
+  urcl::vector3d_t gravity_vector_;
+  double gravity_async_success_;
+
   //*************** Motion primitives stuff ***************
   std::shared_ptr<urcl::InstructionExecutor> instruction_executor_;
 
@@ -361,7 +365,8 @@ protected:
   std::array<double, 4> robot_status_bits_copy_;
   std::array<double, 11> safety_status_bits_copy_;
 
-  bool robot_program_running_;
+  std::atomic<bool> robot_program_running_;
+  std::atomic<bool> stop_requested_;
   bool non_blocking_read_;
   double robot_program_running_copy_;
 
