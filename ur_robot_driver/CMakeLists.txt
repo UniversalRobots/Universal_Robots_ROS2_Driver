@@ -318,6 +318,10 @@ if(BUILD_TESTING)
       TIMEOUT
         800
     )
+    add_launch_test(test/integration_test_twist_controller.py
+      TIMEOUT
+        800
+    )
     add_launch_test(test/integration_test_trajectory_until.py
       TIMEOUT
         800
