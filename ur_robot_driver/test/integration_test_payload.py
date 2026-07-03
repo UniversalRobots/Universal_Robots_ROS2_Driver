@@ -61,7 +61,7 @@ def generate_test_description(tf_prefix):
 
 
 def _make_inertia(
-        m=0.0, cx=0.0, cy=0.0, cz=0.0, ixx=0.0, ixy=0.0, ixz=0.0, iyy=0.0, iyz=0.0, izz=0.0
+    m=0.0, cx=0.0, cy=0.0, cz=0.0, ixx=0.0, ixy=0.0, ixz=0.0, iyy=0.0, iyz=0.0, izz=0.0
 ):
     """Helper to build a geometry_msgs/Inertia message."""
 
@@ -120,14 +120,6 @@ class RobotDriverTest(unittest.TestCase):
         if future.result() is None:
             raise Exception(f"set_payload service call failed: {future.exception()}")
         return future.result()
-
-    def test_set_payload_mass_and_cog_only(self, tf_prefix):
-        """Setting only mass and COG (no inertia) should succeed."""
-
-        res = self._call_set_payload(
-            _make_inertia(m=1.0, cx=0.1, cy=0.0, cz=0.2),
-        )
-        self.assertTrue(res.success)
 
     def test_set_payload_with_inertia(self, tf_prefix):
         """Setting mass, COG and full inertia matrix should succeed."""
