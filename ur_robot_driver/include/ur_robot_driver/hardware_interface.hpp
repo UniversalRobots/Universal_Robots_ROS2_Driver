@@ -289,7 +289,6 @@ protected:
   double payload_transition_time_;
   double payload_async_success_;
   double rtde_payload_mass_ = 0.0;
-  double rtde_transition_time_ = 0.0;
   urcl::vector3d_t rtde_payload_cog_{ 0.0, 0.0, 0.0 };
   urcl::vector6d_t rtde_payload_inertia_{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
