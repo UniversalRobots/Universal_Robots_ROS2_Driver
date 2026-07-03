@@ -75,6 +75,7 @@ def _make_inertia(
     msg.izz = izz
     return msg
 
+
 class RobotDriverTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
