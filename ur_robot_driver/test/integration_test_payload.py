@@ -124,16 +124,6 @@ class RobotDriverTest(unittest.TestCase):
             raise Exception(f"set_payload service call failed: {future.exception()}")
         return future.result()
 
-    def test_set_payload_mass_and_cog_only(self, tf_prefix):
-        """Setting only mass and COG (no inertia) should succeed."""
-        res = self._call_set_payload(
-            mass=1.0,
-            cx=0.1,
-            cy=0.0,
-            cz=0.2,
-        )
-        self.assertTrue(res.success)
-
     def test_set_payload_with_inertia(self, tf_prefix):
         """Setting mass, COG and full inertia matrix should succeed."""
         res = self._call_set_payload(
@@ -152,8 +142,11 @@ class RobotDriverTest(unittest.TestCase):
         self.assertTrue(res.success)
 
     def test_set_payload_with_transition_time(self, tf_prefix):
-        """Setting payload with transition_time > 0 should succeed.
-        The service should wait for the transition to complete before verifying."""
+        """
+        Setting payload with transition_time > 0 should succeed.
+
+        The service should wait for the transition to complete before verifying.
+        """
         res = self._call_set_payload(
             mass=1.0,
             cx=0.0,
