@@ -64,7 +64,6 @@ def _make_inertia(
     m=0.0, cx=0.0, cy=0.0, cz=0.0, ixx=0.0, ixy=0.0, ixz=0.0, iyy=0.0, iyz=0.0, izz=0.0
 ):
     """Helper to build a geometry_msgs/Inertia message."""
-
     msg = Inertia()
     msg.m = m
     msg.com = Vector3(x=cx, y=cy, z=cz)
@@ -75,7 +74,6 @@ def _make_inertia(
     msg.iyz = iyz
     msg.izz = izz
     return msg
-
 
 class RobotDriverTest(unittest.TestCase):
     @classmethod
@@ -109,7 +107,6 @@ class RobotDriverTest(unittest.TestCase):
 
     def _call_set_payload(self, inertia_msg, transition_time=0.0):
         """Call the set_payload service and return the response."""
-
         req = SetPayload.Request()
         req.payload = inertia_msg
         sec = int(transition_time)
@@ -123,7 +120,6 @@ class RobotDriverTest(unittest.TestCase):
 
     def test_set_payload_with_inertia(self, tf_prefix):
         """Setting mass, COG and full inertia matrix should succeed."""
-
         res = self._call_set_payload(
             _make_inertia(
                 m=1.0,
@@ -142,9 +138,11 @@ class RobotDriverTest(unittest.TestCase):
         self.assertTrue(res.success)
 
     def test_set_payload_with_transition_time(self, tf_prefix):
-        """Setting payload with transition_time > 0 should succeed.
-        The service should wait for the transition to complete before verifying."""
+        """
+        Setting payload with transition_time > 0 should succeed.
 
+        The service should wait for the transition to complete before verifying.
+        """
         res = self._call_set_payload(
             _make_inertia(
                 m=1.0,
