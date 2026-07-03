@@ -120,7 +120,6 @@ enum StateInterfaces
   PAYLOAD_STATE_INERTIA_IXY = 78,
   PAYLOAD_STATE_INERTIA_IXZ = 79,
   PAYLOAD_STATE_INERTIA_IYZ = 80,
-  PAYLOAD_STATE_TRANSITION_TIME = 81,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
