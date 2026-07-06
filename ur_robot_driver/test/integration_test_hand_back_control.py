@@ -165,16 +165,6 @@ class HandBackControlTest(unittest.TestCase):
         self._controller_manager_interface.wait_for_controller(
             "scaled_joint_trajectory_controller", "active"
         )
-<<<<<<< HEAD
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                deactivate_controllers=["passthrough_trajectory_controller"],
-                activate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-=======
->>>>>>> 08bab9a (Remove controller switch to passthrough controller (#1857))
 
         self.assertTrue(
             external_control_running, "Robot program should be running before hand_back_control"
