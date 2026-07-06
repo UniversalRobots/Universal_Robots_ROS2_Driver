@@ -34,6 +34,7 @@ find_package(ament_cmake REQUIRED)
 find_package(backward_ros REQUIRED)
 find_package(controller_manager REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -52,6 +53,7 @@ include_directories(include)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   controller_manager
   controller_manager_msgs
+  control_msgs
   geometry_msgs
   hardware_interface
   pluginlib
@@ -135,6 +137,7 @@ target_link_libraries(trajectory_until_node PUBLIC
   ${std_msgs_TARGETS}
   rclcpp_action::rclcpp_action
   ${ur_msgs_TARGETS}
+  ${control_msgs_TARGETS}
 )
 
 install(
