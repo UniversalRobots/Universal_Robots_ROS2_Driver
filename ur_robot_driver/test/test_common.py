@@ -130,7 +130,6 @@ def wait_for_robot_program_state(node, state, timeout):
     received_state = None
 
     def callback(msg):
-        print(msg)
         nonlocal received_state
         received_state = msg.data
 
