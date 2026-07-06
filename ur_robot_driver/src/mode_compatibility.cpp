@@ -62,7 +62,7 @@ ModeCompatibilityMatrix createModeCompatibilityMatrix()
   mode_compatibility[hardware_interface::HW_IF_VELOCITY][FREEDRIVE_MODE_GPIO] = false;
   mode_compatibility[hardware_interface::HW_IF_VELOCITY][TOOL_CONTACT_GPIO] = true;
   mode_compatibility[hardware_interface::HW_IF_VELOCITY][HW_IF_MOTION_PRIMITIVES] = false;
-  mode_compatibility[hardware_interface::HW_IF_VELOCITY][TWIST_GPIO] = true;
+  mode_compatibility[hardware_interface::HW_IF_VELOCITY][TWIST_GPIO] = false;
 
   mode_compatibility[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_POSITION] = false;
   mode_compatibility[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_VELOCITY] = false;
