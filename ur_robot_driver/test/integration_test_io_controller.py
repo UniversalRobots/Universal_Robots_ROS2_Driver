@@ -191,6 +191,10 @@ class IOControllerTest(unittest.TestCase):
             transition_time=DurationMsg(),
         )
         self.assertTrue(result.success, "Setting inertia failed")
+        logging.info("Resetting payload to zero")
+        inertia = Inertia()
+        result = self._io_status_controller_interface.set_payload(payload=inertia)
+        self.assertTrue(result.success, "Resetting payload via set_payload failed")
 
     def test_set_payload_with_transition_time(self):
         """
@@ -209,6 +213,10 @@ class IOControllerTest(unittest.TestCase):
             transition_time=DurationMsg(sec=1, nanosec=0),
         )
         self.assertTrue(res.success)
+        logging.info("Resetting payload to zero")
+        inertia = Inertia()
+        result = self._io_status_controller_interface.set_payload(payload=inertia)
+        self.assertTrue(result.success, "Resetting payload via set_payload failed")
 
     def test_set_payload_updates_sequentially(self):
         """Multiple sequential set_payload calls should all succeed."""
