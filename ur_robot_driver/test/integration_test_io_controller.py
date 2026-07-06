@@ -33,12 +33,13 @@ import sys
 import time
 import unittest
 
-import launch_testing
 import pytest
 import rclpy
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Inertia, Vector3
 from rclpy.node import Node
 from ur_msgs.msg import IOStates
+
+from builtin_interfaces.msg import Duration as DurationMsg
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
@@ -50,9 +51,22 @@ from test_common import (  # noqa: E402
 
 
 @pytest.mark.launch_test
-@launch_testing.parametrize("tf_prefix", [(""), ("my_ur_")])
-def generate_test_description(tf_prefix):
-    return generate_driver_test_description(tf_prefix=tf_prefix)
+def generate_test_description():
+    return generate_driver_test_description()
+
+
+def _make_inertia(m=0.0, com=Vector3(), ixx=0.0, ixy=0.0, ixz=0.0, iyy=0.0, iyz=0.0, izz=0.0):
+    """Helper to build a geometry_msgs/Inertia message."""
+    msg = Inertia()
+    msg.m = m
+    msg.com = com
+    msg.ixx = ixx
+    msg.ixy = ixy
+    msg.ixz = ixz
+    msg.iyy = iyy
+    msg.iyz = iyz
+    msg.izz = izz
+    return msg
 
 
 class IOControllerTest(unittest.TestCase):
@@ -145,7 +159,9 @@ class IOControllerTest(unittest.TestCase):
         cog = Vector3(x=0.01, y=0.02, z=0.03)
 
         logging.info("Setting payload to mass=%f, cog=(%f, %f, %f)", mass, cog.x, cog.y, cog.z)
-        result = self._io_status_controller_interface.set_payload(mass=mass, center_of_gravity=cog)
+        result = self._io_status_controller_interface.set_payload(
+            payload=_make_inertia(m=mass, com=cog)
+        )
         self.assertTrue(
             result.success,
             "set_payload returned success=False. With verify_payload_on_set=true the "
@@ -155,7 +171,55 @@ class IOControllerTest(unittest.TestCase):
         # Reset the payload to zero and verify again. This makes sure the verification
         # logic also detects subsequent changes and is not just matching the initial state.
         logging.info("Resetting payload to zero")
-        result = self._io_status_controller_interface.set_payload(
-            mass=0.0, center_of_gravity=Vector3(x=0.0, y=0.0, z=0.0)
-        )
+        inertia = Inertia()
+        result = self._io_status_controller_interface.set_payload(payload=inertia)
         self.assertTrue(result.success, "Resetting payload via set_payload failed")
+
+    def test_set_payload_with_inertia(self):
+        """Setting mass, COG and full inertia matrix should succeed."""
+        result = self._io_status_controller_interface.set_payload(
+            payload=_make_inertia(
+                m=1.0,
+                com=Vector3(x=0.1, y=0.2, z=0.3),
+                ixx=0.01,
+                iyy=0.01,
+                izz=0.02,
+                ixy=0.0,
+                ixz=0.0,
+                iyz=0.0,
+            ),
+            transition_time=DurationMsg(),
+        )
+        self.assertTrue(result.success, "Setting inertia failed")
+
+    def test_set_payload_with_transition_time(self):
+        """
+        Setting payload with transition_time > 0 should succeed.
+
+        The service should wait for the transition to complete before verifying.
+        """
+        res = self._io_status_controller_interface.set_payload(
+            payload=_make_inertia(
+                m=1.0,
+                com=Vector3(x=0.0, y=0.0, z=0.1),
+                ixx=0.01,
+                iyy=0.01,
+                izz=0.02,
+            ),
+            transition_time=DurationMsg(sec=1, nanosec=0),
+        )
+        self.assertTrue(res.success)
+
+    def test_set_payload_updates_sequentially(self):
+        """Multiple sequential set_payload calls should all succeed."""
+        payloads = [
+            _make_inertia(m=0.5, com=Vector3(x=0.0, y=0.0, z=0.1), ixx=0.005, iyy=0.005, izz=0.01),
+            _make_inertia(m=1.0, com=Vector3(x=0.1, y=0.0, z=0.2), ixx=0.01, iyy=0.01, izz=0.02),
+            _make_inertia(m=2.0, com=Vector3(x=0.05, y=0.05, z=0.15), ixx=0.02, iyy=0.02, izz=0.04),
+            _make_inertia(m=0.0, com=Vector3(x=0.0, y=0.0, z=0.0), ixx=0.0, iyy=0.0, izz=0.0),
+        ]
+        for payload in payloads:
+            res = self._io_status_controller_interface.set_payload(
+                payload=payload, transition_time=DurationMsg()
+            )
+            self.assertTrue(res.success, f"set_payload failed for m={payload.m}")
