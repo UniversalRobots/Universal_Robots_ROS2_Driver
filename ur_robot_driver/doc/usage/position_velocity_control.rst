@@ -186,7 +186,7 @@ this controller commands tool-space velocities in the robot's ``base`` frame.
 
 * Cartesian velocity control in the robot's ``base`` frame via ``geometry_msgs/msg/TwistStamped``.
 * Can be combined with the :ref:`tool_contact_controller <tool_contact_controller>` to stop motion
-  on tool contact.
+  on tool contact or with :ref:`force_mode_controller <force_mode_controller>`.
 * Mutually exclusive with all other motion controllers.
 
 To activate:

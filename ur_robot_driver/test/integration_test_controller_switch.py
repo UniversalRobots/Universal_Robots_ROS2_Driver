@@ -719,3 +719,53 @@ class ControllerSwitchTest(unittest.TestCase):
                 ],
             ).ok
         )
+
+    def test_force_mode_and_twist_controller_is_compatible(self):
+        """Test that force_mode_controlller is compatible with all motion controllers."""
+        # Deactivate all writing controllers
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=ALL_CONTROLLERS,
+            ).ok
+        )
+
+        time.sleep(3)
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "twist_controller",
+                ],
+            ).ok
+        )
+
+        # Activate force mode with twist controller being active
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+            ).ok
+        )
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                deactivate_controllers=[
+                    "twist_controller",
+                ],
+            ).ok
+        )
+
+        # Activate twist controller with force_mode being active
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "twist_controller",
+                ],
+            ).ok
+        )

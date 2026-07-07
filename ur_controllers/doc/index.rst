@@ -288,9 +288,13 @@ Controller compatibility
 The twist controller is mutually exclusive with all other motion controllers
 (``joint_trajectory_controller``, ``passthrough_trajectory_controller``,
 ``forward_position_controller``, ``forward_velocity_controller``, ``forward_effort_controller``,
-``freedrive_mode_controller``, ``motion_primitive_forward_controller``, and
-``force_mode_controller``). It can be combined with the
-:ref:`tool_contact_controller <tool_contact_controller>`.
+``freedrive_mode_controller`` and ``motion_primitive_forward_controller``).
+It can be combined with the
+:ref:`tool_contact_controller <tool_contact_controller>` and the :ref:`force_mode_controller <force_mode_controller>`\*.
+
+.. note::
+   When combining force_mode and twist remember that force_mode will "claim" axes that aren't
+   available for twist commands anymore.
 
 Interfaces
 """"""""""
