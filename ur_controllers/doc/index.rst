@@ -231,9 +231,9 @@ this controller commands tool-space velocities in the robot's ``base`` frame.
 
 .. note::
 
-   The robot will scale down the execution speed if its safety limits require it. Unlike
-   trajectory-based controllers, the twist controller does not automatically account for this
-   scaling. Monitor the :ref:`speed_scaling_state_broadcaster <speed_scaling_state_broadcaster>` to
+   The robot will scale down the execution speed if its safety limits or speed slider require it.
+   Unlike trajectory-based controllers, the twist controller does not automatically account for
+   this scaling. Monitor the :ref:`speed_scaling_state_broadcaster <speed_scaling_state_broadcaster>` to
    detect when the robot is scaling down and adapt your commands accordingly.
 
 Parameters
