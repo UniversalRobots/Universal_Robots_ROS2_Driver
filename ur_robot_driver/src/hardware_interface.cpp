@@ -778,12 +778,21 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   try {
+    auto input_recipe = urcl::rtde_interface::RTDEClient::readRecipe(input_recipe_filename);
+    auto output_recipe = urcl::rtde_interface::RTDEClient::readRecipe(output_recipe_filename);
+
+    if (!use_currents_as_efforts_) {
+      if (std::find(output_recipe.begin(), output_recipe.end(), "actual_current_as_torque") == output_recipe.end()) {
+        output_recipe.push_back("actual_current_as_torque");
+      }
+    }
+
     rtde_comm_has_been_started_ = false;
     urcl::UrDriverConfiguration driver_config;
     driver_config.robot_ip = robot_ip;
     driver_config.script_file = script_filename;
-    driver_config.output_recipe_file = output_recipe_filename;
-    driver_config.input_recipe_file = input_recipe_filename;
+    driver_config.output_recipe = output_recipe;
+    driver_config.input_recipe = input_recipe;
     driver_config.headless_mode = headless_mode;
     driver_config.reverse_port = static_cast<uint32_t>(reverse_port);
     driver_config.script_sender_port = static_cast<uint32_t>(script_sender_port);
@@ -798,7 +807,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
     ur_driver_ = std::make_shared<urcl::UrDriver>(driver_config);
     if (ur_driver_->getControlFrequency() != info_.rw_rate) {
-      ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, info_.rw_rate);
+      ur_driver_->resetRTDEClient(output_recipe, input_recipe, info_.rw_rate);
     }
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {
