@@ -1,3 +1,19 @@
+Forthcoming
+-----------
+* Allow setting payload inertia matrix via set_payload service   (`#1808 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1808>`_)
+* Migrate Urscript interface to primary client (`#1833 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1833>`_)
+* Remove controller switch to passthrough controller (`#1857 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1857>`_)
+* Replace linking to moprim controller my using its include directories (`#1853 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1853>`_)
+* Update model test (`#1848 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1848>`_)
+* Allow updating robot gravity (`#1606 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1606>`_)
+* [tests] Fix shadowed function arg (`#1835 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1835>`_)
+* Explicitly send MODE_STOPPED when returning control to the robot (`#1678 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1678>`_)
+* Update minimum CMake version to 3.28.3 (`#1814 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1814>`_)
+* Fix whitespace error introduced earlier (`#1805 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1805>`_)
+* Clarify effort control limitations in URSim (`#1800 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1800>`_)
+* Fail example move on error (`#1795 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1795>`_)
+* Contributors: AdamPettinger, Felix Exner, Sergi Romero, URJala
+
 6.0.0 (2026-05-12)
 ------------------
 * [driver] Remove deprecated packages from package.xml (`#1785 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1785>`_)
