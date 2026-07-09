@@ -1,5 +1,5 @@
-Forthcoming
------------
+4.8.0 (2026-07-09)
+------------------
 * Migrate Urscript interface to primary client (backport `#1833 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1833>`_) (`#1867 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1867>`_)
 * Remove controller switch to passthrough controller (backport `#1857 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1857>`_) (`#1862 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1862>`_)
 * Update model test (backport `#1848 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1848>`_) (`#1855 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1855>`_)
