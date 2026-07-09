@@ -135,6 +135,14 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   config.names.emplace_back(tf_prefix + "gpio/analog_output_domain_cmd");
 
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixx");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.izz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
+  config.names.emplace_back(tf_prefix + "payload/transition_time");
+
   return config;
 }
 
@@ -200,6 +208,12 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   config.names.emplace_back(tf_prefix + "payload/cog.x");
   config.names.emplace_back(tf_prefix + "payload/cog.y");
   config.names.emplace_back(tf_prefix + "payload/cog.z");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixx");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.izz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
 
   return config;
 }
@@ -614,10 +628,19 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->mass));
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->payload.m));
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->payload.com.x);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->payload.com.y);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->payload.com.z);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXX].set_value(req->payload.ixx);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYY].set_value(req->payload.iyy);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IZZ].set_value(req->payload.izz);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXY].set_value(req->payload.ixy);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXZ].set_value(req->payload.ixz);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYZ].set_value(req->payload.iyz);
+  double transition_time_seconds =
+      static_cast<double>(req->transition_time.sec) + (static_cast<double>(req->transition_time.nanosec) * 1e-9);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_TRANSITION_TIME].set_value(transition_time_seconds);
 
   if (!waitForAsyncCommand([&]() {
         return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
@@ -635,9 +658,11 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   }
 
   if (params_.verify_payload_on_set) {
-    if (!waitForPayloadRtdeMatch(static_cast<double>(req->mass), req->center_of_gravity.x, req->center_of_gravity.y,
-                                 req->center_of_gravity.z)) {
-      RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog do not match "
+    if (!waitForPayloadRtdeMatch(static_cast<double>(req->payload.m), req->payload.com.x, req->payload.com.y,
+                                 req->payload.com.z, req->payload.ixx, req->payload.iyy, req->payload.izz,
+                                 req->payload.ixy, req->payload.ixz, req->payload.iyz, transition_time_seconds)) {
+      RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog / "
+                                            "payload_inertia do not match "
                                             "the "
                                             "request yet. (This might "
                                             "happen when using the mocked interface.)");
@@ -706,20 +731,35 @@ bool GPIOController::waitForAsyncCommand(std::function<double(void)> get_value)
   return true;
 }
 
-bool GPIOController::waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz)
+bool GPIOController::waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz, double ixx, double iyy,
+                                             double izz, double ixy, double ixz, double iyz, double transition_time)
 {
   constexpr double tol_mass = 1e-3;
   constexpr double tol_cog = 1e-4;
+  constexpr double tol_inertia = 1e-4;
   const auto maximum_retries = params_.check_io_successfull_retries;
+
+  if (transition_time > 0.0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(transition_time * 1000)));
+  }
 
   for (int retries = 0; retries <= maximum_retries; ++retries) {
     const auto m = state_interfaces_[StateInterfaces::PAYLOAD_STATE_MASS].get_optional();
     const auto sx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_X].get_optional();
     const auto sy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Y].get_optional();
     const auto sz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Z].get_optional();
-    if (m && sx && sy && sz) {
+    const auto sixx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXX].get_optional();
+    const auto siyy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYY].get_optional();
+    const auto sizz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IZZ].get_optional();
+    const auto sixy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXY].get_optional();
+    const auto sixz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXZ].get_optional();
+    const auto siyz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYZ].get_optional();
+    if (m && sx && sy && sz && sixx && siyy && sizz && sixy && sixz && siyz) {
       if (std::abs(*m - mass) <= tol_mass && std::abs(*sx - cx) <= tol_cog && std::abs(*sy - cy) <= tol_cog &&
-          std::abs(*sz - cz) <= tol_cog) {
+          std::abs(*sz - cz) <= tol_cog && std::abs(*sixx - ixx) <= tol_inertia &&
+          std::abs(*siyy - iyy) <= tol_inertia && std::abs(*sizz - izz) <= tol_inertia &&
+          std::abs(*sixy - ixy) <= tol_inertia && std::abs(*sixz - ixz) <= tol_inertia &&
+          std::abs(*siyz - iyz) <= tol_inertia) {
         return true;
       }
     }
