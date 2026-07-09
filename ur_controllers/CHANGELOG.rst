@@ -2,6 +2,13 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Allow updating robot gravity (backport `#1606 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1606>`_) (`#1846 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1846>`_)
+* Use a realtime_tools::RealtimePublisher for publishing the state (backport `#1822 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1822>`_) (`#1825 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1825>`_)
+* Make GPIO controller publishers realtime safe (backport `#1807 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1807>`_) (`#1828 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1828>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 4.7.0 (2026-05-15)
 ------------------
 * Check payload state in gpio_controller (backport `#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_) (`#1777 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1777>`_)
