@@ -2,8 +2,8 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.0.0 (2026-07-09)
+------------------
 * Update safety status msg with new IO plane stop (`#1817 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1817>`_)
 * Update minimum CMake version to 3.28.3 (`#1814 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1814>`_)
 * Contributors: Felix Exner, Mads Holm Peters
