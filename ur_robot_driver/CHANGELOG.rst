@@ -1,3 +1,16 @@
+Forthcoming
+-----------
+* Migrate Urscript interface to primary client (backport `#1833 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1833>`_) (`#1867 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1867>`_)
+* Remove controller switch to passthrough controller (backport `#1857 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1857>`_) (`#1862 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1862>`_)
+* Update model test (backport `#1848 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1848>`_) (`#1855 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1855>`_)
+* Replace linking to moprim controller my using its include directories (backport `#1853 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1853>`_) (`#1856 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1856>`_)
+* Allow updating robot gravity (backport `#1606 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1606>`_) (`#1846 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1846>`_)
+* [tests] Fix shadowed function arg (backport `#1835 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1835>`_) (`#1844 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1844>`_)
+* Explicitly send MODE_STOPPED when returning control to the robot (backport `#1678 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1678>`_) (`#1832 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1832>`_)
+* Clarify effort control limitations in URSim (backport `#1800 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1800>`_) (`#1804 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1804>`_)
+* Fail example move on error (backport `#1795 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1795>`_) (`#1798 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1798>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 4.7.0 (2026-05-15)
 ------------------
 * Update README and ci_status pages (`#1784 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1784>`_)
