@@ -124,7 +124,18 @@ ament_target_dependencies(robot_state_helper ${${PROJECT_NAME}_EXPORTED_TARGETS}
 add_executable(urscript_interface
   src/urscript_interface.cpp
 )
+<<<<<<< HEAD
 ament_target_dependencies(urscript_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+=======
+target_link_libraries(urscript_interface PUBLIC
+  rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
+  ${std_msgs_TARGETS}
+  ${ur_msgs_TARGETS}
+  rclcpp::rclcpp
+  ur_client_library::urcl
+)
+>>>>>>> 7f6ae90 (Migrate Urscript interface to primary client (#1833))
 
 #
 # trajectory_until_node
