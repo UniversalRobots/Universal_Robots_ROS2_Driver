@@ -28,13 +28,8 @@ Check also [presentations and videos](ur_robot_driver/doc/resources/README.md) a
         <th>Branch</th>
         <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
         <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/jazzy">jazzy</a></td>
-<<<<<<< HEAD
-        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/kilted">main</a></td>
-        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
-=======
         <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/kilted">kilted</a></td>
-        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/lyrical">main</a></td>
->>>>>>> a717fea (Update README and ci_status for lyrical branch (#1868))
+        <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/lyrical">lyrical</a></td>
         <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
       </tr>
       <tr>
