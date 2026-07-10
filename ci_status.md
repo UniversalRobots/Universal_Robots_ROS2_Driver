@@ -15,8 +15,8 @@ red pipeline there should be a corresponding issue labeled with [ci-failure](htt
   <tr>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/humble">humble</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/jazzy">jazzy</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">kilted</a></td>
-    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">lyrical</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/kilted">kilted</a></td>
+    <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/lyrical">lyrical</a></td>
     <td><a href="https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/tree/main">main</a></td>
   </tr>
   <tr>
