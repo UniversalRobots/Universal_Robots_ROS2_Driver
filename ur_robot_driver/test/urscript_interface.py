@@ -39,7 +39,7 @@ from builtin_interfaces.msg import Duration
 from std_msgs.msg import String as StringMsg
 from ur_msgs.msg import IOStates
 from ur_msgs.action import SendScript
-from action_msgs.srv import CancelGoal_Response
+from action_msgs.srv import CancelGoal
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
@@ -216,7 +216,7 @@ class URScriptInterfaceTest(unittest.TestCase):
 
         cancel_future = goal_handle.cancel_goal_async()
         rclpy.spin_until_future_complete(self.node, cancel_future)
-        self.assertEqual(cancel_future.result().return_code, CancelGoal_Response.ERROR_NONE)
+        self.assertEqual(cancel_future.result().return_code, CancelGoal.Response.ERROR_NONE)
 
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self.node, result_future, timeout_sec=30)
