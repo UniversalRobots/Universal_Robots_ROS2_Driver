@@ -50,12 +50,60 @@
 namespace ur_robot_driver
 {
 DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
-  : node_(node), primary_client_(robot_ip, notifier_)
+  : node_(node), robot_ip_(robot_ip), primary_client_(robot_ip, notifier_)
 {
   node_->declare_parameter<double>("receive_timeout", 20);
+  node_->declare_parameter<bool>("autoconnect", true);
 
   param_callback_handle_ = node_->add_on_set_parameters_callback(
       std::bind(&DashboardClientROS::parametersCallback, this, std::placeholders::_1));
+
+  // Available before connection so callers can connect later when autoconnect is false.
+  reconnect_service_ = node_->create_service<std_srvs::srv::Trigger>(
+      "~/connect",
+      [&](const std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
+          std_srvs::srv::Trigger::Response::SharedPtr resp) {
+        try {
+          resp->success = connect();
+        } catch (const urcl::UrException& e) {
+          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
+          resp->message = e.what();
+          resp->success = false;
+        }
+        return true;
+      });
+
+  if (node_->get_parameter("autoconnect").as_bool()) {
+    while (!connect()) {
+      RCLCPP_ERROR(node_->get_logger(),
+                   "Failed to connect to Dashboard Server at %s. Please check the IP address and ensure the robot is "
+                   "powered on and has the dashboard server enabled. Retrying in 5 seconds.",
+                   robot_ip_.c_str());
+      if (rclcpp::ok()) {
+        rclcpp::sleep_for(std::chrono::seconds(5));
+      } else {
+        RCLCPP_ERROR(node_->get_logger(), "ROS is shutting down, exiting now.");
+        return;
+      }
+    }
+  } else {
+    RCLCPP_INFO(node_->get_logger(),
+                "Dashboard client started with autoconnect disabled. Call the ~/connect service to connect to %s.",
+                robot_ip_.c_str());
+  }
+}
+
+bool DashboardClientROS::connect()
+{
+  if (client_) {
+    timeval tv;
+    double time_buffer = 0;
+    node_->get_parameter("receive_timeout", time_buffer);
+    tv.tv_sec = time_buffer;
+    tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
+    client_->setReceiveTimeout(tv);
+    return client_->connect();
+  }
 
   primary_client_.start(10, std::chrono::seconds(10));
   auto robot_version = primary_client_.getRobotVersion();
@@ -73,25 +121,29 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
     dashboard_policy = urcl::DashboardClient::ClientPolicy::POLYSCOPE_X;
   }
 
-  RCLCPP_INFO(node_->get_logger(), "Connecting to Dashboard Server at %s with policy %s", robot_ip.c_str(),
+  RCLCPP_INFO(node_->get_logger(), "Connecting to Dashboard Server at %s with policy %s", robot_ip_.c_str(),
               dashboard_policy == urcl::DashboardClient::ClientPolicy::G5 ? "G5" : "Polyscope X");
-  client_ = std::make_unique<urcl::DashboardClient>(robot_ip, dashboard_policy);
+  client_ = std::make_unique<urcl::DashboardClient>(robot_ip_, dashboard_policy);
 
-  while (!connect()) {
-    RCLCPP_ERROR(node_->get_logger(),
-                 "Failed to connect to Dashboard Server at %s. Please check the IP address and ensure the robot is "
-                 "powered on and has the dashboard server enabled. Retrying in 5 seconds.",
-                 robot_ip.c_str());
-    if (rclcpp::ok()) {
-      rclcpp::sleep_for(std::chrono::seconds(5));
-    } else {
-      RCLCPP_ERROR(node_->get_logger(), "ROS is shutting down, exiting now.");
-      return;
-    }
+  timeval tv;
+  // Timeout after which a call to the dashboard server will be considered failure if no answer has been received.
+  double time_buffer = 0;
+  node_->get_parameter("receive_timeout", time_buffer);
+  tv.tv_sec = time_buffer;
+  tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
+  client_->setReceiveTimeout(tv);
+  if (!client_->connect()) {
+    client_.reset();
+    return false;
   }
-  RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
-              robot_ip.c_str(), robot_version->toString().c_str());
 
+  RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s", robot_ip_.c_str());
+  initServices(dashboard_policy);
+  return true;
+}
+
+void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashboard_policy)
+{
   // Service to release the brakes. If the robot is currently powered off, it will get powered on on the fly.
   brake_release_service_ = createDashboardTriggerSrv(
       "~/brake_release", std::bind(&urcl::DashboardClient::commandBrakeReleaseWithResponse, client_.get()));
@@ -282,19 +334,6 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         return true;
       });
 
-  // Service to reconnect to the dashboard server
-  reconnect_service_ = node_->create_service<std_srvs::srv::Trigger>(
-      "~/connect",
-      [&](const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp) {
-        try {
-          resp->success = connect();
-        } catch (const urcl::UrException& e) {
-          RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Service Call failed: '%s'", e.what());
-          resp->message = e.what();
-          resp->success = false;
-        }
-        return true;
-      });
 
   // Disconnect from the dashboard service.
   quit_service_ =
@@ -481,18 +520,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         }
         return true;
       });
-}
 
-bool DashboardClientROS::connect()
-{
-  timeval tv;
-  // Timeout after which a call to the dashboard server will be considered failure if no answer has been received.
-  double time_buffer = 0;
-  node_->get_parameter("receive_timeout", time_buffer);
-  tv.tv_sec = time_buffer;
-  tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
-  client_->setReceiveTimeout(tv);
-  return client_->connect();
 }
 
 bool DashboardClientROS::handleRunningQuery(const ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,

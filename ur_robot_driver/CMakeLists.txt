@@ -277,6 +277,10 @@ if(BUILD_TESTING)
       TIMEOUT
         180
     )
+    add_launch_test(test/dashboard_client_autoconnect.py
+      TIMEOUT
+        180
+    )
     add_launch_test(test/example_move.py
       TIMEOUT
         180
