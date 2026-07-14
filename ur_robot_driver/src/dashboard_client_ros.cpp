@@ -749,12 +749,14 @@ DashboardClientROS::parametersCallback(const std::vector<rclcpp::Parameter>& par
 
   for (const auto& parameter : parameters) {
     if (parameter.get_name() == "receive_timeout") {
-      timeval tv;
-      double time_buffer = parameter.as_double();
-      tv.tv_sec = time_buffer;
-      tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
-      client_->setReceiveTimeout(tv);
-      RCLCPP_INFO(node_->get_logger(), "Set receive_timeout to %f seconds", time_buffer);
+      if (client_) {
+        timeval tv;
+        double time_buffer = parameter.as_double();
+        tv.tv_sec = time_buffer;
+        tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
+        client_->setReceiveTimeout(tv);
+      }
+      RCLCPP_INFO(node_->get_logger(), "Set receive_timeout to %f seconds", parameter.as_double());
     } else {
       result.successful = false;
       result.reason = "Requested to change parameter '" + parameter.get_name() +
