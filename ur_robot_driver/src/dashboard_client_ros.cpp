@@ -131,15 +131,27 @@ bool DashboardClientROS::connect()
   node_->get_parameter("receive_timeout", time_buffer);
   tv.tv_sec = time_buffer;
   tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
-  client_->setReceiveTimeout(tv);
-  if (!client_->connect()) {
+  bool connected = false;
+  try {
+    client_->setReceiveTimeout(tv);
+    connected = client_->connect();
+  } catch (const urcl::UrException& e) {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Connect failed: '%s'", e.what());
+  }
+  if (!connected) {
     client_.reset();
     return false;
   }
 
   RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
               robot_ip_.c_str(), robot_version->toString().c_str());
-  initServices(dashboard_policy);
+  try {
+    initServices(dashboard_policy);
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Failed to initialize dashboard services: '%s'", e.what());
+    client_.reset();
+    return false;
+  }
   return true;
 }
 
