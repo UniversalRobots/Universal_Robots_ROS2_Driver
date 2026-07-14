@@ -137,7 +137,8 @@ bool DashboardClientROS::connect()
     return false;
   }
 
-  RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s", robot_ip_.c_str());
+  RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
+              robot_ip_.c_str(), robot_version->toString().c_str());
   initServices(dashboard_policy);
   return true;
 }
@@ -235,7 +236,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Load a robot program from a file
-  load_program_service_ = node->create_service<ur_dashboard_msgs::srv::Load>(
+  load_program_service_ = node_->create_service<ur_dashboard_msgs::srv::Load>(
       "~/load_program", [&](const ur_dashboard_msgs::srv::Load::Request::SharedPtr req,
                             ur_dashboard_msgs::srv::Load::Response::SharedPtr resp) {
         auto dashboard_response = dashboardCallWithChecks(
@@ -283,7 +284,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to get serial number of the robot
-  get_serial_number_service_ = node->create_service<ur_dashboard_msgs::srv::GetSerialNumber>(
+  get_serial_number_service_ = node_->create_service<ur_dashboard_msgs::srv::GetSerialNumber>(
       "~/get_serial_number", [&](const ur_dashboard_msgs::srv::GetSerialNumber::Request::SharedPtr /*unused*/,
                                  ur_dashboard_msgs::srv::GetSerialNumber::Response::SharedPtr resp) {
         auto dashboard_response =
@@ -310,14 +311,14 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       std::bind(&DashboardClientROS::handleRobotModeQuery, this, std::placeholders::_1, std::placeholders::_2));
 
   // Service to add a message to the robot's log
-  add_to_log_service_ = node->create_service<ur_dashboard_msgs::srv::AddToLog>(
+  add_to_log_service_ = node_->create_service<ur_dashboard_msgs::srv::AddToLog>(
       "~/add_to_log", [&](const ur_dashboard_msgs::srv::AddToLog::Request::SharedPtr req,
                           ur_dashboard_msgs::srv::AddToLog::Response::SharedPtr resp) {
         dashboardCallWithChecks([this, req]() { return client_->commandAddToLogWithResponse(req->message); }, resp);
         return true;
       });
   // Service to get the polyscope version running on the robot
-  get_polyscope_version_service_ = node->create_service<ur_dashboard_msgs::srv::GetPolyScopeVersion>(
+  get_polyscope_version_service_ = node_->create_service<ur_dashboard_msgs::srv::GetPolyScopeVersion>(
       "~/get_polyscope_version", std::bind(&DashboardClientROS::handleGetPolyScopeVersionQuery, this,
                                            std::placeholders::_1, std::placeholders::_2));
 
@@ -409,7 +410,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to set the user role on the robot (Only valid for CB3 robots)
-  set_user_role_service_ = node->create_service<ur_dashboard_msgs::srv::SetUserRole>(
+  set_user_role_service_ = node_->create_service<ur_dashboard_msgs::srv::SetUserRole>(
       "~/set_user_role", [&](const ur_dashboard_msgs::srv::SetUserRole::Request::SharedPtr req,
                              ur_dashboard_msgs::srv::SetUserRole::Response::SharedPtr resp) {
         dashboardCallWithChecks([this, req]() { return client_->commandSetUserRoleWithResponse(req->user_role.role); },
@@ -418,7 +419,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to get the current user role (Only valid for CB3)
-  get_user_role_service_ = node->create_service<ur_dashboard_msgs::srv::GetUserRole>(
+  get_user_role_service_ = node_->create_service<ur_dashboard_msgs::srv::GetUserRole>(
       "~/get_user_role", [&](const ur_dashboard_msgs::srv::GetUserRole::Request::SharedPtr /*unused*/,
                              ur_dashboard_msgs::srv::GetUserRole::Response::SharedPtr resp) {
         auto dashboard_response =
@@ -434,7 +435,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to set the operational mode. (e-series only)
-  set_operational_mode_service_ = node->create_service<ur_dashboard_msgs::srv::SetOperationalMode>(
+  set_operational_mode_service_ = node_->create_service<ur_dashboard_msgs::srv::SetOperationalMode>(
       "~/set_operational_mode", [&](const ur_dashboard_msgs::srv::SetOperationalMode::Request::SharedPtr req,
                                     ur_dashboard_msgs::srv::SetOperationalMode::Response::SharedPtr resp) {
         dashboardCallWithChecks(
@@ -443,7 +444,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to get the current operational mode (e-series only)
-  get_operational_mode_service_ = node->create_service<ur_dashboard_msgs::srv::GetOperationalMode>(
+  get_operational_mode_service_ = node_->create_service<ur_dashboard_msgs::srv::GetOperationalMode>(
       "~/get_operational_mode", [&](const ur_dashboard_msgs::srv::GetOperationalMode::Request::SharedPtr /*unused*/,
                                     ur_dashboard_msgs::srv::GetOperationalMode::Response::SharedPtr resp) {
         auto dashboard_response =
@@ -459,7 +460,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to get the robot model as a string
-  get_robot_model_service_ = node->create_service<ur_dashboard_msgs::srv::GetRobotModel>(
+  get_robot_model_service_ = node_->create_service<ur_dashboard_msgs::srv::GetRobotModel>(
       "~/get_robot_model", [&](const ur_dashboard_msgs::srv::GetRobotModel::Request::SharedPtr /*unused*/,
                                ur_dashboard_msgs::srv::GetRobotModel::Response::SharedPtr resp) {
         auto dashboard_response =
@@ -475,12 +476,12 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to get robot safety status as a string
-  get_safety_status_service_ = node->create_service<ur_dashboard_msgs::srv::GetSafetyStatus>(
+  get_safety_status_service_ = node_->create_service<ur_dashboard_msgs::srv::GetSafetyStatus>(
       "~/get_safety_status",
       std::bind(&DashboardClientROS::handleSafetyStatusQuery, this, std::placeholders::_1, std::placeholders::_2));
 
   // Service to generate flight report, defaults to system type
-  generate_flight_report_service_ = node->create_service<ur_dashboard_msgs::srv::GenerateFlightReport>(
+  generate_flight_report_service_ = node_->create_service<ur_dashboard_msgs::srv::GenerateFlightReport>(
       "~/generate_flight_report", [&](const ur_dashboard_msgs::srv::GenerateFlightReport::Request::SharedPtr req,
                                       ur_dashboard_msgs::srv::GenerateFlightReport::Response::SharedPtr resp) {
         auto dashboard_response = dashboardCallWithChecks(
@@ -501,7 +502,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
       });
 
   // Service to generate support file, defaults to saving the file in /programs
-  generate_support_file_service_ = node->create_service<ur_dashboard_msgs::srv::GenerateSupportFile>(
+  generate_support_file_service_ = node_->create_service<ur_dashboard_msgs::srv::GenerateSupportFile>(
       "~/generate_support_file", [&](const ur_dashboard_msgs::srv::GenerateSupportFile::Request::SharedPtr req,
                                      ur_dashboard_msgs::srv::GenerateSupportFile::Response::SharedPtr resp) {
         auto dashboard_response = dashboardCallWithChecks(

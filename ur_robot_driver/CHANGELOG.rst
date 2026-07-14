@@ -1,6 +1,5 @@
 7.0.0 (2026-07-09)
 ------------------
-* Add autoconnect parameter to dashboard client (`#1478 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1478>`_)
 * Allow setting payload inertia matrix via set_payload service   (`#1808 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1808>`_)
 * Migrate Urscript interface to primary client (`#1833 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1833>`_)
 * Remove controller switch to passthrough controller (`#1857 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1857>`_)
