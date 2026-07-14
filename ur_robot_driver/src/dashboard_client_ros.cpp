@@ -58,7 +58,6 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
   param_callback_handle_ = node_->add_on_set_parameters_callback(
       std::bind(&DashboardClientROS::parametersCallback, this, std::placeholders::_1));
 
-  // Available before connection so callers can connect later when autoconnect is false.
   reconnect_service_ = node_->create_service<std_srvs::srv::Trigger>(
       "~/connect",
       [&](const std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
@@ -145,13 +144,7 @@ bool DashboardClientROS::connect()
 
   RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
               robot_ip_.c_str(), robot_version->toString().c_str());
-  try {
-    initServices(dashboard_policy);
-  } catch (const std::exception& e) {
-    RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Failed to initialize dashboard services: '%s'", e.what());
-    client_.reset();
-    return false;
-  }
+  initServices(dashboard_policy);
   return true;
 }
 
