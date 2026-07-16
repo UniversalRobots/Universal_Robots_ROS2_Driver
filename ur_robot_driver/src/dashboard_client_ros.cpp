@@ -60,8 +60,7 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
 
   reconnect_service_ = node_->create_service<std_srvs::srv::Trigger>(
       "~/connect",
-      [&](const std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
-          std_srvs::srv::Trigger::Response::SharedPtr resp) {
+      [&](const std_srvs::srv::Trigger::Request::SharedPtr /*req*/, std_srvs::srv::Trigger::Response::SharedPtr resp) {
         try {
           resp->success = connect();
         } catch (const urcl::UrException& e) {
@@ -340,7 +339,6 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
         return true;
       });
 
-
   // Disconnect from the dashboard service.
   quit_service_ =
       createDashboardTriggerSrv("~/quit", std::bind(&urcl::DashboardClient::commandQuitWithResponse, client_.get()));
@@ -526,7 +524,6 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
         }
         return true;
       });
-
 }
 
 bool DashboardClientROS::handleRunningQuery(const ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
