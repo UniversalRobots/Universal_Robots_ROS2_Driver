@@ -86,6 +86,7 @@ joint_trajectory_controller:
       $(var tf_prefix)wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
       $(var tf_prefix)wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
       $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
+    update_rate: $(var update_rate)
 
 
 scaled_joint_trajectory_controller:
