@@ -70,7 +70,7 @@ Scripts with execution monitoring
 ---------------------------------
 The action server at ``/urscript_interface/execute_script`` allows executing script programs and getting the information when execution is done and whether there was an error during execution.
 
-The ``SendScript`` action definition can be seen in the `ur_msgs action definitions <https://docs.ros.org/en/rolling/p/ur_msgs/__action_definitions.html/>`_
+The ``SendScript`` action definition can be seen in the `ur_msgs/action/SendScript <https://docs.ros.org/en/rolling/p/ur_msgs/action/SendScript.html>`_
 
 This action server is a ROS wrapper around the `URCL primary client's <https://github.com/UniversalRobots/Universal_Robots_Client_Library/blob/master/doc/architecture/primary_client.rst/>`_
 SendScriptBlocking method, and the meaning of parameters can be seen there.
