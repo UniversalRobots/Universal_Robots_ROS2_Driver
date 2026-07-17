@@ -287,3 +287,10 @@ Timeout after which a call to the dashboard server will be considered failure if
 ##### robot_ip (Required)
 
 The IP address under which the robot is reachable.
+
+##### autoconnect (default: true)
+
+If `true` (default), the dashboard client connects to the robot during startup and retries until
+the connection succeeds or ROS is shut down. If `false`, the node starts without contacting the
+robot and only exposes the `~/connect` service until a connection succeeds; call `~/connect`
+once the robot is available to register the remaining dashboard services.
