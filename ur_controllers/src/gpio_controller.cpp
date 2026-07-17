@@ -606,27 +606,19 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
 
   // reset success flag
   command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-
-<<<<<<< HEAD
-  command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(req->mass);
+  command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->mass));
   command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
   command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
   command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
-=======
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->mass));
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXX].set_value(req->ixx);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYY].set_value(req->iyy);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IZZ].set_value(req->izz);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXY].set_value(req->ixy);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXZ].set_value(req->ixz);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYZ].set_value(req->iyz);
+  command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXX].set_value(req->ixx);
+  command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYY].set_value(req->iyy);
+  command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IZZ].set_value(req->izz);
+  command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXY].set_value(req->ixy);
+  command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXZ].set_value(req->ixz);
+  command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYZ].set_value(req->iyz);
   double transition_time_seconds =
       static_cast<double>(req->transition_time.sec) + (static_cast<double>(req->transition_time.nanosec) * 1e-9);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_TRANSITION_TIME].set_value(transition_time_seconds);
->>>>>>> 3d18755 (Allow setting payload inertia matrix via set_payload service backwards-compatible (#1811))
+  command_interfaces_[CommandInterfaces::PAYLOAD_TRANSITION_TIME].set_value(transition_time_seconds);
 
   if (!waitForAsyncCommand(
           [&]() { return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_value(); })) {
@@ -725,34 +717,23 @@ bool GPIOController::waitForPayloadRtdeMatch(double mass, double cx, double cy, 
   }
 
   for (int retries = 0; retries <= maximum_retries; ++retries) {
-<<<<<<< HEAD
     const auto m = state_interfaces_[StateInterfaces::PAYLOAD_STATE_MASS].get_value();
     const auto sx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_X].get_value();
     const auto sy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Y].get_value();
     const auto sz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Z].get_value();
-    if (std::abs(m - mass) <= tol_mass && std::abs(sx - cx) <= tol_cog && std::abs(sy - cy) <= tol_cog &&
-        std::abs(sz - cz) <= tol_cog) {
-      return true;
-=======
-    const auto m = state_interfaces_[StateInterfaces::PAYLOAD_STATE_MASS].get_optional();
-    const auto sx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_X].get_optional();
-    const auto sy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Y].get_optional();
-    const auto sz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Z].get_optional();
-    const auto sixx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXX].get_optional();
-    const auto siyy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYY].get_optional();
-    const auto sizz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IZZ].get_optional();
-    const auto sixy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXY].get_optional();
-    const auto sixz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXZ].get_optional();
-    const auto siyz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYZ].get_optional();
+    const auto sixx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXX].get_value();
+    const auto siyy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYY].get_value();
+    const auto sizz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IZZ].get_value();
+    const auto sixy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXY].get_value();
+    const auto sixz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXZ].get_value();
+    const auto siyz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYZ].get_value();
     if (m && sx && sy && sz && sixx && siyy && sizz && sixy && sixz && siyz) {
-      if (std::abs(*m - mass) <= tol_mass && std::abs(*sx - cx) <= tol_cog && std::abs(*sy - cy) <= tol_cog &&
-          std::abs(*sz - cz) <= tol_cog && std::abs(*sixx - ixx) <= tol_inertia &&
-          std::abs(*siyy - iyy) <= tol_inertia && std::abs(*sizz - izz) <= tol_inertia &&
-          std::abs(*sixy - ixy) <= tol_inertia && std::abs(*sixz - ixz) <= tol_inertia &&
-          std::abs(*siyz - iyz) <= tol_inertia) {
+      if (std::abs(m - mass) <= tol_mass && std::abs(sx - cx) <= tol_cog && std::abs(sy - cy) <= tol_cog &&
+          std::abs(sz - cz) <= tol_cog && std::abs(sixx - ixx) <= tol_inertia && std::abs(siyy - iyy) <= tol_inertia &&
+          std::abs(sizz - izz) <= tol_inertia && std::abs(sixy - ixy) <= tol_inertia &&
+          std::abs(sixz - ixz) <= tol_inertia && std::abs(siyz - iyz) <= tol_inertia) {
         return true;
       }
->>>>>>> 3d18755 (Allow setting payload inertia matrix via set_payload service backwards-compatible (#1811))
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
