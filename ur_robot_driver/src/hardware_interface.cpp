@@ -385,8 +385,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       hardware_interface::StateInterface(tf_prefix + "payload", "cog.y", &rtde_payload_cog_[1]));
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]));
-<<<<<<< HEAD
-=======
+
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixx", &rtde_payload_inertia_[0]));
   state_interfaces.emplace_back(
@@ -404,7 +403,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
                                                                    "execution_status", &hw_moprim_states_[0]));
   state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                    "ready_for_new_primitive", &hw_moprim_states_[1]));
->>>>>>> 3d18755 (Allow setting payload inertia matrix via set_payload service backwards-compatible (#1811))
 
   return state_interfaces;
 }
