@@ -29,6 +29,8 @@
 #
 # Author: Denis Stogl
 
+import yaml
+
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterFile, ParameterValue
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
@@ -227,6 +229,13 @@ def launch_setup(context, *args, **kwargs):
             ur_type.perform(context) + "_update_rate.yaml",
         ]
     )
+
+    # Expose the controller_manager update_rate as a launch configuration so
+    # that '$(var update_rate)' substitutions inside controller config yaml
+    # resolve to the correct rate for this ur_type.
+    with open(update_rate_config_file.perform(context)) as f:
+        update_rate = yaml.safe_load(f)["controller_manager"]["ros__parameters"]["update_rate"]
+    context.launch_configurations["update_rate"] = str(update_rate)
 
     control_node = Node(
         package="controller_manager",
