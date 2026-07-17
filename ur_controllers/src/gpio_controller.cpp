@@ -727,13 +727,11 @@ bool GPIOController::waitForPayloadRtdeMatch(double mass, double cx, double cy, 
     const auto sixy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXY].get_value();
     const auto sixz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXZ].get_value();
     const auto siyz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYZ].get_value();
-    if (m && sx && sy && sz && sixx && siyy && sizz && sixy && sixz && siyz) {
-      if (std::abs(m - mass) <= tol_mass && std::abs(sx - cx) <= tol_cog && std::abs(sy - cy) <= tol_cog &&
-          std::abs(sz - cz) <= tol_cog && std::abs(sixx - ixx) <= tol_inertia && std::abs(siyy - iyy) <= tol_inertia &&
-          std::abs(sizz - izz) <= tol_inertia && std::abs(sixy - ixy) <= tol_inertia &&
-          std::abs(sixz - ixz) <= tol_inertia && std::abs(siyz - iyz) <= tol_inertia) {
-        return true;
-      }
+    if (std::abs(m - mass) <= tol_mass && std::abs(sx - cx) <= tol_cog && std::abs(sy - cy) <= tol_cog &&
+        std::abs(sz - cz) <= tol_cog && std::abs(sixx - ixx) <= tol_inertia && std::abs(siyy - iyy) <= tol_inertia &&
+        std::abs(sizz - izz) <= tol_inertia && std::abs(sixy - ixy) <= tol_inertia &&
+        std::abs(sixz - ixz) <= tol_inertia && std::abs(siyz - iyz) <= tol_inertia) {
+      return true;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
