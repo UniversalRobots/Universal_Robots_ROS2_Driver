@@ -398,11 +398,6 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixz", &rtde_payload_inertia_[4]));
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "payload", "inertia.iyz", &rtde_payload_inertia_[5]));
-  // Motion primitives stuff
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                   "execution_status", &hw_moprim_states_[0]));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                   "ready_for_new_primitive", &hw_moprim_states_[1]));
 
   return state_interfaces;
 }
