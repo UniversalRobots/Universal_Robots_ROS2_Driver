@@ -40,25 +40,32 @@ from ur_dashboard_msgs.msg import RobotMode, UserRole, OperationalMode, SafetySt
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     DashboardInterface,
+    connect_dashboard_client,
     generate_dashboard_test_description,
 )
 
 
 @pytest.mark.launch_test
 @launch_testing.parametrize(
-    "ursim_version, ur_type",
-    [("latest", "ur30"), ("10.12.0", "ur15"), ("3.15.8", "ur10")],
+    "ursim_version, ur_type, autoconnect",
+    [
+        ("latest", "ur30", "false"),
+        ("10.12.0", "ur15", "true"),
+        ("3.15.8", "ur10", "true"),
+    ],
 )
-def generate_test_description(ursim_version, ur_type):
-    return generate_dashboard_test_description(ursim_version, ur_type)
+def generate_test_description(ursim_version, ur_type, autoconnect):
+    return generate_dashboard_test_description(ursim_version, ur_type, autoconnect)
 
 
 class DashboardClientTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls, ursim_version):
+    def setUpClass(cls, ursim_version, autoconnect):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("dashboard_client_test")
+        if autoconnect == "false":
+            connect_dashboard_client(cls.node)
         cls.init_robot(cls, ursim_version)
 
     @classmethod
