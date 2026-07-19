@@ -20,6 +20,7 @@ find_package(tf2_ros REQUIRED)
 
 find_package(Eigen3 REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
+find_package(yaml-cpp REQUIRED)
 find_package(ur_client_library REQUIRED)
 
 ###########
@@ -37,10 +38,14 @@ target_include_directories(calibration
 target_link_libraries(calibration
   ur_client_library::urcl
   Eigen3::Eigen
-  yaml-cpp
   rclcpp::rclcpp
   ur_robot_driver::ur_robot_driver_log_handler
 )
+if(TARGET yaml-cpp::yaml-cpp)
+  target_link_libraries(calibration yaml-cpp::yaml-cpp)
+else()
+  target_link_libraries(calibration yaml-cpp)
+endif()
 
 add_executable(calibration_correction
   src/calibration_correction.cpp
