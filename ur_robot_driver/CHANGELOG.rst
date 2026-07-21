@@ -1,3 +1,15 @@
+Forthcoming
+-----------
+* Add autoconnect parameter to dashboard client (backport `#1881 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1881>`_) (`#1887 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1887>`_)
+* Verify robot model (backport `#1779 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1779>`_) (`#1790 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1790>`_)
+* Fix sjtc sampling (`#1894 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1894>`_)
+* Allow setting payload inertia matrix via set_payload service backwards-compatible (backport `#1811 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1811>`_) (`#1880 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1880>`_)
+* Migrate Urscript interface to primary client (backport `#1833 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1833>`_) (`#1865 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1865>`_)
+* Add explicit control_msgs dependency for humble (`#1863 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1863>`_)
+* [tests] Remove controller switch to passthrough controller (backport `#1857 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1857>`_) (`#1860 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1860>`_)
+* [tests] Fix shadowed function arg (backport `#1835 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1835>`_) (`#1842 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1842>`_)
+* Contributors: Felix Exner, Plumezz, mergify[bot]
+
 2.13.2 (2026-06-24)
 -------------------
 * Explicitly send MODE_STOPPED when returning control to the robot (backport `#1678 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1678>`_) (`#1830 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1830>`_)

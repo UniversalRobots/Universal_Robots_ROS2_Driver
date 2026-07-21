@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix sjtc sampling (`#1894 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1894>`_)
+* Allow setting payload inertia matrix via set_payload service backwards-compatible (backport `#1811 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1811>`_) (`#1880 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1880>`_)
+* Contributors: Felix Exner, mergify[bot]
+
 2.13.2 (2026-06-24)
 -------------------
 * Use a realtime_tools::RealtimePublisher for publishing the state (backport `#1822 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1822>`_) (`#1823 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1823>`_)

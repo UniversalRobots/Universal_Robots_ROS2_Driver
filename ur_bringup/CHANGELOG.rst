@@ -2,6 +2,12 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix sjtc sampling (`#1894 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1894>`_)
+  * Set SJTC's update rate to CM's update rate
+* Contributors: Felix Exner
+
 2.13.2 (2026-06-24)
 -------------------
 
