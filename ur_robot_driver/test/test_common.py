@@ -236,6 +236,22 @@ class ActionInterface:
             )
 
 
+def connect_dashboard_client(node, timeout=TIMEOUT_WAIT_SERVICE_INITIAL):
+    """Call ~/connect until it succeeds. Used when the dashboard client is launched with autoconnect disabled."""
+    connect_client = _wait_for_service(node, "/dashboard_client/connect", Trigger, timeout)
+    end_time = time.time() + timeout
+    last_result = None
+    while time.time() < end_time:
+        last_result = _call_service(node, connect_client, Trigger.Request())
+        if last_result.success:
+            return last_result
+        time.sleep(1.0)
+    raise Exception(
+        "Failed to connect to dashboard client with autoconnect disabled"
+        + (f": {last_result.message}" if last_result is not None else "")
+    )
+
+
 class DashboardInterface(
     _ServiceInterface,
     namespace="/dashboard_client",
@@ -509,7 +525,7 @@ def _ursim_action(
     )
 
 
-def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e"):
+def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", autoconnect="true"):
     dashboard_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -522,6 +538,7 @@ def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e"):
         ),
         launch_arguments={
             "robot_ip": "192.168.56.101",
+            "autoconnect": autoconnect,
         }.items(),
     )
 
