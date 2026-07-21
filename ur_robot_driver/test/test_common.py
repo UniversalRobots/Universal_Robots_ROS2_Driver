@@ -46,7 +46,9 @@ from launch.actions import (
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from launch_testing.actions import ReadyToTest
 from rclpy.action import ActionClient
@@ -618,4 +620,108 @@ def generate_driver_test_description(
     return LaunchDescription(
         _declare_launch_arguments()
         + [ReadyToTest(), wait_dashboard_server, ursim_starter, driver_starter]
+    )
+
+
+def generate_driver_test_description_for_model(
+    ur_type,
+    hw_name="ur",
+    ursim_version="latest",
+    ursim_type=None,
+):
+    """
+    Generate a launch description that brings up URSim and the driver for an explicit ``ur_type``.
+
+    Unlike :func:`generate_driver_test_description`, this helper does not read the
+    ``ur_type`` launch argument but uses the value passed in. This makes it suitable
+    for tests parametrized over multiple robot models, where each parametrization
+    needs to spawn its own URSim of the matching model.
+
+    The optional ``ursim_type`` argument allows the URSim model to differ from the
+    driver's ``ur_type``. This is useful for negative tests that verify the driver
+    rejects a configuration mismatch. If not given, URSim is started for the same
+    model as the driver.
+    """
+    if ursim_type is None:
+        ursim_type = ur_type
+
+    script_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_client_library"), "resources", "external_control.urscript"]
+    )
+    input_recipe_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
+    )
+    output_recipe_filename = PathJoinSubstitution(
+        [FindPackageShare("ur_robot_driver"), "resources", "rtde_output_recipe.txt"]
+    )
+
+    robot_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("ur_description"), "urdf", "ur.urdf.xacro"]),
+            " ",
+            "robot_ip:=",
+            "192.168.56.101",
+            " ",
+            "name:=",
+            hw_name,
+            " ",
+            "script_filename:=",
+            script_filename,
+            " ",
+            "input_recipe_filename:=",
+            input_recipe_filename,
+            " ",
+            "output_recipe_filename:=",
+            output_recipe_filename,
+            " ",
+            "headless_mode:=true",
+            " ",
+            "ur_type:=",
+            ur_type,
+            " ",
+            "verify_robot_model:=true",
+        ]
+    )
+    robot_description = {
+        "robot_description": ParameterValue(value=robot_description_content, value_type=str)
+    }
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[
+            robot_description,
+            {"update_rate": 125},  # that fits all models
+            {"hardware_components_initial_state": {"unconfigured": ["ur"]}},
+        ],
+        output="screen",
+    )
+
+    wait_dashboard_server = ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
+            )
+        ],
+        name="wait_dashboard_server",
+        output="screen",
+    )
+    driver_starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_dashboard_server, on_exit=control_node)
+    )
+
+    # Use a per-model container name so leftover containers from a previous
+    # parametrization can never be confused with the current one.
+    container_name = f"ursim_{ursim_type}"
+
+    return LaunchDescription(
+        [
+            ReadyToTest(),
+            wait_dashboard_server,
+            _ursim_action(
+                ursim_version=ursim_version, ur_type=ursim_type, container_name=container_name
+            ),
+            driver_starter,
+        ]
     )
