@@ -74,7 +74,16 @@ controller_interface::InterfaceConfiguration ScaledJointTrajectoryController::st
 
 controller_interface::CallbackReturn ScaledJointTrajectoryController::on_configure(const rclcpp_lifecycle::State& state)
 {
-  update_period_ = rclcpp::Duration(0.0, static_cast<uint32_t>(1.0e9 / static_cast<double>(get_update_rate())));
+  auto update_rate = get_update_rate();
+
+  if (update_rate == 0) {
+    RCLCPP_WARN(get_node()->get_logger(), "Controller's update_rate is 0. Please configure a non-zero update_rate for "
+                                          "the controller to work properly. Falling back to sampling trajectory at "
+                                          "current_time + last period.");
+    update_period_ = rclcpp::Duration(0, 0);
+  } else {
+    update_period_ = rclcpp::Duration(0, static_cast<uint32_t>(1.0e9 / static_cast<double>(get_update_rate())));
+  }
 
   return JointTrajectoryController::on_configure(state);
 }
@@ -179,14 +188,18 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
     } else {
       traj_time_ += period * scaling_factor_;
     }
-    joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
-    // Sample expected state from the trajectory
-    traj_external_point_ptr_->sample(traj_time_, interpolation_method_, state_desired_, start_segment_itr,
-                                     end_segment_itr);
-    state_desired_.time_from_start = traj_time_ - traj_external_point_ptr_->time_from_start();
 
-    // find segment for current timestamp
-    const bool valid_point = traj_external_point_ptr_->sample(traj_time_ + update_period_, interpolation_method_,
+    // We expect the robot to be where it was commanded last. This will not be absolutely correct
+    // since
+    //  1. speed scaling will affect this
+    //  2. The cycle might not take exactly the controller's configured update period.
+    state_desired_ = last_commanded_state_;
+
+    // find segment for current timestamp. Look controller period ahead, fallback to last cycle's
+    // period if no update rate is configured.
+    const auto& sample_period = update_period_.seconds() == 0.0 ? period : update_period_;
+    joint_trajectory_controller::TrajectoryPointConstIter start_segment_itr, end_segment_itr;
+    const bool valid_point = traj_external_point_ptr_->sample(traj_time_ + sample_period, interpolation_method_,
                                                               command_next_, start_segment_itr, end_segment_itr);
     state_current_.time_from_start = time - traj_external_point_ptr_->time_from_start();
 
