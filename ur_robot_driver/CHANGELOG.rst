@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.14.0 (2026-07-21)
+-------------------
 * Add autoconnect parameter to dashboard client (backport `#1881 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1881>`_) (`#1887 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1887>`_)
 * Verify robot model (backport `#1779 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1779>`_) (`#1790 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1790>`_)
 * Fix sjtc sampling (`#1894 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1894>`_)
