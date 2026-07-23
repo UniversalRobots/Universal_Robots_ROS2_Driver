@@ -29,6 +29,8 @@ import logging
 import time
 
 import rclpy
+from rclpy.qos import QoSProfile, DurabilityPolicy
+
 from controller_manager_msgs.srv import (
     ListControllers,
     SwitchController,
@@ -83,6 +85,7 @@ from ur_msgs.srv import (
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from std_msgs.msg import Bool as BoolMsg
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
@@ -121,6 +124,28 @@ def _wait_for_action(node, action_name, action_type, timeout):
 
     logging.info("  Successfully connected to action server '%s'", action_name)
     return client
+
+
+def wait_for_robot_program_state(node, state, timeout):
+    received_state = None
+
+    def callback(msg):
+        nonlocal received_state
+        received_state = msg.data
+
+    subscription = node.create_subscription(
+        BoolMsg,
+        "/io_and_status_controller/robot_program_running",
+        callback,
+        QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL),
+    )
+
+    start_time = time.time()
+    while time.time() - start_time < timeout and received_state != state:
+        rclpy.spin_once(node, timeout_sec=0.1)
+
+    node.destroy_subscription(subscription)
+    return received_state
 
 
 def _call_service(node, client, request):
