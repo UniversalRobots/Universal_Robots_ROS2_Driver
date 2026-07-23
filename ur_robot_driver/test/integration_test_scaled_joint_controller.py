@@ -44,6 +44,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
     ActionInterface,
     ControllerManagerInterface,
     DashboardInterface,
@@ -68,6 +69,7 @@ class SJTCTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("sjtc_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 

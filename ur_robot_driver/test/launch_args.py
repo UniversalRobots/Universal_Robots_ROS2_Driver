@@ -56,7 +56,7 @@ sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     ControllerManagerInterface,
     _declare_launch_arguments,
-    _ursim_action,
+    _robot_ip,
 )
 
 
@@ -68,7 +68,7 @@ from test_common import (  # noqa: E402
 def generate_test_description(launch_dashboard_client):
     ur_type = LaunchConfiguration("ur_type")
     launch_arguments = {
-        "robot_ip": "192.168.56.101",
+        "robot_ip": _robot_ip(),
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(120),
@@ -104,8 +104,7 @@ def generate_test_description(launch_dashboard_client):
     )
 
     return LaunchDescription(
-        _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, _ursim_action(), driver_starter]
+        _declare_launch_arguments() + [ReadyToTest(), wait_dashboard_server, driver_starter]
     )
 
 

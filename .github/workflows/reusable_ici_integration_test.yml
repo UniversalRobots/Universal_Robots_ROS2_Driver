@@ -1,0 +1,111 @@
+name: Reusable industrial_ci integration tests
+
+on:
+  workflow_call:
+    inputs:
+      ref_for_scheduled_build:
+        description: 'Reference on which the repo should be checkout for scheduled build.'
+        default: ''
+        required: false
+        type: string
+      upstream_workspace:
+        description: 'UPSTREAM_WORKSPACE variable for industrial_ci.'
+        required: false
+        default: ''
+        type: string
+      ros_distro:
+        description: 'ROS_DISTRO variable for industrial_ci'
+        required: true
+        type: string
+      ros_repo:
+        description: 'ROS_REPO to run for industrial_ci. Possible values: "main", "testing"'
+        default: 'main'
+        required: false
+        type: string
+      workspace_cache_key:
+        description: 'Cache key for the built workspace produced by the build job'
+        required: true
+        type: string
+
+jobs:
+  integration_test:
+    name: integration (${{ matrix.ursim_version }} / ${{ matrix.ursim_type }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ursim_version: latest
+            ursim_type: ur30
+          - ursim_version: '10.12.0'
+            ursim_type: ur15
+          - ursim_version: '3.15.8'
+            ursim_type: ur10
+    env:
+      BASEDIR: ${{ github.workspace }}/.ici
+      ROS_DISTRO: ${{ inputs.ros_distro }}
+      UR_CI_ROBOT_IP: 192.168.56.101
+      UR_CI_UR_TYPE: ${{ matrix.ursim_type }}
+    steps:
+      - name: Checkout repository
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/checkout@v7
+      - name: Checkout scheduled ref
+        if: ${{ github.event_name == 'schedule' }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref_for_scheduled_build }}
+      - uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: ${{ inputs.ros_distro }}
+          use-ros2-testing: ${{ inputs.ros_repo == 'testing' }}
+      - name: Restore built workspace
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .ici/target_ws/build
+            .ici/target_ws/install
+            .ici/upstream_ws/install
+          key: ${{ inputs.workspace_cache_key }}
+          fail-on-cache-miss: true
+      - run: docker network create --subnet=192.168.56.0/24 --gateway=192.168.56.254 ursim_net
+        if: ${{ !env.ACT }}
+      - name: Create shared host directories
+        run: |
+          mkdir -p /tmp/ur_test_artifacts /tmp/ursim_urcaps
+          chmod 777 /tmp/ur_test_artifacts /tmp/ursim_urcaps
+      - name: Start URSim
+        run: |
+          source "/opt/ros/${ROS_DISTRO}/setup.bash"
+          if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
+            source "${BASEDIR}/upstream_ws/install/setup.bash"
+          fi
+          source "${BASEDIR}/target_ws/install/setup.bash"
+          mkdir -p /tmp/ursim_urcaps
+          ros2 run ur_client_library start_ursim.sh \
+            -m "${{ matrix.ursim_type }}" \
+            -v "${{ matrix.ursim_version }}" \
+            -n ursim \
+            -u /tmp/ursim_urcaps
+      - name: Run integration tests
+        run: |
+          source "/opt/ros/${ROS_DISTRO}/setup.bash"
+          if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
+            source "${BASEDIR}/upstream_ws/install/setup.bash"
+          fi
+          source "${BASEDIR}/target_ws/install/setup.bash"
+          cd "${BASEDIR}/target_ws"
+          colcon test --packages-select ur_robot_driver --ctest-args -L ursim
+          colcon test-result --verbose
+      - name: Show test-results
+        run: |
+          source "/opt/ros/${ROS_DISTRO}/setup.bash"
+          if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
+            source "${BASEDIR}/upstream_ws/install/setup.bash"
+          fi
+          source "${BASEDIR}/target_ws/install/setup.bash"
+          cd "${BASEDIR}/target_ws"
+          colcon test-result --verbose
+      - name: Stop URSim
+        if: always()
+        run: docker rm -f ursim || true

@@ -45,6 +45,7 @@ from action_msgs.msg import GoalStatus
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
@@ -68,6 +69,7 @@ class ToolContactTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("tool_contact_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 

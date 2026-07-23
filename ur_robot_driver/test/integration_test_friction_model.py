@@ -51,6 +51,7 @@ from ur_msgs.msg import FrictionModelParameters
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
     ControllerManagerInterface,
     DashboardInterface,
     FrictionModelInterface,
@@ -74,6 +75,7 @@ class FrictionModelTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("friction_model_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 

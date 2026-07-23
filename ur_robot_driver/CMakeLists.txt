@@ -1,20 +1,11 @@
 cmake_minimum_required(VERSION 3.28.3)
 project(ur_robot_driver)
 
-# Default to off as this only works in environments where a new docker container can be started with the appropriate networking, which
-# might not be possible e.g. inside the buildfarm
+# Default to off: these tests require an externally started robot/URSim and are
+# not suitable for environments such as the ROS buildfarm.
 option(
   UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS
-  "Build integration tests using the start_ursim script"
-  OFF
-)
-
-# This test spins up a fresh URSim container for every supported robot model
-# (and one model-mismatch case), which takes a long time. It is therefore kept
-# behind its own flag so a normal integration-test run is not slowed down by it.
-option(
-  UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST
-  "Run the integration test that runs the driver against URSim for every supported robot model"
+  "Build integration tests that run against an externally started robot/URSim"
   OFF
 )
 
@@ -265,71 +256,104 @@ if(BUILD_TESTING)
   )
 
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
+    # Labelled "ursim" so they can be explicitly
+    # - skipped  using `ctest -LE ursim`
+    # - executed using `ctest -L ursim`
     add_launch_test(test/launch_args.py
       TIMEOUT
         180
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_component_lifecycle.py
       TIMEOUT
         180
+      LABELS
+        ursim
     )
     add_launch_test(test/dashboard_client.py
       TIMEOUT
         180
+      LABELS
+        ursim
     )
     add_launch_test(test/example_move.py
       TIMEOUT
         180
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_scaled_joint_controller.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_controller_switch.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_force_mode.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_friction_model.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_config_controller.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_passthrough_controller.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_io_controller.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_hand_back_control.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_tool_contact.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
     add_launch_test(test/integration_test_trajectory_until.py
       TIMEOUT
         800
+      LABELS
+        ursim
     )
-    if(${UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST})
-      add_launch_test(test/integration_test_robot_models.py
-        TIMEOUT
-          2700
-      )
-    endif()
+    # Runs in the industrial_ci build job (not the URSim matrix): starts its own
+    # URSim instance per robot-model parametrization.
+    add_launch_test(test/integration_test_robot_models.py
+      TIMEOUT
+        2700
+    )
   endif()
 endif()
