@@ -701,6 +701,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // The driver will offer an interface to receive the program's URScript on this port.
   const int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
 
+  // Newer software version (5.23.0 / 10.11.0) support reporting the actual joint torques. On older
+  // versions fall back to the currents, instead.
+  use_currents_as_efforts_ = ((info_.hardware_parameters["use_currents_as_efforts"] == "true") ||
+                              (info_.hardware_parameters["use_currents_as_efforts"] == "True"));
+
   // The ip address of the host the driver runs on
   std::string reverse_ip = info_.hardware_parameters["reverse_ip"];
   if (reverse_ip == "0.0.0.0") {
@@ -798,12 +803,21 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   try {
+    auto input_recipe = urcl::rtde_interface::RTDEClient::readRecipe(input_recipe_filename);
+    auto output_recipe = urcl::rtde_interface::RTDEClient::readRecipe(output_recipe_filename);
+
+    if (!use_currents_as_efforts_) {
+      if (std::find(output_recipe.begin(), output_recipe.end(), "actual_current_as_torque") == output_recipe.end()) {
+        output_recipe.push_back("actual_current_as_torque");
+      }
+    }
+
     rtde_comm_has_been_started_ = false;
     urcl::UrDriverConfiguration driver_config;
     driver_config.robot_ip = robot_ip;
     driver_config.script_file = script_filename;
-    driver_config.output_recipe_file = output_recipe_filename;
-    driver_config.input_recipe_file = input_recipe_filename;
+    driver_config.output_recipe = output_recipe;
+    driver_config.input_recipe = input_recipe;
     driver_config.headless_mode = headless_mode;
     driver_config.reverse_port = static_cast<uint32_t>(reverse_port);
     driver_config.script_sender_port = static_cast<uint32_t>(script_sender_port);
@@ -818,7 +832,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
     ur_driver_ = std::make_shared<urcl::UrDriver>(driver_config);
     if (ur_driver_->getControlFrequency() != info_.rw_rate) {
-      ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, info_.rw_rate);
+      ur_driver_->resetRTDEClient(output_recipe, input_recipe, info_.rw_rate);
     }
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {
@@ -882,6 +896,17 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing InstructionExecutor");
   instruction_executor_ = std::make_shared<urcl::InstructionExecutor>(ur_driver_);
+
+  if (!use_currents_as_efforts_) {
+    if ((version_info_.major == 5 && version_info_.minor < 23) ||
+        (version_info_.major == 10 && version_info_.minor < 11) || version_info_.major < 5) {
+      RCLCPP_ERROR(get_logger(),
+                   "Driver configured to use actual torques as efforts, which is not supported by this software "
+                   "version %s. Please use version 5.23.0 / 10.11.0 or newer for this feature.",
+                   version_info_.toString().c_str());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+  }
 
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
@@ -996,7 +1021,11 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     packet_read_ = true;
     readData(data_package_buffer_, "actual_q", urcl_joint_positions_);
     readData(data_package_buffer_, "actual_qd", urcl_joint_velocities_);
-    readData(data_package_buffer_, "actual_current", urcl_joint_efforts_);
+    if (use_currents_as_efforts_) {
+      readData(data_package_buffer_, "actual_current", urcl_joint_efforts_);
+    } else {
+      readData(data_package_buffer_, "actual_current_as_torque", urcl_joint_efforts_);
+    }
     readData(data_package_buffer_, "target_speed_fraction", target_speed_fraction_);
     readData(data_package_buffer_, "speed_scaling", speed_scaling_);
     readData(data_package_buffer_, "runtime_state", runtime_state_);
