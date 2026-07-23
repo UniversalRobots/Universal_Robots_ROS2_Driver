@@ -36,6 +36,18 @@ After installation, please make sure to activate tool forwarding in the URCap's 
 
 After installing the URCap the robot will expose its tool communication device to the network.
 
+.. note::
+   If you cannot connect to the network-exposed tool communication port, please make sure that the
+   robot isn't configured to block inbound connections. To check if this is the case, go to the
+   **Hamburger Menu** -> **Settings** -> **Security** -> **General**, and ensure port 54321 is not
+   disabled in the fields under **Inbound Connections**.
+
+   Both fields can be cleared to remove all restrictions and enable all ports.
+
+   .. image:: resources/inbound.png
+      :alt: Screenshot showing the inbound connections menu screen.
+
+
 Setup the ROS side
 ------------------
 
