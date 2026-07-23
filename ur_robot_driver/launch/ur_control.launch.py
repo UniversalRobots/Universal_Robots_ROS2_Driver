@@ -35,7 +35,10 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
     ExecuteProcess,
+    RegisterEventHandler,
+    LogInfo,
 )
+from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.substitutions import (
@@ -236,6 +239,30 @@ def launch_setup(context):
         controller_spawner(controllers_inactive, active=False),
     ]
 
+    controller_manager_awaiter = Node(
+        package="ur_robot_driver",
+        executable="ur_controller_manager_awaiter.py",
+        parameters=[
+            {"use_mock_hardware": use_mock_hardware},
+        ],
+        output="screen",
+    )
+
+    spawn_controllers_event = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=controller_manager_awaiter,
+            on_exit=lambda event, context: (
+                controller_spawners
+                if event.returncode == 0
+                else [
+                    LogInfo(
+                        msg=f"ur_controller_manager_awaiter node failed or was killed (Exit code {event.returncode}). Aborting controller spawners."
+                    )
+                ]
+            ),
+        )
+    )
+
     rsp = IncludeLaunchDescription(
         AnyLaunchDescriptionSource(description_launchfile),
         launch_arguments={
@@ -254,7 +281,9 @@ def launch_setup(context):
         rsp,
         rviz_node,
         trajectory_until_node,
-    ] + controller_spawners
+        spawn_controllers_event,
+        controller_manager_awaiter,
+    ]
 
     return nodes_to_start
 
