@@ -150,10 +150,7 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
   }
 
   // Send action goal to trajectory controller and wait for it to be accepted. If it is not accepted
-  // within 1 second, it is assumed to be rejected. This wait must use cv_trajectory_ —
-  // trajectory_response_callback notifies cv_trajectory_, not cv_until_, so waiting on cv_until_
-  // here always ran into the timeout, delaying every goal acceptance by a full second (and goals
-  // finishing inside that window had their results dropped against the not-yet-accepted goal).
+  // within 1 second, it is assumed to be rejected.
   send_trajectory_goal(goal);
   {
     std::unique_lock<std::mutex> traj_lock(mutex_trajectory);
