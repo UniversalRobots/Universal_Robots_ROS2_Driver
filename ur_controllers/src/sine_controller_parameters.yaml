@@ -1,0 +1,39 @@
+sine_controller:
+  joints: {
+    type: string_array,
+    description: "Name of the joints to control",
+    validation: {
+      not_empty<>: []
+    },
+    read_only: true
+  }
+  interface_name: {
+    type: string,
+    description: "Name of the interface of the joint",
+    validation: {
+      not_empty<>: []
+    },
+    read_only: true
+  }
+
+  joint_indices_to_control: {
+    type: int_array,
+    description: "Indices of the joints to control (0-based)",
+    validation: {
+      not_empty<>: []
+    },
+    read_only: true
+  }
+
+  amplitude: {
+    type: double,
+    description: "Amplitude of the sine wave (in radians for position, in Nm for effort, in rad/s for velocity)",
+    default_value: 0.5,
+    read_only: true,
+  }
+  frequency: {
+    type: double,
+    description: "Frequency of the sine wave (in Hz)",
+    default_value: 0.5,
+    read_only: true,
+  }
