@@ -139,22 +139,28 @@ rclcpp_action::GoalResponse TrajectoryUntilNode::goal_received_callback(
     throw std::runtime_error("Until type not implemented. This should not happen.");
   }
 
-  // If it is not accepted within 1 seconds, it is
-  // assumed to be rejected.
-  std::unique_lock<std::mutex> until_lock(mutex_until);
-  cv_until_.wait_for(until_lock, 1s);
-  if (!until_accepted_) {
-    return rclcpp_action::GoalResponse::REJECT;
+  // If it is not accepted within 1 second, it is assumed to be rejected. The predicate protects
+  // against the acceptance callback firing before this wait starts (the clients run on a separate
+  // callback group), which would otherwise lose the notification and burn the full timeout.
+  {
+    std::unique_lock<std::mutex> until_lock(mutex_until);
+    if (!cv_until_.wait_for(until_lock, 1s, [this] { return until_accepted_.load(); })) {
+      return rclcpp_action::GoalResponse::REJECT;
+    }
   }
 
-  // Send action goal to trajectory controller and wait for it to be accepted. If it is not accepted within 1 seconds,
-  // it is assumed to be rejected.
+  // Send action goal to trajectory controller and wait for it to be accepted. If it is not accepted
+  // within 1 second, it is assumed to be rejected. This wait must use cv_trajectory_ —
+  // trajectory_response_callback notifies cv_trajectory_, not cv_until_, so waiting on cv_until_
+  // here always ran into the timeout, delaying every goal acceptance by a full second (and goals
+  // finishing inside that window had their results dropped against the not-yet-accepted goal).
   send_trajectory_goal(goal);
-  std::unique_lock<std::mutex> traj_lock(mutex_trajectory);
-  cv_until_.wait_for(traj_lock, 1s);
-  if (!trajectory_accepted_) {
-    reset_node();
-    return rclcpp_action::GoalResponse::REJECT;
+  {
+    std::unique_lock<std::mutex> traj_lock(mutex_trajectory);
+    if (!cv_trajectory_.wait_for(traj_lock, 1s, [this] { return trajectory_accepted_.load(); })) {
+      reset_node();
+      return rclcpp_action::GoalResponse::REJECT;
+    }
   }
 
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
