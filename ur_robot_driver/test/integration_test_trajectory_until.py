@@ -170,3 +170,45 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["tool_contact_controller"],
             ).ok
         )
+
+    def test_trajectory_with_tool_contact_short_goal_succeeds(self, tf_prefix):
+        # Regression test for #1908: while goal acceptance was delayed by the
+        # mismatched condition-variable waits in goal_received_callback, a
+        # trajectory finishing inside that window had its result dropped
+        # against the not-yet-accepted goal and was spuriously rejected. A
+        # short goal must be accepted and succeed like any other.
+        # NB: runs after test_trajectory_with_tool_contact_no_trigger_succeeds
+        # (alphabetical order), so the robot deterministically starts at that
+        # test's final waypoint.
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["tool_contact_controller"],
+            ).ok
+        )
+        # Small move from the previous test's end pose, short enough to finish
+        # within the formerly-burnt acceptance window.
+        target = list(self.test_traj["waypts"][1])
+        target[5] -= 0.3
+        trajectory = JointTrajectory()
+        trajectory.joint_names = [tf_prefix + joint for joint in ROBOT_JOINTS]
+        trajectory.points = [
+            JointTrajectoryPoint(positions=target, time_from_start=Duration(sec=1, nanosec=0))
+        ]
+        goal_handle = self._trajectory_until_interface.send_goal(
+            trajectory=trajectory, until_type=FollowJointTrajectoryUntil.Goal.TOOL_CONTACT
+        )
+        self.assertTrue(goal_handle.accepted)
+        result = self._trajectory_until_interface.get_result(
+            goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+        )
+        self.assertEqual(result.error_code, FollowJointTrajectoryUntil.Result.SUCCESSFUL)
+        self.assertEqual(
+            result.until_condition_result, FollowJointTrajectoryUntil.Result.NOT_TRIGGERED
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["tool_contact_controller"],
+            ).ok
+        )
