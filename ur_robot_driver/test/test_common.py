@@ -48,7 +48,6 @@ from launch.actions import (
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
 from launch_testing.actions import ReadyToTest
 from rclpy.action import ActionClient
@@ -554,6 +553,25 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
+def _wait_robot_booted_action():
+    """Wait until dashboard or Robot API is reachable. Not a ROS node."""
+    return ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [
+                    FindPackagePrefix("ur_robot_driver"),
+                    "lib",
+                    "ur_robot_driver",
+                    "wait_robot_booted.py",
+                ]
+            ),
+            _robot_ip(),
+        ],
+        name="wait_robot_booted",
+        output="screen",
+    )
+
+
 def _ursim_action(
     ursim_version="latest",
     ur_type="ur5e",
@@ -677,13 +695,7 @@ def generate_driver_test_description(
         ),
         launch_arguments=launch_arguments.items(),
     )
-    wait_robot_booted = Node(
-        package="ur_robot_driver",
-        executable="wait_robot_booted.py",
-        name="wait_robot_booted",
-        arguments=_robot_ip(),
-        output="screen",
-    )
+    wait_robot_booted = _wait_robot_booted_action()
     driver_starter = RegisterEventHandler(
         OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
     )
@@ -734,13 +746,7 @@ def generate_driver_test_description_for_model(
         ),
         launch_arguments=launch_arguments.items(),
     )
-    wait_robot_booted = Node(
-        package="ur_robot_driver",
-        executable="wait_robot_booted.py",
-        name="wait_robot_booted",
-        arguments=_robot_ip(),
-        output="screen",
-    )
+    wait_robot_booted = _wait_robot_booted_action()
     driver_starter = RegisterEventHandler(
         OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
     )

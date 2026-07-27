@@ -40,14 +40,13 @@ from rclpy.node import Node
 
 from launch import LaunchDescription
 from launch.actions import (
-    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
+from launch_ros.substitutions import FindPackageShare
 
 import launch_testing
 from launch_testing.actions import ReadyToTest
@@ -57,6 +56,7 @@ from test_common import (  # noqa: E402
     ControllerManagerInterface,
     _declare_launch_arguments,
     _robot_ip,
+    _wait_robot_booted_action,
 )
 
 
@@ -86,25 +86,13 @@ def generate_test_description(launch_dashboard_client):
         ),
         launch_arguments=launch_arguments.items(),
     )
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [
-                    FindPackagePrefix("ur_robot_driver"),
-                    "bin",
-                    "wait_dashboard_server.sh",
-                ]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
+    wait_robot_booted = _wait_robot_booted_action()
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+        OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
     )
 
     return LaunchDescription(
-        _declare_launch_arguments() + [ReadyToTest(), wait_dashboard_server, driver_starter]
+        _declare_launch_arguments() + [ReadyToTest(), wait_robot_booted, driver_starter]
     )
 
 
