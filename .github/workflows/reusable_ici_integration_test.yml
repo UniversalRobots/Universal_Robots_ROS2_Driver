@@ -26,6 +26,14 @@ on:
         description: 'Cache key for the built workspace produced by the build job'
         required: true
         type: string
+      ci_image:
+        description: 'Docker image tag committed by the build job'
+        required: true
+        type: string
+      ci_image_artifact:
+        description: 'Artifact name containing the committed CI docker image'
+        required: true
+        type: string
 
 jobs:
   integration_test:
@@ -46,6 +54,7 @@ jobs:
       ROS_DISTRO: ${{ inputs.ros_distro }}
       UR_CI_ROBOT_IP: 192.168.56.101
       UR_CI_UR_TYPE: ${{ matrix.ursim_type }}
+      CI_IMAGE: ${{ inputs.ci_image }}
     steps:
       - name: Checkout repository
         if: ${{ github.event_name != 'schedule' }}
@@ -55,10 +64,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref_for_scheduled_build }}
-      - uses: ros-tooling/setup-ros@v0.7
-        with:
-          required-ros-distributions: ${{ inputs.ros_distro }}
-          use-ros2-testing: ${{ inputs.ros_repo == 'testing' }}
       - name: Restore built workspace
         uses: actions/cache/restore@v4
         with:
@@ -68,44 +73,51 @@ jobs:
             .ici/upstream_ws/install
           key: ${{ inputs.workspace_cache_key }}
           fail-on-cache-miss: true
+      - name: Download CI docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ci_image_artifact }}
+      - name: Load CI docker image
+        run: gzip -dc ci-image.tar.gz | docker load
       - run: docker network create --subnet=192.168.56.0/24 --gateway=192.168.56.254 ursim_net
         if: ${{ !env.ACT }}
       - name: Create shared host directories
         run: |
           mkdir -p /tmp/ur_test_artifacts /tmp/ursim_urcaps
           chmod 777 /tmp/ur_test_artifacts /tmp/ursim_urcaps
-      - name: Start URSim
+      - name: Start URSim and run integration tests
         run: |
-          source "/opt/ros/${ROS_DISTRO}/setup.bash"
-          if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
-            source "${BASEDIR}/upstream_ws/install/setup.bash"
-          fi
-          source "${BASEDIR}/target_ws/install/setup.bash"
-          mkdir -p /tmp/ursim_urcaps
-          ros2 run ur_client_library start_ursim.sh \
-            -m "${{ matrix.ursim_type }}" \
-            -v "${{ matrix.ursim_version }}" \
-            -n ursim \
-            -u /tmp/ursim_urcaps
-      - name: Run integration tests
-        run: |
-          source "/opt/ros/${ROS_DISTRO}/setup.bash"
-          if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
-            source "${BASEDIR}/upstream_ws/install/setup.bash"
-          fi
-          source "${BASEDIR}/target_ws/install/setup.bash"
-          cd "${BASEDIR}/target_ws"
-          colcon test --packages-select ur_robot_driver --ctest-args -L ursim
-          colcon test-result --verbose
-      - name: Show test-results
-        run: |
-          source "/opt/ros/${ROS_DISTRO}/setup.bash"
-          if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
-            source "${BASEDIR}/upstream_ws/install/setup.bash"
-          fi
-          source "${BASEDIR}/target_ws/install/setup.bash"
-          cd "${BASEDIR}/target_ws"
-          colcon test-result --verbose
+          docker run --rm \
+            --network ursim_net --ip 192.168.56.1 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "${BASEDIR}:${BASEDIR}" \
+            -v /tmp/ur_test_artifacts:/tmp/ur_test_artifacts \
+            -v /tmp/ursim_urcaps:/tmp/ursim_urcaps \
+            -e BASEDIR \
+            -e ROS_DISTRO \
+            -e UR_CI_ROBOT_IP \
+            -e UR_CI_UR_TYPE \
+            -e UR_TEST_ARTIFACTS_DIR=/tmp/ur_test_artifacts \
+            "${CI_IMAGE}" \
+            bash -c '
+              set -euo pipefail
+              source "/opt/ros/${ROS_DISTRO}/setup.bash"
+              if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
+                source "${BASEDIR}/upstream_ws/install/setup.bash"
+              fi
+              source "${BASEDIR}/target_ws/install/setup.bash"
+
+              mkdir -p /tmp/ursim_urcaps
+              ros2 run ur_client_library start_ursim.sh \
+                -m "${UR_CI_UR_TYPE}" \
+                -v "${{ matrix.ursim_version }}" \
+                -n ursim \
+                -u /tmp/ursim_urcaps
+
+              cd "${BASEDIR}/target_ws"
+              colcon test --packages-select ur_robot_driver --ctest-args -L ursim
+              colcon test-result --verbose
+            '
       - name: Stop URSim
         if: always()
         run: docker rm -f ursim || true

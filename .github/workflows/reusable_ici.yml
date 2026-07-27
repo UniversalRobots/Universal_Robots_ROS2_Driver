@@ -60,3 +60,5 @@ jobs:
       ros_distro: ${{ inputs.ros_distro }}
       ros_repo: ${{ inputs.ros_repo }}
       workspace_cache_key: ${{ needs.build.outputs.workspace_cache_key }}
+      ci_image: ${{ needs.build.outputs.ci_image }}
+      ci_image_artifact: ${{ needs.build.outputs.ci_image_artifact }}

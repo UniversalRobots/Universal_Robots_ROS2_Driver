@@ -37,6 +37,12 @@ on:
       workspace_cache_key:
         description: 'Cache key for the built workspace consumed by integration test jobs'
         value: ${{ jobs.build.outputs.workspace_cache_key }}
+      ci_image:
+        description: 'Docker image tag committed by industrial_ci for reuse in matrix jobs'
+        value: ${{ jobs.build.outputs.ci_image }}
+      ci_image_artifact:
+        description: 'Artifact name containing the committed CI docker image'
+        value: ${{ jobs.build.outputs.ci_image_artifact }}
 
 jobs:
   build:
@@ -44,6 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       workspace_cache_key: ${{ steps.workspace_cache_key.outputs.key }}
+      ci_image: ${{ steps.ci_image.outputs.image }}
+      ci_image_artifact: ${{ steps.ci_image.outputs.artifact }}
     env:
       BASEDIR: ${{ github.workspace }}/.ici
       CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
@@ -80,15 +88,26 @@ jobs:
       - name: Set workspace cache key
         id: workspace_cache_key
         run: echo "key=ici-ws-${{ env.CACHE_PREFIX }}-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+      - name: Set CI image names
+        id: ci_image
+        run: |
+          image="ur-robot-driver-ci:${{ inputs.ros_distro }}-${{ inputs.ros_repo }}-${{ github.sha }}"
+          artifact="ci-image-${{ inputs.ros_distro }}-${{ inputs.ros_repo }}-${{ github.run_id }}"
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          echo "artifact=${artifact}" >> "$GITHUB_OUTPUT"
       - uses: 'ros-industrial/industrial_ci@master'
         env:
           UPSTREAM_WORKSPACE: ${{ inputs.upstream_workspace }}
           ROS_DISTRO: ${{ inputs.ros_distro }}
           ROS_REPO: ${{ inputs.ros_repo }}
           BASEDIR: ${{ env.BASEDIR }}
+          DOCKER_COMMIT: ${{ steps.ci_image.outputs.image }}
           # industrial_ci's default test step always passes `--ctest-args -j1`, which
           # overrides colcon defaults. Skip that step and run tests ourselves so we
-          # can exclude the shared-URSim matrix tests (-LE ursim).
+          # can exclude the shared-URSim matrix tests (-LE ursim). robot_models is
+          # unlabelled and still runs here (starts its own URSim per case), as do
+          # other package tests (ur_controllers, ur_calibration, mock hardware, …).
+          NOT_TEST_BUILD: true
           ADDITIONAL_DEBS: docker.io netcat-openbsd curl
           OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
           CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
@@ -100,7 +119,6 @@ jobs:
             && colcon test --event-handlers desktop_notification- status- terminal_title- console_cohesion+
                --executor sequential --ctest-args -LE ursim -j1
             && colcon test-result --verbose
-
       - name: Cache built workspace
         uses: actions/cache/save@v4
         with:
@@ -109,3 +127,11 @@ jobs:
             .ici/target_ws/install
             .ici/upstream_ws/install
           key: ${{ steps.workspace_cache_key.outputs.key }}
+      - name: Save CI docker image
+        run: docker save "${{ steps.ci_image.outputs.image }}" | gzip > ci-image.tar.gz
+      - name: Upload CI docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.ci_image.outputs.artifact }}
+          path: ci-image.tar.gz
+          retention-days: 1

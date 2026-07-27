@@ -160,8 +160,8 @@ Each of these stages also performs integration tests using ursim. In order to ex
 
 Each binary and semi-binary workflow now runs in two phases:
 
-1. **Build job** — industrial_ci builds all packages and runs every non-robot test: `ur_controllers`, `ur_calibration`, mock hardware tests, and `integration_test_robot_models` (which starts its own URSim per robot-model case). Shared-URSim matrix tests are built/registered but skipped via the `ursim` CTest label.
-2. **Integration test jobs** — three parallel jobs (PolyScope X / UR30, PolyScope 5 / UR15, CB3 / UR10) each restore the cached workspace, start one URSim instance, and run the shared-URSim integration tests against it.
+1. **Build job** — industrial_ci builds all packages inside its Docker image, runs every non-matrix test via `colcon test --ctest-args -LE ursim` (`ur_controllers`, `ur_calibration`, mock hardware, and `integration_test_robot_models`), then commits that image (`DOCKER_COMMIT`) and caches the workspace. Shared-URSim matrix tests are built/registered but skipped by the label filter.
+2. **Integration test jobs** — three parallel jobs (PolyScope X / UR30, PolyScope 5 / UR15, CB3 / UR10) each restore the cached workspace, load the committed CI image (so all rosdep/apt dependencies are present), start one URSim instance, and run the shared-URSim integration tests inside that image.
 
 Shared-URSim integration tests (labelled `ursim`) always expect an externally started robot/URSim and never launch a container themselves. Between those tests, `reset_ursim_state()` resets robot state via the dashboard client.
 
