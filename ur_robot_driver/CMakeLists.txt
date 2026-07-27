@@ -40,6 +40,7 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
+find_package(realtime_tools REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
@@ -110,6 +111,7 @@ add_executable(ur_ros2_control_node
 ament_target_dependencies(ur_ros2_control_node
   controller_manager
   rclcpp
+  realtime_tools
 )
 
 #
