@@ -100,12 +100,14 @@ jobs:
             -e UR_TEST_ARTIFACTS_DIR=/tmp/ur_test_artifacts \
             "${CI_IMAGE}" \
             bash -c '
-              set -euo pipefail
+              set -eo pipefail
+              set +u
               source "/opt/ros/${ROS_DISTRO}/setup.bash"
               if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
                 source "${BASEDIR}/upstream_ws/install/setup.bash"
               fi
               source "${BASEDIR}/target_ws/install/setup.bash"
+              set -u
 
               mkdir -p /tmp/ursim_urcaps
               ros2 run ur_client_library start_ursim.sh \

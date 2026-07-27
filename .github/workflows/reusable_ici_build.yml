@@ -112,10 +112,12 @@ jobs:
           OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
           CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
           AFTER_SCRIPT: >-
-            source "/opt/ros/$ROS_DISTRO/setup.bash"
+            set +u
+            && source "/opt/ros/$ROS_DISTRO/setup.bash"
             && { [ ! -f "$BASEDIR/upstream_ws/install/setup.bash" ] || source "$BASEDIR/upstream_ws/install/setup.bash"; }
             && cd "$BASEDIR/target_ws"
             && source install/setup.bash
+            && set -u
             && colcon test --event-handlers desktop_notification- status- terminal_title- console_direct+ --executor sequential --ctest-args -LE ursim -j1
             && colcon test-result --verbose
       - name: Cache built workspace
