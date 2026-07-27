@@ -306,8 +306,9 @@ class DashboardInterface(
     },
 ):
     def start_robot(self):
-        self._check_call(self.close_popup())
-        self._check_call(self.close_safety_popup())
+        # close_popup / close_safety_popup are not implemented on PolyScope X.
+        self._try_call(self.close_popup)
+        self._try_call(self.close_safety_popup)
         self._check_call(self.stop())
         self._check_call(self.power_off())
         self._check_call(self.power_on())
@@ -331,6 +332,25 @@ class DashboardInterface(
     def _check_call(self, result):
         if not result.success:
             raise Exception("Service call not successful")
+
+    def _try_call(self, action):
+        """Call a dashboard action, ignoring failure (e.g. unsupported on PolyScope X)."""
+        try:
+            result = action()
+            if not getattr(result, "success", True):
+                logging.info(
+                    "Optional dashboard call %s was not successful; continuing",
+                    action.__name__,
+                )
+                return False
+            return True
+        except Exception as exc:
+            logging.info(
+                "Optional dashboard call %s failed (%s); continuing",
+                action.__name__,
+                exc,
+            )
+            return False
 
     def detect_polyscope_family(self):
         """
@@ -357,15 +377,17 @@ def reset_ursim_state(node=None):
     """
     Return the robot/URSim to a clean idle state between tests.
 
+    ``close_popup`` / ``close_safety_popup`` are best-effort (unsupported on PolyScope X).
+
     :return: True if the reset succeeded, False otherwise.
     """
     if node is None:
         return False
     try:
         dashboard = DashboardInterface(node)
+        dashboard._try_call(dashboard.close_popup)
+        dashboard._try_call(dashboard.close_safety_popup)
         for action in (
-            dashboard.close_popup,
-            dashboard.close_safety_popup,
             dashboard.stop,
             dashboard.power_off,
         ):
