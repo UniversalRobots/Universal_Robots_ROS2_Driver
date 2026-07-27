@@ -116,8 +116,7 @@ jobs:
             && { [ ! -f "$BASEDIR/upstream_ws/install/setup.bash" ] || source "$BASEDIR/upstream_ws/install/setup.bash"; }
             && cd "$BASEDIR/target_ws"
             && source install/setup.bash
-            && colcon test --event-handlers desktop_notification- status- terminal_title- console_direct+ \
-               --executor sequential --ctest-args -LE ursim -j1
+            && colcon test --event-handlers desktop_notification- status- terminal_title- console_direct+ --executor sequential --ctest-args -LE ursim -j1
             && colcon test-result --verbose
       - name: Cache built workspace
         uses: actions/cache/save@v4
