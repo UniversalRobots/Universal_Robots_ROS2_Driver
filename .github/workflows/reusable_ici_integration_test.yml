@@ -114,7 +114,8 @@ jobs:
                 -m "${UR_CI_UR_TYPE}" \
                 -v "${{ matrix.ursim_version }}" \
                 -n ursim \
-                -u /tmp/ursim_urcaps
+                -u /tmp/ursim_urcaps \
+                -d
 
               cd "${BASEDIR}/target_ws"
               colcon test --packages-select ur_robot_driver --ctest-args -L ursim
@@ -122,4 +123,4 @@ jobs:
             '
       - name: Stop URSim
         if: always()
-        run: docker rm -f ursim || true
+        run: docker stop ursim && docker rm -f ursim || true
