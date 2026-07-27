@@ -67,7 +67,9 @@ jobs:
       - name: Restore built workspace
         uses: actions/cache/restore@v4
         with:
+          # src is required for colcon package discovery (--packages-select).
           path: |
+            .ici/target_ws/src
             .ici/target_ws/build
             .ici/target_ws/install
             .ici/upstream_ws/install
@@ -118,9 +120,9 @@ jobs:
                 -d
 
               cd "${BASEDIR}/target_ws"
-              colcon test --packages-select ur_robot_driver --ctest-args -L ursim
+              colcon test --event-handlers console_direct+ --executor sequential --packages-select ur_robot_driver --ctest-args -L ursim
               colcon test-result --verbose
             '
       - name: Stop URSim
         if: always()
-        run: docker stop ursim && docker rm -f ursim || true
+        run: docker stop ursim

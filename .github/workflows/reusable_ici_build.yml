@@ -123,7 +123,10 @@ jobs:
       - name: Cache built workspace
         uses: actions/cache/save@v4
         with:
+          # src is required for colcon package discovery in matrix jobs
+          # (industrial_ci copies the checkout into target_ws/src).
           path: |
+            .ici/target_ws/src
             .ici/target_ws/build
             .ici/target_ws/install
             .ici/upstream_ws/install
