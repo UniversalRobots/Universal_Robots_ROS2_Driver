@@ -160,10 +160,8 @@ class RobotDriverTest(unittest.TestCase):
         )
         self.assertTrue(goal_handle.accepted)
         result = self._trajectory_until_interface.cancel_goal(goal_handle)
-<<<<<<< HEAD
         self.assertTrue(len(result.goals_canceling) > 0)
-=======
-        self.assertEqual(result.return_code, CancelGoal_Response.ERROR_NONE)
+
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
@@ -212,4 +210,3 @@ class RobotDriverTest(unittest.TestCase):
                 deactivate_controllers=["tool_contact_controller"],
             ).ok
         )
->>>>>>> 8900b03 (Fix `trajectory_until_node` goal acceptance handshake (#1909))
