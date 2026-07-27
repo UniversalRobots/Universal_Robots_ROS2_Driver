@@ -43,18 +43,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # PolyScope X: skip tests that require CB3/PolyScope 5 dashboard features.
           - ursim_version: latest
             ursim_type: ur30
+            exclude_dashboard_g5: true
           - ursim_version: '10.12.0'
             ursim_type: ur15
+            exclude_dashboard_g5: true
           - ursim_version: '3.15.8'
             ursim_type: ur10
+            exclude_dashboard_g5: false
     env:
       BASEDIR: ${{ github.workspace }}/.ici
       ROS_DISTRO: ${{ inputs.ros_distro }}
       UR_CI_ROBOT_IP: 192.168.56.101
       UR_CI_UR_TYPE: ${{ matrix.ursim_type }}
       CI_IMAGE: ${{ inputs.ci_image }}
+      EXCLUDE_DASHBOARD_G5: ${{ matrix.exclude_dashboard_g5 }}
     steps:
       - name: Checkout repository
         if: ${{ github.event_name != 'schedule' }}
@@ -99,6 +104,7 @@ jobs:
             -e ROS_DISTRO \
             -e UR_CI_ROBOT_IP \
             -e UR_CI_UR_TYPE \
+            -e EXCLUDE_DASHBOARD_G5 \
             -e UR_TEST_ARTIFACTS_DIR=/tmp/ur_test_artifacts \
             "${CI_IMAGE}" \
             bash -c '
@@ -122,8 +128,14 @@ jobs:
 
               ros2 run ur_robot_driver wait_robot_booted.py --timeout 300 "${UR_CI_ROBOT_IP}"
 
+              ctest_label_args=(-L ursim)
+              if [ "${EXCLUDE_DASHBOARD_G5}" = "true" ]; then
+                ctest_label_args+=(-LE dashboard_g5)
+              fi
+
               cd "${BASEDIR}/target_ws"
-              colcon test --event-handlers console_direct+ --executor sequential --packages-select ur_robot_driver --ctest-args -L ursim
+              colcon test --event-handlers console_direct+ --executor sequential \
+                --packages-select ur_robot_driver --ctest-args "${ctest_label_args[@]}"
               colcon test-result --verbose
             '
       - name: Stop URSim

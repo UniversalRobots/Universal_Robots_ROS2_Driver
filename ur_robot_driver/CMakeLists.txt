@@ -269,6 +269,9 @@ if(BUILD_TESTING)
     # Labelled "ursim" so they can be explicitly
     # - skipped  using `ctest -LE ursim`
     # - executed using `ctest -L ursim`
+    # Tests that need CB3 / PolyScope 5 dashboard features (power cycle via
+    # start_robot / reset_ursim_state) also carry "dashboard_g5" so PolyScope X
+    # CI can exclude them with `ctest -L ursim -LE dashboard_g5`.
     add_launch_test(test/launch_args.py
       TIMEOUT
         180
@@ -280,6 +283,7 @@ if(BUILD_TESTING)
         180
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/dashboard_client.py
       TIMEOUT
@@ -292,72 +296,84 @@ if(BUILD_TESTING)
         180
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_scaled_joint_controller.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_controller_switch.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_force_mode.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_friction_model.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/urscript_interface.py
       TIMEOUT
         500
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_config_controller.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_passthrough_controller.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_io_controller.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_hand_back_control.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_tool_contact.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
     add_launch_test(test/integration_test_trajectory_until.py
       TIMEOUT
         800
       LABELS
         ursim
+        dashboard_g5
     )
 
     if(${UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST})
