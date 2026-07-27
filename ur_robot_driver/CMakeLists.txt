@@ -1,11 +1,20 @@
 cmake_minimum_required(VERSION 3.28.3)
 project(ur_robot_driver)
 
-# Default to off: these tests require an externally started robot/URSim and are
-# not suitable for environments such as the ROS buildfarm.
+# Default to off as this only works in environments where a new docker container can be started with the appropriate networking, which
+# might not be possible e.g. inside the buildfarm
 option(
   UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS
-  "Build integration tests that run against an externally started robot/URSim"
+  "Build integration tests using the start_ursim script"
+  OFF
+)
+
+# This test spins up a fresh URSim container for every supported robot model
+# (and one model-mismatch case), which takes a long time. It is therefore kept
+# behind its own flag so a normal integration-test run is not slowed down by it.
+option(
+  UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST
+  "Run the integration test that runs the driver against URSim for every supported robot model"
   OFF
 )
 
@@ -349,11 +358,12 @@ if(BUILD_TESTING)
       LABELS
         ursim
     )
-    # Runs in the industrial_ci build job (not the URSim matrix): starts its own
-    # URSim instance per robot-model parametrization.
-    add_launch_test(test/integration_test_robot_models.py
-      TIMEOUT
-        2700
-    )
+
+    if(${UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST})
+      add_launch_test(test/integration_test_robot_models.py
+        TIMEOUT
+          2700
+      )
+    endif()
   endif()
 endif()

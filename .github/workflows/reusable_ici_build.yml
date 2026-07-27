@@ -86,14 +86,21 @@ jobs:
           ROS_DISTRO: ${{ inputs.ros_distro }}
           ROS_REPO: ${{ inputs.ros_repo }}
           BASEDIR: ${{ env.BASEDIR }}
-          # Shared-URSim matrix tests are skipped here via -LE ursim.
-          # robot_models (unlabelled) runs here and starts its own URSim per case.
-          # Other package tests (ur_controllers, ur_calibration, mock hardware, …)
-          # also run in this industrial_ci stage.
+          # industrial_ci's default test step always passes `--ctest-args -j1`, which
+          # overrides colcon defaults. Skip that step and run tests ourselves so we
+          # can exclude the shared-URSim matrix tests (-LE ursim).
           ADDITIONAL_DEBS: docker.io netcat-openbsd curl
           OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
           CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
-          BEFORE_RUN_TESTS_EMBED: export COLCON_DEFAULTS_FILE="$TARGET_REPO_PATH/.github/colcon_defaults_ici.yaml"
+          AFTER_SCRIPT: >-
+            source "/opt/ros/$ROS_DISTRO/setup.bash"
+            && { [ ! -f "$BASEDIR/upstream_ws/install/setup.bash" ] || source "$BASEDIR/upstream_ws/install/setup.bash"; }
+            && cd "$BASEDIR/target_ws"
+            && source install/setup.bash
+            && colcon test --event-handlers desktop_notification- status- terminal_title- console_cohesion+
+               --executor sequential --ctest-args -LE ursim -j1
+            && colcon test-result --verbose
+
       - name: Cache built workspace
         uses: actions/cache/save@v4
         with:

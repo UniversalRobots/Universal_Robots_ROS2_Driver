@@ -1,7 +1,0 @@
-# Used by the industrial_ci build job to skip shared-URSim matrix tests.
-# robot_models is intentionally unlabelled so it still runs here.
-# Integration-test matrix jobs pass explicit --ctest-args and do not use this file.
-test:
-  ctest-args:
-    - -LE
-    - ursim
