@@ -129,15 +129,27 @@ class DashboardClientTest(unittest.TestCase):
         """Test uploading a program."""
         if self.polyscope_family != POLYSCOPE_X:
             self.skipTest("Uploading a program is only supported on PolyScope X")
+
+        def program_exists(program_name):
+            result = self._dashboard_interface.get_programs()
+            self.assertTrue(result.success)
+            for prog in result.programs:
+                if prog.name == program_name:
+                    return True
+            return False
+
+        PROGRAM_NAME = "test upload"
+
+        if program_exists(PROGRAM_NAME):
+            self.skipTest("Upload program already tested by previous run. Skipping test.")
+
         result = self._dashboard_interface.upload_program(
             file_path=os.path.join(os.path.dirname(__file__), "test_program.urpx")
         )
         self.assertTrue(result.success)
         self.assertEqual(result.program_name, "test upload")
 
-        result = self._dashboard_interface.get_programs()
-        self.assertTrue(result.success)
-        self.assertTrue(len(result.programs) > 0)
+        self.assertTrue(program_exists(PROGRAM_NAME))
 
         # TODO: Updating a program requires an open UI session. We would need to start a browser
         # from within this test. Maybe it would be better to turn those tests into unittests, as
