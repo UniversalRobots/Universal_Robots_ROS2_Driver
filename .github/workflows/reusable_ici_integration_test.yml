@@ -128,6 +128,9 @@ jobs:
 
               ros2 run ur_robot_driver wait_robot_booted.py --timeout 300 "${UR_CI_ROBOT_IP}"
 
+              docker container inspect ursim
+              ls "${BASEDIR}/target_ws/src/ur_robot_driver/.github/dockerursim/ursim_storage/${{ matrix.ursim_version }}/${UR_CI_UR_TYPE}/programs"
+
               ctest_label_args=(-L ursim)
               if [ "${EXCLUDE_DASHBOARD_G5}" = "true" ]; then
                 ctest_label_args+=(-LE dashboard_g5)
