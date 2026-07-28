@@ -339,15 +339,13 @@ class DashboardInterface(
             result = action()
             if not getattr(result, "success", True):
                 logging.info(
-                    "Optional dashboard call %s was not successful; continuing",
-                    action.__name__,
+                    "Optional dashboard call was not successful; continuing",
                 )
                 return False
             return True
         except Exception as exc:
             logging.info(
-                "Optional dashboard call %s failed (%s); continuing",
-                action.__name__,
+                "Optional dashboard call failed (%s); continuing",
                 exc,
             )
             return False
@@ -394,10 +392,10 @@ def reset_ursim_state(node=None):
             try:
                 result = action()
                 if not getattr(result, "success", True):
-                    logging.error("reset_ursim_state: %s was not successful", action.__name__)
+                    logging.error("reset_ursim_state: Service call was not successful")
                     return False
             except Exception as exc:
-                logging.error("reset_ursim_state: %s failed: %s", action.__name__, exc)
+                logging.error("reset_ursim_state: Service call failed: %s", exc)
                 return False
     except Exception as exc:
         logging.error("reset_ursim_state via ROS dashboard failed: %s", exc)
