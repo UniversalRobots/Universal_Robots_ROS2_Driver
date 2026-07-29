@@ -45,7 +45,7 @@ from launch.actions import (
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 import launch_testing
@@ -54,6 +54,7 @@ from launch_testing.actions import ReadyToTest
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     ControllerManagerInterface,
+    _ci_ur_type,
     _declare_launch_arguments,
     _robot_ip,
     _wait_robot_booted_action,
@@ -66,7 +67,7 @@ from test_common import (  # noqa: E402
     [("true"), ("false")],
 )
 def generate_test_description(launch_dashboard_client):
-    ur_type = LaunchConfiguration("ur_type")
+    ur_type = _ci_ur_type()
     launch_arguments = {
         "robot_ip": _robot_ip(),
         "ur_type": ur_type,
