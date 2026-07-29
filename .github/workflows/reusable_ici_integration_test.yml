@@ -134,8 +134,10 @@ jobs:
               fi
 
               cd "${BASEDIR}/target_ws"
+              set -x
               colcon test --event-handlers console_direct+ --executor sequential \
                 --packages-select ur_robot_driver --ctest-args "-j1 ${ctest_label_args[@]}"
+              set +x
               colcon test-result --verbose
             '
       - name: Stop URSim
