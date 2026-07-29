@@ -49,7 +49,7 @@ jobs:
             exclude_dashboard_g5: true
           - ursim_version: '10.12.0'
             ursim_type: ur15
-            exclude_dashboard_g5: true
+            exclude_dashboard_g5: false
           - ursim_version: '3.15.8'
             ursim_type: ur10
             exclude_dashboard_g5: false
