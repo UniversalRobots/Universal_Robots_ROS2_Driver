@@ -76,9 +76,9 @@ def launch_setup(context):
             {
                 "hardware_synchronization.expect_blocking_read_write": LaunchConfiguration(
                     "blocking_read"
-                )
+                ),
+                "overruns.print_warnings": NotSubstitution(LaunchConfiguration("blocking_read")),
             },
-            {"overruns.print_warnings": False},
             # We use the tf_prefix as substitution in there, so that's why we keep it as an
             # argument for this launchfile
             ParameterFile(controllers_file, allow_substs=True),
