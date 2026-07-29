@@ -37,7 +37,7 @@ on:
 
 jobs:
   integration_test:
-    name: integration (${{ matrix.ursim_version }} / ${{ matrix.ursim_type }})
+    name: integration (${{ matrix.ursim_version }}, ${{ matrix.ursim_type }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
