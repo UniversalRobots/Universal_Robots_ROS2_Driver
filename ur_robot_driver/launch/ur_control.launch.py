@@ -541,7 +541,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "blocking_read",
-            default_value="false",
+            default_value="true",
             description="Block in read() effectively synchronizing the driver with the robot controller.",
         )
     )
