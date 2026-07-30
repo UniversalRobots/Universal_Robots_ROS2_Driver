@@ -102,7 +102,7 @@ ROBOT_JOINTS = [
 DEFAULT_ROBOT_IP = "192.168.56.101"
 
 # PolyScope family identifiers used by dashboard tests.
-POLYSCOPE_CB3 = "cb3"
+CB3 = "cb3"
 POLYSCOPE_5 = "polyscope5"
 POLYSCOPE_X = "polyscopex"
 
@@ -361,7 +361,7 @@ class DashboardInterface(
         if not resp.success:
             return POLYSCOPE_X
         if resp.version.major == 3:
-            return POLYSCOPE_CB3
+            return CB3
         if resp.version.major == 5:
             return POLYSCOPE_5
         logging.warning(

@@ -47,6 +47,7 @@ from test_common import (  # noqa: E402
     DashboardInterface,
     IoStatusInterface,
     generate_driver_test_description,
+    CB3,
 )
 
 ALL_CONTROLLERS = [
@@ -89,6 +90,7 @@ class ControllerSwitchTest(unittest.TestCase):
         self._io_status_controller_interface = IoStatusInterface(self.node)
         for controller in ALL_CONTROLLERS:
             self._controller_manager_interface.wait_for_controller(controller)
+        self.robot_family = self._dashboard_interface.detect_polyscope_family()
 
     def setUp(self):
         self._dashboard_interface.start_robot()
@@ -561,6 +563,8 @@ class ControllerSwitchTest(unittest.TestCase):
             ).ok
         )
 
+        self._controller_manager_interface.list_controllers()
+
         # MoPrim controller and force_mode should be possible to combine
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -583,6 +587,9 @@ class ControllerSwitchTest(unittest.TestCase):
 
     def test_friction_model_compatibility(self):
         """Test that friction_model_controller is compatible with all motion controllers."""
+        if self.robot_family == CB3:
+            self.skipTest("Friction model controller is not available on CB3")
+
         # Deactivate all writing controllers
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
