@@ -40,8 +40,8 @@ from ur_dashboard_msgs.msg import RobotMode, UserRole, OperationalMode, SafetySt
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     DashboardInterface,
+    CB3,
     POLYSCOPE_5,
-    POLYSCOPE_CB3,
     POLYSCOPE_X,
     connect_dashboard_client,
     generate_dashboard_test_description,
@@ -180,7 +180,7 @@ class DashboardClientTest(unittest.TestCase):
         self.assertNotEqual(resp.serial_number, 0)
 
     def test_user_role_services(self):
-        if self.polyscope_family != POLYSCOPE_CB3:
+        if self.polyscope_family != CB3:
             self.skipTest("User role services only supported on CB3")
         roles = [
             UserRole.PROGRAMMER,
