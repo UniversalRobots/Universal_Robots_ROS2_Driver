@@ -57,6 +57,7 @@ from test_common import (  # noqa: E402
     FrictionModelInterface,
     IoStatusInterface,
     generate_driver_test_description,
+    CB3,
 )
 
 
@@ -92,7 +93,11 @@ class FrictionModelTest(unittest.TestCase):
 
         self._controller_manager_interface.wait_for_controller("friction_model_controller")
 
+        self.family = self._dashboard_interface.detect_polyscope_family()
+
     def setUp(self):
+        if self.family == CB3:
+            self.skipTest("Friction model controller is not supported on CB3 robots")
         self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
