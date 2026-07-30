@@ -31,7 +31,6 @@ import logging
 import os
 import socket
 import sys
-import subprocess
 import time
 import unittest
 
@@ -61,11 +60,6 @@ def generate_test_description():
     return generate_driver_test_description(headless_mode=False)
 
 
-def copy_to_docker_container(container_name, src_path, dest_path):
-    print(f"Copying {src_path} to container '{container_name}' at {dest_path}")
-    subprocess.run(["docker", "cp", src_path, f"{container_name}:{dest_path}"], check=True)
-
-
 class HandBackControlTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -74,27 +68,6 @@ class HandBackControlTest(unittest.TestCase):
         assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
-        try:
-            copy_to_docker_container(
-                URSIM_CONTAINER,
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "resources",
-                    "ursim",
-                    "e-series",
-                    "ur5e",
-                    "programs",
-                    "hand_back_control_test_prog.urp",
-                ),
-                "/ursim/programs/hand_back_control_test_prog.urp",
-            )
-            subprocess.run(
-                ["docker", "exec", URSIM_CONTAINER, "ls", "-l", "/ursim/programs"],
-                check=True,
-            )
-
-        except Exception as e:
-            logging.error(f"Failed to copy program to Docker container: {e}")
 
     @classmethod
     def tearDownClass(cls):
