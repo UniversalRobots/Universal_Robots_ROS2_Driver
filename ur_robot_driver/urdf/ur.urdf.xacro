@@ -34,7 +34,7 @@
   <xacro:arg name="script_sender_port" default="50002"/>
   <xacro:arg name="trajectory_port" default="50003"/>
   <xacro:arg name="verify_robot_model" default="true" />
-  <xacro:arg name="use_currents_as_efforts" default="true"/>
+  <xacro:arg name="use_currents_as_efforts" default="false"/>
 
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />

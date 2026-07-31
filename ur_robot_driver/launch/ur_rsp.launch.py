@@ -463,7 +463,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_currents_as_efforts",
-            default_value="true",
+            default_value="false",
             description="Report motor currents as efforts. When set to false, the torques as reported from the robot are used. Note that this requires software 5.23.0 / 10.11.0.",
         )
     )

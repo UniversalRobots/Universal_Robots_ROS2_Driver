@@ -29,7 +29,7 @@
     robot_receive_timeout:=0.04
     rw_rate:=0
     verify_robot_model:=true
-    use_currents_as_efforts:=true
+    use_currents_as_efforts:=false
     ">
     <!-- rw_rate of 0 uses the rate of the controller_manager -->
 
