@@ -29,10 +29,10 @@ The UR hardware interface supports the following control modes:
 - **Effort state interfaces**: Joint efforts are reported as torques by default
   (``actual_current_as_torque``, requires PolyScope >= 5.23.0 / 10.11.0). Set
   ``use_currents_as_efforts`` to ``true`` to report motor currents instead.
-  
+
   .. note::
-  
-     The torques reported are gravity-compensated, meaning a torque of 0.0 corresponds to a joint that is 
+
+     The torques reported are gravity-compensated, meaning a torque of 0.0 corresponds to a joint that is
      not moving and does not experience an external load. This will only be true for a correctly setup
      payload on the robot. Please see :ref:`the GPIO controller <io_and_status_controller>` for more
      information on how to set up the payload dynamically.
