@@ -127,7 +127,7 @@ Selects which RTDE values are exported on the joint effort state interfaces.
   versions, configuring the hardware interface will fail.
 * When set to ``true``, the driver keeps the previous behavior and reports motor currents from
   ``actual_current`` as efforts.
-* When set to ``true`` on robot software versions < 5.23.0 / 10.11.0, the driver will report
+* When set to ``false`` on robot software versions < 5.23.0 / 10.11.0, the driver will report
   automatically fall back to using ``actual_current`` as efforts and print a warning message.
 
 This parameter can also be set through the ``use_currents_as_efforts`` launch argument of
