@@ -3,6 +3,28 @@
 ur_robot_driver
 ^^^^^^^^^^^^^^^
 
+Joint effort state interfaces report torques by default
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The joint effort state interfaces (and therefore the ``effort`` field of
+``sensor_msgs/JointState``) now report joint torques from RTDE
+(``actual_current_as_torque``) by default instead of motor currents.
+
+This requires PolyScope >= 5.23.0 / 10.11.0. On older software versions the driver will fall back to
+reporting currents instead of torques.
+
+To keep reporting motor currents as efforts, set ``use_currents_as_efforts`` to ``true``:
+
+.. code::
+
+   ros2 launch ur_robot_driver ur_control.launch.py \
+     robot_ip:=192.168.56.101 \
+     ur_type:=ur5e \
+     use_currents_as_efforts:=true
+
+See :doc:`../hardware_interface_parameters` for details.
+
+
 Interface change of set_payload service
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
