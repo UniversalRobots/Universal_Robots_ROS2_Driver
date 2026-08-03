@@ -128,7 +128,8 @@ Selects which RTDE values are exported on the joint effort state interfaces.
 * When set to ``true``, the driver keeps the previous behavior and reports motor currents from
   ``actual_current`` as efforts.
 * When set to ``false`` on robot software versions < 5.23.0 / 10.11.0, the driver will
-  automatically fall back to using ``actual_current`` as efforts and print a warning message.
+  fail to initialize, printing an error about the missing variable ``actual_current_as_torque`` on
+  the robot.
 
 This parameter can also be set through the ``use_currents_as_efforts`` launch argument of
 ``ur_control.launch.py`` / ``ur_rsp.launch.py``.

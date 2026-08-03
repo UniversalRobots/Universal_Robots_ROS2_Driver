@@ -701,8 +701,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // The driver will offer an interface to receive the program's URScript on this port.
   const int script_sender_port = stoi(info_.hardware_parameters["script_sender_port"]);
 
-  // Newer software version (5.23.0 / 10.11.0) support reporting the actual joint torques. On older
-  // versions fall back to the currents, instead.
   use_currents_as_efforts_ = ((info_.hardware_parameters["use_currents_as_efforts"] == "true") ||
                               (info_.hardware_parameters["use_currents_as_efforts"] == "True"));
 
@@ -802,11 +800,20 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   }
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
+  std::string ur_type = info_.hardware_parameters["ur_type"];
+  auto expected_type = robotTypeFromString(ur_type);
   try {
     auto input_recipe = urcl::rtde_interface::RTDEClient::readRecipe(input_recipe_filename);
     auto output_recipe = urcl::rtde_interface::RTDEClient::readRecipe(output_recipe_filename);
 
     if (!use_currents_as_efforts_) {
+      if (expected_type.robot_series == urcl::RobotSeries::CB3) {
+        RCLCPP_WARN_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "Using actual joint torques as efforts "
+                                                                              "requested on a CB3 robot. This is not "
+                                                                              "supported and will fail to initialize. "
+                                                                              "Please set the parameter "
+                                                                              "'use_currents_as_efforts' to true.");
+      }
       if (std::find(output_recipe.begin(), output_recipe.end(), "actual_current_as_torque") == output_recipe.end()) {
         output_recipe.push_back("actual_current_as_torque");
       }
@@ -839,6 +846,20 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
 
     return hardware_interface::CallbackReturn::ERROR;
+  } catch (urcl::RTDEInvalidKeyException& e) {
+    RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
+    if (std::find(e.invalid_keys.begin(), e.invalid_keys.end(), "actual_current_as_torque") != e.invalid_keys.end()) {
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "The robot declined the RTDE key "
+                                                                             "'actual_current_as_torque'. This is "
+                                                                             "required for "
+                                                                             "using actual joint torques as efforts. "
+                                                                             "Please use a newer version of the UR "
+                                                                             "robot software "
+                                                                             "(5.23.0 / 10.11.0 or newer) or set the "
+                                                                             "parameter 'use_currents_as_efforts' to "
+                                                                             "true.");
+    }
+    return hardware_interface::CallbackReturn::ERROR;
   } catch (urcl::UrException& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
     return hardware_interface::CallbackReturn::ERROR;
@@ -853,8 +874,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   get_robot_software_version_build_ = version_info_.build;
   get_robot_software_version_bugfix_ = version_info_.bugfix;
 
-  std::string ur_type = info_.hardware_parameters["ur_type"];
-  auto expected_type = robotTypeFromString(ur_type);
   auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
   auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
 
