@@ -1,0 +1,11 @@
+ur_robot_mode_broadcaster:
+   tf_prefix: {
+    type: string,
+    default_value: "",
+    description: "Urdf prefix of the corresponding arm"
+   }
+   state_publish_rate: {
+    type: double,
+    default_value: 10.0,
+    description: "Rate at which the robot mode data will be published."
+   }
