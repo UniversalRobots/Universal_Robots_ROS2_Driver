@@ -36,7 +36,7 @@ Other important arguments are:
 * ``launch_rviz`` (default: *true*) - Start RViz together with the driver.
 * ``initial_joint_controller`` (default: *joint_trajectory_controller*) - Use this if you
   want to start the robot with another controller.
-* ``blocking_read`` (default: *true*) - Make the robot's communication drive the ROS control loop's
+* ``blocking_read`` (default: *false*) - Make the robot's communication drive the ROS control loop's
   pace. Deactivate this  if you don't have a reliable robot communication setup. See
   :ref:`blocking_read` for more details.
 
