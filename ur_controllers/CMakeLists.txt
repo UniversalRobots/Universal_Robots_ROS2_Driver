@@ -72,8 +72,8 @@ generate_parameter_library(
   src/gpio_controller_parameters.yaml
 )
 generate_parameter_library(
-  ur_robot_broadcaster_parameters
-  src/ur_robot_broadcaster_parameters.yaml
+  ur_robot_mode_broadcaster_parameters
+  src/ur_robot_mode_broadcaster_parameters.yaml
 )
 
 generate_parameter_library(
@@ -108,7 +108,7 @@ add_library(${PROJECT_NAME} SHARED
   src/speed_scaling_state_broadcaster.cpp
   src/freedrive_mode_controller.cpp
   src/gpio_controller.cpp
-  src/ur_robot_broadcaster.cpp
+  src/ur_robot_mode_broadcaster.cpp
   src/gravity_update_controller.cpp
   src/passthrough_trajectory_controller.cpp
   src/ur_configuration_controller.cpp)
@@ -121,7 +121,7 @@ target_link_libraries(${PROJECT_NAME}
   force_mode_controller_parameters
   friction_model_controller_parameters
   gpio_controller_parameters
-  ur_robot_broadcaster_parameters
+  ur_robot_mode_broadcaster_parameters
   gravity_update_controller_parameters
   speed_scaling_state_broadcaster_parameters
   freedrive_mode_controller_parameters
