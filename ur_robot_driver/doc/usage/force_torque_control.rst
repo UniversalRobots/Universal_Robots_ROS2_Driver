@@ -56,8 +56,11 @@ with one value per joint.
 
 .. note::
 
-   The ``effort`` field in ``sensor_msgs/JointState`` (published by the ``joint_state_broadcaster``)
-   contains motor currents, not physical joint torques.
+   For robot softwware versions prior to PolyScope 5.23.0 / 10.11.0 the joint_states' ``effort``
+   field contains the motor currents instead of the actual joint torques.
+   On newer robot software versions, the driver reports the actual joint torques by default. To
+   revert to the previous behavior, set the hardware parameter ``use_currents_as_efforts`` to
+   ``true``. See :doc:`../hardware_interface_parameters` for details.
 
 Friction Compensation
 ^^^^^^^^^^^^^^^^^^^^^
