@@ -35,7 +35,7 @@ import unittest
 import launch_testing
 import pytest
 import rclpy
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Inertia, Vector3
 from rclpy.node import Node
 from control_msgs.action import FollowJointTrajectory
 from controller_manager_msgs.srv import SwitchController
@@ -132,7 +132,7 @@ class MockHWTest(unittest.TestCase):
         should therefore return success without performing the RTDE verification.
         """
         result = self._io_status_controller_interface.set_payload(
-            mass=1.5, center_of_gravity=Vector3(x=0.01, y=0.02, z=0.03)
+            payload=Inertia(m=1.5, com=Vector3(x=0.01, y=0.02, z=0.03))
         )
         self.assertTrue(
             result.success,
@@ -141,6 +141,6 @@ class MockHWTest(unittest.TestCase):
         )
 
         result = self._io_status_controller_interface.set_payload(
-            mass=0.0, center_of_gravity=Vector3(x=0.0, y=0.0, z=0.0)
+            payload=Inertia(m=0.0, com=Vector3(x=0.0, y=0.0, z=0.0))
         )
         self.assertTrue(result.success, "Resetting payload via set_payload failed on mock hardware")

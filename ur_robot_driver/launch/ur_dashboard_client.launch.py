@@ -49,10 +49,19 @@ def generate_launch_description():
             description="Timeout that the dashboard client will wait for a response from the robot.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "autoconnect",
+            default_value="true",
+            description="Automatically connect to the robot dashboard server on startup. "
+            "If false, call the ~/connect service after the robot is available.",
+        )
+    )
 
     # Initialize Arguments
     robot_ip = LaunchConfiguration("robot_ip")
     dashboard_receive_timeout = LaunchConfiguration("dashboard_receive_timeout")
+    autoconnect = LaunchConfiguration("autoconnect")
 
     dashboard_client_node = Node(
         package="ur_robot_driver",
@@ -63,6 +72,7 @@ def generate_launch_description():
         parameters=[
             {"robot_ip": robot_ip},
             {"receive_timeout": dashboard_receive_timeout},
+            {"autoconnect": autoconnect},
         ],
     )
 

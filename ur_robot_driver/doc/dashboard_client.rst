@@ -36,7 +36,7 @@ Close a safety popup on the teach pendant.
 connect (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Service to reconnect to the dashboard server
+Service to connect or reconnect to the dashboard server. Required after startup when ``autoconnect`` is ``false``.
 
 download_program (`ur_dashboard_msgs/DownloadProgram <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/DownloadProgram.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -229,6 +229,14 @@ Defaults to saving to the programs folder
 
 Parameters
 ----------
+
+autoconnect (default: true)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If ``true`` (default), the dashboard client connects to the robot during startup and retries until
+the connection succeeds or ROS is shut down. If ``false``, the node starts without contacting the
+robot and only exposes the ``~/connect`` service until a connection succeeds; call ``~/connect``
+once the robot is available to register the remaining dashboard services.
 
 receive_timeout (default: 20.0)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

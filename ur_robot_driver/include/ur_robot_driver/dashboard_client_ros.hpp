@@ -200,8 +200,10 @@ private:
                                       ur_dashboard_msgs::srv::GetPolyScopeVersion::Response::SharedPtr resp);
 
   bool connect();
+  void initServices(urcl::DashboardClient::ClientPolicy dashboard_policy);
 
   std::shared_ptr<rclcpp::Node> node_;
+  std::string robot_ip_;
   std::unique_ptr<urcl::DashboardClient> client_;
 
   urcl::comm::INotifier notifier_;

@@ -31,3 +31,14 @@ pull_request_rules:
           - kilted
         labels:
           - kilted
+
+  - name: Backport to lyrical branch
+    conditions:
+      - base=main
+      - label=backport-lyrical
+    actions:
+      backport:
+        branches:
+          - lyrical
+        labels:
+          - lyrical
