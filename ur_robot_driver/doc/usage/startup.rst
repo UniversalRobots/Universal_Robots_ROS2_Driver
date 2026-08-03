@@ -36,6 +36,9 @@ Other important arguments are:
 * ``launch_rviz`` (default: *true*) - Start RViz together with the driver.
 * ``initial_joint_controller`` (default: *scaled_joint_trajectory_controller*) - Use this if you
   want to start the robot with another controller.
+* ``blocking_read`` (default: *true*) - Make the robot's communication drive the ROS control loop's
+  pace. Deactivate this  if you don't have a reliable robot communication setup. See
+  :ref:`blocking_read` for more details.
 
   .. note::
      When the driver is started, you can list all loaded controllers using the ``ros2 control
@@ -51,6 +54,22 @@ For all other arguments, please see
    $ ros2 launch ur_robot_driver ur_control.launch.py --show-args
 
 Also, there are predefined launch files for all supported types of UR robots.
+
+.. _blocking_read:
+
+Blocking read
+-------------
+
+When using the ``ur_robot_driver``, there are effectively two control loops active: The ROS driver
+has it's own control loop, where it reads the robot's state, updates controllers and sends new
+commands to the robot. The robot itself also has a control loop, where it reads new commands and
+executes them. In most control modes the robot expects to receive new commands at a fixed rate.
+When both control loops run at different clocks, there will be a phase shift between the two loops,
+which can lead to problems. To avoid this, the driver can be started with the ``blocking_read``
+parameter set to ``true``. In this case, the driver will wait for new robot state data before
+updating the controllers and sending new commands. This way, the robot's control loop drives the
+ROS control loop's pace. This is the recommended setting for single robot setups and therefore the
+default value for the startup launch file.
 
 .. _robot_startup_program:
 
