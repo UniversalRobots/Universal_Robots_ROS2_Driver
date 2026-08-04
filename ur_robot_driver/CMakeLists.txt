@@ -56,6 +56,7 @@ add_library(ur_robot_driver_plugin
   SHARED
   src/dashboard_client_ros.cpp
   src/hardware_interface.cpp
+  src/mode_compatibility.cpp
   src/urcl_log_handler.cpp
 )
 target_link_libraries(ur_robot_driver_plugin PUBLIC
@@ -254,10 +255,18 @@ install(DIRECTORY config launch urdf
 ament_package()
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ur_controllers REQUIRED)
   find_package(ur_description REQUIRED)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
+
+  ament_add_gmock(test_mode_compatibility_symmetry
+    test/test_mode_compatibility_symmetry.cpp
+  )
+  target_link_libraries(test_mode_compatibility_symmetry
+    ur_robot_driver_plugin
+  )
 
   add_launch_test(test/test_mock_hardware.py
     TIMEOUT
@@ -318,6 +327,10 @@ if(BUILD_TESTING)
         800
     )
     add_launch_test(test/integration_test_tool_contact.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_twist_controller.py
       TIMEOUT
         800
     )
