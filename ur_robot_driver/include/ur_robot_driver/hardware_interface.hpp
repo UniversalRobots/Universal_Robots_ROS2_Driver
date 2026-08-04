@@ -83,6 +83,7 @@ enum StoppingInterface
   STOP_FREEDRIVE,
   STOP_TOOL_CONTACT,
   STOP_TORQUE,
+  STOP_TWIST,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -187,6 +188,7 @@ protected:
   urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
   urcl::vector6d_t urcl_torque_commands_;
+  urcl::vector6d_t urcl_twist_commands_;
   urcl::vector6d_t urcl_joint_positions_;
   urcl::vector6d_t urcl_joint_velocities_;
   urcl::vector6d_t urcl_joint_efforts_;
@@ -268,7 +270,9 @@ protected:
   urcl::vector6d_t passthrough_trajectory_accelerations_;
   double passthrough_trajectory_time_from_start_;
 
-  // Payload stuff
+  bool twist_controller_running_;
+
+  // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
   urcl::vector6d_t payload_inertia_;
   double payload_mass_;
@@ -345,6 +349,7 @@ protected:
   const std::string FORCE_MODE_GPIO = "force_mode";
   const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
   const std::string TOOL_CONTACT_GPIO = "tool_contact";
+  const std::string TWIST_GPIO = "twist";
 
   std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
 

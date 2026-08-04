@@ -98,6 +98,11 @@ generate_parameter_library(
 )
 
 generate_parameter_library(
+  twist_controller_parameters
+  src/twist_controller_parameters.yaml
+)
+
+generate_parameter_library(
   ur_configuration_controller_parameters
   src/ur_configuration_controller_parameters.yaml
 )
@@ -112,6 +117,7 @@ add_library(${PROJECT_NAME} SHARED
   src/gpio_controller.cpp
   src/gravity_update_controller.cpp
   src/passthrough_trajectory_controller.cpp
+  src/twist_controller.cpp
   src/ur_configuration_controller.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -128,10 +134,32 @@ target_link_libraries(${PROJECT_NAME}
   freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters
+<<<<<<< HEAD
 )
 
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
+=======
+  twist_controller_parameters
+  ${geometry_msgs_TARGETS}
+  ${lifecycle_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${std_srvs_TARGETS}
+  ${tf2_geometry_msgs_TARGETS}
+  ${ur_dashboard_msgs_TARGETS}
+  ${control_msgs_TARGETS}
+  ${trajectory_msgs_TARGETS}
+  ${ur_msgs_TARGETS}
+  ${action_msgs_TARGETS}
+  angles::angles
+  controller_interface::controller_interface
+  joint_trajectory_controller::joint_trajectory_controller
+  pluginlib::pluginlib
+  rclcpp_lifecycle::rclcpp_lifecycle
+  rcutils::rcutils
+  realtime_tools::realtime_tools
+  tf2_ros::tf2_ros
+>>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
 )
 
 # prevent pluginlib from using boost
@@ -195,6 +223,14 @@ if(BUILD_TESTING)
     test/test_load_friction_model_controller.cpp
   )
   target_link_libraries(test_load_friction_model_controller
+    ${PROJECT_NAME}
+    controller_manager::controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  ament_add_gmock(test_load_twist_controller
+    test/test_load_twist_controller.cpp
+  )
+  target_link_libraries(test_load_twist_controller
     ${PROJECT_NAME}
     controller_manager::controller_manager
     ros2_control_test_assets::ros2_control_test_assets
