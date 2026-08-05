@@ -46,6 +46,7 @@ from test_common import (  # noqa: E402
     DashboardInterface,
     IoStatusInterface,
     generate_driver_test_description,
+    wait_for_robot_program_state,
 )
 
 ALL_CONTROLLERS = [
@@ -57,6 +58,7 @@ ALL_CONTROLLERS = [
     "freedrive_mode_controller",
     "motion_primitive_forward_controller",
     "friction_model_controller",
+    "twist_controller",
 ]
 
 
@@ -92,6 +94,8 @@ class ControllerSwitchTest(unittest.TestCase):
         self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
+        program_state = wait_for_robot_program_state(self.node, True, 10.0)
+        self.assertEqual(program_state, True)
 
     def test_activating_multiple_controllers_same_interface_fails(self):
         # Deactivate all writing controllers
@@ -163,6 +167,24 @@ class ControllerSwitchTest(unittest.TestCase):
                 activate_controllers=[
                     "joint_trajectory_controller",
                     "force_mode_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "joint_trajectory_controller",
+                    "twist_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "forward_velocity_controller",
+                    "twist_controller",
                 ],
             ).ok
         )
@@ -245,6 +267,14 @@ class ControllerSwitchTest(unittest.TestCase):
                 ],
             ).ok
         )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "twist_controller",
+                ],
+            ).ok
+        )
         # Stop controller again
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -309,6 +339,14 @@ class ControllerSwitchTest(unittest.TestCase):
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
                     "freedrive_mode_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "twist_controller",
                 ],
             ).ok
         )
@@ -492,6 +530,26 @@ class ControllerSwitchTest(unittest.TestCase):
             ).ok
         )
 
+        # tool contact should work with twist controller
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "twist_controller",
+                    "tool_contact_controller",
+                ],
+            ).ok
+        )
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                deactivate_controllers=[
+                    "twist_controller",
+                    "tool_contact_controller",
+                ],
+            ).ok
+        )
+
     def test_moprim_compatibility(self):
         # Deactivate all writing controllers
         self.assertTrue(
@@ -555,6 +613,15 @@ class ControllerSwitchTest(unittest.TestCase):
                 activate_controllers=[
                     "motion_primitive_forward_controller",
                     "freedrive_mode_controller",
+                ],
+            ).ok
+        )
+        self.assertFalse(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "motion_primitive_forward_controller",
+                    "twist_controller",
                 ],
             ).ok
         )
@@ -649,6 +716,56 @@ class ControllerSwitchTest(unittest.TestCase):
                     "passthrough_trajectory_controller",
                     "force_mode_controller",
                     "friction_model_controller",
+                ],
+            ).ok
+        )
+
+    def test_force_mode_and_twist_controller_is_compatible(self):
+        """Test that force_mode_controlller is compatible with all motion controllers."""
+        # Deactivate all writing controllers
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=ALL_CONTROLLERS,
+            ).ok
+        )
+
+        time.sleep(3)
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "twist_controller",
+                ],
+            ).ok
+        )
+
+        # Activate force mode with twist controller being active
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "force_mode_controller",
+                ],
+            ).ok
+        )
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                deactivate_controllers=[
+                    "twist_controller",
+                ],
+            ).ok
+        )
+
+        # Activate twist controller with force_mode being active
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.STRICT,
+                activate_controllers=[
+                    "twist_controller",
                 ],
             ).ok
         )
