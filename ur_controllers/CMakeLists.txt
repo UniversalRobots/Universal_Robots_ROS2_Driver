@@ -134,32 +134,10 @@ target_link_libraries(${PROJECT_NAME}
   freedrive_mode_controller_parameters
   passthrough_trajectory_controller_parameters
   ur_configuration_controller_parameters
-<<<<<<< HEAD
 )
 
 ament_target_dependencies(${PROJECT_NAME}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
-=======
-  twist_controller_parameters
-  ${geometry_msgs_TARGETS}
-  ${lifecycle_msgs_TARGETS}
-  ${std_msgs_TARGETS}
-  ${std_srvs_TARGETS}
-  ${tf2_geometry_msgs_TARGETS}
-  ${ur_dashboard_msgs_TARGETS}
-  ${control_msgs_TARGETS}
-  ${trajectory_msgs_TARGETS}
-  ${ur_msgs_TARGETS}
-  ${action_msgs_TARGETS}
-  angles::angles
-  controller_interface::controller_interface
-  joint_trajectory_controller::joint_trajectory_controller
-  pluginlib::pluginlib
-  rclcpp_lifecycle::rclcpp_lifecycle
-  rcutils::rcutils
-  realtime_tools::realtime_tools
-  tf2_ros::tf2_ros
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
 )
 
 # prevent pluginlib from using boost

@@ -95,58 +95,7 @@ RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str)
 
 URPositionHardwareInterface::URPositionHardwareInterface()
 {
-<<<<<<< HEAD
-  mode_compatibility_[hardware_interface::HW_IF_POSITION][hardware_interface::HW_IF_VELOCITY] = false;
-  mode_compatibility_[hardware_interface::HW_IF_POSITION][hardware_interface::HW_IF_EFFORT] = false;
-  mode_compatibility_[hardware_interface::HW_IF_POSITION][FORCE_MODE_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_POSITION][PASSTHROUGH_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_POSITION][FREEDRIVE_MODE_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_POSITION][TOOL_CONTACT_GPIO] = true;
-
-  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][hardware_interface::HW_IF_POSITION] = false;
-  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][hardware_interface::HW_IF_EFFORT] = false;
-  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][FORCE_MODE_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][PASSTHROUGH_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][FREEDRIVE_MODE_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_VELOCITY][TOOL_CONTACT_GPIO] = true;
-
-  mode_compatibility_[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_POSITION] = false;
-  mode_compatibility_[hardware_interface::HW_IF_EFFORT][hardware_interface::HW_IF_VELOCITY] = false;
-  mode_compatibility_[hardware_interface::HW_IF_EFFORT][FORCE_MODE_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_EFFORT][PASSTHROUGH_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_EFFORT][FREEDRIVE_MODE_GPIO] = false;
-  mode_compatibility_[hardware_interface::HW_IF_EFFORT][TOOL_CONTACT_GPIO] = true;
-
-  mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
-  mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
-  mode_compatibility_[FORCE_MODE_GPIO][hardware_interface::HW_IF_EFFORT] = false;
-  mode_compatibility_[FORCE_MODE_GPIO][PASSTHROUGH_GPIO] = true;
-  mode_compatibility_[FORCE_MODE_GPIO][FREEDRIVE_MODE_GPIO] = false;
-  mode_compatibility_[FORCE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
-
-  mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_POSITION] = false;
-  mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
-  mode_compatibility_[PASSTHROUGH_GPIO][hardware_interface::HW_IF_EFFORT] = false;
-  mode_compatibility_[PASSTHROUGH_GPIO][FORCE_MODE_GPIO] = true;
-  mode_compatibility_[PASSTHROUGH_GPIO][FREEDRIVE_MODE_GPIO] = false;
-  mode_compatibility_[PASSTHROUGH_GPIO][TOOL_CONTACT_GPIO] = true;
-
-  mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_POSITION] = false;
-  mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_VELOCITY] = false;
-  mode_compatibility_[FREEDRIVE_MODE_GPIO][hardware_interface::HW_IF_EFFORT] = false;
-  mode_compatibility_[FREEDRIVE_MODE_GPIO][FORCE_MODE_GPIO] = false;
-  mode_compatibility_[FREEDRIVE_MODE_GPIO][PASSTHROUGH_GPIO] = false;
-  mode_compatibility_[FREEDRIVE_MODE_GPIO][TOOL_CONTACT_GPIO] = false;
-
-  mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_POSITION] = true;
-  mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_VELOCITY] = true;
-  mode_compatibility_[TOOL_CONTACT_GPIO][hardware_interface::HW_IF_EFFORT] = true;
-  mode_compatibility_[TOOL_CONTACT_GPIO][FORCE_MODE_GPIO] = false;
-  mode_compatibility_[TOOL_CONTACT_GPIO][PASSTHROUGH_GPIO] = true;
-  mode_compatibility_[TOOL_CONTACT_GPIO][FREEDRIVE_MODE_GPIO] = false;
-=======
   mode_compatibility_ = createModeCompatibilityMatrix();
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
 }
 
 URPositionHardwareInterface::~URPositionHardwareInterface()
@@ -1032,13 +981,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
           urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
       check_passthrough_trajectory_controller();
-<<<<<<< HEAD
-=======
-    } else if (motion_primitives_forward_controller_running_) {
-      handleMoprimCommands();
     } else if (twist_controller_running_) {
       ur_driver_->writeJointCommand(urcl_twist_commands_, urcl::comm::ControlMode::MODE_SPEEDL, receive_timeout_);
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
     } else {
       ur_driver_->writeKeepalive();
     }
@@ -1348,15 +1292,9 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     if (tool_contact_controller_running_) {
       control_modes[i].push_back(TOOL_CONTACT_GPIO);
     }
-<<<<<<< HEAD
-=======
-    if (motion_primitives_forward_controller_running_) {
-      control_modes[i].push_back(HW_IF_MOTION_PRIMITIVES);
-    }
     if (twist_controller_running_) {
       control_modes[i].push_back(TWIST_GPIO);
     }
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
   }
 
   auto is_mode_compatible = [this](const std::string& mode, const std::vector<std::string>& other_modes) {
@@ -1384,13 +1322,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
         { tf_prefix + FORCE_MODE_GPIO + "/type", FORCE_MODE_GPIO },
         { tf_prefix + PASSTHROUGH_GPIO + "/setpoint_positions_" + std::to_string(i), PASSTHROUGH_GPIO },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO },
-<<<<<<< HEAD
-        { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO }
-=======
         { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO },
-        { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES },
         { tf_prefix + TWIST_GPIO + "/linear_velocity_x", TWIST_GPIO }
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
       };
 
       for (auto& item : start_modes_to_check) {
@@ -1440,14 +1373,8 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           StoppingInterface::STOP_PASSTHROUGH },
         { tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success", FREEDRIVE_MODE_GPIO, StoppingInterface::STOP_FREEDRIVE },
         { tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state", TOOL_CONTACT_GPIO,
-<<<<<<< HEAD
-          StoppingInterface::STOP_TOOL_CONTACT }
-=======
           StoppingInterface::STOP_TOOL_CONTACT },
-        { tf_prefix + HW_IF_MOTION_PRIMITIVES + "/motion_type", HW_IF_MOTION_PRIMITIVES,
-          StoppingInterface::STOP_MOTION_PRIMITIVES },
         { tf_prefix + TWIST_GPIO + "/linear_velocity_x", TWIST_GPIO, StoppingInterface::STOP_TWIST }
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
       };
       for (auto& item : stop_modes_to_check) {
         if (key == std::get<0>(item)) {

@@ -183,10 +183,7 @@ class ControllerSwitchTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
-<<<<<<< HEAD
                     "scaled_joint_trajectory_controller",
-=======
-                    "joint_trajectory_controller",
                     "twist_controller",
                 ],
             ).ok
@@ -204,8 +201,7 @@ class ControllerSwitchTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
-                    "joint_trajectory_controller",
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
+                    "scaled_joint_trajectory_controller",
                     "freedrive_mode_controller",
                 ],
             ).ok
@@ -527,27 +523,6 @@ class ControllerSwitchTest(unittest.TestCase):
             ).ok
         )
 
-<<<<<<< HEAD
-=======
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "tool_contact_controller",
-                ],
-            ).ok
-        )
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                deactivate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "tool_contact_controller",
-                ],
-            ).ok
-        )
-
         # tool contact should work with twist controller
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -577,94 +552,6 @@ class ControllerSwitchTest(unittest.TestCase):
             ).ok
         )
 
-        time.sleep(3)
-
-        # moprim controller should not start with any other joint controller
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "joint_trajectory_controller",
-                ],
-            ).ok
-        )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "forward_effort_controller",
-                ],
-            ).ok
-        )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "forward_velocity_controller",
-                ],
-            ).ok
-        )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "forward_position_controller",
-                ],
-            ).ok
-        )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "passthrough_trajectory_controller",
-                ],
-            ).ok
-        )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "freedrive_mode_controller",
-                ],
-            ).ok
-        )
-        self.assertFalse(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "twist_controller",
-                ],
-            ).ok
-        )
-
-        # MoPrim controller and force_mode should be possible to combine
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                activate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "force_mode_controller",
-                ],
-            ).ok
-        )
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.STRICT,
-                deactivate_controllers=[
-                    "motion_primitive_forward_controller",
-                    "force_mode_controller",
-                ],
-            ).ok
-        )
-
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
     def test_friction_model_compatibility(self):
         """Test that friction_model_controller is compatible with all motion controllers."""
         # Deactivate all writing controllers
