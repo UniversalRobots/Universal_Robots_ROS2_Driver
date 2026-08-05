@@ -187,6 +187,7 @@
         <state_interface name="tool_analog_input_type_1"/>
 
         <state_interface name="robot_mode"/>
+        <state_interface name="robot_control_mode"/>
         <state_interface name="robot_status_bit_0"/>
         <state_interface name="robot_status_bit_1"/>
         <state_interface name="robot_status_bit_2"/>

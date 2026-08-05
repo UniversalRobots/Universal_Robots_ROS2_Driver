@@ -46,6 +46,7 @@
 #include <vector>
 
 #include "ur_client_library/exceptions.h"
+#include "ur_client_library/primary/robot_state/robot_mode_data.h"
 #include "ur_client_library/ur/tool_communication.h"
 #include "ur_client_library/ur/version_information.h"
 #include "ur_client_library/ur/robot_receive_timeout.h"
@@ -297,6 +298,9 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
 
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
+
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface(tf_prefix + "gpio", "robot_control_mode", &robot_control_mode_copy_));
 
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
@@ -978,6 +982,11 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     readData(data_package_buffer_, "payload", rtde_payload_mass_);
     readData(data_package_buffer_, "payload_cog", rtde_payload_cog_);
     readData(data_package_buffer_, "payload_inertia", rtde_payload_inertia_);
+    // Not part of the RTDE package: the primary interface delivers RobotModeData
+    // at ~10 Hz on its own connection. Null until the first package arrives.
+    if (auto robot_mode_data = ur_driver_->getPrimaryClient()->getRobotModeData()) {
+      robot_control_mode_ = robot_mode_data->control_mode_;
+    }
 
     // required transforms
     extractToolPose();
@@ -1292,6 +1301,7 @@ void URPositionHardwareInterface::updateNonDoubleValues()
 
   tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
   robot_mode_copy_ = static_cast<double>(robot_mode_);
+  robot_control_mode_copy_ = static_cast<double>(robot_control_mode_);
   safety_mode_copy_ = static_cast<double>(safety_mode_);
   tool_mode_copy_ = static_cast<double>(tool_mode_);
   system_interface_initialized_ = initialized_ ? 1.0 : 0.0;
