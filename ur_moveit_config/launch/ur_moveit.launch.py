@@ -82,7 +82,6 @@ def launch_setup(context, *args, **kwargs):
 
     robot_description_content = Command(
         [
-<<<<<<< HEAD
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
@@ -125,47 +124,6 @@ def launch_setup(context, *args, **kwargs):
             "prefix:=",
             prefix,
             " ",
-=======
-            DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?"),
-            DeclareLaunchArgument(
-                "ur_type",
-                description="Robot model of the used UR robot.",
-                choices=[
-                    "ur3",
-                    "ur5",
-                    "ur10",
-                    "ur3e",
-                    "ur5e",
-                    "ur7e",
-                    "ur10e",
-                    "ur12e",
-                    "ur16e",
-                    "ur8long",
-                    "ur15",
-                    "ur18",
-                    "ur20",
-                    "ur30",
-                ],
-            ),
-            DeclareLaunchArgument(
-                "warehouse_sqlite_path",
-                default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite"),
-                description="Path where the warehouse database should be stored",
-            ),
-            DeclareLaunchArgument(
-                "launch_servo", default_value="false", description="Launch Servo?"
-            ),
-            DeclareLaunchArgument(
-                "use_sim_time",
-                default_value="false",
-                description="Using or not time from simulation",
-            ),
-            DeclareLaunchArgument(
-                "publish_robot_description_semantic",
-                default_value="true",
-                description="MoveGroup publishes robot description semantic",
-            ),
->>>>>>> 4da09f5 (Fix a typo in launch file arg docstring (#1917))
         ]
     )
     robot_description = {
@@ -324,7 +282,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
-            description="Type/series of used UR robot.",
+            description="Robot model of the used UR robot.",
             choices=[
                 "ur3",
                 "ur5",
