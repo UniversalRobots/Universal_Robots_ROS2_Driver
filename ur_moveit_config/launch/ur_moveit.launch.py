@@ -67,7 +67,7 @@ def declare_arguments():
             DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?"),
             DeclareLaunchArgument(
                 "ur_type",
-                description="Type/series of used UR robot.",
+                description="Robot model of the used UR robot.",
                 choices=[
                     "ur3",
                     "ur5",
