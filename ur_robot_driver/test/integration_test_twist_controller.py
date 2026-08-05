@@ -115,7 +115,7 @@ class TwistControllerTest(unittest.TestCase):
             strictness=SwitchController.Request.BEST_EFFORT,
             activate_controllers=["twist_controller"],
             deactivate_controllers=[
-                "joint_trajectory_controller",
+                "scaled_joint_trajectory_controller",
                 "forward_velocity_controller",
                 "forward_position_controller",
                 "passthrough_trajectory_controller",

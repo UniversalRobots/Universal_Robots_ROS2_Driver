@@ -184,10 +184,7 @@ class ControllerSwitchTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
-<<<<<<< HEAD
                     "scaled_joint_trajectory_controller",
-=======
-                    "joint_trajectory_controller",
                     "twist_controller",
                 ],
             ).ok
@@ -206,7 +203,6 @@ class ControllerSwitchTest(unittest.TestCase):
                 strictness=SwitchController.Request.STRICT,
                 activate_controllers=[
                     "joint_trajectory_controller",
->>>>>>> 6497b23 (Add Cartesian twist controller (#1586))
                     "freedrive_mode_controller",
                 ],
             ).ok
