@@ -3,6 +3,22 @@
 ur_robot_driver
 ^^^^^^^^^^^^^^^
 
+Blocking read enabled by default in launch files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From ROS Makoa onwards, the ``ur_robot_driver`` launch files have blocking read enabled by default.
+If you want to disable this behavior, you can set the ``blocking_read`` parameter to ``false`` in your
+launch file.
+
+.. note::
+
+   Blocking read might not be the desired behavior in multi-robot (or multi hardware-interface)
+   setups, in which case you should create your own launch files anyway. This is why in the URDF
+   the default value of the ``blocking_read`` parameter is still ``false``.
+
+See :ref:`blocking_read` for more details on that feature.
+
+
 Interface change of set_payload service
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

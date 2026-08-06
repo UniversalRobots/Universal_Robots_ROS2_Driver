@@ -73,6 +73,12 @@ def launch_setup(context):
         executable="ros2_control_node",
         parameters=[
             LaunchConfiguration("update_rate_config_file"),
+            {
+                "hardware_synchronization.expect_blocking_read_write": LaunchConfiguration(
+                    "blocking_read"
+                ),
+                "overruns.print_warnings": NotSubstitution(LaunchConfiguration("blocking_read")),
+            },
             ParameterFile(controllers_file, allow_substs=True),
             # We use the tf_prefix as substitution in there, so that's why we keep it as an
             # argument for this launchfile
@@ -223,6 +229,7 @@ def launch_setup(context):
         "freedrive_mode_controller",
         "tool_contact_controller",
         "motion_primitive_forward_controller",
+        "twist_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
@@ -265,7 +272,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
-            description="Type/series of used UR robot.",
+            description="Robot model of the used UR robot.",
             choices=[
                 "ur3",
                 "ur5",
@@ -530,6 +537,13 @@ def generate_launch_description():
                 LaunchConfiguration("ur_type"),
                 "_update_rate.yaml",
             ],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "blocking_read",
+            default_value="true",
+            description="Block in read() effectively synchronizing the driver with the robot controller.",
         )
     )
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
