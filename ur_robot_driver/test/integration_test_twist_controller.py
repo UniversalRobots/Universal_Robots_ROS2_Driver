@@ -45,6 +45,7 @@ from controller_manager_msgs.srv import SwitchController
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    ConfigurationInterface,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
@@ -78,6 +79,7 @@ class TwistControllerTest(unittest.TestCase):
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
         self._controller_manager_interface.wait_for_controller("twist_controller")
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
         self._dashboard_interface.start_robot()
 
     def setUp(self):
@@ -212,6 +214,13 @@ class TwistControllerTest(unittest.TestCase):
         )
 
     def test_twist_and_tool_contact_are_compatible(self):
+        version = self._configuration_controller_interface.get_robot_software_version()
+        self.assertIsNotNone(version, "Failed to get robot software version")
+        if version.major < 5:
+            self.skipTest(
+                "Tool contact controller is only available in UR software version 5 and above"
+            )
+
         self.assertTrue(self._activate_twist_controller())
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
