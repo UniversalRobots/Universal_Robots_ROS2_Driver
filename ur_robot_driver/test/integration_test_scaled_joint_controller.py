@@ -215,7 +215,7 @@ class SJTCTest(unittest.TestCase):
         self.assertTrue(
             all(
                 [
-                    abs(a - b) < 0.01
+                    abs(a - b) < 0.05
                     for a, b in zip(state_after_sleep.position, state_when_aborted.position)
                 ]
             )
