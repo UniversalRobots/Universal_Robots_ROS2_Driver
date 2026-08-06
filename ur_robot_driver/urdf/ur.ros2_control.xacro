@@ -186,13 +186,21 @@
         <state_interface name="tool_analog_input_type_0"/>
         <state_interface name="tool_analog_input_type_1"/>
 
-        <state_interface name="robot_mode"/>
+        <state_interface name="robot_mode">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">7</param>
+          </xacro:if>
+        </state_interface>
         <state_interface name="robot_status_bit_0"/>
         <state_interface name="robot_status_bit_1"/>
         <state_interface name="robot_status_bit_2"/>
         <state_interface name="robot_status_bit_3"/>
 
-        <state_interface name="safety_mode"/>
+        <state_interface name="safety_mode">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">1</param>
+          </xacro:if>
+        </state_interface>
         <state_interface name="safety_status_bit_0"/>
         <state_interface name="safety_status_bit_1"/>
         <state_interface name="safety_status_bit_2"/>
@@ -205,7 +213,11 @@
         <state_interface name="safety_status_bit_9"/>
         <state_interface name="safety_status_bit_10"/>
 
-        <state_interface name="program_running"/>
+        <state_interface name="program_running">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">1</param>
+          </xacro:if>
+        </state_interface>
       </gpio>
 
       <gpio name="${tf_prefix}payload">
