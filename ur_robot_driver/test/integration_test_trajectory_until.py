@@ -47,6 +47,7 @@ from builtin_interfaces.msg import Duration
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     reset_ursim_state,
+    ConfigurationInterface,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
@@ -91,6 +92,7 @@ class RobotDriverTest(unittest.TestCase):
         self._trajectory_until_interface = ActionInterface(
             self.node, "/trajectory_until_node/execute", FollowJointTrajectoryUntil
         )
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
         self.test_traj = {
             "waypts": [[1.5, -1.5, 0.0, -1.5, -1.5, -1.5], [2.1, -1.2, 0.0, -2.4, -1.5, -1.5]],
             "time_vec": [Duration(sec=3, nanosec=0), Duration(sec=6, nanosec=0)],
@@ -99,6 +101,12 @@ class RobotDriverTest(unittest.TestCase):
         self._controller_manager_interface.wait_for_controller("tool_contact_controller")
 
     def setUp(self, initial_joint_controller):
+        version = self._configuration_controller_interface.get_robot_software_version()
+        self.assertIsNotNone(version, "Failed to get robot software version")
+        if version.major < 5:
+            self.skipTest(
+                "Tool contact controller is only available in UR software version 5 and above"
+            )
         self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
