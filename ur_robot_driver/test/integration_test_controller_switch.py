@@ -43,6 +43,7 @@ from controller_manager_msgs.srv import SwitchController
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     reset_ursim_state,
+    ConfigurationInterface,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
@@ -90,6 +91,7 @@ class ControllerSwitchTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
         for controller in ALL_CONTROLLERS:
             self._controller_manager_interface.wait_for_controller(controller)
         self.robot_family = self._dashboard_interface.detect_polyscope_family()
@@ -435,6 +437,12 @@ class ControllerSwitchTest(unittest.TestCase):
         )
 
     def test_tool_contact_compatibility(self):
+        version = self._configuration_controller_interface.get_robot_software_version()
+        self.assertIsNotNone(version, "Failed to get robot software version")
+        if version.major < 5:
+            self.skipTest(
+                "Tool contact controller is only available in UR software version 5 and above"
+            )
         # Deactivate all writing controllers
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
