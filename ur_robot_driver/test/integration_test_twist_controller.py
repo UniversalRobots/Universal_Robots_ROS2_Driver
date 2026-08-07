@@ -45,6 +45,7 @@ from controller_manager_msgs.srv import SwitchController
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
     ConfigurationInterface,
     ControllerManagerInterface,
     DashboardInterface,
@@ -66,6 +67,7 @@ class TwistControllerTest(unittest.TestCase):
     def setUpClass(cls):
         rclpy.init()
         cls.node = Node("twist_controller_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 
