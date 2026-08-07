@@ -103,9 +103,6 @@ class MockHWTest(unittest.TestCase):
             self._configuration_controller_interface.get_robot_software_version().major, 1
         )
 
-<<<<<<< HEAD
-    def test_start_scaled_jtc_controller(self):
-=======
     def test_mock_hardware_publishes_operational_status(self):
         """Mock hardware reports deterministic happy-path status on latched topics."""
         messages = {}
@@ -146,8 +143,7 @@ class MockHWTest(unittest.TestCase):
         for subscription in subscriptions:
             self.node.destroy_subscription(subscription)
 
-    def test_start_jtc_controller(self):
->>>>>>> f6cae59 (Report operational status with mock hardware (#1923))
+    def test_start_scaled_jtc_controller(self):
         # Deactivate controller, if it is not already
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
