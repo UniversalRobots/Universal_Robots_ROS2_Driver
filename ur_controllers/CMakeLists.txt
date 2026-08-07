@@ -98,6 +98,11 @@ generate_parameter_library(
 )
 
 generate_parameter_library(
+  twist_controller_parameters
+  src/twist_controller_parameters.yaml
+)
+
+generate_parameter_library(
   ur_configuration_controller_parameters
   src/ur_configuration_controller_parameters.yaml
 )
@@ -112,6 +117,7 @@ add_library(${PROJECT_NAME} SHARED
   src/gpio_controller.cpp
   src/gravity_update_controller.cpp
   src/passthrough_trajectory_controller.cpp
+  src/twist_controller.cpp
   src/ur_configuration_controller.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -195,6 +201,14 @@ if(BUILD_TESTING)
     test/test_load_friction_model_controller.cpp
   )
   target_link_libraries(test_load_friction_model_controller
+    ${PROJECT_NAME}
+    controller_manager::controller_manager
+    ros2_control_test_assets::ros2_control_test_assets
+  )
+  ament_add_gmock(test_load_twist_controller
+    test/test_load_twist_controller.cpp
+  )
+  target_link_libraries(test_load_twist_controller
     ${PROJECT_NAME}
     controller_manager::controller_manager
     ros2_control_test_assets::ros2_control_test_assets
