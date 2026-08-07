@@ -110,7 +110,12 @@ jobs:
           NOT_TEST_BUILD: true
           ADDITIONAL_DEBS: docker.io netcat-openbsd curl
           OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
-          CMAKE_ARGS: -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
+          CMAKE_ARGS: >-
+            -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
+            ${{ (
+              (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release'))
+              || steps.robot_models_changes.outputs.changed == 'true'
+            ) && '-DUR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST=ON' || '' }}
           AFTER_SCRIPT: >-
             set +u
             && source "/opt/ros/$ROS_DISTRO/setup.bash"
