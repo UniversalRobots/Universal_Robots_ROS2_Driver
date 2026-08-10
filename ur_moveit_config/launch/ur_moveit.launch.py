@@ -103,6 +103,12 @@ def declare_arguments():
                 default_value="true",
                 description="MoveGroup publishes robot description semantic",
             ),
+            DeclareLaunchArgument(
+                "tf_prefix",
+                default_value="",
+                description="Prefix of the joint names, useful for multi-robot setup. "
+                "Must match the tf_prefix used to generate the robot description (URDF).",
+            ),
         ]
     )
 
@@ -114,10 +120,13 @@ def generate_launch_description():
     launch_servo = LaunchConfiguration("launch_servo")
     use_sim_time = LaunchConfiguration("use_sim_time")
     publish_robot_description_semantic = LaunchConfiguration("publish_robot_description_semantic")
+    tf_prefix = LaunchConfiguration("tf_prefix")
 
     moveit_config = (
         MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config")
-        .robot_description_semantic(Path("srdf") / "ur.srdf.xacro", {"name": ur_type})
+        .robot_description_semantic(
+            Path("srdf") / "ur.srdf.xacro", {"name": ur_type, "tf_prefix": tf_prefix}
+        )
         .to_moveit_configs()
     )
 
