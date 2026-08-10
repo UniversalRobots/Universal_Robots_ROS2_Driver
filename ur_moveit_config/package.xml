@@ -35,6 +35,10 @@
   <exec_depend>warehouse_ros_sqlite</exec_depend>
   <exec_depend>xacro</exec_depend>
 
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>ur_robot_driver</test_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
