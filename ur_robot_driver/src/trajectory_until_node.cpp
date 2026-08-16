@@ -40,6 +40,7 @@
 
 #include <ur_robot_driver/trajectory_until_node.hpp>
 #include <functional>
+#include <rclcpp/exceptions.hpp>
 
 namespace ur_robot_driver
 {
@@ -294,26 +295,43 @@ void TrajectoryUntilNode::report_goal(TrajectoryResult result)
     prealloc_res_->until_condition_result = TrajectoryUntilAction::Result::NOT_TRIGGERED;
     prealloc_res_->error_code = result.result->error_code;
     prealloc_res_->error_string = result.result->error_string;
-    switch (result.code) {
-      case rclcpp_action::ResultCode::SUCCEEDED:
-        server_goal_handle_->succeed(prealloc_res_);
-        break;
+    try {
+      switch (result.code) {
+        case rclcpp_action::ResultCode::SUCCEEDED:
+          server_goal_handle_->succeed(prealloc_res_);
+          break;
 
-      case rclcpp_action::ResultCode::ABORTED:
-        prealloc_res_->error_string += " Trajectory action was aborted. Aborting goal.";
-        server_goal_handle_->abort(prealloc_res_);
-        break;
+        case rclcpp_action::ResultCode::ABORTED:
+          prealloc_res_->error_string += " Trajectory action was aborted. Aborting goal.";
+          server_goal_handle_->abort(prealloc_res_);
+          break;
 
-      case rclcpp_action::ResultCode::CANCELED:
-        prealloc_res_->error_string += " Trajectory action was canceled.";
-        server_goal_handle_->canceled(prealloc_res_);
-        break;
+        case rclcpp_action::ResultCode::CANCELED:
+          prealloc_res_->error_string += " Trajectory action was canceled.";
+          if (server_goal_handle_->is_canceling()) {
+            server_goal_handle_->canceled(prealloc_res_);
+          } else {
+            // A child can deliver CANCELED without this goal ever being canceled (e.g. the child
+            // server dropped its goal handle mid-flight). canceled() is only a legal rcl_action
+            // transition from CANCELING — from EXECUTING it throws and terminates the node.
+            RCLCPP_WARN(this->get_logger(), "The trajectory action reported CANCELED but this goal was never canceled; "
+                                            "aborting it instead.");
+            prealloc_res_->error_string += " Goal was not canceling; aborting.";
+            server_goal_handle_->abort(prealloc_res_);
+          }
+          break;
 
-      default:
-        prealloc_res_->error_string += " Unknown result code received from trajectory action, this should not happen. "
-                                       "Aborting goal.";
-        server_goal_handle_->abort(prealloc_res_);
-        break;
+        default:
+          prealloc_res_->error_string += " Unknown result code received from trajectory action, this should not "
+                                         "happen. "
+                                         "Aborting goal.";
+          server_goal_handle_->abort(prealloc_res_);
+          break;
+      }
+    } catch (const rclcpp::exceptions::RCLError& e) {
+      // The goal reached a terminal state on another path first; losing that race must not
+      // terminate the node.
+      RCLCPP_ERROR(this->get_logger(), "Could not terminate the goal: %s", e.what());
     }
     if (result.code != rclcpp_action::ResultCode::SUCCEEDED) {
       RCLCPP_ERROR(this->get_logger(), "%s", prealloc_res_->error_string.c_str());
@@ -328,31 +346,47 @@ template <typename UntilResult>
 void TrajectoryUntilNode::report_goal(UntilResult result)
 {
   if (server_goal_handle_) {
-    switch (result.code) {
-      case rclcpp_action::ResultCode::SUCCEEDED:
-        prealloc_res_->error_code = TrajectoryUntilAction::Result::SUCCESSFUL;
-        prealloc_res_->until_condition_result = TrajectoryUntilAction::Result::TRIGGERED;
-        prealloc_res_->error_string += "Trajectory finished successfully by triggering until condition.";
-        server_goal_handle_->succeed(prealloc_res_);
-        break;
+    try {
+      switch (result.code) {
+        case rclcpp_action::ResultCode::SUCCEEDED:
+          prealloc_res_->error_code = TrajectoryUntilAction::Result::SUCCESSFUL;
+          prealloc_res_->until_condition_result = TrajectoryUntilAction::Result::TRIGGERED;
+          prealloc_res_->error_string += "Trajectory finished successfully by triggering until condition.";
+          server_goal_handle_->succeed(prealloc_res_);
+          break;
 
-      case rclcpp_action::ResultCode::ABORTED:
-        prealloc_res_->error_string += "Until action was aborted. Aborting goal.";
-        server_goal_handle_->abort(prealloc_res_);
-        break;
+        case rclcpp_action::ResultCode::ABORTED:
+          prealloc_res_->error_string += "Until action was aborted. Aborting goal.";
+          server_goal_handle_->abort(prealloc_res_);
+          break;
 
-      case rclcpp_action::ResultCode::CANCELED:
-        prealloc_res_->error_string += "Until action was canceled.";
-        server_goal_handle_->canceled(prealloc_res_);
-        break;
+        case rclcpp_action::ResultCode::CANCELED:
+          prealloc_res_->error_string += "Until action was canceled.";
+          if (server_goal_handle_->is_canceling()) {
+            server_goal_handle_->canceled(prealloc_res_);
+          } else {
+            // A child can deliver CANCELED without this goal ever being canceled (e.g. the child
+            // server dropped its goal handle mid-flight). canceled() is only a legal rcl_action
+            // transition from CANCELING — from EXECUTING it throws and terminates the node.
+            RCLCPP_WARN(this->get_logger(), "The until action reported CANCELED but this goal was never canceled; "
+                                            "aborting it instead.");
+            prealloc_res_->error_string += " Goal was not canceling; aborting.";
+            server_goal_handle_->abort(prealloc_res_);
+          }
+          break;
 
-      default:
-        prealloc_res_->error_string += "Unknown result code received from until action, this should not happen. "
-                                       "Aborting "
-                                       "goal.";
-        server_goal_handle_->abort(prealloc_res_);
+        default:
+          prealloc_res_->error_string += "Unknown result code received from until action, this should not happen. "
+                                         "Aborting "
+                                         "goal.";
+          server_goal_handle_->abort(prealloc_res_);
 
-        break;
+          break;
+      }
+    } catch (const rclcpp::exceptions::RCLError& e) {
+      // The goal reached a terminal state on another path first; losing that race must not
+      // terminate the node.
+      RCLCPP_ERROR(this->get_logger(), "Could not terminate the goal: %s", e.what());
     }
     if (result.code != rclcpp_action::ResultCode::SUCCEEDED) {
       RCLCPP_ERROR(this->get_logger(), "%s", prealloc_res_->error_string.c_str());
