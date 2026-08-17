@@ -20,6 +20,7 @@ set(msg_files
 set(srv_files
   srv/AddToLog.srv
   srv/DownloadProgram.srv
+  srv/DownloadSupportFile.srv
   srv/GetLoadedProgram.srv
   srv/GetPrograms.srv
   srv/GetProgramState.srv

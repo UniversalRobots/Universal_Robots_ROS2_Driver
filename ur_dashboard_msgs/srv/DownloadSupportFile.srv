@@ -1,0 +1,6 @@
+# Local path where the support file archive (zip) should be stored.
+# Only available on PolyScope X >= 10.14.0.
+string target_path
+---
+string answer
+bool success

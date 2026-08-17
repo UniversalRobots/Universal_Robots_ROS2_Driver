@@ -260,8 +260,8 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
   popup_service_ = node_->create_service<ur_dashboard_msgs::srv::Popup>(
       "~/popup", [&](ur_dashboard_msgs::srv::Popup::Request::SharedPtr req,
                      ur_dashboard_msgs::srv::Popup::Response::SharedPtr resp) {
-        auto dashboard_response =
-            dashboardCallWithChecks([this, req]() { return client_->commandPopupWithResponse(req->message); }, resp);
+        auto dashboard_response = dashboardCallWithChecks(
+            [this, req]() { return client_->commandPopupWithResponse(req->message, req->title); }, resp);
 
         return true;
       });
@@ -524,6 +524,15 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
         }
         return true;
       });
+
+  // PolyScope X only: download support files as a zip archive to a local path
+  download_support_file_service_ = node_->create_service<ur_dashboard_msgs::srv::DownloadSupportFile>(
+      "~/download_support_file", [&](const ur_dashboard_msgs::srv::DownloadSupportFile::Request::SharedPtr req,
+                                     ur_dashboard_msgs::srv::DownloadSupportFile::Response::SharedPtr resp) {
+        dashboardCallWithChecks(
+            [this, req]() { return client_->commandDownloadSupportFilesWithResponse(req->target_path); }, resp);
+        return true;
+      });
 }
 
 bool DashboardClientROS::handleRunningQuery(const ur_dashboard_msgs::srv::IsProgramRunning::Request::SharedPtr req,
@@ -715,7 +724,8 @@ bool DashboardClientROS::handleGetPolyScopeVersionQuery(
         [dashboard_response, resp]() {
           std::string version_string = std::get<std::string>(dashboard_response.data.at("polyscope_version"));
 
-          std::regex version_regex(R"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)");
+          // Accept 2-4 numeric components (e.g. "10.14.0" on PolyScope X, "5.21.0.12345" on PolyScope 5)
+          std::regex version_regex(R"([0-9]+(?:\.[0-9]+){1,3})");
           std::smatch version_match;
           if (std::regex_search(version_string, version_match, version_regex)) {
             int num = 0;
@@ -735,7 +745,13 @@ bool DashboardClientROS::handleGetPolyScopeVersionQuery(
                 num = 0;
               }
             }
-            resp->version.build = num;
+            if (counter == 1) {
+              resp->version.minor = num;
+            } else if (counter == 2) {
+              resp->version.bugfix = num;
+            } else if (counter == 3) {
+              resp->version.build = num;
+            }
           }
         },
         resp, dashboard_response);
