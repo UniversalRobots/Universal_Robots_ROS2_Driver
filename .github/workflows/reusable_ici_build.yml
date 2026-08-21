@@ -143,7 +143,7 @@ jobs:
             && colcon test --event-handlers desktop_notification- status- terminal_title- console_direct+ --executor sequential --ctest-args -LE ursim -j1
             && colcon test-result --verbose
       - name: Cache built workspace
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           # src is required for colcon package discovery in matrix jobs
           # (industrial_ci copies the checkout into target_ws/src).

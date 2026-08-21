@@ -70,7 +70,7 @@ jobs:
         with:
           ref: ${{ inputs.ref_for_scheduled_build }}
       - name: Restore built workspace
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           # src is required for colcon package discovery (--packages-select).
           path: |
