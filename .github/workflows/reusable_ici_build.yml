@@ -156,7 +156,7 @@ jobs:
       - name: Save CI docker image
         run: docker save "${{ steps.ci_image.outputs.image }}" -o ci-image.tar
       - name: Upload CI docker image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.ci_image.outputs.artifact }}
           path: ci-image.tar

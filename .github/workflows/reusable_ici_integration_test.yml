@@ -81,7 +81,7 @@ jobs:
           key: ${{ inputs.workspace_cache_key }}
           fail-on-cache-miss: true
       - name: Download CI docker image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.ci_image_artifact }}
       - name: Load CI docker image
