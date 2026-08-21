@@ -85,7 +85,7 @@ jobs:
         with:
           name: ${{ inputs.ci_image_artifact }}
       - name: Load CI docker image
-        run: gzip -dc ci-image.tar.gz | docker load
+        run: docker load --file ci-image.tar
       - run: docker network create --subnet=192.168.56.0/24 --gateway=192.168.56.254 ursim_net
         if: ${{ !env.ACT }}
       - name: Create shared host directories

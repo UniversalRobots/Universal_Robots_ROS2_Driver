@@ -154,10 +154,11 @@ jobs:
             .ici/upstream_ws/install
           key: ${{ steps.workspace_cache_key.outputs.key }}
       - name: Save CI docker image
-        run: docker save "${{ steps.ci_image.outputs.image }}" | gzip > ci-image.tar.gz
+        run: docker save "${{ steps.ci_image.outputs.image }}" -o ci-image.tar
       - name: Upload CI docker image
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.ci_image.outputs.artifact }}
-          path: ci-image.tar.gz
+          path: ci-image.tar
+          compression-level: 0 # docker storage is zipped already
           retention-days: 1
