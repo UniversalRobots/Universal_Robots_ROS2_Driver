@@ -30,13 +30,14 @@
 """
 Integration test for robot model verification.
 
-Brings up URSim for every supported robot model and verifies that the driver
-starts and the hardware interface ends up in the expected state.
+Integration test that brings up URSim for every supported robot model and verifies
+that the driver starts and the hardware interface ends up in the active state.
 
-This test runs in the industrial_ci build job (not the shared-URSim matrix).
-Each ``launch_testing`` parametrization starts its own URSim container. When
-``ursim_type`` and ``driver_type`` differ, the driver must refuse to leave the
-``unconfigured`` state.
+The ``ursim_type`` / ``driver_type`` parameters are sourced from
+:func:`launch_testing.parametrize`, so a fresh URSim container plus a fresh driver
+process is launched for each entry. When ``ursim_type`` and ``driver_type`` differ,
+the driver is configured for a different robot than the one running in URSim and
+must therefore refuse to leave the ``unconfigured`` state.
 """
 
 import logging
@@ -76,6 +77,8 @@ ROBOT_MODEL_CASES = [
     ("ur20", "ur20"),
     ("ur30", "ur30"),
     # Negative case: URSim runs a UR5e but the driver is configured for a UR20.
+    # ``verify_robot_model`` is enabled by default in ``ur.urdf.xacro``, so the
+    # hardware interface should reject the configuration.
     ("ur5e", "ur20"),
 ]
 
@@ -92,6 +95,8 @@ class RobotModelStartupTest(unittest.TestCase):
         rclpy.init()
         cls.node = Node("robot_model_startup_test")
         time.sleep(1)
+        # The controller_manager service is always available, regardless of whether
+        # the hardware interface actually reaches the active state.
         cls._controller_manager_interface = ControllerManagerInterface(cls.node)
 
     @classmethod
@@ -141,7 +146,8 @@ class RobotModelStartupTest(unittest.TestCase):
         With ``verify_robot_model`` enabled (the default), the hardware interface's
         ``on_configure`` returns ERROR when the driver's ``ur_type`` does not match
         the robot reported by URSim, leaving the component in
-        ``PRIMARY_STATE_UNCONFIGURED``.
+        ``PRIMARY_STATE_UNCONFIGURED``. Poll for a generous amount of time to make
+        sure we don't accidentally race the state transition.
         """
         timeout = 60.0
         end_time = time.time() + timeout
@@ -153,22 +159,22 @@ class RobotModelStartupTest(unittest.TestCase):
                 self.assertNotEqual(
                     last_state,
                     State.PRIMARY_STATE_ACTIVE,
-                    f"Hardware interface unexpectedly reached ACTIVE for "
-                    f"ursim={ursim_type}, driver={driver_type}",
+                    f"Hardware interface unexpectedly reached ACTIVE for ursim={ursim_type}, "
+                    f"driver={driver_type} (model mismatch should have prevented this)",
                 )
                 self.assertNotEqual(
                     last_state,
                     State.PRIMARY_STATE_INACTIVE,
-                    f"Hardware interface unexpectedly reached INACTIVE for "
-                    f"ursim={ursim_type}, driver={driver_type}",
+                    f"Hardware interface unexpectedly reached INACTIVE for ursim={ursim_type}, "
+                    f"driver={driver_type} (model mismatch should have kept it unconfigured)",
                 )
             time.sleep(2.0)
 
         self.assertEqual(
             last_state,
             State.PRIMARY_STATE_UNCONFIGURED,
-            f"Hardware interface for ursim={ursim_type}, driver={driver_type} "
-            f"ended in state id={last_state}, expected PRIMARY_STATE_UNCONFIGURED "
+            f"Hardware interface for ursim={ursim_type}, driver={driver_type} ended in "
+            f"state id={last_state}, expected PRIMARY_STATE_UNCONFIGURED "
             f"({State.PRIMARY_STATE_UNCONFIGURED}) due to model mismatch",
         )
 
@@ -180,7 +186,8 @@ class RobotModelStartupTest(unittest.TestCase):
           activate the hardware component normally and all interfaces should be
           available.
         - When they differ: the hardware interface must reject the configuration
-          and remain in ``PRIMARY_STATE_UNCONFIGURED``.
+          and remain in ``PRIMARY_STATE_UNCONFIGURED`` (verified by
+          ``verify_robot_model``, which is enabled by default).
         """
         logging.info(
             "Running case ursim=%s, driver=%s (mismatch=%s)",
