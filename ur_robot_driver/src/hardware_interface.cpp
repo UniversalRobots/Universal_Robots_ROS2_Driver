@@ -46,7 +46,6 @@
 #include <vector>
 
 #include "ur_client_library/exceptions.h"
-#include "ur_client_library/primary/robot_state/robot_mode_data.h"
 #include "ur_client_library/ur/tool_communication.h"
 #include "ur_client_library/ur/version_information.h"
 #include "ur_client_library/ur/robot_receive_timeout.h"
@@ -824,6 +823,8 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     if (ur_driver_->getControlFrequency() != info_.rw_rate) {
       ur_driver_->resetRTDEClient(output_recipe_filename, input_recipe_filename, info_.rw_rate);
     }
+    robot_mode_consumer_ = std::make_shared<RobotModeDataConsumer>();
+    ur_driver_->getPrimaryClient()->addPrimaryConsumer(robot_mode_consumer_);
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
@@ -944,6 +945,10 @@ hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
     async_moprim_cmd_thread_.reset();
   }
 
+  if (ur_driver_ && robot_mode_consumer_) {
+    ur_driver_->getPrimaryClient()->removePrimaryConsumer(robot_mode_consumer_);
+    robot_mode_consumer_.reset();
+  }
   instruction_executor_.reset();
   ur_driver_.reset();
 
@@ -1029,11 +1034,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     readData(data_package_buffer_, "payload", rtde_payload_mass_);
     readData(data_package_buffer_, "payload_cog", rtde_payload_cog_);
     readData(data_package_buffer_, "payload_inertia", rtde_payload_inertia_);
-    // Not part of the RTDE package: the primary interface delivers RobotModeData
-    // at ~10 Hz on its own connection. Null until the first package arrives.
-    if (auto robot_mode_data = ur_driver_->getPrimaryClient()->getRobotModeData()) {
-      robot_control_mode_ = robot_mode_data->control_mode_;
-    }
+    // RobotModeDataConsumer is registered against the primary client, so it writes the atomic directly at ~10 Hz
+    robot_control_mode_ = robot_mode_consumer_->control_mode();
 
     // required transforms
     extractToolPose();

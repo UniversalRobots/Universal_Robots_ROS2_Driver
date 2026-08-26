@@ -36,6 +36,9 @@
  *
  * \author  Mathias Fuhrer mathias.fuhrer@b-robotized.de
  * \date    2025-05-28 – Added support for usage with motion_primitives_controller
+ * 
+ * \author  Arthur Haffemayer arthur.haffemayer@gmail.com
+ * \date    2026-08-19 - Added robot mode reading
  *
  */
 //----------------------------------------------------------------------
@@ -59,8 +62,10 @@
 #include "ur_client_library/ur/ur_driver.h"
 #include "ur_client_library/ur/instruction_executor.h"
 #include "ur_client_library/ur/robot_receive_timeout.h"
+#include "ur_robot_driver/robot_mode_data_consumer.hpp"
 #include "ur_robot_driver/dashboard_client_ros.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
+#include "ur_msgs/msg/robot_mode_data_msg.hpp"
 
 // ROS
 #include "rclcpp/macros.hpp"
@@ -171,9 +176,6 @@ public:
 
   static constexpr double NO_NEW_CMD_ = std::numeric_limits<double>::quiet_NaN();
 
-  // Not reported by UR; set by this driver when the primary interface has not
-  // yet delivered a RobotModeData package.
-  static constexpr uint8_t CONTROL_MODE_UNKNOWN_ = 255;
   void asyncThread();
 
 protected:
@@ -234,7 +236,7 @@ protected:
   double target_speed_fraction_;
   double speed_scaling_combined_;
   int32_t robot_mode_;
-  uint8_t robot_control_mode_ = CONTROL_MODE_UNKNOWN_;
+  uint8_t robot_control_mode_ = ur_msgs::msg::RobotModeDataMsg::CONTROL_MODE_UNKNOWN;
   int32_t safety_mode_;
   std::bitset<4> robot_status_bits_;
   std::bitset<11> safety_status_bits_;
@@ -367,7 +369,7 @@ protected:
   double safety_mode_copy_;
   std::array<double, 4> robot_status_bits_copy_;
   std::array<double, 11> safety_status_bits_copy_;
-  double robot_control_mode_copy_ = CONTROL_MODE_UNKNOWN_;
+  double robot_control_mode_copy_ = ur_msgs::msg::RobotModeDataMsg::CONTROL_MODE_UNKNOWN;
   std::atomic<bool> robot_program_running_;
   std::atomic<bool> stop_requested_;
   bool non_blocking_read_;
@@ -393,6 +395,8 @@ protected:
 
   std::shared_ptr<urcl::UrDriver> ur_driver_;  // changed to shared_ptr for instruction_executer
   std::shared_ptr<std::thread> async_thread_;
+
+  std::shared_ptr<RobotModeDataConsumer> robot_mode_consumer_;
 
   std::atomic_bool rtde_comm_has_been_started_ = false;
 
