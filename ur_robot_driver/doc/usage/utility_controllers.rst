@@ -146,3 +146,23 @@ default in the driver's launch file.
      "{gravity: {header: {frame_id: 'base'}, vector: {x: 0.0, y: 0.0, z: -9.82}}}"
 
 See the :ref:`gravity_update_controller <gravity_update_controller>` documentation for full details.
+
+ur_robot_mode_broadcaster
+-------------------------
+
+Type: :ref:`ur_controllers/URRobotModeBroadcaster <ur_robot_mode_broadcaster>`
+
+Publishes the robot's mode data as reported by the primary interface on the ``~/robot_mode_data``
+topic as a ``ur_msgs/msg/RobotModeDataMsg``. This broadcaster is read-only and can run alongside
+any other controller.
+
+Currently the ``control_mode`` field is populated, reporting whether the robot controller is in
+position control, freedrive, or force mode. Constants for the possible values are defined in the
+message.
+
+.. note::
+
+   The robot broadcasts this data at approximately 10 Hz, so this controller runs asynchronously
+   with ``update_rate: 10`` rather than at the controller manager's rate.
+
+See the :ref:`ur_robot_mode_broadcaster <ur_robot_mode_broadcaster>` documentation for full details.

@@ -9,6 +9,11 @@
       This controller publishes the Tool IO.
     </description>
   </class>
+  <class name="ur_controllers/URRobotModeBroadcaster" type="ur_controllers::URRobotModeBroadcaster" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller publishes the robot mode data received from the primary interface.
+    </description>
+  </class>
   <class name="ur_controllers/ForceModeController" type="ur_controllers::ForceModeController" base_class_type="controller_interface::ControllerInterface">
     <description>
       Controller to use UR's force_mode.

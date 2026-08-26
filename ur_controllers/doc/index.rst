@@ -493,3 +493,45 @@ Example for a ceiling-mounted robot (gravity pointing up in the ``base`` frame):
 
    When using the mocked hardware interface, the service may report failure even though the command
    was accepted, because the mock does not emulate the asynchronous success feedback from the robot.
+
+.. _ur_robot_mode_broadcaster:
+
+ur_controllers/URRobotModeBroadcaster
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller publishes the ``RobotModeData`` structure as reported by the robot's primary
+interface.
+
+Published topics
+""""""""""""""""
+
+* ``~/robot_mode_data [ur_msgs/msg/RobotModeDataMsg]``: The robot's mode data
+
+Currently the ``control_mode`` field is populated. It reports which control regime the robot
+controller is in, using the constants defined in ``ur_msgs/msg/RobotModeDataMsg``:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Constant
+     - Value
+     - Meaning
+   * - ``CONTROL_MODE_POSITION``
+     - 0
+     - Position control
+   * - ``CONTROL_MODE_TEACH``
+     - 1
+     - Freedrive (teach) mode
+   * - ``CONTROL_MODE_FORCE``
+     - 2
+     - Force mode
+   * - ``CONTROL_MODE_UNKNOWN``
+     - 255
+     - Not reported by the robot. Set by the driver until the primary interface has delivered its
+       first package.
+
+.. note::
+
+   The robot broadcasts ``RobotModeData`` at approximately 10 Hz. This controller is therefore
+   configured as an asynchronous controller with ``update_rate: 10`` instead of running at the
+   controller manager's rate, since publishing faster would only repeat unchanged data.
