@@ -156,6 +156,7 @@ def launch_setup(context):
             {
                 "consistent_controllers": [
                     "io_and_status_controller",
+                    "ur_robot_mode_broadcaster",
                     "force_torque_sensor_broadcaster",
                     "joint_state_broadcaster",
                     "speed_scaling_state_broadcaster",
@@ -213,6 +214,7 @@ def launch_setup(context):
         "joint_state_broadcaster",
         "io_and_status_controller",
         "speed_scaling_state_broadcaster",
+        "ur_robot_mode_broadcaster",
         "force_torque_sensor_broadcaster",
         "tcp_pose_broadcaster",
         "ur_configuration_controller",

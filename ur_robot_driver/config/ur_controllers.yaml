@@ -6,6 +6,9 @@ controller_manager:
     io_and_status_controller:
       type: ur_controllers/GPIOController
 
+    ur_robot_mode_broadcaster:
+      type: ur_controllers/URRobotModeBroadcaster
+
     speed_scaling_state_broadcaster:
       type: ur_controllers/SpeedScalingStateBroadcaster
 
@@ -67,6 +70,12 @@ speed_scaling_state_broadcaster:
 io_and_status_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
+
+ur_robot_mode_broadcaster:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+    is_async: true
+    update_rate: 10
 
 ur_configuration_controller:
   ros__parameters:
