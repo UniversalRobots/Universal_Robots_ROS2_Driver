@@ -60,7 +60,6 @@ class URRobotModeBroadcaster : public controller_interface::ControllerInterface
     controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
 
   protected:
-    double publish_rate_;
 
     std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::RobotModeDataMsg>> robot_mode_publisher_;
     ur_msgs::msg::RobotModeDataMsg robot_mode_msg_;
