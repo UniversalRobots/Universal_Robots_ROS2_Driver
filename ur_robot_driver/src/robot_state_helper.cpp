@@ -103,6 +103,14 @@ RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options)
       std::bind(&RobotStateHelper::setModeAcceptCallback, this, std::placeholders::_1));
 }
 
+RobotStateHelper::~RobotStateHelper()
+{
+  stop_requested_ = true;
+  if (worker_thread_.joinable()) {
+    worker_thread_.join();
+  }
+}
+
 void RobotStateHelper::robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg)
 {
   if (robot_mode_ != static_cast<urcl::RobotMode>(msg->mode)) {
@@ -151,7 +159,12 @@ bool RobotStateHelper::recoverFromSafety()
     case urcl::SafetyMode::VIOLATION:;
     case urcl::SafetyMode::FAULT:
       if (restart_safety_srv_ != nullptr) {
-        return safeDashboardTrigger(this->restart_safety_srv_);
+        auto call_result = safeDashboardTrigger(restart_safety_srv_);
+        if (!call_result.has_value()) {
+          RCLCPP_WARN_STREAM(get_logger(), "The safety restart service call was interrupted by a shutdown request.");
+          return false;
+        }
+        return call_result.value();
       } else {
         return false;
       }
@@ -239,12 +252,17 @@ bool RobotStateHelper::doTransition(const urcl::RobotMode target_mode)
   return false;
 }
 
-bool RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv)
+std::optional<bool> RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv)
 {
   assert(srv != nullptr);
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   auto future = srv->async_send_request(request);
-  future.wait();
+  // Poll in short intervals so a shutdown request is honoured promptly.
+  while (future.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) {
+    if (stop_requested_) {
+      return std::nullopt;
+    }
+  }
   auto result = future.get();
   RCLCPP_INFO_STREAM(get_logger(), "Service response received: " << result->message);
   return result->success;
@@ -252,7 +270,21 @@ bool RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigge
 
 void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
 {
-  std::thread{ std::bind(&RobotStateHelper::setModeExecute, this, std::placeholders::_1), goal_handle }.detach();
+  // Join any previously completed worker before reusing worker_thread_. The goal
+  // callback has already reserved in_action_; the previous worker cleared that
+  // flag when it left setModeExecute, so this join is non-blocking.
+  if (worker_thread_.joinable()) {
+    worker_thread_.join();
+  }
+  {
+    std::scoped_lock lock(goal_mutex_);
+    // Reset stop state and install the new handle atomically so a cancel cannot
+    // be lost to a later clear, and a stale cancel cannot latch onto this goal.
+    stop_requested_ = false;
+    current_goal_handle_ = goal_handle;
+  }
+  worker_thread_ =
+      std::thread{ std::bind(&RobotStateHelper::setModeExecute, this, std::placeholders::_1), goal_handle };
 }
 
 bool RobotStateHelper::stopProgram()
@@ -268,14 +300,23 @@ bool RobotStateHelper::stopProgram()
 
 void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
 {
+  // Ensure in_action_ is always cleared when this function returns, regardless
+  // of which exit path is taken.
+  struct InActionGuard
   {
-    std::scoped_lock lock(goal_mutex_);
-    current_goal_handle_ = goal_handle;
-  }
-  in_action_ = true;
+    std::atomic<bool>& flag;
+    ~InActionGuard()
+    {
+      flag = false;
+    }
+  } in_action_guard{ in_action_ };
   const auto goal = goal_handle->get_goal();
   this->goal_ = goal;
   urcl::RobotMode target_mode;
+  if (stop_requested_ || !rclcpp::ok()) {
+    handleStopRequested();
+    return;
+  }
   try {
     target_mode = static_cast<urcl::RobotMode>(goal->target_robot_mode);
     switch (target_mode) {
@@ -290,14 +331,26 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
             current_goal_handle_->abort(result_);
             return;
           }
+          if (stop_requested_ || !rclcpp::ok()) {
+            handleStopRequested();
+            return;
+          }
         }
         if (robot_mode_ != target_mode || safety_mode_ > urcl::SafetyMode::REDUCED) {
           RCLCPP_INFO_STREAM(get_logger(), "Target mode was set to " << robotModeString(target_mode) << ".");
           if (!doTransition(target_mode)) {
+            if (stop_requested_ || !rclcpp::ok()) {
+              handleStopRequested();
+              return;
+            }
             result_->message = "Transition to target mode failed.";
             result_->success = false;
             std::scoped_lock lock(goal_mutex_);
             current_goal_handle_->abort(result_);
+            return;
+          }
+          if (stop_requested_ || !rclcpp::ok()) {
+            handleStopRequested();
             return;
           }
         }
@@ -338,11 +391,16 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
     return;
   }
 
-  // Wait until the robot reached the target mode or something went wrong
-  while (robot_mode_ != target_mode && !error_) {
+  // Wait until the robot reached the target mode or something went wrong.
+  while (robot_mode_ != target_mode && !error_ && !stop_requested_ && rclcpp::ok()) {
     RCLCPP_INFO(get_logger(), "Waiting for robot to reach target mode... Current_mode: %s",
                 robotModeString(robot_mode_).c_str());
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
+
+  if (stop_requested_ || !rclcpp::ok()) {
+    handleStopRequested();
+    return;
   }
 
   if (robot_mode_ == target_mode) {
@@ -350,15 +408,36 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
     result_->message = "Reached target robot mode.";
     if (robot_mode_ == urcl::RobotMode::RUNNING && goal_->play_program && !program_running_) {
       if (headless_mode_) {
-        result_->success = safeDashboardTrigger(this->resend_robot_program_srv_);
+        auto call_result = safeDashboardTrigger(this->resend_robot_program_srv_);
+        if (!call_result.has_value()) {
+          handleStopRequested();
+          return;
+        } else if (!call_result.value()) {
+          result_->success = false;
+          result_->message = "Resending the robot program failed.";
+        }
       } else {
         if (play_program_srv_ == nullptr) {
           result_->success = false;
           result_->message = "Play program service not available on this robot.";
         } else {
-          // The dashboard denies playing immediately after switching the mode to RUNNING
-          std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-          result_->success = safeDashboardTrigger(this->play_program_srv_);
+          // The dashboard denies playing immediately after switching the mode to RUNNING.
+          // Poll so cancel/shutdown is honoured during this delay.
+          for (int i = 0; i < 10 && !stop_requested_ && rclcpp::ok(); ++i) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+          }
+          if (stop_requested_ || !rclcpp::ok()) {
+            handleStopRequested();
+            return;
+          }
+          auto call_result = safeDashboardTrigger(this->play_program_srv_);
+          if (!call_result.has_value()) {
+            handleStopRequested();
+            return;
+          } else if (!call_result.value()) {
+            result_->success = false;
+            result_->message = "Starting the robot program failed.";
+          }
         }
       }
     }
@@ -381,10 +460,25 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
   }
 }
 
+void RobotStateHelper::handleStopRequested()
+{
+  std::scoped_lock lock(goal_mutex_);
+  result_->success = false;
+  if (current_goal_handle_->is_canceling()) {
+    result_->message = "SetMode action cancelled by user request.";
+    current_goal_handle_->canceled(result_);
+  } else {
+    result_->message = "SetMode action stopped.";
+    current_goal_handle_->abort(result_);
+  }
+}
+
 rclcpp_action::GoalResponse RobotStateHelper::setModeGoalCallback(
     const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal)
 {
   (void)uuid;
+  (void)goal;
+
   if (robot_mode_ == urcl::RobotMode::UNKNOWN) {
     RCLCPP_ERROR_STREAM(get_logger(), "Robot mode is unknown. Cannot accept goal, yet. Is "
                                       "the robot switched on and connected to the driver?");
@@ -396,15 +490,31 @@ rclcpp_action::GoalResponse RobotStateHelper::setModeGoalCallback(
                                       "the robot switched on and connected to the driver?");
     return rclcpp_action::GoalResponse::REJECT;
   }
+
+  {
+    // Reserve the slot before returning ACCEPT so a second goal callback cannot
+    // also accept while this goal is waiting for its accept callback to run.
+    std::scoped_lock lock(goal_mutex_);
+    if (in_action_) {
+      RCLCPP_WARN_STREAM(get_logger(), "A SetMode action is already in progress. Rejecting new goal.");
+      return rclcpp_action::GoalResponse::REJECT;
+    }
+    in_action_ = true;
+  }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
 rclcpp_action::CancelResponse
 RobotStateHelper::setModeCancelCallback(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
 {
-  RCLCPP_INFO(get_logger(), "Received request to cancel goal");
-  (void)goal_handle;
-  return rclcpp_action::CancelResponse::REJECT;
+  std::scoped_lock lock(goal_mutex_);
+  if (!in_action_ || !current_goal_handle_ || goal_handle->get_goal_id() != current_goal_handle_->get_goal_id()) {
+    RCLCPP_WARN(get_logger(), "No matching SetMode action is currently running. Cannot cancel.");
+    return rclcpp_action::CancelResponse::REJECT;
+  }
+  RCLCPP_INFO(get_logger(), "Cancelling the current SetMode action.");
+  stop_requested_ = true;
+  return rclcpp_action::CancelResponse::ACCEPT;
 }
 
 }  // namespace ur_robot_driver

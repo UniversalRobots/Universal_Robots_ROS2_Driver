@@ -29,8 +29,10 @@
 #ifndef UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 #define UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 
+#include <optional>
 #include <string>
 #include <memory>
+#include <thread>
 
 #include "rclcpp/node.hpp"
 #include "rclcpp_action/server.hpp"
@@ -65,6 +67,10 @@ protected:
   }
 
 private:
+  // Grant the test wrapper access to private state (robot_mode_, safety_mode_, in_action_)
+  // and the goal callback.
+  friend class RobotStateHelperTestWrapper;
+
   void robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);
   void safetyModeCallback(ur_dashboard_msgs::msg::SafetyMode::SharedPtr msg);
 
@@ -74,7 +80,7 @@ private:
   bool doTransition(const urcl::RobotMode target_mode);
   bool jumpToRobotMode(const urcl::RobotMode target_mode);
 
-  bool safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv);
+  std::optional<bool> safeDashboardTrigger(rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr srv);
 
   bool stopProgram();
 
@@ -82,6 +88,8 @@ private:
   rclcpp_action::GoalResponse setModeGoalCallback(const rclcpp_action::GoalUUID& uuid,
                                                   std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal);
   rclcpp_action::CancelResponse setModeCancelCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
+
+  void handleStopRequested();
 
   void setModeExecute(const std::shared_ptr<SetModeGoalHandle> goal_handle);
 
@@ -97,6 +105,10 @@ private:
   std::atomic<bool> error_ = false;
   std::atomic<bool> in_action_;
   std::atomic<bool> program_running_;
+
+  // workers poll this to exit their wait loops and dashboard-service calls before the helper is torn down.
+  std::atomic<bool> stop_requested_ = false;
+  std::thread worker_thread_;
   std::mutex goal_mutex_;
 
   std::string robot_ip_;

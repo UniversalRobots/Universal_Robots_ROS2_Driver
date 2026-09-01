@@ -284,6 +284,14 @@ if(BUILD_TESTING)
     ur_robot_driver_plugin
   )
 
+  ament_add_gmock(test_robot_state_helper
+    test/test_robot_state_helper.cpp
+  )
+  target_link_libraries(test_robot_state_helper
+    robot_state_helper_lib
+    rclcpp::rclcpp
+  )
+
   add_launch_test(test/test_mock_hardware.py
     TIMEOUT
       800
