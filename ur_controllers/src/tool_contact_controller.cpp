@@ -297,31 +297,60 @@ rclcpp_action::CancelResponse ToolContactController::goal_canceled_callback(
 controller_interface::return_type ToolContactController::update(const rclcpp::Time& /* time */,
                                                                 const rclcpp::Duration& /* period */)
 {
-  static bool write_success = true;
+  bool write_success = true;
+
+  auto exit_success_if_write_success = [&write_success](const char* msg) {
+    if (!write_success) {
+      RCLCPP_FATAL(rclcpp::get_logger("ToolContactController"), "%s", msg);
+      return controller_interface::return_type::ERROR;
+    }
+    return controller_interface::return_type::OK;
+  };
 
   // Abort takes priority
   if (tool_contact_abort_) {
     tool_contact_abort_ = false;
     tool_contact_enable_ = false;
     write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
+    return exit_success_if_write_success("Controller failed to update command interface.");
   } else if (tool_contact_enable_) {
     tool_contact_enable_ = false;
     write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN);
+    return exit_success_if_write_success("Controller failed to update command interface.");
   }
 
-  RealtimeGoalHandlePtr active_goal;
-  if (!rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; })) {
-    RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, skipping update cycle.");
-    return controller_interface::return_type::OK;
-  }
-
+  // Read hardware state before the goal box so the start handshake can still be
+  // acknowledged if obtaining the goal handle fails due to contention.
   std::optional<double> state_optional = tool_contact_state_interface_->get().get_optional();
-
   if (!state_optional) {
     RCLCPP_FATAL(get_node()->get_logger(), "Controller failed to read state interface, aborting.");
     return controller_interface::return_type::ERROR;
   }
   const int state = static_cast<int>(state_optional.value());
+
+  RealtimeGoalHandlePtr active_goal;
+  if (!rt_active_goal_.try_get([&active_goal](const RealtimeGoalHandlePtr& goal) { active_goal = goal; })) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Failed to read active goal, skipping goal handling this cycle.");
+
+    // Still acknowledge EXECUTING so startToolContact is not retriggered.
+    // Terminal result handling is deferred until a cycle where the goal is available.
+    if (state == static_cast<int>(TOOL_CONTACT_EXECUTING)) {
+      std::optional<double> result = tool_contact_result_interface_->get().get_optional();
+      if (!result) {
+        RCLCPP_FATAL(get_node()->get_logger(), "Controller failed to read result interface, aborting.");
+        return controller_interface::return_type::ERROR;
+      }
+      if (result.value() != 0.0 && result.value() != 1.0) {
+        tool_contact_active_ = true;
+        if (!logged_once_) {
+          RCLCPP_INFO(get_node()->get_logger(), "Tool contact enabled successfully.");
+          logged_once_ = true;
+        }
+      }
+      write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_EXECUTING);
+    }
+    return exit_success_if_write_success("Controller failed to update command interface.");
+  }
 
   switch (state) {
     case static_cast<int>(TOOL_CONTACT_EXECUTING):
@@ -380,9 +409,8 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
       if (tool_contact_active_) {
         RCLCPP_INFO(get_node()->get_logger(), "Tool contact disabled successfully.");
         tool_contact_active_ = false;
-
-        write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
       }
+      write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
     } break;
 
     case static_cast<int>(TOOL_CONTACT_FAILURE_END):
@@ -407,11 +435,7 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
     active_goal->setFeedback(feedback_);
   }
 
-  if (!write_success) {
-    RCLCPP_FATAL(get_node()->get_logger(), "Controller failed to update or read command/state interface.");
-    return controller_interface::return_type::ERROR;
-  }
-  return controller_interface::return_type::OK;
+  return exit_success_if_write_success("Controller failed to update or read command/state interface.");
 }
 
 std::optional<ToolContactController::RealtimeGoalHandlePtr> ToolContactController::get_rt_goal_from_non_rt()
