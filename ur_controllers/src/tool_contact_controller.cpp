@@ -287,6 +287,9 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
           active_goal->setAborted(result);
           should_reset_goal = true;
         }
+      } else {
+        // Set command interface, so "startToolContact" is only sent once in the hardware interface
+        write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_EXECUTING);
       }
     } break;
 
