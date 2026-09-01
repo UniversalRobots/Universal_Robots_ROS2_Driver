@@ -32,8 +32,8 @@
 #include <string>
 #include <memory>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp_action/create_server.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp_action/server.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_srvs/srv/trigger.hpp"
 
@@ -45,18 +45,26 @@
 
 namespace ur_robot_driver
 {
-class RobotStateHelper
+class RobotStateHelper : public rclcpp::Node
 {
 public:
   using SetModeGoalHandle = rclcpp_action::ServerGoalHandle<ur_dashboard_msgs::action::SetMode>;
 
-  explicit RobotStateHelper(const rclcpp::Node::SharedPtr& node);
-  RobotStateHelper() = delete;
-  virtual ~RobotStateHelper() = default;
+  explicit RobotStateHelper(const rclcpp::NodeOptions& options);
+  ~RobotStateHelper();
+
+protected:
+  // Constructor meant for test purposes mainly. Constructs a helper without the ROS service
+  // interfaces.
+  RobotStateHelper()
+    : rclcpp::Node("robot_state_helper")
+    , robot_mode_(urcl::RobotMode::UNKNOWN)
+    , safety_mode_(urcl::SafetyMode::UNDEFINED_SAFETY_MODE)
+    , in_action_(false)
+  {
+  }
 
 private:
-  rclcpp::Node::SharedPtr node_;
-
   void robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);
   void safetyModeCallback(ur_dashboard_msgs::msg::SafetyMode::SharedPtr msg);
 
