@@ -346,8 +346,8 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
           RCLCPP_INFO(get_node()->get_logger(), "Tool contact enabled successfully.");
           logged_once_ = true;
         }
-        write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_EXECUTING);
       }
+      write_success &= tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_EXECUTING);
     }
     return exit_success_if_write_success("Controller failed to update command interface.");
   }
