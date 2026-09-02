@@ -271,9 +271,6 @@ std::optional<bool> RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_sr
 
 void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHelper::SetModeGoalHandle> goal_handle)
 {
-  // Join any previously completed worker before reusing worker_thread_. The goal
-  // callback has already reserved in_action_; the previous worker cleared that
-  // flag when it left setModeExecute, so this join is non-blocking.
   if (worker_thread_.joinable()) {
     worker_thread_.join();
   }
@@ -282,6 +279,8 @@ void RobotStateHelper::setModeAcceptCallback(const std::shared_ptr<RobotStateHel
     // Reset stop state and install the new handle atomically so a cancel cannot
     // be lost to a later clear, and a stale cancel cannot latch onto this goal.
     stop_requested_ = false;
+    in_action_ = true;
+    goal_pending_ = false;
     current_goal_handle_ = goal_handle;
   }
   worker_thread_ =
@@ -483,11 +482,11 @@ rclcpp_action::GoalResponse RobotStateHelper::setModeGoalCallback(
     // Reserve the slot before returning ACCEPT so a second goal callback cannot
     // also accept while this goal is waiting for its accept callback to run.
     std::scoped_lock lock(goal_mutex_);
-    if (in_action_) {
+    if (in_action_ || goal_pending_) {
       RCLCPP_WARN_STREAM(get_logger(), "A SetMode action is already in progress. Rejecting new goal.");
       return rclcpp_action::GoalResponse::REJECT;
     }
-    in_action_ = true;
+    goal_pending_ = true;
   }
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }

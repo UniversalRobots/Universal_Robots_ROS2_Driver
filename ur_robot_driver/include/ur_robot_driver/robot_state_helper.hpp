@@ -105,6 +105,7 @@ private:
   std::atomic<urcl::SafetyMode> safety_mode_;
   std::atomic<bool> error_ = false;
   std::atomic<bool> in_action_;
+  std::atomic<bool> goal_pending_ = false;
   std::atomic<bool> program_running_;
 
   // workers poll this to exit their wait loops and dashboard-service calls before the helper is torn down.
