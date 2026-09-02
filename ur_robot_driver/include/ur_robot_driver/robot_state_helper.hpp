@@ -29,6 +29,7 @@
 #ifndef UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 #define UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 
+#include <string_view>
 #include <optional>
 #include <string>
 #include <memory>
@@ -89,7 +90,7 @@ private:
                                                   std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal);
   rclcpp_action::CancelResponse setModeCancelCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
 
-  void handleStopRequested();
+  void setTerminalState(bool success, std::string_view message = "");
 
   void setModeExecute(const std::shared_ptr<SetModeGoalHandle> goal_handle);
 

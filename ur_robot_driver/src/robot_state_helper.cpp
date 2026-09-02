@@ -315,7 +315,7 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
   this->goal_ = goal;
   urcl::RobotMode target_mode;
   if (stop_requested_ || !rclcpp::ok()) {
-    handleStopRequested();
+    setTerminalState(false);
     return;
   }
   try {
@@ -326,14 +326,11 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
       case urcl::RobotMode::RUNNING:
         if (goal_->stop_program && program_running_) {
           if (!stopProgram()) {
-            result_->message = "Stopping the program failed.";
-            result_->success = false;
-            std::scoped_lock lock(goal_mutex_);
-            current_goal_handle_->abort(result_);
+            setTerminalState(false, "Stopping the program failed.");
             return;
           }
           if (stop_requested_ || !rclcpp::ok()) {
-            handleStopRequested();
+            setTerminalState(false);
             return;
           }
         }
@@ -341,17 +338,14 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
           RCLCPP_INFO_STREAM(get_logger(), "Target mode was set to " << robotModeString(target_mode) << ".");
           if (!doTransition(target_mode)) {
             if (stop_requested_ || !rclcpp::ok()) {
-              handleStopRequested();
+              setTerminalState(false);
               return;
             }
-            result_->message = "Transition to target mode failed.";
-            result_->success = false;
-            std::scoped_lock lock(goal_mutex_);
-            current_goal_handle_->abort(result_);
+            setTerminalState(false, "Transition to target mode failed.");
             return;
           }
           if (stop_requested_ || !rclcpp::ok()) {
-            handleStopRequested();
+            setTerminalState(false);
             return;
           }
         }
@@ -363,32 +357,17 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
       case urcl::RobotMode::POWER_ON:
       case urcl::RobotMode::BACKDRIVE:
       case urcl::RobotMode::UPDATING_FIRMWARE:
-        result_->message =
-            "Requested target mode " + robotModeString(target_mode) + " which cannot be explicitly selected.";
-        result_->success = false;
-        {
-          std::scoped_lock lock(goal_mutex_);
-          current_goal_handle_->abort(result_);
-        }
+        setTerminalState(false, "Requested target mode " + robotModeString(target_mode) +
+                                    " which cannot be explicitly selected.");
         return;
         break;
       default:
-        result_->message = "Requested illegal mode.";
-        result_->success = false;
-        {
-          std::scoped_lock lock(goal_mutex_);
-          current_goal_handle_->abort(result_);
-        }
+        setTerminalState(false, "Requested target mode " + robotModeString(target_mode) + " is not a valid mode.");
         return;
         break;
     }
   } catch (const std::invalid_argument& e) {
-    result_->message = e.what();
-    result_->success = false;
-    {
-      std::scoped_lock lock(goal_mutex_);
-      current_goal_handle_->abort(result_);
-    }
+    setTerminalState(false, e.what());
     return;
   }
 
@@ -400,27 +379,30 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
   }
 
   if (stop_requested_ || !rclcpp::ok()) {
-    handleStopRequested();
+    setTerminalState(false);
     return;
   }
 
+  std::string result_message;
+  bool result_success;
+
   if (robot_mode_ == target_mode) {
-    result_->success = true;
-    result_->message = "Reached target robot mode.";
+    result_success = true;
+    result_message = "Reached target robot mode.";
     if (robot_mode_ == urcl::RobotMode::RUNNING && goal_->play_program && !program_running_) {
       if (headless_mode_) {
         auto call_result = safeDashboardTrigger(this->resend_robot_program_srv_);
         if (!call_result.has_value()) {
-          handleStopRequested();
+          setTerminalState(false, "Resending the robot program was interrupted by a shutdown/cancel request.");
           return;
         } else if (!call_result.value()) {
-          result_->success = false;
-          result_->message = "Resending the robot program failed.";
+          result_success = false;
+          result_message = "Resending the robot program failed.";
         }
       } else {
         if (play_program_srv_ == nullptr) {
-          result_->success = false;
-          result_->message = "Play program service not available on this robot.";
+          result_success = false;
+          result_message = "Play program service not available on this robot.";
         } else {
           // The dashboard denies playing immediately after switching the mode to RUNNING.
           // Poll so cancel/shutdown is honoured during this delay.
@@ -428,48 +410,53 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
           }
           if (stop_requested_ || !rclcpp::ok()) {
-            handleStopRequested();
+            setTerminalState(false);
             return;
           }
           auto call_result = safeDashboardTrigger(this->play_program_srv_);
           if (!call_result.has_value()) {
-            handleStopRequested();
+            setTerminalState(false);
             return;
           } else if (!call_result.value()) {
-            result_->success = false;
-            result_->message = "Starting the robot program failed.";
+            result_success = false;
+            result_message = "Starting the robot program failed.";
           }
         }
       }
     }
-    if (result_->success) {
-      std::scoped_lock lock(goal_mutex_);
-      current_goal_handle_->succeed(result_);
-    } else {
-      std::scoped_lock lock(goal_mutex_);
-      current_goal_handle_->abort(result_);
-    }
   } else {
-    result_->success = false;
-    result_->message = "Robot reached higher mode than requested during recovery. This either means that something "
-                       "went wrong or that a higher mode was requested from somewhere else (e.g. the teach "
-                       "pendant.)";
-    {
-      std::scoped_lock lock(goal_mutex_);
-      current_goal_handle_->abort(result_);
-    }
+    result_success = false;
+    result_message = "Robot reached higher mode than requested during recovery. This either means that something "
+                     "went wrong or that a higher mode was requested from somewhere else (e.g. the teach "
+                     "pendant.)";
   }
+  setTerminalState(result_success, result_message);
 }
 
-void RobotStateHelper::handleStopRequested()
+void RobotStateHelper::setTerminalState(bool success, std::string_view message)
 {
   std::scoped_lock lock(goal_mutex_);
-  result_->success = false;
   if (current_goal_handle_->is_canceling()) {
-    result_->message = "SetMode action cancelled by user request.";
+    result_->success = false;
+    // Keep an explicit failure reason if we have one; otherwise use the cancel default
+    // (do not report a success message on a canceled goal).
+    if (!success && !message.empty()) {
+      result_->message = message;
+    } else {
+      result_->message = "SetMode action cancelled by user request.";
+    }
     current_goal_handle_->canceled(result_);
+  } else if (success) {
+    result_->success = true;
+    result_->message = message;
+    current_goal_handle_->succeed(result_);
   } else {
-    result_->message = "SetMode action stopped.";
+    result_->success = false;
+    if (!message.empty()) {
+      result_->message = message;
+    } else {
+      result_->message = "SetMode action stopped.";
+    }
     current_goal_handle_->abort(result_);
   }
 }
