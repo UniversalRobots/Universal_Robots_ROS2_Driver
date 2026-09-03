@@ -68,8 +68,7 @@ protected:
   }
 
 private:
-  // Grant the test wrapper access to private state (robot_mode_, safety_mode_, in_action_)
-  // and the goal callback.
+  // Grant the test wrapper access to private state and action callbacks.
   friend class RobotStateHelperTestWrapper;
 
   void robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);

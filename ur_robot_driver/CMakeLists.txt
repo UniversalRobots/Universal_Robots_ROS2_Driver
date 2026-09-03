@@ -290,6 +290,8 @@ if(BUILD_TESTING)
   target_link_libraries(test_robot_state_helper
     robot_state_helper_lib
     rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+    ${std_srvs_TARGETS}
   )
 
   add_launch_test(test/test_mock_hardware.py
