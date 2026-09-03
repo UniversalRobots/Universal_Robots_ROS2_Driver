@@ -118,7 +118,7 @@ void RobotStateHelper::robotModeCallback(ur_dashboard_msgs::msg::RobotMode::Shar
     RCLCPP_INFO_STREAM(get_logger(), "The robot is currently in mode " << robotModeString(robot_mode_) << ".");
     {
       std::scoped_lock lock(goal_mutex_);
-      if (in_action_) {
+      if (in_action_ && current_goal_handle_->is_active()) {
         feedback_->current_robot_mode =
             static_cast<ur_dashboard_msgs::action::SetMode::Feedback::_current_robot_mode_type>(robot_mode_.load());
         current_goal_handle_->publish_feedback(feedback_);
@@ -134,7 +134,7 @@ void RobotStateHelper::safetyModeCallback(ur_dashboard_msgs::msg::SafetyMode::Sh
     RCLCPP_INFO_STREAM(get_logger(), "The robot is currently in safety mode " << safetyModeString(safety_mode_) << ".");
     {
       std::scoped_lock lock(goal_mutex_);
-      if (in_action_) {
+      if (in_action_ && current_goal_handle_->is_active()) {
         feedback_->current_safety_mode =
             static_cast<ur_dashboard_msgs::action::SetMode::Feedback::_current_safety_mode_type>(safety_mode_.load());
         current_goal_handle_->publish_feedback(feedback_);
