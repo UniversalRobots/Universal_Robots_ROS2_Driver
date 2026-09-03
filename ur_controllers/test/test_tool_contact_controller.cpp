@@ -184,7 +184,7 @@ protected:
     while (!lock_held.load() && std::chrono::steady_clock::now() < deadline) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-if (!lock_held.load()) {
+    if (!lock_held.load()) {
       release_lock = true;
       holder.join();
       FAIL() << "Timed out waiting to hold the goal box mutex.";
