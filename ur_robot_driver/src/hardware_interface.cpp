@@ -1559,18 +1559,23 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
   } else if (passthrough_trajectory_transfer_state_ == 6.0) {
     if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
+<<<<<<< HEAD
       RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Got a new trajectory with %lu points.",
                   static_cast<size_t>(passthrough_trajectory_size_));
+=======
+>>>>>>> c67d59d (Fix/passthrough controller very short trajectories (#1940))
       trajectory_joint_positions_.resize(passthrough_trajectory_size_);
       trajectory_joint_velocities_.resize(passthrough_trajectory_size_);
       trajectory_joint_accelerations_.resize(passthrough_trajectory_size_);
       trajectory_times_.resize(passthrough_trajectory_size_);
-      point_index_received = 0;
-      point_index_sent = 0;
-      trajectory_started = false;
-      last_time = 0.0;
-      passthrough_trajectory_transfer_state_ = 1.0;
     }
+    RCLCPP_INFO(get_logger(), "Got a new trajectory with %lu points.",
+                static_cast<size_t>(passthrough_trajectory_size_));
+    point_index_received = 0;
+    point_index_sent = 0;
+    trajectory_started = false;
+    last_time = 0.0;
+    passthrough_trajectory_transfer_state_ = 1.0;
   } else if (passthrough_trajectory_transfer_state_ == 2.0) {
     passthrough_trajectory_abort_ = 0.0;
     trajectory_joint_positions_[point_index_received] = passthrough_trajectory_positions_;
@@ -1585,8 +1590,13 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     passthrough_trajectory_transfer_state_ = 1.0;
 
     // Once we received enough points so we can move for at least 5 cycles, we start executing
+<<<<<<< HEAD
     if ((passthrough_trajectory_time_from_start_ > 5.0 / static_cast<double>(ur_driver_->getControlFrequency()) ||
          point_index_received == passthrough_trajectory_size_ - 1) &&
+=======
+    if ((passthrough_trajectory_time_from_start_ > 5.0 / static_cast<double>(info_.rw_rate) ||
+         point_index_received == passthrough_trajectory_size_) &&
+>>>>>>> c67d59d (Fix/passthrough controller very short trajectories (#1940))
         !trajectory_started) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
                                                 trajectory_joint_positions_.size());
