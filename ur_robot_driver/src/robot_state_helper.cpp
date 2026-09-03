@@ -263,7 +263,7 @@ std::optional<bool> RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_sr
   auto future = srv->async_send_request(request);
   // Poll in short intervals so a shutdown request is honoured promptly.
   while (future.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) {
-    if (stop_requested_) {
+    if (stop_requested_ || !rclcpp::ok()) {
       srv->remove_pending_request(future);
       return std::nullopt;
     }
