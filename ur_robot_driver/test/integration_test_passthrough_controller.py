@@ -41,6 +41,7 @@ from control_msgs.action import FollowJointTrajectory
 from control_msgs.msg import JointTolerance
 from controller_manager_msgs.srv import SwitchController
 from rclpy.node import Node
+from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 sys.path.append(os.path.dirname(__file__))
@@ -116,27 +117,68 @@ class PassthroughControllerTest(unittest.TestCase):
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
+    def _activate_passthrough_controller(self):
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["joint_trajectory_controller"],
+            ).ok
+        )
+
+    def _get_current_joint_positions(self, tf_prefix, timeout=5.0):
+        last_joint_state = None
+
+        def js_cb(msg):
+            nonlocal last_joint_state
+            last_joint_state = msg
+
+        joint_state_sub = self.node.create_subscription(JointState, "/joint_states", js_cb, 1)
+        end_time = time.time() + timeout
+        while last_joint_state is None and time.time() < end_time:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        self.node.destroy_subscription(joint_state_sub)
+        self.assertIsNotNone(last_joint_state)
+
+        joint_names = [tf_prefix + joint for joint in ROBOT_JOINTS]
+        return [
+            last_joint_state.position[last_joint_state.name.index(name)] for name in joint_names
+        ]
+
+    def _send_single_point_trajectory_at_current_pose(self, tf_prefix):
+        joint_names = [tf_prefix + joint for joint in ROBOT_JOINTS]
+        positions = self._get_current_joint_positions(tf_prefix)
+        trajectory = JointTrajectory(
+            joint_names=joint_names,
+            points=[
+                JointTrajectoryPoint(
+                    positions=positions,
+                    time_from_start=Duration(sec=0, nanosec=0),
+                )
+            ],
+        )
+        goal_tolerance = [JointTolerance(position=0.01, name=name) for name in joint_names]
+        goal_time_tolerance = Duration(sec=1, nanosec=0)
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+        self.assertTrue(goal_handle.accepted)
+        result = self._passthrough_forward_joint_trajectory.get_result(
+            goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+        )
+        self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
+
     #
     # Test functions
     #
 
     def test_start_passthrough_controller(self):
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
-            ).ok
-        )
+        self._activate_passthrough_controller()
 
     def test_passthrough_trajectory(self, tf_prefix):
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
-            ).ok
-        )
+        self._activate_passthrough_controller()
 
         goal_tolerance = [
             JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
@@ -161,15 +203,20 @@ class PassthroughControllerTest(unittest.TestCase):
             )
             self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
+    def test_single_point_trajectory_at_current_pose(self, tf_prefix):
+        """A trajectory with only one point at time 0.0 at the current pose should succeed."""
+        self._activate_passthrough_controller()
+        self._send_single_point_trajectory_at_current_pose(tf_prefix)
+
+    def test_consecutive_single_point_trajectories(self, tf_prefix):
+        """Two consecutive single-point trajectories at time 0.0 should both succeed."""
+        self._activate_passthrough_controller()
+        self._send_single_point_trajectory_at_current_pose(tf_prefix)
+        self._send_single_point_trajectory_at_current_pose(tf_prefix)
+
     def test_quintic_trajectory(self, tf_prefix):
         # Full quintic trajectory
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
-            ).ok
-        )
+        self._activate_passthrough_controller()
         trajectory = JointTrajectory(
             points=[
                 JointTrajectoryPoint(
@@ -201,13 +248,7 @@ class PassthroughControllerTest(unittest.TestCase):
 
     def test_impossible_goal_tolerance_fails(self, tf_prefix):
         # Test impossible goal tolerance, should fail.
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
-            ).ok
-        )
+        self._activate_passthrough_controller()
         trajectory = JointTrajectory(
             points=[
                 JointTrajectoryPoint(positions=pos, time_from_start=times)
@@ -235,13 +276,7 @@ class PassthroughControllerTest(unittest.TestCase):
 
     def test_impossible_goal_time_tolerance_fails(self, tf_prefix):
         # Test impossible goal time
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
-            ).ok
-        )
+        self._activate_passthrough_controller()
 
         goal_tolerance = [
             JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
