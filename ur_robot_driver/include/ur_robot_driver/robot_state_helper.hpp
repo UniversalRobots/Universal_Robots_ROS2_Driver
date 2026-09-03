@@ -75,8 +75,6 @@ private:
   void robotModeCallback(ur_dashboard_msgs::msg::RobotMode::SharedPtr msg);
   void safetyModeCallback(ur_dashboard_msgs::msg::SafetyMode::SharedPtr msg);
 
-  void updateRobotState();
-
   bool recoverFromSafety();
   bool doTransition(const urcl::RobotMode target_mode);
   bool jumpToRobotMode(const urcl::RobotMode target_mode);
