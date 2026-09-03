@@ -29,8 +29,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <chrono>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
+#include <utility>
 
 #include "controller_interface/controller_interface_params.hpp"
 #include "hardware_interface/loaned_command_interface.hpp"
@@ -161,6 +166,32 @@ protected:
     return controller_.update(rclcpp::Time(0, 0, RCL_ROS_TIME), rclcpp::Duration::from_seconds(0.01));
   }
 
+  // Hold rt_active_goal_'s mutex so update()'s try_get fails (contention path).
+  template <typename Fn>
+  void with_goal_box_contended(Fn&& fn)
+  {
+    std::atomic<bool> lock_held{ false };
+    std::atomic<bool> release_lock{ false };
+    std::thread holder([this, &lock_held, &release_lock]() {
+      std::unique_lock lock(controller_.rt_active_goal_.get_mutex());
+      lock_held = true;
+      while (!release_lock.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    });
+
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    while (!lock_held.load() && std::chrono::steady_clock::now() < deadline) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    ASSERT_TRUE(lock_held.load()) << "Timed out waiting to hold the goal box mutex.";
+
+    std::forward<Fn>(fn)();
+
+    release_lock = true;
+    holder.join();
+  }
+
   ur_controllers::ToolContactController controller_;
   double set_state_value_{};
   double state_value_{};
@@ -266,6 +297,79 @@ TEST_F(ToolContactControllerTest, ExecutingHardwareAbortResultSetsStandby)
   EXPECT_EQ(run_update(), controller_interface::return_type::OK);
   EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_STANDBY);
   EXPECT_FALSE(is_active());
+}
+
+// ---------------------------------------------------------------------------
+// Goal-box contention: try_get fails while another thread holds the mutex
+// ---------------------------------------------------------------------------
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingNonTerminalAcknowledgesExecuting)
+{
+  // Non-terminal EXECUTING must still be acknowledged so startToolContact is
+  // not retriggered, even when the goal handle cannot be read this cycle.
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_WAITING_BEGIN;
+  set_hw_state(TOOL_CONTACT_EXECUTING, 3.0);
+  set_logged_once(false);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
+    EXPECT_TRUE(is_active());
+    EXPECT_TRUE(logged_once());
+    EXPECT_FALSE(should_reset_goal());
+  });
+}
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingSuccessDefersTerminalHandling)
+{
+  // Terminal success must NOT write WAITING_END while the goal box is
+  // contended; goal/result handling is deferred to a later cycle.
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_EXECUTING;
+  set_hw_state(TOOL_CONTACT_EXECUTING, 0.0);
+  set_active(true);
+  set_logged_once(true);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
+    EXPECT_TRUE(is_active());
+    EXPECT_FALSE(should_reset_goal());
+  });
+}
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingHardwareAbortDefersTerminalHandling)
+{
+  // Terminal hardware abort must NOT write STANDBY while the goal box is
+  // contended; goal/result handling is deferred to a later cycle.
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_EXECUTING;
+  set_hw_state(TOOL_CONTACT_EXECUTING, 1.0);
+  set_active(true);
+  set_logged_once(true);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
+    EXPECT_TRUE(is_active());
+    EXPECT_FALSE(should_reset_goal());
+  });
+}
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxNonExecutingLeavesCommandUnchanged)
+{
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_STANDBY;
+  set_hw_state(TOOL_CONTACT_STANDBY);
+  set_logged_once(true);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_STANDBY);
+    // STANDBY logging clear only runs in the uncontended switch.
+    EXPECT_TRUE(logged_once());
+  });
 }
 
 // ---------------------------------------------------------------------------
