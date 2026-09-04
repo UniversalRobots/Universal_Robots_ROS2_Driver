@@ -352,6 +352,10 @@ protected:
   bool getMoprimVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
                           double& move_time);
   void quaternionToRotVec(double qx, double qy, double qz, double qw, double& rx, double& ry, double& rz);
+  std::vector<double> getCommandSlice(const std::array<double, 25>& command, size_t start, size_t end);
+  urcl::vector6d_t vector6dFromCommand(const std::array<double, 25>& command);
+  urcl::Pose poseFromCommand(const std::array<double, 25>& command);
+  urcl::Pose viaPoseFromCommand(const std::array<double, 25>& command);
 
   const std::string HW_IF_MOTION_PRIMITIVES = "motion_primitive";
   //*************** End Motion primitives stuff ***************

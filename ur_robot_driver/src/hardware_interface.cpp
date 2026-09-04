@@ -49,6 +49,7 @@
 #include "ur_client_library/ur/tool_communication.h"
 #include "ur_client_library/ur/version_information.h"
 #include "ur_client_library/ur/robot_receive_timeout.h"
+#include "ur_client_library/helpers.h"
 
 #include <rclcpp/logging.hpp>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
@@ -1868,6 +1869,42 @@ void URPositionHardwareInterface::asyncMoprimCmdThread()
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "[asyncMoprimCmdThread] Exiting");
 }
 
+std::vector<double> URPositionHardwareInterface::getCommandSlice(const std::array<double, 25>& command, size_t start,
+                                                                 size_t end)
+{
+  std::vector<double> slice;
+  slice.reserve(end - start + 1);
+  for (size_t i = start; i <= end; ++i) {
+    slice.push_back(command[i]);
+  }
+  return slice;
+}
+
+urcl::vector6d_t URPositionHardwareInterface::vector6dFromCommand(const std::array<double, 25>& command)
+{
+  return urcl::vector6d_t{ command[1], command[2], command[3], command[4], command[5], command[6] };
+}
+
+urcl::Pose URPositionHardwareInterface::poseFromCommand(const std::array<double, 25>& command)
+{
+  double rx, ry, rz;
+  quaternionToRotVec(command[10], command[11], command[12], command[13], rx, ry, rz);
+  return urcl::Pose(command[7], command[8], command[9], rx, ry, rz);
+}
+
+urcl::Pose URPositionHardwareInterface::viaPoseFromCommand(const std::array<double, 25>& command)
+{
+  double via_rx, via_ry, via_rz;
+  quaternionToRotVec(command[17], command[18], command[19], command[20], via_rx, via_ry, via_rz);
+  return urcl::Pose(command[14], command[15], command[16], via_rx, via_ry, via_rz);
+}
+
+template <typename Range>
+bool hasNoNaN(const Range& range)
+{
+  return std::none_of(range.begin(), range.end(), [](double i) { return std::isnan(i); });
+}
+
 void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double, 25>& command)
 {
   if (std::isnan(command[0])) {
@@ -1876,6 +1913,54 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
   double velocity, acceleration, move_time;
   double motion_type = command[0];
   double blend_radius = command[21];
+
+  urcl::MotionTarget target_command = urcl::Pose();
+  urcl::MotionTarget via_command = urcl::Pose();
+
+  bool joints_valid = false;
+  bool pose_valid = false;
+  bool via_valid = false;
+
+  // Check if joint angles in command are valid
+  const auto joint_angles = vector6dFromCommand(command);
+  if (hasNoNaN(joint_angles)) {
+    joints_valid = true;
+    target_command = urcl::Q(joint_angles);
+  }
+
+  // Check if pose in command is valid
+  const auto pose_slice = getCommandSlice(command, 7, 13);
+  if (hasNoNaN(pose_slice)) {
+    pose_valid = true;
+    target_command = poseFromCommand(command);
+  }
+
+  // Check if via pose in command is valid
+  const auto via_slice = getCommandSlice(command, 14, 20);
+  if (hasNoNaN(via_slice)) {
+    via_valid = true;
+    via_command = viaPoseFromCommand(command);
+  }
+
+  // Not a control message
+  if (static_cast<uint8_t>(motion_type) != static_cast<uint8_t>(MoprimMotionHelperType::MOTION_SEQUENCE_END) &&
+      static_cast<uint8_t>(motion_type) != static_cast<uint8_t>(MoprimMotionHelperType::MOTION_SEQUENCE_START)) {
+    // If neither pose nor joints are valid, something is wrong
+    if (!pose_valid && !joints_valid) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: both joint positions "
+                                                                      "and pose contain NaN values");
+      current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+      return;
+    }
+    // Same if both are valid
+    if (pose_valid && joints_valid) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: both joint positions "
+                                                                      "and pose contain non-NaN values. Command is "
+                                                                      "ambiguous, only one should be defined");
+      current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+      return;
+    }
+  }
 
   try {
     switch (static_cast<uint8_t>(motion_type)) {
@@ -1905,17 +1990,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
 
       case MoprimMotionType::LINEAR_JOINT:
       {  // moveJ
-        // Check if joint positions are valid
-        for (int i = 1; i <= 6; ++i) {
-          if (std::isnan(command[i])) {
-            RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: joint positions "
-                                                                            "contain NaN values");
-            current_moprim_execution_status_ = MoprimExecutionState::ERROR;
-            return;
-          }
-        }
-        urcl::vector6d_t joint_positions = { command[1], command[2], command[3], command[4], command[5], command[6] };
-
         // Get move_time OR (velocity AND acceleration)
         if (!getMoprimTimeOrVelAndAcc(command, velocity, acceleration, move_time)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid move_time, velocity or acceleration "
@@ -1927,22 +2001,23 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
         // Check if the command is part of a motion sequence or a single command
         if (build_moprim_sequence_) {  // Add command to motion sequence
           moprim_sequence_.emplace_back(std::make_shared<urcl::control::MoveJPrimitive>(
-              joint_positions, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)),
-              acceleration, velocity));
+              target_command, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration,
+              velocity));
+
           RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      "Added moveJ to motion sequence with joint positions: [%f, %f, %f, %f, %f, %f], "
+                      "Added moveJ to motion sequence with: %s, "
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
-                      joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
-                      joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
+                      stringFromMotionTarget(target_command).c_str(), velocity, acceleration, move_time, blend_radius);
           return;
         } else {  // execute single primitive directly
           current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
+
           RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      "Executing moveJ with joint positions: [%f, %f, %f, %f, %f, %f], "
+                      "Executing moveJ with: %s, "
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
-                      joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
-                      joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
-          bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
+                      stringFromMotionTarget(target_command).c_str(), velocity, acceleration, move_time, blend_radius);
+
+          bool success = instruction_executor_->moveJ(target_command, acceleration, velocity, move_time, blend_radius);
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
           }
@@ -1953,19 +2028,6 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
 
       case MoprimMotionType::LINEAR_CARTESIAN:
       {  // moveL
-        // Check if pose values (position and quaternion) are valid
-        for (int i = 7; i <= 13; ++i) {
-          if (std::isnan(command[i])) {
-            RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: pose contains NaN "
-                                                                            "values");
-            current_moprim_execution_status_ = MoprimExecutionState::ERROR;
-            return;
-          }
-        }
-        double rx, ry, rz;
-        quaternionToRotVec(command[10], command[11], command[12], command[13], rx, ry, rz);
-        urcl::Pose pose = { command[7], command[8], command[9], rx, ry, rz };
-
         // Get move_time OR (velocity AND acceleration)
         if (!getMoprimTimeOrVelAndAcc(command, velocity, acceleration, move_time)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid move_time, velocity or acceleration "
@@ -1977,22 +2039,21 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
         // Check if the command is part of a motion sequence or a single command
         if (build_moprim_sequence_) {  // Add command to motion sequence
           moprim_sequence_.emplace_back(std::make_shared<urcl::control::MoveLPrimitive>(
-              pose, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration,
+              target_command, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration,
               velocity));
+
           RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      "Added  moveL to motion sequence with pose: [%f, %f, %f, %f, %f, %f], "
+                      "Added  moveL to motion sequence with: %s, "
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
-                      pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
-                      blend_radius);
+                      stringFromMotionTarget(target_command).c_str(), velocity, acceleration, move_time, blend_radius);
           return;
         } else {  // execute single primitive directly
           current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
           RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      "Executing moveL with pose: [%f, %f, %f, %f, %f, %f], "
+                      "Executing moveL with: %s, "
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
-                      pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
-                      blend_radius);
-          bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
+                      stringFromMotionTarget(target_command).c_str(), velocity, acceleration, move_time, blend_radius);
+          bool success = instruction_executor_->moveL(target_command, acceleration, velocity, move_time, blend_radius);
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
           }
@@ -2004,56 +2065,47 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
       case MoprimMotionType::CIRCULAR_CARTESIAN:
       {  // CIRC
         // Check if pose values (position and quaternion) are valid
-        for (int i = 7; i <= 20; ++i) {
-          if (std::isnan(command[i])) {
-            RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: pose contains NaN "
-                                                                            "values");
-            current_moprim_execution_status_ = MoprimExecutionState::ERROR;
-            return;
-          }
+        if (!(pose_valid && via_valid)) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid motion command: goal pose or via "
+                                                                          "pose contains NaN "
+                                                                          "values");
+          current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+          return;
+        }
+
+        // Get velocity and acceleration
+        if (!getMoprimVelAndAcc(command, velocity, acceleration, move_time)) {
+          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid velocity or acceleration "
+                                                                          "values");
+          current_moprim_execution_status_ = MoprimExecutionState::ERROR;
+          return;
         }
 
         // 0: Unconstrained mode, 1: Fixed mode
         // (https://www.universal-robots.com/manuals/EN/HTML/SW5_22/Content/prod-scriptmanual/all_scripts/movec_pose_via_pose_toa1.htm)
         int32_t mode = 0;
 
-        // Get velocity and acceleration)
-        if (!getMoprimVelAndAcc(command, velocity, acceleration, move_time)) {
-          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Invalid velocity or acceleration values");
-          current_moprim_execution_status_ = MoprimExecutionState::ERROR;
-          return;
-        }
-
-        double via_rx, via_ry, via_rz;
-        quaternionToRotVec(command[17], command[18], command[19], command[20], via_rx, via_ry, via_rz);
-        urcl::Pose via_pose = { command[14], command[15], command[16], via_rx, via_ry, via_rz };
-
-        double goal_rx, goal_ry, goal_rz;
-        quaternionToRotVec(command[10], command[11], command[12], command[13], goal_rx, goal_ry, goal_rz);
-        urcl::Pose goal_pose = { command[7], command[8], command[9], goal_rx, goal_ry, goal_rz };
-
         // Check if the command is part of a motion sequence or a single command
         if (build_moprim_sequence_) {  // Add command to motion sequence
           moprim_sequence_.emplace_back(std::make_shared<urcl::control::MoveCPrimitive>(
-              via_pose, goal_pose, blend_radius, acceleration, velocity, mode));
+              via_command, target_command, blend_radius, acceleration, velocity, mode));
           RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      "Added  moveC to motion sequence with via_pose: [%f, %f, %f, %f, %f, %f], "
-                      "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
+                      "Added  moveC to motion sequence with via_pose: %s, "
+                      "goal_pose: %s, velocity: %f,"
                       "acceleration: %f, blend_radius: %f, mode: %d",
-                      via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
-                      goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
-                      blend_radius, mode);
+                      stringFromMotionTarget(via_command).c_str(), stringFromMotionTarget(target_command).c_str(),
+                      velocity, acceleration, blend_radius, mode);
           return;
         } else {  // execute single primitive directly
           current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
           RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"),
-                      "Executing moveC with via_pose: [%f, %f, %f, %f, %f, %f], "
-                      "goal_pose: [%f, %f, %f, %f, %f, %f], velocity: %f,"
+                      "Executing moveC with via_pose: %s, "
+                      "goal_pose: %s, velocity: %f,"
                       "acceleration: %f, blend_radius: %f, mode: %d",
-                      via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
-                      goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
-                      blend_radius, mode);
-          bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
+                      stringFromMotionTarget(via_command).c_str(), stringFromMotionTarget(target_command).c_str(),
+                      velocity, acceleration, blend_radius, mode);
+          bool success =
+              instruction_executor_->moveC(via_command, target_command, acceleration, velocity, blend_radius, mode);
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
           }
