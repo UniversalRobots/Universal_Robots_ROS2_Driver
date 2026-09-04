@@ -165,7 +165,8 @@ bool RobotStateHelper::recoverFromSafety()
       if (restart_safety_srv_ != nullptr) {
         auto call_result = safeDashboardTrigger(restart_safety_srv_);
         if (!call_result.has_value()) {
-          RCLCPP_WARN_STREAM(get_logger(), "The safety restart service call was interrupted by a shutdown or cancellation request.");
+          RCLCPP_WARN_STREAM(get_logger(), "The safety restart service call was interrupted by a shutdown or "
+                                           "cancellation request.");
           return false;
         }
         return call_result.value();
