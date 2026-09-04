@@ -273,16 +273,18 @@ class DashboardClientTest(unittest.TestCase):
         self.assertNotEqual(resp.generated_file_name, "")
 
     def test_download_support_file(self, ursim_version):
-        if not _is_polyscope_x_at_least(ursim_version, "10.14.0"):
-            self.skipTest("Downloading support files requires PolyScope X >= 10.14.0")
         target_path = "/tmp/ur_dashboard_support_files.zip"
         if os.path.exists(target_path):
             os.remove(target_path)
         resp = self._dashboard_interface.download_support_file(target_path=target_path)
-        self.assertTrue(resp.success)
-        self.assertTrue(os.path.isfile(target_path))
-        if resp.support_files_present:
-            self.assertGreater(os.path.getsize(target_path), 0)
+        if _is_polyscope_x_at_least(ursim_version, "10.14.0"):
+            self.assertTrue(resp.success)
+            self.assertTrue(os.path.isfile(target_path))
+            if resp.support_files_present:
+                self.assertGreater(os.path.getsize(target_path), 0)
+        else:
+            self.assertFalse(resp.success)
+            self.assertFalse(os.path.isfile(target_path))
 
     def test_popup_and_add_to_log(self, ursim_version):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
