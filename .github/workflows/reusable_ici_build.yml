@@ -1,0 +1,164 @@
+name: Reusable industrial_ci build
+# original author: Denis Štogl <denis@stoglrobotics.de>
+
+on:
+  workflow_call:
+    inputs:
+      ref_for_scheduled_build:
+        description: 'Reference on which the repo should be checkout for scheduled build.'
+        default: ''
+        required: false
+        type: string
+      upstream_workspace:
+        description: 'UPSTREAM_WORKSPACE variable for industrial_ci.'
+        required: false
+        default: ''
+        type: string
+      ros_distro:
+        description: 'ROS_DISTRO variable for industrial_ci'
+        required: true
+        type: string
+      ros_repo:
+        description: 'ROS_REPO to run for industrial_ci. Possible values: "main", "testing"'
+        default: 'main'
+        required: false
+        type: string
+      ccache_dir:
+        description: 'CCache dir that should be used. Relative to github.workspace'
+        default: '.ccache'
+        required: false
+        type: string
+      rosdep_skip_keys:
+        description: "Skip those keys when doing 'rosdep install'. space-separated list"
+        default: ''
+        required: false
+        type: string
+    outputs:
+      workspace_cache_key:
+        description: 'Cache key for the built workspace consumed by integration test jobs'
+        value: ${{ jobs.build.outputs.workspace_cache_key }}
+      ci_image:
+        description: 'Docker image tag committed by industrial_ci for reuse in matrix jobs'
+        value: ${{ jobs.build.outputs.ci_image }}
+      ci_image_artifact:
+        description: 'Artifact name containing the committed CI docker image'
+        value: ${{ jobs.build.outputs.ci_image_artifact }}
+
+jobs:
+  build:
+    name: build ${{ inputs.ros_distro }} ${{ inputs.ros_repo }}
+    runs-on: ubuntu-latest
+    outputs:
+      workspace_cache_key: ${{ steps.workspace_cache_key.outputs.key }}
+      ci_image: ${{ steps.ci_image.outputs.image }}
+      ci_image_artifact: ${{ steps.ci_image.outputs.artifact }}
+    env:
+      BASEDIR: ${{ github.workspace }}/.ici
+      CCACHE_DIR: ${{ github.workspace }}/${{ inputs.ccache_dir }}
+      CACHE_PREFIX: ${{ inputs.ros_distro }}-${{ inputs.upstream_workspace }}-${{ inputs.ros_repo }}
+      ROSDEP_SKIP_KEYS: ${{ inputs.rosdep_skip_keys }}
+      TARGET_CMAKE_ARGS: -DCMAKE_CXX_FLAGS="-Werror -Wall -Wextra -Wpedantic -Wno-error=cpp"
+      # Needed so robot_models (and start_ursim.sh) can reach URSim from the ICI container.
+      DOCKER_RUN_OPTS: '-v /var/run/docker.sock:/var/run/docker.sock -v /tmp/ur_test_artifacts:/test_artifacts -v /tmp/ursim_urcaps:/tmp/ursim_urcaps -e UR_TEST_ARTIFACTS_DIR=/test_artifacts --network ursim_net --ip 192.168.56.1'
+    steps:
+      - name: Checkout ${{ github.ref_name }} since build is not scheduled
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Checkout ${{ inputs.ref_for_scheduled_build }} on scheduled build
+        if: ${{ github.event_name == 'schedule' }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref_for_scheduled_build }}
+      - run: docker network create --subnet=192.168.56.0/24 --gateway=192.168.56.254 ursim_net
+        if: ${{ !env.ACT }}
+      - name: Create shared host directories
+        run: |
+          mkdir -p /tmp/ur_test_artifacts /tmp/ursim_urcaps
+          chmod 777 /tmp/ur_test_artifacts /tmp/ursim_urcaps
+      - name: Cache ccache
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ env.CACHE_PREFIX }}-${{ github.sha }}
+            ccache-${{ env.CACHE_PREFIX }}
+      - name: Set workspace cache key
+        id: workspace_cache_key
+        run: echo "key=ici-ws-${{ env.CACHE_PREFIX }}-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+      - name: Set CI image names
+        id: ci_image
+        run: |
+          image="ur-robot-driver-ci:${{ inputs.ros_distro }}-${{ inputs.ros_repo }}-${{ github.sha }}"
+          artifact="ci-image-${{ inputs.ros_distro }}-${{ inputs.ros_repo }}-${{ github.run_id }}"
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          echo "artifact=${artifact}" >> "$GITHUB_OUTPUT"
+      - name: Detect robot models test changes
+        id: robot_models_changes
+        run: |
+          changed=false
+          set -o pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if git diff --name-only "origin/${{ github.event.pull_request.base.ref }}"...HEAD \
+                | grep -Fxq 'ur_robot_driver/test/integration_test_robot_models.py'; then
+              changed=true
+            fi
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            if git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" \
+                | grep -Fxq 'ur_robot_driver/test/integration_test_robot_models.py'; then
+              changed=true
+            fi
+          fi
+          echo "changed=${changed}" | tee "$GITHUB_OUTPUT"
+      - uses: 'ros-industrial/industrial_ci@master'
+        env:
+          UPSTREAM_WORKSPACE: ${{ inputs.upstream_workspace }}
+          ROS_DISTRO: ${{ inputs.ros_distro }}
+          ROS_REPO: ${{ inputs.ros_repo }}
+          BASEDIR: ${{ env.BASEDIR }}
+          DOCKER_COMMIT: ${{ steps.ci_image.outputs.image }}
+          # industrial_ci's default test step always passes `--ctest-args -j1`, which
+          # overrides colcon defaults. Skip that step and run tests ourselves so we
+          # can exclude the shared-URSim matrix tests (-LE ursim). robot_models is
+          # unlabelled and still runs here (starts its own URSim per case), as do
+          # other package tests (ur_controllers, ur_calibration, mock hardware, …).
+          NOT_TEST_BUILD: true
+          ADDITIONAL_DEBS: docker.io netcat-openbsd curl
+          OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
+          CMAKE_ARGS: >-
+            -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
+            ${{ (
+              (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release'))
+              || steps.robot_models_changes.outputs.changed == 'true'
+            ) && '-DUR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST=ON' || '' }}
+          AFTER_SCRIPT: >-
+            set +u
+            && source "/opt/ros/$ROS_DISTRO/setup.bash"
+            && { [ ! -f "$BASEDIR/upstream_ws/install/setup.bash" ] || source "$BASEDIR/upstream_ws/install/setup.bash"; }
+            && cd "$BASEDIR/target_ws"
+            && source install/setup.bash
+            && set -u
+            && colcon test --event-handlers desktop_notification- status- terminal_title- console_direct+ --executor sequential --ctest-args -LE ursim -j1
+            && colcon test-result --verbose
+      - name: Cache built workspace
+        uses: actions/cache/save@v6
+        with:
+          # src is required for colcon package discovery in matrix jobs
+          # (industrial_ci copies the checkout into target_ws/src).
+          path: |
+            .ici/target_ws/src
+            .ici/target_ws/build
+            .ici/target_ws/install
+            .ici/upstream_ws/install
+          key: ${{ steps.workspace_cache_key.outputs.key }}
+      - name: Save CI docker image
+        run: docker save "${{ steps.ci_image.outputs.image }}" -o ci-image.tar
+      - name: Upload CI docker image
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.ci_image.outputs.artifact }}
+          path: ci-image.tar
+          compression-level: 0 # docker storage is zipped already
+          retention-days: 1

@@ -40,14 +40,13 @@ from rclpy.node import Node
 
 from launch import LaunchDescription
 from launch.actions import (
-    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackagePrefix, FindPackageShare
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 import launch_testing
 from launch_testing.actions import ReadyToTest
@@ -55,8 +54,10 @@ from launch_testing.actions import ReadyToTest
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     ControllerManagerInterface,
+    _ci_ur_type,
     _declare_launch_arguments,
-    _ursim_action,
+    _robot_ip,
+    _wait_robot_booted_action,
 )
 
 
@@ -66,9 +67,9 @@ from test_common import (  # noqa: E402
     [("true"), ("false")],
 )
 def generate_test_description(launch_dashboard_client):
-    ur_type = LaunchConfiguration("ur_type")
+    ur_type = _ci_ur_type()
     launch_arguments = {
-        "robot_ip": "192.168.56.101",
+        "robot_ip": _robot_ip(),
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(120),
@@ -86,26 +87,13 @@ def generate_test_description(launch_dashboard_client):
         ),
         launch_arguments=launch_arguments.items(),
     )
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [
-                    FindPackagePrefix("ur_robot_driver"),
-                    "bin",
-                    "wait_dashboard_server.sh",
-                ]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
+    wait_robot_booted = _wait_robot_booted_action()
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+        OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
     )
 
     return LaunchDescription(
-        _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, _ursim_action(), driver_starter]
+        _declare_launch_arguments() + [ReadyToTest(), wait_robot_booted, driver_starter]
     )
 
 

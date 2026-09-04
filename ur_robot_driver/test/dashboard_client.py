@@ -31,8 +31,8 @@ import sys
 import time
 import unittest
 
-import launch_testing
 import pytest
+import launch_testing
 import rclpy
 from rclpy.node import Node
 from ur_dashboard_msgs.msg import RobotMode, UserRole, OperationalMode, SafetyStatus
@@ -40,33 +40,29 @@ from ur_dashboard_msgs.msg import RobotMode, UserRole, OperationalMode, SafetySt
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
     DashboardInterface,
+    CB3,
+    POLYSCOPE_5,
+    POLYSCOPE_X,
     connect_dashboard_client,
     generate_dashboard_test_description,
 )
 
 
 @pytest.mark.launch_test
-@launch_testing.parametrize(
-    "ursim_version, ur_type, autoconnect",
-    [
-        ("latest", "ur30", "false"),
-        ("10.12.0", "ur15", "true"),
-        ("3.15.8", "ur10", "true"),
-    ],
-)
-def generate_test_description(ursim_version, ur_type, autoconnect):
-    return generate_dashboard_test_description(ursim_version, ur_type, autoconnect)
+@launch_testing.parametrize("autoconnect", [("true"), ("false")])
+def generate_test_description(autoconnect):
+    return generate_dashboard_test_description(autoconnect=autoconnect)
 
 
 class DashboardClientTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls, ursim_version, autoconnect):
+    def setUpClass(cls, autoconnect):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("dashboard_client_test")
         if autoconnect == "false":
             connect_dashboard_client(cls.node)
-        cls.init_robot(cls, ursim_version)
+        cls.init_robot(cls)
 
     @classmethod
     def tearDownClass(cls):
@@ -74,16 +70,17 @@ class DashboardClientTest(unittest.TestCase):
         cls.node.destroy_node()
         rclpy.shutdown()
 
-    def init_robot(self, ursim_version):
+    def init_robot(self):
         self._dashboard_interface = DashboardInterface(self.node)
+        self.polyscope_family = self._dashboard_interface.detect_polyscope_family()
         result = self._dashboard_interface.is_in_remote_control()
         self.remote_control = result.remote_control
-        if self.remote_control or ursim_version.startswith("5.") or ursim_version == "latest":
+        if self.remote_control or self.polyscope_family == POLYSCOPE_5:
             self._dashboard_interface.power_off()  # create a defined starting state
 
-    def test_switch_on(self, ursim_version):
+    def test_switch_on(self):
         """Test power on a robot."""
-        if ursim_version.startswith("10."):
+        if self.polyscope_family == POLYSCOPE_X:
             self.skipTest("Currently, this test isn't supported on PolyScope X")
 
         # Wait until the robot is booted completely
@@ -128,19 +125,31 @@ class DashboardClientTest(unittest.TestCase):
         result = self._dashboard_interface.get_robot_mode()
         self.assertTrue(result.success)
 
-    def test_program_management(self, ursim_version):
+    def test_program_management(self):
         """Test uploading a program."""
-        if not ursim_version.startswith("10."):
+        if self.polyscope_family != POLYSCOPE_X:
             self.skipTest("Uploading a program is only supported on PolyScope X")
+
+        def program_exists(program_name):
+            result = self._dashboard_interface.get_programs()
+            self.assertTrue(result.success)
+            for prog in result.programs:
+                if prog.name == program_name:
+                    return True
+            return False
+
+        PROGRAM_NAME = "test upload"
+
+        if program_exists(PROGRAM_NAME):
+            self.skipTest("Upload program already tested by previous run. Skipping test.")
+
         result = self._dashboard_interface.upload_program(
             file_path=os.path.join(os.path.dirname(__file__), "test_program.urpx")
         )
         self.assertTrue(result.success)
         self.assertEqual(result.program_name, "test upload")
 
-        result = self._dashboard_interface.get_programs()
-        self.assertTrue(result.success)
-        self.assertTrue(len(result.programs) > 0)
+        self.assertTrue(program_exists(PROGRAM_NAME))
 
         # TODO: Updating a program requires an open UI session. We would need to start a browser
         # from within this test. Maybe it would be better to turn those tests into unittests, as
@@ -156,22 +165,22 @@ class DashboardClientTest(unittest.TestCase):
         )
         self.assertTrue(result.success)
 
-    def test_get_polyscope_version(self, ursim_version):
-        if ursim_version.startswith("10."):
+    def test_get_polyscope_version(self):
+        if self.polyscope_family == POLYSCOPE_X:
             self.skipTest("Getting polyscope version is not supported on PolyScope X")
         resp = self._dashboard_interface.get_polyscope_version()
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.version.major, 0)
 
-    def test_get_serial_number(self, ursim_version):
-        if ursim_version.startswith("10."):
+    def test_get_serial_number(self):
+        if self.polyscope_family == POLYSCOPE_X:
             self.skipTest("Getting serial number is not supported on PolyScope X")
         resp = self._dashboard_interface.get_serial_number()
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.serial_number, 0)
 
-    def test_user_role_services(self, ursim_version):
-        if not ursim_version.startswith("3."):
+    def test_user_role_services(self):
+        if self.polyscope_family != CB3:
             self.skipTest("User role services only supported on CB3")
         roles = [
             UserRole.PROGRAMMER,
@@ -189,8 +198,8 @@ class DashboardClientTest(unittest.TestCase):
             self.assertEqual(role, resp.user_role.role)
 
     # Not all operational mode services are supported in PolyScope X yet
-    def test_operational_mode_services(self, ursim_version):
-        if not ursim_version.startswith("5."):
+    def test_operational_mode_services(self):
+        if self.polyscope_family != POLYSCOPE_5:
             self.skipTest(
                 "Operational mode services only supported on PolyScope 5 robots, skipping tests"
             )
@@ -205,36 +214,36 @@ class DashboardClientTest(unittest.TestCase):
         resp = self._dashboard_interface.clear_operational_mode()
         self.assertTrue(resp.success)
 
-    def test_get_operational_mode(self, ursim_version):
-        if not ursim_version.startswith("10."):
+    def test_get_operational_mode(self):
+        if self.polyscope_family != POLYSCOPE_X:
             self.skipTest("Specific test for PolyScope X, skipping")
         resp = self._dashboard_interface.get_operational_mode()
         self.assertTrue(resp.success)
         self.assertIn(resp.operational_mode.mode, ["MANUAL", "AUTOMATIC"])
 
-    def test_get_robot_model(self, ursim_version):
-        if ursim_version.startswith("10."):
+    def test_get_robot_model(self):
+        if self.polyscope_family == POLYSCOPE_X:
             self.skipTest("Getting robot model not supported on PolyScope X, skipping tests")
         resp = self._dashboard_interface.get_robot_model()
         self.assertTrue(resp.success)
         self.assertTrue("UR" in resp.robot_model)
 
-    def test_get_safety_status(self, ursim_version):
-        if not ursim_version.startswith("5."):
+    def test_get_safety_status(self):
+        if self.polyscope_family != POLYSCOPE_5:
             self.skipTest("Safety status only supported on PolyScope 5 robots, skipping tests")
         resp = self._dashboard_interface.get_safety_status()
         self.assertTrue(resp.success)
         self.assertEqual(resp.safety_status.status, SafetyStatus.NORMAL)
 
-    def test_generate_flight_report(self, ursim_version):
-        if ursim_version.startswith("10."):
+    def test_generate_flight_report(self):
+        if self.polyscope_family == POLYSCOPE_X:
             self.skipTest("Generating flight report not supported on PolyScope X, skipping tests")
         resp = self._dashboard_interface.generate_flight_report()
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.report_id, "")
 
-    def test_generate_support_file(self, ursim_version):
-        if ursim_version.startswith("10."):
+    def test_generate_support_file(self):
+        if self.polyscope_family == POLYSCOPE_X:
             self.skipTest("Generating support file not supported on PolyScope X, skipping tests")
         resp = self._dashboard_interface.generate_support_file()
         self.assertTrue(resp.success)

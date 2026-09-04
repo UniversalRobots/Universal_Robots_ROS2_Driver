@@ -43,13 +43,15 @@ from action_msgs.srv import CancelGoal_Response
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
+    _robot_ip,
     generate_driver_test_description,
 )
 
-ROBOT_IP = "192.168.56.101"
+ROBOT_IP = _robot_ip()
 
 
 @pytest.mark.launch_test
@@ -63,6 +65,7 @@ class URScriptInterfaceTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = rclpy.node.Node("urscript_interface_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         cls.init_robot(cls)
 
     @classmethod
