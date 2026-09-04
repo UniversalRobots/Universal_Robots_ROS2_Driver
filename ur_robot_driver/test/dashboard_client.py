@@ -75,6 +75,7 @@ def _is_older_polyscope_x(ursim_version, min_version):
     "ursim_version, ur_type, autoconnect",
     [
         ("latest", "ur30", "false"),
+        ("10.14.0", "ur15", "true"),
         ("10.12.0", "ur15", "true"),
         ("3.15.8", "ur10", "true"),
     ],
@@ -188,7 +189,10 @@ class DashboardClientTest(unittest.TestCase):
         if not resp.success and "Not implemented" in resp.answer:
             self.skipTest("Getting polyscope version requires PolyScope X >= 10.14.0")
         self.assertTrue(resp.success)
-        self.assertNotEqual(resp.version.major, 0)
+        if ursim_version != "latest":
+            self.assertEqual(resp.version.major, _version_tuple(ursim_version)[0])
+            self.assertEqual(resp.version.minor, _version_tuple(ursim_version)[1])
+            self.assertEqual(resp.version.patch, _version_tuple(ursim_version)[2])
 
     def test_get_serial_number(self, ursim_version):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
