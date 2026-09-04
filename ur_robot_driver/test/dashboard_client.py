@@ -186,8 +186,6 @@ class DashboardClientTest(unittest.TestCase):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
             self.skipTest("Getting polyscope version requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.get_polyscope_version()
-        if not resp.success and "Not implemented" in resp.answer:
-            self.skipTest("Getting polyscope version requires PolyScope X >= 10.14.0")
         self.assertTrue(resp.success)
         if ursim_version != "latest":
             self.assertEqual(resp.version.major, _version_tuple(ursim_version)[0])
@@ -198,8 +196,6 @@ class DashboardClientTest(unittest.TestCase):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
             self.skipTest("Getting serial number requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.get_serial_number()
-        if not resp.success and "Not implemented" in resp.answer:
-            self.skipTest("Getting serial number requires PolyScope X >= 10.14.0")
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.serial_number, 0)
 
@@ -249,8 +245,6 @@ class DashboardClientTest(unittest.TestCase):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
             self.skipTest("Getting robot model requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.get_robot_model()
-        if not resp.success and "Not implemented" in resp.answer:
-            self.skipTest("Getting robot model requires PolyScope X >= 10.14.0")
         self.assertTrue(resp.success)
         self.assertTrue("UR" in resp.robot_model)
 
@@ -265,8 +259,6 @@ class DashboardClientTest(unittest.TestCase):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
             self.skipTest("Generating flight report requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.generate_flight_report()
-        if not resp.success and "Not implemented" in resp.answer:
-            self.skipTest("Generating flight report requires PolyScope X >= 10.14.0")
         # PolyScope X requires remote control for this endpoint.
         if not resp.success and "Forbidden" in resp.answer:
             self.skipTest("Generating flight report requires remote control on PolyScope X")
@@ -283,14 +275,12 @@ class DashboardClientTest(unittest.TestCase):
         self.assertNotEqual(resp.generated_file_name, "")
 
     def test_download_support_file(self, ursim_version):
-        if not _is_polyscope_x_at_least(ursim_version, "10.14.0"):
+        if not _is_polyscope_x_at_least(ursim_version, "10.14.0") or ursim_version.startswith("5."):
             self.skipTest("Downloading support files requires PolyScope X >= 10.14.0")
         target_path = "/tmp/ur_dashboard_support_files.zip"
         if os.path.exists(target_path):
             os.remove(target_path)
         resp = self._dashboard_interface.download_support_file(target_path=target_path)
-        if not resp.success and "Not implemented" in resp.answer:
-            self.skipTest("Downloading support files requires PolyScope X >= 10.14.0")
         self.assertTrue(resp.success)
         self.assertTrue(os.path.isfile(target_path))
         self.assertGreater(os.path.getsize(target_path), 0)
@@ -299,8 +289,6 @@ class DashboardClientTest(unittest.TestCase):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
             self.skipTest("Popup / add_to_log require PolyScope X >= 10.14.0")
         popup_resp = self._dashboard_interface.popup(message="ROS2 dashboard test", title="Test")
-        if not popup_resp.success and "Not implemented" in popup_resp.answer:
-            self.skipTest("Popup / add_to_log require PolyScope X >= 10.14.0")
         # PolyScope X requires remote control for popup / log endpoints.
         if not popup_resp.success and "Forbidden" in popup_resp.answer:
             self.skipTest("Popup / add_to_log require remote control on PolyScope X")
