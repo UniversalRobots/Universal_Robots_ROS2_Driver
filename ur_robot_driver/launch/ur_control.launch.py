@@ -519,6 +519,16 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "use_currents_as_efforts",
+            default_value="true",
+            description=(
+                "Report motor currents as efforts. When set to false, the torques as reported "
+                "from the robot are used. Note that this requires software 5.23.0 / 10.11.0."
+            ),
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             name="update_rate_config_file",
             default_value=[
                 PathJoinSubstitution(
