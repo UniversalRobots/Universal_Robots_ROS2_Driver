@@ -535,7 +535,7 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
           resp->support_files_present = true;
           handleDashboardResponseData(
               [dashboard_response, resp]() {
-                static constexpr std::string key = "status_code";
+                const std::string key = "status_code";
                 if (dashboard_response.data.find(key) != dashboard_response.data.end()) {
                   const int status_code = std::get<int>(dashboard_response.data.at(key));
                   if (status_code == 204) {
