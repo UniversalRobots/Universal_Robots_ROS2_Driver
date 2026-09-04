@@ -529,8 +529,22 @@ void DashboardClientROS::initServices(urcl::DashboardClient::ClientPolicy dashbo
   download_support_file_service_ = node_->create_service<ur_dashboard_msgs::srv::DownloadSupportFile>(
       "~/download_support_file", [&](const ur_dashboard_msgs::srv::DownloadSupportFile::Request::SharedPtr req,
                                      ur_dashboard_msgs::srv::DownloadSupportFile::Response::SharedPtr resp) {
-        dashboardCallWithChecks(
+        auto dashboard_response = dashboardCallWithChecks(
             [this, req]() { return client_->commandDownloadSupportFilesWithResponse(req->target_path); }, resp);
+        if (resp->success) {
+          resp->support_files_present = true;
+          handleDashboardResponseData(
+              [dashboard_response, resp]() {
+                static constexpr std::string key = "status_code";
+                if (dashboard_response.data.find(key) != dashboard_response.data.end()) {
+                  const int status_code = std::get<int>(dashboard_response.data.at(key));
+                  if (status_code == 204) {
+                    resp->support_files_present = false;
+                  }
+                }
+              },
+              resp, dashboard_response);
+        }
         return true;
       });
 }

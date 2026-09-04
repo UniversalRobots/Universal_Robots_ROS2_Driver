@@ -283,7 +283,8 @@ class DashboardClientTest(unittest.TestCase):
         resp = self._dashboard_interface.download_support_file(target_path=target_path)
         self.assertTrue(resp.success)
         self.assertTrue(os.path.isfile(target_path))
-        self.assertGreater(os.path.getsize(target_path), 0)
+        if resp.support_files_present:
+            self.assertGreater(os.path.getsize(target_path), 0)
 
     def test_popup_and_add_to_log(self, ursim_version):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
