@@ -263,7 +263,7 @@ std::optional<bool> RobotStateHelper::safeDashboardTrigger(rclcpp::Client<std_sr
   auto future = srv->async_send_request(request);
   // Poll in short intervals so a shutdown request is honoured promptly.
   while (future.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) {
-    if (stop_requested_ || !rclcpp::ok()) {
+    if (shouldGoalTerminate()) {
       srv->remove_pending_request(future);
       return std::nullopt;
     }
@@ -317,7 +317,7 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
   const auto goal = goal_handle->get_goal();
   this->goal_ = goal;
   urcl::RobotMode target_mode;
-  if (stop_requested_ || !rclcpp::ok()) {
+  if (shouldGoalTerminate()) {
     setTerminalState(false);
     return;
   }
@@ -332,7 +332,7 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
             setTerminalState(false, "Stopping the program failed.");
             return;
           }
-          if (stop_requested_ || !rclcpp::ok()) {
+          if (shouldGoalTerminate()) {
             setTerminalState(false);
             return;
           }
@@ -340,14 +340,14 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
         if (robot_mode_ != target_mode || safety_mode_ > urcl::SafetyMode::REDUCED) {
           RCLCPP_INFO_STREAM(get_logger(), "Target mode was set to " << robotModeString(target_mode) << ".");
           if (!doTransition(target_mode)) {
-            if (stop_requested_ || !rclcpp::ok()) {
+            if (shouldGoalTerminate()) {
               setTerminalState(false);
               return;
             }
             setTerminalState(false, "Transition to target mode failed.");
             return;
           }
-          if (stop_requested_ || !rclcpp::ok()) {
+          if (shouldGoalTerminate()) {
             setTerminalState(false);
             return;
           }
@@ -375,13 +375,13 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
   }
 
   // Wait until the robot reached the target mode or something went wrong.
-  while (robot_mode_ != target_mode && !error_ && !stop_requested_ && rclcpp::ok()) {
+  while (robot_mode_ != target_mode && !error_ && !shouldGoalTerminate()) {
     RCLCPP_INFO(get_logger(), "Waiting for robot to reach target mode... Current_mode: %s",
                 robotModeString(robot_mode_).c_str());
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
-  if (stop_requested_ || !rclcpp::ok()) {
+  if (shouldGoalTerminate()) {
     setTerminalState(false);
     return;
   }
@@ -409,10 +409,10 @@ void RobotStateHelper::setModeExecute(const std::shared_ptr<RobotStateHelper::Se
         } else {
           // The dashboard denies playing immediately after switching the mode to RUNNING.
           // Poll so cancel/shutdown is honoured during this delay.
-          for (int i = 0; i < 10 && !stop_requested_ && rclcpp::ok(); ++i) {
+          for (int i = 0; i < 10 && !shouldGoalTerminate(); ++i) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
           }
-          if (stop_requested_ || !rclcpp::ok()) {
+          if (shouldGoalTerminate()) {
             setTerminalState(false);
             return;
           }
@@ -504,8 +504,12 @@ RobotStateHelper::setModeCancelCallback(const std::shared_ptr<RobotStateHelper::
     return rclcpp_action::CancelResponse::REJECT;
   }
   RCLCPP_INFO(get_logger(), "Cancelling the current SetMode action.");
-  stop_requested_ = true;
   return rclcpp_action::CancelResponse::ACCEPT;
+}
+
+bool RobotStateHelper::shouldGoalTerminate() const
+{
+  return stop_requested_ || !rclcpp::ok() || (current_goal_handle_ && current_goal_handle_->is_canceling());
 }
 
 }  // namespace ur_robot_driver

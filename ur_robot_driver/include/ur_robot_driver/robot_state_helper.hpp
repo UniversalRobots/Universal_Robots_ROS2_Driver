@@ -87,6 +87,7 @@ private:
                                                   std::shared_ptr<const ur_dashboard_msgs::action::SetMode::Goal> goal);
   rclcpp_action::CancelResponse setModeCancelCallback(const std::shared_ptr<SetModeGoalHandle> goal_handle);
 
+  bool shouldGoalTerminate() const;
   void setTerminalState(bool success, std::string_view message = "");
 
   void setModeExecute(const std::shared_ptr<SetModeGoalHandle> goal_handle);
