@@ -262,11 +262,11 @@ class DashboardClientTest(unittest.TestCase):
             self.skipTest("Generating flight report requires remote control on PolyScope X")
         self.assertTrue(resp.success)
         # PolyScope 5 / CB3 return a report id; PolyScope X currently does not.
-        if not ursim_version.startswith("10.") and ursim_version != "latest":
+        if not ursim_version.startswith("10."):
             self.assertNotEqual(resp.report_id, "")
 
     def test_generate_support_file(self, ursim_version):
-        if ursim_version.startswith("10.") or ursim_version == "latest":
+        if ursim_version.startswith("10."):
             self.skipTest("Generating support file is not supported on PolyScope X")
         resp = self._dashboard_interface.generate_support_file()
         self.assertTrue(resp.success)
