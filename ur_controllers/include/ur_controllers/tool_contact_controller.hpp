@@ -60,6 +60,9 @@
 #include <ur_msgs/action/tool_contact.hpp>
 #include "ur_controllers/tool_contact_controller_parameters.hpp"
 
+// Forward declaration for unit-test friend (defined in test_tool_contact_controller.cpp).
+class ToolContactControllerTest;
+
 namespace ur_controllers
 {
 class ToolContactController : public controller_interface::ControllerInterface
@@ -132,6 +135,9 @@ private:
   static constexpr double TOOL_CONTACT_WAITING_END = 5.0;
   static constexpr double TOOL_CONTACT_SUCCESS_END = 6.0;
   static constexpr double TOOL_CONTACT_FAILURE_END = 7.0;
+
+  // Grant unit tests access to private state for update()-path regression checks.
+  friend class ::ToolContactControllerTest;
 };
 }  // namespace ur_controllers
 
