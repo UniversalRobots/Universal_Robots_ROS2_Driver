@@ -53,11 +53,9 @@ def _is_polyscope_x_at_least(ursim_version, min_version):
     """
     Return True if ursim_version is PolyScope X >= min_version.
 
-    ``latest`` is treated as the newest PolyScope X image. Numbered 10.x tags are compared
+    ``latest`` is treated as the newest PolyScope 5 image therefore the result will be False. Numbered 10.x tags are compared
     numerically. CB3 / PolyScope 5 tags return False.
     """
-    if ursim_version == "latest":
-        return True
     if not ursim_version.startswith("10."):
         return False
     return _version_tuple(ursim_version) >= _version_tuple(min_version)
