@@ -272,6 +272,10 @@ if(BUILD_TESTING)
     TIMEOUT
       800
   )
+  add_launch_test(test/test_urscript_interface_shutdown.py
+    TIMEOUT
+      30
+  )
 
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
     add_launch_test(test/launch_args.py
