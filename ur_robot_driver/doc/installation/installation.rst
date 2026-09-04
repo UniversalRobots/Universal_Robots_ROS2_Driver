@@ -18,7 +18,7 @@ recommend a binary package installation unless you want to join development and 
 Install from binary packages
 ----------------------------
 
-1. `Install ROS2 <https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html>`_. This
+1. `Install ROS2 <https://docs.ros.org/en/rolling/Get-Started/Installation/Ubuntu-Install-Debs.html>`_. This
    branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective branches.
 2. Install the driver using
 
@@ -38,10 +38,10 @@ require upstream repositories to be present in a certain version as otherwise bu
 Starting from scratch following exactly the steps below should always work, but simply pulling and
 building might fail occasionally.
 
-1. `Install ROS2 <https://docs.ros.org/en/rolling/Installation/Ubuntu-Install-Debians.html>`_. This
+1. `Install ROS2 <https://docs.ros.org/en/rolling/Get-Started/Installation/Ubuntu-Install-Debs.html>`_. This
    branch supports only ROS2 Rolling. For other ROS2 versions, please see the respective branches.
 
-   Once installed, please make sure to actually `source ROS2 <https://docs.ros.org/en/rolling/Tutorials/Beginner-CLI-Tools/Configuring-ROS2-Environment.html#source-the-setup-files>`_ before proceeding.
+   Once installed, please make sure to actually `source ROS2 <https://docs.ros.org/en/rolling/Get-Started/Configuring-ROS2-Environment.html#source-the-setup-files>`_ before proceeding.
 
 3. Make sure that ``colcon``, its extensions and ``vcs`` are installed:
 
