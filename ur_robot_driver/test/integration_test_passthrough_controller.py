@@ -231,7 +231,8 @@ class PassthroughControllerTest(unittest.TestCase):
         )
         goal_time_tolerance = Duration(sec=1, nanosec=0)
         goal_tolerance = [
-            JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
+            JointTolerance(position=0.01, velocity=0.01, acceleration=0.01, name=tf_prefix + joint)
+            for joint in ROBOT_JOINTS
         ]
         goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
             trajectory=trajectory,
