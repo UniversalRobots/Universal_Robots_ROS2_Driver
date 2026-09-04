@@ -77,6 +77,7 @@ class TestStartupShutdown(unittest.TestCase):
             proc_output.assertWaitFor(
                 "Retrying in 10 seconds",
                 process=urscript_interface,
+                stream="stdout",
                 timeout=10,
             )
 
