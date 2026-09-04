@@ -56,6 +56,7 @@ from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
     DownloadProgram,
+    DownloadSupportFile,
     GetLoadedProgram,
     GetProgramState,
     GetPrograms,
@@ -74,6 +75,8 @@ from ur_dashboard_msgs.srv import (
     GetSafetyStatus,
     SetOperationalMode,
     SetUserRole,
+    AddToLog,
+    Popup,
 )
 from ur_msgs.srv import (
     SetIO,
@@ -301,6 +304,7 @@ class DashboardInterface(
         "upload_program": UploadProgram,
         "update_program": UploadProgram,
         "download_program": DownloadProgram,
+        "download_support_file": DownloadSupportFile,
         "clear_operational_mode": Trigger,
         "generate_flight_report": GenerateFlightReport,
         "generate_support_file": GenerateSupportFile,
@@ -312,6 +316,9 @@ class DashboardInterface(
         "get_user_role": GetUserRole,
         "set_operational_mode": SetOperationalMode,
         "set_user_role": SetUserRole,
+        "add_to_log": AddToLog,
+        "popup": Popup,
+        "shutdown": Trigger,
     },
 ):
     def start_robot(self):

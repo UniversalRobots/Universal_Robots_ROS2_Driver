@@ -45,11 +45,35 @@ from test_common import (  # noqa: E402
 )
 
 
+def _version_tuple(version_str):
+    return tuple(int(part) for part in version_str.split(".")[:3])
+
+
+def _is_polyscope_x_at_least(ursim_version, min_version):
+    """
+    Return True if ursim_version is PolyScope X >= min_version.
+
+    ``latest`` is treated as the newest PolyScope 5 image therefore the result will be False. Numbered 10.x tags are compared
+    numerically. CB3 / PolyScope 5 tags return False.
+    """
+    if not ursim_version.startswith("10."):
+        return False
+    return _version_tuple(ursim_version) >= _version_tuple(min_version)
+
+
+def _is_older_polyscope_x(ursim_version, min_version):
+    """Return True for numbered PolyScope X tags older than min_version."""
+    return ursim_version.startswith("10.") and not _is_polyscope_x_at_least(
+        ursim_version, min_version
+    )
+
+
 @pytest.mark.launch_test
 @launch_testing.parametrize(
     "ursim_version, ur_type, autoconnect",
     [
         ("latest", "ur30", "false"),
+        ("10.14.0", "ur15", "true"),
         ("10.12.0", "ur15", "true"),
         ("3.15.8", "ur10", "true"),
     ],
@@ -157,15 +181,18 @@ class DashboardClientTest(unittest.TestCase):
         self.assertTrue(result.success)
 
     def test_get_polyscope_version(self, ursim_version):
-        if ursim_version.startswith("10."):
-            self.skipTest("Getting polyscope version is not supported on PolyScope X")
+        if _is_older_polyscope_x(ursim_version, "10.14.0"):
+            self.skipTest("Getting polyscope version requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.get_polyscope_version()
         self.assertTrue(resp.success)
-        self.assertNotEqual(resp.version.major, 0)
+        if ursim_version != "latest":
+            self.assertEqual(resp.version.major, _version_tuple(ursim_version)[0])
+            self.assertEqual(resp.version.minor, _version_tuple(ursim_version)[1])
+            self.assertEqual(resp.version.bugfix, _version_tuple(ursim_version)[2])
 
     def test_get_serial_number(self, ursim_version):
-        if ursim_version.startswith("10."):
-            self.skipTest("Getting serial number is not supported on PolyScope X")
+        if _is_older_polyscope_x(ursim_version, "10.14.0"):
+            self.skipTest("Getting serial number requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.get_serial_number()
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.serial_number, 0)
@@ -213,8 +240,8 @@ class DashboardClientTest(unittest.TestCase):
         self.assertIn(resp.operational_mode.mode, ["MANUAL", "AUTOMATIC"])
 
     def test_get_robot_model(self, ursim_version):
-        if ursim_version.startswith("10."):
-            self.skipTest("Getting robot model not supported on PolyScope X, skipping tests")
+        if _is_older_polyscope_x(ursim_version, "10.14.0"):
+            self.skipTest("Getting robot model requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.get_robot_model()
         self.assertTrue(resp.success)
         self.assertTrue("UR" in resp.robot_model)
@@ -227,15 +254,49 @@ class DashboardClientTest(unittest.TestCase):
         self.assertEqual(resp.safety_status.status, SafetyStatus.NORMAL)
 
     def test_generate_flight_report(self, ursim_version):
-        if ursim_version.startswith("10."):
-            self.skipTest("Generating flight report not supported on PolyScope X, skipping tests")
+        if _is_older_polyscope_x(ursim_version, "10.14.0"):
+            self.skipTest("Generating flight report requires PolyScope X >= 10.14.0")
         resp = self._dashboard_interface.generate_flight_report()
+        # PolyScope X requires remote control for this endpoint.
+        if not resp.success and "Forbidden" in resp.answer:
+            self.skipTest("Generating flight report requires remote control on PolyScope X")
         self.assertTrue(resp.success)
-        self.assertNotEqual(resp.report_id, "")
+        # PolyScope 5 / CB3 return a report id; PolyScope X currently does not.
+        if not ursim_version.startswith("10."):
+            self.assertNotEqual(resp.report_id, "")
 
     def test_generate_support_file(self, ursim_version):
         if ursim_version.startswith("10."):
-            self.skipTest("Generating support file not supported on PolyScope X, skipping tests")
+            self.skipTest("Generating support file is not supported on PolyScope X")
         resp = self._dashboard_interface.generate_support_file()
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.generated_file_name, "")
+
+    def test_download_support_file(self, ursim_version):
+        target_path = "/tmp/ur_dashboard_support_files.zip"
+        if os.path.exists(target_path):
+            os.remove(target_path)
+        resp = self._dashboard_interface.download_support_file(target_path=target_path)
+        if _is_polyscope_x_at_least(ursim_version, "10.14.0"):
+            self.assertTrue(resp.success)
+            self.assertTrue(os.path.isfile(target_path))
+            if resp.support_files_present:
+                self.assertGreater(os.path.getsize(target_path), 0)
+        else:
+            self.assertFalse(resp.success)
+            self.assertFalse(os.path.isfile(target_path))
+
+    def test_popup_and_add_to_log(self, ursim_version):
+        if _is_older_polyscope_x(ursim_version, "10.14.0"):
+            self.skipTest("Popup / add_to_log require PolyScope X >= 10.14.0")
+        popup_resp = self._dashboard_interface.popup(message="ROS2 dashboard test", title="Test")
+        # PolyScope X requires remote control for popup / log endpoints.
+        if not popup_resp.success and "Forbidden" in popup_resp.answer:
+            self.skipTest("Popup / add_to_log require remote control on PolyScope X")
+        self.assertTrue(popup_resp.success)
+        self.assertTrue(self._dashboard_interface.close_popup().success)
+
+        log_resp = self._dashboard_interface.add_to_log(message="ROS2 dashboard test log")
+        if not log_resp.success and "Forbidden" in log_resp.answer:
+            self.skipTest("add_to_log requires remote control on PolyScope X")
+        self.assertTrue(log_resp.success)
