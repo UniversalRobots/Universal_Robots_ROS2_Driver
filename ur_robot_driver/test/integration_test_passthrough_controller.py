@@ -122,7 +122,7 @@ class PassthroughControllerTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
                 activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
+                deactivate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
 
@@ -175,29 +175,10 @@ class PassthroughControllerTest(unittest.TestCase):
     #
 
     def test_start_passthrough_controller(self):
-<<<<<<< HEAD
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-
-    def test_passthrough_trajectory(self, tf_prefix):
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-=======
         self._activate_passthrough_controller()
 
     def test_passthrough_trajectory(self, tf_prefix):
         self._activate_passthrough_controller()
->>>>>>> c67d59d (Fix/passthrough controller very short trajectories (#1940))
 
         goal_tolerance = [
             JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
@@ -235,17 +216,7 @@ class PassthroughControllerTest(unittest.TestCase):
 
     def test_quintic_trajectory(self, tf_prefix):
         # Full quintic trajectory
-<<<<<<< HEAD
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-=======
         self._activate_passthrough_controller()
->>>>>>> c67d59d (Fix/passthrough controller very short trajectories (#1940))
         trajectory = JointTrajectory(
             points=[
                 JointTrajectoryPoint(
@@ -277,17 +248,7 @@ class PassthroughControllerTest(unittest.TestCase):
 
     def test_impossible_goal_tolerance_fails(self, tf_prefix):
         # Test impossible goal tolerance, should fail.
-<<<<<<< HEAD
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-=======
         self._activate_passthrough_controller()
->>>>>>> c67d59d (Fix/passthrough controller very short trajectories (#1940))
         trajectory = JointTrajectory(
             points=[
                 JointTrajectoryPoint(positions=pos, time_from_start=times)
@@ -315,17 +276,7 @@ class PassthroughControllerTest(unittest.TestCase):
 
     def test_impossible_goal_time_tolerance_fails(self, tf_prefix):
         # Test impossible goal time
-<<<<<<< HEAD
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["scaled_joint_trajectory_controller"],
-            ).ok
-        )
-=======
         self._activate_passthrough_controller()
->>>>>>> c67d59d (Fix/passthrough controller very short trajectories (#1940))
 
         goal_tolerance = [
             JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
