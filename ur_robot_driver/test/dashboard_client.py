@@ -192,7 +192,7 @@ class DashboardClientTest(unittest.TestCase):
         if ursim_version != "latest":
             self.assertEqual(resp.version.major, _version_tuple(ursim_version)[0])
             self.assertEqual(resp.version.minor, _version_tuple(ursim_version)[1])
-            self.assertEqual(resp.version.patch, _version_tuple(ursim_version)[2])
+            self.assertEqual(resp.version.bugfix, _version_tuple(ursim_version)[2])
 
     def test_get_serial_number(self, ursim_version):
         if _is_older_polyscope_x(ursim_version, "10.14.0"):
