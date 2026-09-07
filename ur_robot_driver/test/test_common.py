@@ -519,6 +519,25 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
+def _wait_robot_booted_action():
+    """Wait until dashboard or Robot API is reachable. Not a ROS node."""
+    return ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [
+                    FindPackagePrefix("ur_robot_driver"),
+                    "lib",
+                    "ur_robot_driver",
+                    "wait_robot_booted.py",
+                ]
+            ),
+            "192.168.56.101",
+        ],
+        name="wait_robot_booted",
+        output="screen",
+    )
+
+
 def _ursim_action(
     ursim_version="latest",
     ur_type="ur5e",
@@ -569,10 +588,15 @@ def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", 
             "autoconnect": autoconnect,
         }.items(),
     )
+    wait_robot_booted = _wait_robot_booted_action()
+
+    starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_robot_booted, on_exit=[ReadyToTest(), dashboard_client])
+    )
 
     return LaunchDescription(
         _declare_launch_arguments()
-        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version, ur_type)]
+        + [wait_robot_booted, starter, _ursim_action(ursim_version, ur_type)]
     )
 
 

@@ -32,6 +32,7 @@ import time
 import unittest
 
 import launch_testing
+import launch_testing.asserts
 import pytest
 import rclpy
 from rclpy.node import Node
@@ -80,6 +81,14 @@ def _is_older_polyscope_x(ursim_version, min_version):
 )
 def generate_test_description(ursim_version, ur_type, autoconnect):
     return generate_dashboard_test_description(ursim_version, ur_type, autoconnect)
+
+
+@launch_testing.post_shutdown_test()
+class TestWaitRobotBootedExitCode(unittest.TestCase):
+    def test_exit_code(self, proc_info, wait_robot_booted):
+        launch_testing.asserts.assertExitCodes(
+            proc_info, process=wait_robot_booted, allowable_exit_codes=[0]
+        )
 
 
 class DashboardClientTest(unittest.TestCase):
