@@ -594,9 +594,12 @@ def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", 
         OnProcessExit(target_action=wait_robot_booted, on_exit=[ReadyToTest(), dashboard_client])
     )
 
-    return LaunchDescription(
-        _declare_launch_arguments()
-        + [wait_robot_booted, starter, _ursim_action(ursim_version, ur_type)]
+    return (
+        LaunchDescription(
+            _declare_launch_arguments()
+            + [wait_robot_booted, starter, _ursim_action(ursim_version, ur_type)]
+        ),
+        {"wait_robot_booted": wait_robot_booted},
     )
 
 
