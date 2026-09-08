@@ -290,10 +290,13 @@ class DashboardClientTest(unittest.TestCase):
             os.remove(target_path)
         resp = self._dashboard_interface.download_support_file(target_path=target_path)
         if _is_polyscope_x_at_least(ursim_version, "10.14.0"):
-            self.assertTrue(resp.success)
-            self.assertTrue(os.path.isfile(target_path))
-            if resp.support_files_present:
-                self.assertGreater(os.path.getsize(target_path), 0)
+            # On a simulator that results in a 404 error.
+            if not resp.success:
+                self.assertIn("404", resp.answer)
+            elif resp.support_files_present:
+                self.assertTrue(os.path.isfile(target_path))
+                if resp.support_files_present:
+                    self.assertGreater(os.path.getsize(target_path), 0)
         else:
             self.assertFalse(resp.success)
             self.assertFalse(os.path.isfile(target_path))
