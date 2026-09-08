@@ -80,8 +80,8 @@ def _is_older_polyscope_x(ursim_version, min_version):
     ],
 )
 @launch_testing.ready_to_test_action_timeout(
-    130
-)  # seconds. We wait for a booted robot for 120 secs
+    190
+)  # seconds. We wait for a booted robot for 180 secs
 def generate_test_description(ursim_version, ur_type, autoconnect):
     return generate_dashboard_test_description(ursim_version, ur_type, autoconnect)
 

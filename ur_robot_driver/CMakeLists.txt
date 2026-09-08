@@ -285,7 +285,7 @@ if(BUILD_TESTING)
     )
     add_launch_test(test/dashboard_client.py
       TIMEOUT
-        180
+        800 # Booting the simulators can take quite some time. Increasing this timeout to avoid spurious failures.
     )
     add_launch_test(test/example_move.py
       TIMEOUT
