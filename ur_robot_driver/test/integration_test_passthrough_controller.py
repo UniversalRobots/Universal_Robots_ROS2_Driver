@@ -317,7 +317,7 @@ class PassthroughControllerTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
                 activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
+                deactivate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
         trajectory = JointTrajectory(
