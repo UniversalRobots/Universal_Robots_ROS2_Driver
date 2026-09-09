@@ -56,6 +56,7 @@ from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
     DownloadProgram,
+    DownloadSupportFile,
     GetLoadedProgram,
     GetProgramState,
     GetPrograms,
@@ -74,6 +75,8 @@ from ur_dashboard_msgs.srv import (
     GetSafetyStatus,
     SetOperationalMode,
     SetUserRole,
+    AddToLog,
+    Popup,
 )
 from ur_msgs.srv import (
     SetIO,
@@ -301,6 +304,7 @@ class DashboardInterface(
         "upload_program": UploadProgram,
         "update_program": UploadProgram,
         "download_program": DownloadProgram,
+        "download_support_file": DownloadSupportFile,
         "clear_operational_mode": Trigger,
         "generate_flight_report": GenerateFlightReport,
         "generate_support_file": GenerateSupportFile,
@@ -312,6 +316,9 @@ class DashboardInterface(
         "get_user_role": GetUserRole,
         "set_operational_mode": SetOperationalMode,
         "set_user_role": SetUserRole,
+        "add_to_log": AddToLog,
+        "popup": Popup,
+        "shutdown": Trigger,
     },
 ):
     def start_robot(self):
@@ -514,6 +521,25 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
+def _wait_robot_booted_action():
+    """Wait until dashboard or Robot API is reachable. Not a ROS node."""
+    return ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [
+                    FindPackagePrefix("ur_robot_driver"),
+                    "lib",
+                    "ur_robot_driver",
+                    "wait_robot_booted.py",
+                ]
+            ),
+            "192.168.56.101",
+        ],
+        name="wait_robot_booted",
+        output="screen",
+    )
+
+
 def _ursim_action(
     ursim_version="latest",
     ur_type="ur5e",
@@ -564,10 +590,18 @@ def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", 
             "autoconnect": autoconnect,
         }.items(),
     )
+    wait_robot_booted = _wait_robot_booted_action()
 
-    return LaunchDescription(
-        _declare_launch_arguments()
-        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version, ur_type)]
+    starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_robot_booted, on_exit=[ReadyToTest(), dashboard_client])
+    )
+
+    return (
+        LaunchDescription(
+            _declare_launch_arguments()
+            + [wait_robot_booted, starter, _ursim_action(ursim_version, ur_type)]
+        ),
+        {"wait_robot_booted": wait_robot_booted},
     )
 
 
