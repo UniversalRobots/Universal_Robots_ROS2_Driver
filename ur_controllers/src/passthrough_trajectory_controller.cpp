@@ -586,49 +586,25 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
     const std::string joint_name = joint_names_internal->at(i);
     const auto& joint_tol = goal_tolerance->at(i);
     const auto& setpoint = active_joint_traj_.points.back().positions[joint_mapping->at(joint_name)];
-<<<<<<< HEAD
     const double joint_pos = joint_position_state_interface_[i].get().get_value();
-    if (std::abs(joint_pos - setpoint) > joint_tol.position) {
-=======
-    const auto joint_pos = joint_position_state_interface_[i].get().get_optional();
-    if (!joint_pos.has_value()) {
-      return false;
-    }
-    if (joint_tol.position != 0.0 && std::abs(joint_pos.value() - setpoint) > joint_tol.position) {
->>>>>>> 9954493 (Fix flaky quintic spline test in passthrough controller (#1941))
+    if (joint_tol.position != 0.0 && std::abs(joint_pos - setpoint) > joint_tol.position) {
       // RCLCPP_ERROR(
       // get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f, where tolerance is %f",
       // joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos, joint_tol.position);
       return false;
     }
 
-<<<<<<< HEAD
-    if (!active_joint_traj_.points.back().velocities.empty() && !joint_velocity_state_interface_.empty()) {
-      const double joint_vel = joint_velocity_state_interface_[i].get().get_value();
-=======
     if (joint_tol.velocity != 0.0 && !active_joint_traj_.points.back().velocities.empty() &&
         !joint_velocity_state_interface_.empty()) {
-      const auto joint_vel = joint_velocity_state_interface_[i].get().get_optional();
-      if (!joint_vel.has_value()) {
-        return false;
-      }
->>>>>>> 9954493 (Fix flaky quintic spline test in passthrough controller (#1941))
+      const double joint_vel = joint_velocity_state_interface_[i].get().get_value();
       const auto& expected_vel = active_joint_traj_.points.back().velocities[joint_mapping->at(joint_name)];
       if (std::abs(joint_vel - expected_vel) > joint_tol.velocity) {
         return false;
       }
     }
-<<<<<<< HEAD
-    if (!active_joint_traj_.points.back().accelerations.empty() && !joint_acceleration_state_interface_.empty()) {
-      const double joint_acc = joint_acceleration_state_interface_[i].get().get_value();
-=======
     if (joint_tol.acceleration != 0.0 && !active_joint_traj_.points.back().accelerations.empty() &&
         !joint_acceleration_state_interface_.empty()) {
-      const auto joint_acc = joint_acceleration_state_interface_[i].get().get_optional();
-      if (!joint_acc.has_value()) {
-        return false;
-      }
->>>>>>> 9954493 (Fix flaky quintic spline test in passthrough controller (#1941))
+      const double joint_acc = joint_acceleration_state_interface_[i].get().get_value();
       const auto& expected_acc = active_joint_traj_.points.back().accelerations[joint_mapping->at(joint_name)];
       if (std::abs(joint_acc - expected_acc) > joint_tol.acceleration) {
         return false;

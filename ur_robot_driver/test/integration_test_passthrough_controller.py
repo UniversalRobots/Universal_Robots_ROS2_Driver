@@ -313,13 +313,7 @@ class PassthroughControllerTest(unittest.TestCase):
 
     def test_trajectory_with_disabled_tolerances(self, tf_prefix):
         # Should always succeed
-        self.assertTrue(
-            self._controller_manager_interface.switch_controller(
-                strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["passthrough_trajectory_controller"],
-                deactivate_controllers=["joint_trajectory_controller"],
-            ).ok
-        )
+        self._activate_passthrough_controller()
         trajectory = JointTrajectory(
             points=[
                 JointTrajectoryPoint(
