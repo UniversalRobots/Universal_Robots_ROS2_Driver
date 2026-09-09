@@ -11,7 +11,7 @@ Advertised Services
 add_to_log (`ur_dashboard_msgs/AddToLog <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/AddToLog.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Service to add a message to the robot's log
+Service to add a message to the robot's log. On PolyScope X this requires version >= 10.14.0.
 
 brake_release (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -26,12 +26,12 @@ If this service is called the operational mode can again be changed from PolySco
 close_popup (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Close a (non-safety) popup on the teach pendant.
+Close a (non-safety) popup on the teach pendant. On PolyScope X this requires version >= 10.14.0.
 
 close_safety_popup (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Close a safety popup on the teach pendant.
+Close a safety popup on the teach pendant. On PolyScope X this requires version >= 10.14.0.
 
 connect (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -97,7 +97,8 @@ Start execution of a previously loaded program
 popup (`ur_dashboard_msgs/Popup <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/Popup.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Service to show a popup on the UR Teach pendant.
+Service to show a popup on the UR Teach pendant. On PolyScope X (>= 10.14.0) an optional ``title``
+can be provided; on PolyScope 5 / CB3 the title is ignored.
 
 power_off (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -148,7 +149,7 @@ robot with version >= 10.11.0.
 shutdown (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Shutdown the robot controller
+Shutdown the robot controller. On PolyScope X this requires version >= 10.14.0.
 
 stop (`std_srvs/Trigger <http://docs.ros.org/en/rolling/p/std_srvs/srv/Trigger.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -178,12 +179,12 @@ version >= 10.12.0.
 get_polyscope_version (`ur_dashboard_msgs/GetPolyScopeVersion <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GetPolyScopeVersion.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**CB3 | PolyScope 5** Get polyScope version of robot
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Get PolyScope version of the robot
 
 get_serial_number (`ur_dashboard_msgs/GetSerialNumber <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GetSerialNumber.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**CB3 | PolyScope 5** Get serial number of robot
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Get serial number of robot
 
 get_user_role (`ur_dashboard_msgs/GetUserRole <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GetUserRole.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -208,7 +209,7 @@ set_operational_mode (`ur_dashboard_msgs/SetOperationalMode <http://docs.ros.org
 get_robot_model (`ur_dashboard_msgs/GetRobotModel <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GetRobotModel.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**CB3 | PolyScope 5** Get the robot model, in the format URx. It should be noted this call does not differentiate between e-series and CB3, so UR5 and UR5e will both report as UR5
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Get the robot model, in the format URx. It should be noted this call does not differentiate between e-series and CB3, so UR5 and UR5e will both report as UR5
 
 get_safety_status (`ur_dashboard_msgs/GetSafetyStatus <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GetSafetyStatus.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -218,14 +219,20 @@ get_safety_status (`ur_dashboard_msgs/GetSafetyStatus <http://docs.ros.org/en/ro
 generate_flight_report (`ur_dashboard_msgs/GenerateFlightReport <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GenerateFlightReport.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**CB3 | PolyScope 5** Generate flight report of the chosen type, defaults to SYSTEM. It is required to wait at least 30 seconds between triggering software or controller reports.
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Generate flight report of the chosen type, defaults to SYSTEM. On PolyScope 5 / CB3 it is required to wait at least 30 seconds between triggering software or controller reports. On PolyScope X the ``report_type`` argument is ignored.
 
 generate_support_file (`ur_dashboard_msgs/GenerateSupportFile <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/GenerateSupportFile.html>`_)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **CB3 | PolyScope 5** Generate a support file a the specified location. Location is relative to the programs folder, if saving to a subfolder it must exist prior to the service call.
-Defaults to saving to the programs folder
+Defaults to saving to the programs folder. On PolyScope X use :ref:`download_support_file <dashboard_download_support_file>` instead.
 
+.. _dashboard_download_support_file:
+
+download_support_file (`ur_dashboard_msgs/DownloadSupportFile <http://docs.ros.org/en/rolling/p/ur_dashboard_msgs/srv/DownloadSupportFile.html>`_)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PolyScope X only (>= 10.14.0)**: Download the robot's support files as a zip archive to ``target_path`` on the machine running the dashboard client.
 
 Parameters
 ----------
