@@ -250,9 +250,11 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
     tool_contact_abort_ = false;
     tool_contact_enable_ = false;
     tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_END);
+    return controller_interface::return_type::OK;
   } else if (tool_contact_enable_) {
     tool_contact_enable_ = false;
     tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_WAITING_BEGIN);
+    return controller_interface::return_type::OK;
   }
 
   const auto active_goal = *rt_active_goal_.readFromRT();
@@ -287,6 +289,9 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
           active_goal->setAborted(result);
           should_reset_goal = true;
         }
+      } else {
+        // Set command interface, so "startToolContact" is only sent once in the hardware interface
+        tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_EXECUTING);
       }
     } break;
 
@@ -308,9 +313,8 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
       if (tool_contact_active_) {
         RCLCPP_INFO(get_node()->get_logger(), "Tool contact disabled successfully.");
         tool_contact_active_ = false;
-
-        tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
       }
+      tool_contact_set_state_interface_->get().set_value(TOOL_CONTACT_STANDBY);
     } break;
 
     case static_cast<int>(TOOL_CONTACT_FAILURE_END):
