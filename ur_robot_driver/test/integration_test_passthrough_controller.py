@@ -231,7 +231,8 @@ class PassthroughControllerTest(unittest.TestCase):
         )
         goal_time_tolerance = Duration(sec=1, nanosec=0)
         goal_tolerance = [
-            JointTolerance(position=0.01, name=tf_prefix + joint) for joint in ROBOT_JOINTS
+            JointTolerance(position=0.01, velocity=0.01, acceleration=0.01, name=tf_prefix + joint)
+            for joint in ROBOT_JOINTS
         ]
         goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
             trajectory=trajectory,
@@ -309,3 +310,42 @@ class PassthroughControllerTest(unittest.TestCase):
                 activate_controllers=["scaled_joint_trajectory_controller"],
             ).ok
         )
+
+    def test_trajectory_with_disabled_tolerances(self, tf_prefix):
+        # Should always succeed
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                activate_controllers=["passthrough_trajectory_controller"],
+                deactivate_controllers=["scaled_joint_trajectory_controller"],
+            ).ok
+        )
+        trajectory = JointTrajectory(
+            points=[
+                JointTrajectoryPoint(
+                    positions=pos,
+                    time_from_start=times,
+                    velocities=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    accelerations=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                )
+                for (times, pos) in TEST_TRAJECTORY
+            ],
+            joint_names=[tf_prefix + joint for joint in ROBOT_JOINTS],
+        )
+        goal_time_tolerance = Duration(sec=0, nanosec=0)
+        goal_tolerance = [
+            JointTolerance(position=0.00, velocity=0.00, acceleration=0.00, name=tf_prefix + joint)
+            for joint in ROBOT_JOINTS
+        ]
+        goal_handle = self._passthrough_forward_joint_trajectory.send_goal(
+            trajectory=trajectory,
+            goal_time_tolerance=goal_time_tolerance,
+            goal_tolerance=goal_tolerance,
+        )
+
+        self.assertTrue(goal_handle.accepted)
+        if goal_handle.accepted:
+            result = self._passthrough_forward_joint_trajectory.get_result(
+                goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
+            )
+            self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
