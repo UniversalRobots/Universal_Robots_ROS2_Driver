@@ -114,33 +114,12 @@ ament_target_dependencies(controller_stopper_node ${${PROJECT_NAME}_EXPORTED_TAR
 #
 # robot_state_helper
 #
-add_library(robot_state_helper_lib SHARED
-  src/robot_state_helper.cpp
-  src/urcl_log_handler.cpp
-)
-<<<<<<< HEAD
-target_link_libraries(robot_state_helper ur_client_library::urcl)
-ament_target_dependencies(robot_state_helper ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-=======
-target_include_directories(robot_state_helper_lib PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-)
-target_link_libraries(robot_state_helper_lib PUBLIC
-  ${std_msgs_TARGETS}
-  ${std_srvs_TARGETS}
-  ${ur_dashboard_msgs_TARGETS}
-  rclcpp::rclcpp
-  rclcpp_action::rclcpp_action
-  ur_client_library::urcl
-)
 add_executable(robot_state_helper
   src/robot_state_helper_node.cpp
 )
 target_link_libraries(robot_state_helper
-  robot_state_helper_lib
+  ur_robot_driver_plugin
 )
->>>>>>> 87c207b ([RobotStateHelper] Fix worker thread lifecycle management (#1950))
 
 add_executable(urscript_interface
   src/urscript_interface.cpp
@@ -169,12 +148,6 @@ install(
     robot_state_helper
     trajectory_until_node
   DESTINATION lib/${PROJECT_NAME}
-)
-
-install(
-  TARGETS robot_state_helper_lib
-  EXPORT export_${PROJECT_NAME}
-  DESTINATION lib
 )
 
 # INSTALL
@@ -257,7 +230,7 @@ if(BUILD_TESTING)
     test/test_robot_state_helper.cpp
   )
   target_link_libraries(test_robot_state_helper
-    robot_state_helper_lib
+    ur_robot_driver_plugin
     rclcpp::rclcpp
     rclcpp_action::rclcpp_action
     ${std_srvs_TARGETS}
