@@ -66,6 +66,7 @@
 #include "ur_dashboard_msgs/srv/is_in_remote_control.hpp"
 #include "ur_dashboard_msgs/srv/get_programs.hpp"
 #include "ur_dashboard_msgs/srv/download_program.hpp"
+#include "ur_dashboard_msgs/srv/download_support_file.hpp"
 #include "ur_dashboard_msgs/srv/upload_program.hpp"
 #include "ur_dashboard_msgs/srv/get_poly_scope_version.hpp"
 #include "ur_dashboard_msgs/srv/get_serial_number.hpp"
@@ -233,6 +234,7 @@ private:
   rclcpp::Service<ur_dashboard_msgs::srv::SetOperationalMode>::SharedPtr set_operational_mode_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GenerateFlightReport>::SharedPtr generate_flight_report_service_;
   rclcpp::Service<ur_dashboard_msgs::srv::GenerateSupportFile>::SharedPtr generate_support_file_service_;
+  rclcpp::Service<ur_dashboard_msgs::srv::DownloadSupportFile>::SharedPtr download_support_file_service_;
 
   // Query services
   rclcpp::Service<ur_dashboard_msgs::srv::IsProgramRunning>::SharedPtr running_service_;
