@@ -11,8 +11,7 @@ example, if the robot goes into a protective stop, the error has to be acknowled
 program has to be unpaused.
 
 When the robot is in :ref:`remote_control_mode <operation_modes>`, most interaction with the robot can be done
-without using the teach pendant, many of that through the :ref:`dashboard client
-<dashboard_client_ros2>`.
+without using the teach pendant, many of that through the :doc:`dashboard client <ROS_INTERFACE>`.
 
 The ROS driver provides a helper node that can be used to automate some of these tasks. The
 ``robot_state_helper`` node can be used to start the robot, release the brakes, and (re-)start the
