@@ -37,7 +37,11 @@
 
 #include <ur_client_library/primary/primary_client.h>
 
+#include <atomic>
 #include <chrono>
+#include <exception>
+#include <memory>
+#include <mutex>
 #include <thread>
 
 #include <ur_msgs/action/send_script.hpp>
@@ -58,9 +62,58 @@ public:
 
     primary_client_ =
         std::make_unique<urcl::primary_interface::PrimaryClient>(this->get_parameter("robot_ip").as_string(), notif_);
+  }
 
-    primary_client_->start(10, std::chrono::seconds(10));
+  void start_primary_client_async()
+  {
+    std::lock_guard<std::mutex> lock(startup_mutex_);
+    startup_thread_ = std::thread([this]() {
+      {
+        std::lock_guard<std::mutex> lock(startup_mutex_);
+        if (startup_stop_requested_) {
+          return;
+        }
+        startup_in_progress_ = true;
+      }
 
+      try {
+        primary_client_->start(10, std::chrono::seconds(10));
+      } catch (...) {
+        std::lock_guard<std::mutex> lock(startup_mutex_);
+        startup_exception_ = std::current_exception();
+      }
+
+      std::lock_guard<std::mutex> lock(startup_mutex_);
+      startup_in_progress_ = false;
+    });
+  }
+
+  void stop_primary_client_startup()
+  {
+    bool stop_primary_client = false;
+    {
+      std::lock_guard<std::mutex> lock(startup_mutex_);
+      startup_stop_requested_ = true;
+      stop_primary_client = startup_in_progress_;
+    }
+
+    if (stop_primary_client) {
+      primary_client_->stop();
+    }
+  }
+
+  std::exception_ptr join_primary_client_startup()
+  {
+    if (startup_thread_.joinable()) {
+      startup_thread_.join();
+    }
+
+    std::lock_guard<std::mutex> lock(startup_mutex_);
+    return startup_exception_;
+  }
+
+  void initialize_interfaces()
+  {
     script_sub_ = create_subscription<std_msgs::msg::String>(
         "~/script_command", 1, std::bind(&URScriptInterface::script_callback, this, std::placeholders::_1));
 
@@ -73,6 +126,10 @@ public:
 
   ~URScriptInterface() override
   {
+    if (startup_thread_.joinable()) {
+      stop_primary_client_startup();
+      startup_thread_.join();
+    }
     if (execute_thread_.joinable()) {
       execute_thread_.join();
     }
@@ -202,13 +259,72 @@ private:
   std::unique_ptr<urcl::primary_interface::PrimaryClient> primary_client_;
   urcl::comm::INotifier notif_;
   std::atomic<bool> busy = false;
+  std::mutex startup_mutex_;
+  std::thread startup_thread_;
+  std::exception_ptr startup_exception_;
+  bool startup_stop_requested_ = false;
+  bool startup_in_progress_ = false;
   std::thread execute_thread_;
 };
 
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_unique<URScriptInterface>());
-  rclcpp::shutdown();
+
+  try {
+    auto node = std::make_shared<URScriptInterface>();
+    std::weak_ptr<URScriptInterface> weak_node = node;
+    rclcpp::on_shutdown([weak_node]() {
+      if (auto node = weak_node.lock()) {
+        node->stop_primary_client_startup();
+      }
+    });
+
+    if (!rclcpp::ok()) {
+      node->stop_primary_client_startup();
+      return 0;
+    }
+
+    node->start_primary_client_async();
+    auto startup_exception = node->join_primary_client_startup();
+
+    if (!rclcpp::ok()) {
+      return 0;
+    }
+    if (startup_exception != nullptr) {
+      std::rethrow_exception(startup_exception);
+    }
+
+    node->initialize_interfaces();
+    if (!rclcpp::ok()) {
+      return 0;
+    }
+    rclcpp::spin(node);
+  } catch (const urcl::UrException& exc) {
+    if (!rclcpp::ok()) {
+      return 0;
+    }
+    RCLCPP_FATAL(rclcpp::get_logger("urscript_interface"), "Primary client startup failed: %s", exc.what());
+    rclcpp::shutdown();
+    return 1;
+  } catch (const std::exception& exc) {
+    if (!rclcpp::ok()) {
+      return 0;
+    }
+    RCLCPP_FATAL(rclcpp::get_logger("urscript_interface"), "Unexpected startup failure: %s", exc.what());
+    rclcpp::shutdown();
+    return 1;
+  } catch (...) {
+    if (!rclcpp::ok()) {
+      return 0;
+    }
+    RCLCPP_FATAL(rclcpp::get_logger("urscript_interface"), "Unknown startup failure");
+    rclcpp::shutdown();
+    return 1;
+  }
+
+  if (rclcpp::ok()) {
+    rclcpp::shutdown();
+  }
   return 0;
 }
