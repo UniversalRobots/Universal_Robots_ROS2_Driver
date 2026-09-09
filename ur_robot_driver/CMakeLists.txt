@@ -115,12 +115,11 @@ ament_target_dependencies(controller_stopper_node ${${PROJECT_NAME}_EXPORTED_TAR
 # robot_state_helper
 #
 add_executable(robot_state_helper
-  src/robot_state_helper.cpp
   src/robot_state_helper_node.cpp
-  src/urcl_log_handler.cpp
 )
-target_link_libraries(robot_state_helper ur_client_library::urcl)
-ament_target_dependencies(robot_state_helper ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(robot_state_helper
+  ur_robot_driver_plugin
+)
 
 add_executable(urscript_interface
   src/urscript_interface.cpp
@@ -183,6 +182,7 @@ ament_export_dependencies(
   hardware_interface
   pluginlib
   rclcpp
+  rclcpp_action
   rclcpp_lifecycle
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
@@ -225,6 +225,16 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_mode_compatibility_symmetry
     ur_robot_driver_plugin
+  )
+
+  ament_add_gmock(test_robot_state_helper
+    test/test_robot_state_helper.cpp
+  )
+  target_link_libraries(test_robot_state_helper
+    ur_robot_driver_plugin
+    rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+    ${std_srvs_TARGETS}
   )
 
   add_launch_test(test/test_mock_hardware.py
