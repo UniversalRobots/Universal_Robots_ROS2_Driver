@@ -1,0 +1,145 @@
+name: Reusable industrial_ci integration tests
+
+on:
+  workflow_call:
+    inputs:
+      ref_for_scheduled_build:
+        description: 'Reference on which the repo should be checkout for scheduled build.'
+        default: ''
+        required: false
+        type: string
+      upstream_workspace:
+        description: 'UPSTREAM_WORKSPACE variable for industrial_ci.'
+        required: false
+        default: ''
+        type: string
+      ros_distro:
+        description: 'ROS_DISTRO variable for industrial_ci'
+        required: true
+        type: string
+      ros_repo:
+        description: 'ROS_REPO to run for industrial_ci. Possible values: "main", "testing"'
+        default: 'main'
+        required: false
+        type: string
+      workspace_cache_key:
+        description: 'Cache key for the built workspace produced by the build job'
+        required: true
+        type: string
+      ci_image:
+        description: 'Docker image tag committed by the build job'
+        required: true
+        type: string
+      ci_image_artifact:
+        description: 'Artifact name containing the committed CI docker image'
+        required: true
+        type: string
+
+jobs:
+  integration_test:
+    name: integration (${{ matrix.ursim_version }}, ${{ matrix.ursim_type }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # PolyScope X: skip tests that require CB3/PolyScope 5 dashboard features.
+          - ursim_version: latest
+            ursim_type: ur30
+            exclude_dashboard_g5: false
+          - ursim_version: '10.12.0'
+            ursim_type: ur15
+            exclude_dashboard_g5: true
+          - ursim_version: '3.15.8'
+            ursim_type: ur10
+            exclude_dashboard_g5: false
+    env:
+      BASEDIR: ${{ github.workspace }}/.ici
+      ROS_DISTRO: ${{ inputs.ros_distro }}
+      UR_CI_ROBOT_IP: 192.168.56.101
+      UR_CI_UR_TYPE: ${{ matrix.ursim_type }}
+      CI_IMAGE: ${{ inputs.ci_image }}
+      EXCLUDE_DASHBOARD_G5: ${{ matrix.exclude_dashboard_g5 }}
+    steps:
+      - name: Checkout repository
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/checkout@v7
+      - name: Checkout scheduled ref
+        if: ${{ github.event_name == 'schedule' }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref_for_scheduled_build }}
+      - name: Restore built workspace
+        uses: actions/cache/restore@v6
+        with:
+          # src is required for colcon package discovery (--packages-select).
+          path: |
+            .ici/target_ws/src
+            .ici/target_ws/build
+            .ici/target_ws/install
+            .ici/upstream_ws/install
+          key: ${{ inputs.workspace_cache_key }}
+          fail-on-cache-miss: true
+      - name: Download CI docker image
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ inputs.ci_image_artifact }}
+      - name: Load CI docker image
+        run: docker load --input ci-image.tar
+      - run: docker network create --subnet=192.168.56.0/24 --gateway=192.168.56.254 ursim_net
+        if: ${{ !env.ACT }}
+      - name: Create shared host directories
+        run: |
+          mkdir -p /tmp/ur_test_artifacts /tmp/ursim_urcaps
+          chmod 777 /tmp/ur_test_artifacts /tmp/ursim_urcaps
+      - name: Start URSim and run integration tests
+        run: |
+          docker run --rm \
+            --network ursim_net --ip 192.168.56.1 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "${BASEDIR}:${BASEDIR}" \
+            -v /tmp/ur_test_artifacts:/tmp/ur_test_artifacts \
+            -v /tmp/ursim_urcaps:/tmp/ursim_urcaps \
+            -e BASEDIR \
+            -e ROS_DISTRO \
+            -e UR_CI_ROBOT_IP \
+            -e UR_CI_UR_TYPE \
+            -e EXCLUDE_DASHBOARD_G5 \
+            -e UR_TEST_ARTIFACTS_DIR=/tmp/ur_test_artifacts \
+            "${CI_IMAGE}" \
+            bash -c '
+              set -eo pipefail
+              set +u
+              source "/opt/ros/${ROS_DISTRO}/setup.bash"
+              if [ -f "${BASEDIR}/upstream_ws/install/setup.bash" ]; then
+                source "${BASEDIR}/upstream_ws/install/setup.bash"
+              fi
+              source "${BASEDIR}/target_ws/install/setup.bash"
+              set -u
+
+              mkdir -p /tmp/ursim_urcaps
+              ros2 run ur_client_library start_ursim.sh \
+                -m "${UR_CI_UR_TYPE}" \
+                -v "${{ matrix.ursim_version }}" \
+                -p "${BASEDIR}/target_ws/src/Universal_Robots_ROS2_Driver/.github/dockerursim/ursim_storage/${{ matrix.ursim_version }}/${UR_CI_UR_TYPE}/programs" \
+                -n ursim \
+                -u /tmp/ursim_urcaps \
+                -d
+
+              ros2 run ur_robot_driver wait_robot_booted.py --timeout 300 "${UR_CI_ROBOT_IP}"
+
+              ctest_label_args=(-L ursim)
+              if [ "${EXCLUDE_DASHBOARD_G5}" = "true" ]; then
+                ctest_label_args+=(-LE dashboard_g5)
+              fi
+
+              cd "${BASEDIR}/target_ws"
+              set -x
+              colcon test --event-handlers console_direct+ --executor sequential \
+                --packages-select ur_robot_driver --ctest-args -j1 ${ctest_label_args[@]}
+              set +x
+              colcon test-result --verbose
+            '
+      - name: Stop URSim
+        if: always()
+        run: docker stop ursim

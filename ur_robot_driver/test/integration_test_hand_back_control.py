@@ -31,7 +31,6 @@ import logging
 import os
 import socket
 import sys
-import subprocess
 import time
 import unittest
 
@@ -45,6 +44,7 @@ from ur_dashboard_msgs.msg import ProgramState
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
     generate_driver_test_description,
     ActionInterface,
     ControllerManagerInterface,
@@ -52,18 +52,12 @@ from test_common import (  # noqa: E402
     IoStatusInterface,
 )
 
+URSIM_CONTAINER = "ursim"
+
 
 @pytest.mark.launch_test
 def generate_test_description():
-    # When set, use a shared urcap folder to be mounted to the ursim container
-    # This is especially useful when running the test in a Docker DooD setup.
-    urcap_folder = os.environ.get("UR_CI_URCAP_FOLDER")
-    return generate_driver_test_description(headless_mode=False, urcap_folder=urcap_folder)
-
-
-def copy_to_docker_container(container_name, src_path, dest_path):
-    print(f"Copying {src_path} to container '{container_name}' at {dest_path}")
-    subprocess.run(["docker", "cp", src_path, f"{container_name}:{dest_path}"], check=True)
+    return generate_driver_test_description(headless_mode=False)
 
 
 class HandBackControlTest(unittest.TestCase):
@@ -71,26 +65,9 @@ class HandBackControlTest(unittest.TestCase):
     def setUpClass(cls):
         rclpy.init()
         cls.node = Node("hand_back_control_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
-        try:
-            copy_to_docker_container(
-                "ursim",
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "resources",
-                    "ursim",
-                    "e-series",
-                    "ur5e",
-                    "programs",
-                    "hand_back_control_test_prog.urp",
-                ),
-                "/ursim/programs/hand_back_control_test_prog.urp",
-            )
-            subprocess.run(["docker", "exec", "ursim", "ls", "-l", "/ursim/programs"], check=True)
-
-        except Exception as e:
-            logging.error(f"Failed to copy program to Docker container: {e}")
 
     @classmethod
     def tearDownClass(cls):

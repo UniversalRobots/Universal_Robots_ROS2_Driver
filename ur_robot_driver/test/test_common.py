@@ -26,6 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 import logging
+import os
 import time
 
 import rclpy
@@ -100,6 +101,21 @@ ROBOT_JOINTS = [
     "wrist_2_joint",
     "wrist_3_joint",
 ]
+
+DEFAULT_ROBOT_IP = "192.168.56.101"
+
+# PolyScope family identifiers used by dashboard tests.
+CB3 = "cb3"
+POLYSCOPE_5 = "polyscope5"
+POLYSCOPE_X = "polyscopex"
+
+
+def _robot_ip():
+    return os.environ.get("UR_CI_ROBOT_IP", DEFAULT_ROBOT_IP)
+
+
+def _ci_ur_type(default="ur5e"):
+    return os.environ.get("UR_CI_UR_TYPE", default)
 
 
 def _wait_for_service(node, srv_name, srv_type, timeout):
@@ -315,8 +331,9 @@ class DashboardInterface(
     },
 ):
     def start_robot(self):
-        self._check_call(self.close_popup())
-        self._check_call(self.close_safety_popup())
+        # close_popup / close_safety_popup are not implemented on PolyScope X.
+        self._try_call(self.close_popup)
+        self._try_call(self.close_safety_popup)
         self._check_call(self.stop())
         self._check_call(self.power_off())
         self._check_call(self.power_on())
@@ -340,6 +357,75 @@ class DashboardInterface(
     def _check_call(self, result):
         if not result.success:
             raise Exception("Service call not successful")
+
+    def _try_call(self, action):
+        """Call a dashboard action, ignoring failure (e.g. unsupported on PolyScope X)."""
+        try:
+            result = action()
+            if not getattr(result, "success", True):
+                logging.info(
+                    "Optional dashboard call was not successful; continuing",
+                )
+                return False
+            return True
+        except Exception as exc:
+            logging.info(
+                "Optional dashboard call failed (%s); continuing",
+                exc,
+            )
+            return False
+
+    def detect_polyscope_family(self):
+        """
+        Detect CB3 / PolyScope 5 / PolyScope X via the dashboard.
+
+        ``get_polyscope_version`` is supported on CB3 and PolyScope 5. On PolyScope X
+        the call fails, which we treat as PolyScope X.
+        """
+        resp = self.get_polyscope_version()
+        if not resp.success:
+            return POLYSCOPE_X
+        if resp.version.major == 3:
+            return CB3
+        if resp.version.major == 5:
+            return POLYSCOPE_5
+        logging.warning(
+            "Unexpected PolyScope major version %s; treating as PolyScope 5",
+            resp.version.major,
+        )
+        return POLYSCOPE_5
+
+
+def reset_ursim_state(node=None):
+    """
+    Return the robot/URSim to a clean idle state between tests.
+
+    ``close_popup`` / ``close_safety_popup`` are best-effort (unsupported on PolyScope X).
+
+    :return: True if the reset succeeded, False otherwise.
+    """
+    if node is None:
+        return False
+    try:
+        dashboard = DashboardInterface(node)
+        dashboard._try_call(dashboard.close_popup)
+        dashboard._try_call(dashboard.close_safety_popup)
+        for action in (
+            dashboard.stop,
+            dashboard.power_off,
+        ):
+            try:
+                result = action()
+                if not getattr(result, "success", True):
+                    logging.error("reset_ursim_state: Service call was not successful")
+                    return False
+            except Exception as exc:
+                logging.error("reset_ursim_state: Service call failed: %s", exc)
+                return False
+    except Exception as exc:
+        logging.error("reset_ursim_state via ROS dashboard failed: %s", exc)
+        return False
+    return True
 
 
 class ControllerManagerInterface(
@@ -512,6 +598,25 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
+def _wait_robot_booted_action():
+    """Wait until dashboard or Robot API is reachable. Not a ROS node."""
+    return ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [
+                    FindPackagePrefix("ur_robot_driver"),
+                    "lib",
+                    "ur_robot_driver",
+                    "wait_robot_booted.py",
+                ]
+            ),
+            _robot_ip(),
+        ],
+        name="wait_robot_booted",
+        output="screen",
+    )
+
+
 def _ursim_action(
     ursim_version="latest",
     ur_type="ur5e",
@@ -519,6 +624,7 @@ def _ursim_action(
     program_folder=None,
     urcap_folder=None,
 ):
+    """Start URSim via ur_client_library. Used by robot-model tests in the ICI stage."""
     cmd = [
         PathJoinSubstitution(
             [
@@ -546,7 +652,8 @@ def _ursim_action(
     )
 
 
-def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", autoconnect="true"):
+def generate_dashboard_test_description(autoconnect="true"):
+    """Launch the dashboard client against an externally started robot/URSim."""
     dashboard_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -558,15 +665,12 @@ def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", 
             )
         ),
         launch_arguments={
-            "robot_ip": "192.168.56.101",
+            "robot_ip": _robot_ip(),
             "autoconnect": autoconnect,
         }.items(),
     )
 
-    return LaunchDescription(
-        _declare_launch_arguments()
-        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version, ur_type)]
-    )
+    return LaunchDescription(_declare_launch_arguments() + [ReadyToTest(), dashboard_client])
 
 
 def generate_mock_hardware_test_description(
@@ -609,13 +713,14 @@ def generate_driver_test_description(
     initial_joint_controller="joint_trajectory_controller",
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
     headless_mode=True,
-    ursim_version="latest",
-    ur_type="ur5e",
-    ursim_program_folder=None,
-    urcap_folder=None,
+    ur_type=None,
 ):
+    """Launch the driver against an externally started robot/URSim."""
+    if ur_type is None:
+        ur_type = _ci_ur_type()
+
     launch_arguments = {
-        "robot_ip": "192.168.56.101",
+        "robot_ip": _robot_ip(),
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
@@ -635,29 +740,13 @@ def generate_driver_test_description(
         ),
         launch_arguments=launch_arguments.items(),
     )
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
+    wait_robot_booted = _wait_robot_booted_action()
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
-    )
-
-    ursim_starter = _ursim_action(
-        ursim_version=ursim_version,
-        ur_type=ur_type,
-        program_folder=ursim_program_folder,
-        urcap_folder=urcap_folder,
+        OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
     )
 
     return LaunchDescription(
-        _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, ursim_starter, driver_starter]
+        _declare_launch_arguments() + [ReadyToTest(), wait_robot_booted, driver_starter]
     )
 
 
@@ -670,23 +759,19 @@ def generate_driver_test_description_for_model(
     ursim_type=None,
 ):
     """
-    Generate a launch description that brings up URSim and the driver for an explicit ``ur_type``.
+    Bring up URSim and the driver for an explicit ``ur_type``.
 
-    Unlike :func:`generate_driver_test_description`, this helper does not read the
-    ``ur_type`` launch argument but uses the value passed in. This makes it suitable
-    for tests parametrized over multiple robot models, where each parametrization
-    needs to spawn its own URSim of the matching model.
+    Unlike the other integration helpers, this starts its own URSim container so it
+    can be parametrized over robot models in the industrial_ci build job.
 
     The optional ``ursim_type`` argument allows the URSim model to differ from the
-    driver's ``ur_type``. This is useful for negative tests that verify the driver
-    rejects a configuration mismatch. If not given, URSim is started for the same
-    model as the driver.
+    driver's ``ur_type`` for negative mismatch tests.
     """
     if ursim_type is None:
         ursim_type = ur_type
 
     launch_arguments = {
-        "robot_ip": "192.168.56.101",
+        "robot_ip": _robot_ip(),
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
@@ -706,30 +791,24 @@ def generate_driver_test_description_for_model(
         ),
         launch_arguments=launch_arguments.items(),
     )
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
+    wait_robot_booted = _wait_robot_booted_action()
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+        OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
     )
 
-    # Use a per-model container name so leftover containers from a previous
-    # parametrization can never be confused with the current one.
+    # Per-model container name so leftover containers from a previous
+    # parametrization are never confused with the current one.
     container_name = f"ursim_{ursim_type}"
 
     return LaunchDescription(
         _declare_launch_arguments()
         + [
             ReadyToTest(),
-            wait_dashboard_server,
+            wait_robot_booted,
             _ursim_action(
-                ursim_version=ursim_version, ur_type=ursim_type, container_name=container_name
+                ursim_version=ursim_version,
+                ur_type=ursim_type,
+                container_name=container_name,
             ),
             driver_starter,
         ]

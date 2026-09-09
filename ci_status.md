@@ -155,3 +155,26 @@ Each of these stages also performs integration tests using ursim. In order to ex
   ```
   colcon build --packages-select ur_robot_driver --cmake-args -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=On
   ```
+
+### CI layout (build / integration test split)
+
+Each binary and semi-binary workflow now runs in two phases:
+
+1. **Build job** — industrial_ci builds all packages inside its Docker image, runs every non-matrix test via `colcon test --ctest-args -LE ursim` (`ur_controllers`, `ur_calibration`, mock hardware, and `integration_test_robot_models`), then commits that image (`DOCKER_COMMIT`) and caches the workspace. Shared-URSim matrix tests are built/registered but skipped by the label filter.
+2. **Integration test jobs** — three parallel jobs (PolyScope 5 / UR30 `latest`, PolyScope X / UR15 `10.12.0`, CB3 / UR10 `3.15.8`) each restore the cached workspace, load the committed CI image (so all rosdep/apt dependencies are present), start one URSim instance, and run the shared-URSim integration tests inside that image. PolyScope X jobs additionally exclude tests labelled `dashboard_g5` (`ctest -L ursim -LE dashboard_g5`), which need CB3/PolyScope 5 dashboard features such as `start_robot` / `reset_ursim_state` power-cycling.
+
+Shared-URSim integration tests (labelled `ursim`) always expect an externally started robot/URSim and never launch a container themselves. Between `dashboard_g5` tests, `reset_ursim_state()` resets robot state via the dashboard client.
+
+| Variable | Purpose |
+|----------|---------|
+| `UR_CI_ROBOT_IP` | Robot IP (default: `192.168.56.101`) |
+| `UR_CI_UR_TYPE` | Robot model used for the driver’s `ur_type` (must match the running URSim) |
+
+To reproduce a CI integration-test run locally (UR15 / PolyScope X example):
+
+  ```bash
+  export UR_CI_UR_TYPE=ur15
+  ros2 run ur_client_library start_ursim.sh -m ur15 -v 10.12.0 -n ursim &
+  colcon test --packages-select ur_robot_driver --ctest-args -L ursim -LE dashboard_g5
+  colcon test-result --verbose
+  ```
