@@ -39,6 +39,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(rclpy REQUIRED)
@@ -59,6 +60,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   hardware_interface
   pluginlib
   rclcpp
+  rclcpp_action
   rclcpp_lifecycle
   std_msgs
   std_srvs
@@ -73,7 +75,6 @@ add_library(ur_robot_driver_plugin
   src/dashboard_client_ros.cpp
   src/hardware_interface.cpp
   src/urcl_log_handler.cpp
-  src/robot_state_helper.cpp
 )
 target_link_libraries(
   ur_robot_driver_plugin
@@ -130,21 +131,16 @@ add_library(robot_state_helper_lib SHARED
   src/robot_state_helper.cpp
   src/urcl_log_handler.cpp
 )
-<<<<<<< HEAD
-target_link_libraries(robot_state_helper ur_client_library::urcl)
-ament_target_dependencies(robot_state_helper ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-=======
 target_include_directories(robot_state_helper_lib PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+  "$<INSTALL_INTERFACE:include>"
 )
-target_link_libraries(robot_state_helper_lib PUBLIC
-  ${std_msgs_TARGETS}
-  ${std_srvs_TARGETS}
-  ${ur_dashboard_msgs_TARGETS}
-  rclcpp::rclcpp
-  rclcpp_action::rclcpp_action
+target_link_libraries(robot_state_helper_lib
   ur_client_library::urcl
+)
+ament_target_dependencies(robot_state_helper_lib
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 add_executable(robot_state_helper
   src/robot_state_helper_node.cpp
@@ -152,7 +148,10 @@ add_executable(robot_state_helper
 target_link_libraries(robot_state_helper
   robot_state_helper_lib
 )
->>>>>>> 87c207b ([RobotStateHelper] Fix worker thread lifecycle management (#1950))
+ament_target_dependencies(robot_state_helper
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
 
 add_executable(urscript_interface
   src/urscript_interface.cpp
@@ -256,31 +255,24 @@ install(DIRECTORY config launch
 ament_package()
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ur_controllers REQUIRED)
   find_package(ur_description REQUIRED)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
-
-<<<<<<< HEAD
-=======
-  ament_add_gmock(test_mode_compatibility_symmetry
-    test/test_mode_compatibility_symmetry.cpp
-  )
-  target_link_libraries(test_mode_compatibility_symmetry
-    ur_robot_driver_plugin
-  )
 
   ament_add_gmock(test_robot_state_helper
     test/test_robot_state_helper.cpp
   )
   target_link_libraries(test_robot_state_helper
     robot_state_helper_lib
-    rclcpp::rclcpp
-    rclcpp_action::rclcpp_action
-    ${std_srvs_TARGETS}
+  )
+  ament_target_dependencies(test_robot_state_helper
+    rclcpp
+    rclcpp_action
+    std_srvs
   )
 
->>>>>>> 87c207b ([RobotStateHelper] Fix worker thread lifecycle management (#1950))
   add_launch_test(test/test_mock_hardware.py
     TIMEOUT
       800
