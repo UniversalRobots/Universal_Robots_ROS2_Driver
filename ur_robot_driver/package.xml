@@ -36,6 +36,7 @@
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>realtime_tools</depend>
   <depend>rclpy</depend>
@@ -65,6 +66,7 @@
   <exec_depend>velocity_controllers</exec_depend>
   <exec_depend>xacro</exec_depend>
 
+  <test_depend>ament_cmake_gmock</test_depend>
   <test_depend>launch_testing_ament_cmake</test_depend>
   <test_depend>ros2run</test_depend>
 
