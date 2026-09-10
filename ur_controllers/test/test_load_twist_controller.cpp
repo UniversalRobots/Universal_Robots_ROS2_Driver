@@ -1,4 +1,4 @@
-// Copyright 2024, FZI Forschungszentrum Informatik, Created on behalf of Universal Robots A/S
+// Copyright 2026, Universal Robots A/S
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -26,31 +26,35 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <memory>
+#include <gmock/gmock.h>
+#include "controller_manager/controller_manager.hpp"
+#include "rclcpp/executor.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/utilities.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 
-#include <rclcpp/utilities.hpp>
-#include <rclcpp/executors/multi_threaded_executor.hpp>
-
-#include "ur_client_library/exceptions.h"
-#include "ur_robot_driver/robot_state_helper.hpp"
-#include "ur_robot_driver/urcl_log_handler.hpp"
-
-int main(int argc, char** argv)
+TEST(TestLoadTwistController, load_controller)
 {
+  std::shared_ptr<rclcpp::Executor> executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+
+  controller_manager::ControllerManager cm{ executor, ros2_control_test_assets::minimal_robot_urdf, true,
+                                            "test_controller_manager" };
+
+  const std::string test_file_path = std::string{ TEST_FILES_DIRECTORY } + "/twist_controller_params.yaml";
+  cm.set_parameter({ "test_twist_controller.params_file", test_file_path });
+
+  cm.set_parameter({ "test_twist_controller.type", "ur_controllers/TwistController" });
+
+  ASSERT_NE(cm.load_controller("test_twist_controller"), nullptr);
+}
+
+int main(int argc, char* argv[])
+{
+  ::testing::InitGoogleMock(&argc, argv);
   rclcpp::init(argc, argv);
-  ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
 
-  std::shared_ptr<ur_robot_driver::RobotStateHelper> robot_state_helper;
-  try {
-    robot_state_helper = std::make_shared<ur_robot_driver::RobotStateHelper>(rclcpp::NodeOptions());
-  } catch (const urcl::UrException& e) {
-    RCLCPP_ERROR(rclcpp::get_logger("robot_state_helper"), "%s", e.what());
-    return 1;
-  }
+  int result = RUN_ALL_TESTS();
+  rclcpp::shutdown();
 
-  rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(robot_state_helper);
-  executor.spin();
-
-  return 0;
+  return result;
 }

@@ -1,4 +1,4 @@
-// Copyright 2024, FZI Forschungszentrum Informatik, Created on behalf of Universal Robots A/S
+// Copyright 2026 Universal Robots A/S
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -26,31 +26,18 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <memory>
+#ifndef UR_ROBOT_DRIVER__MODE_COMPATIBILITY_HPP_
+#define UR_ROBOT_DRIVER__MODE_COMPATIBILITY_HPP_
 
-#include <rclcpp/utilities.hpp>
-#include <rclcpp/executors/multi_threaded_executor.hpp>
+#include <string>
+#include <unordered_map>
 
-#include "ur_client_library/exceptions.h"
-#include "ur_robot_driver/robot_state_helper.hpp"
-#include "ur_robot_driver/urcl_log_handler.hpp"
-
-int main(int argc, char** argv)
+namespace ur_robot_driver
 {
-  rclcpp::init(argc, argv);
-  ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
+using ModeCompatibilityMatrix = std::unordered_map<std::string, std::unordered_map<std::string, bool>>;
 
-  std::shared_ptr<ur_robot_driver::RobotStateHelper> robot_state_helper;
-  try {
-    robot_state_helper = std::make_shared<ur_robot_driver::RobotStateHelper>(rclcpp::NodeOptions());
-  } catch (const urcl::UrException& e) {
-    RCLCPP_ERROR(rclcpp::get_logger("robot_state_helper"), "%s", e.what());
-    return 1;
-  }
+ModeCompatibilityMatrix createModeCompatibilityMatrix();
 
-  rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(robot_state_helper);
-  executor.spin();
+}  // namespace ur_robot_driver
 
-  return 0;
-}
+#endif  // UR_ROBOT_DRIVER__MODE_COMPATIBILITY_HPP_

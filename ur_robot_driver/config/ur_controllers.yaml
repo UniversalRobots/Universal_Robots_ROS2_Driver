@@ -48,6 +48,9 @@ controller_manager:
     gravity_update_controller:
       type: ur_controllers/GravityUpdateController
 
+    twist_controller:
+      type: ur_controllers/TwistController
+
     # The way this is currently implemented upstream doesn't really work for us. When using
     # position control, the robot will have a tracking error. However, limits will be enforced
     # from the currently reported position, effectively limiting the possible step size using the
@@ -69,6 +72,10 @@ io_and_status_controller:
     tf_prefix: "$(var tf_prefix)"
 
 ur_configuration_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+twist_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
 

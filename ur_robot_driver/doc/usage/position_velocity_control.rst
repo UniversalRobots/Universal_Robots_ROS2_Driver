@@ -111,7 +111,8 @@ Key features:
   on tool contact.
 * Mutually exclusive with all other motion controllers (``joint_trajectory_controller``,
   ``passthrough_trajectory_controller``, ``forward_position_controller``,
-  ``forward_velocity_controller``, ``forward_effort_controller``, ``freedrive_mode_controller``).
+  ``forward_velocity_controller``, ``forward_effort_controller``, ``freedrive_mode_controller``,
+  ``twist_controller``).
 
 To activate:
 
@@ -172,6 +173,39 @@ To activate:
    $ ros2 control switch_controllers --deactivate joint_trajectory_controller \
      --activate forward_velocity_controller
 
+twist_controller
+^^^^^^^^^^^^^^^^
+
+Type: :ref:`ur_controllers/TwistController <twist_controller>`
+
+Streams Cartesian TCP velocities directly to the robot. This interfaces the URScript function
+``speedl(...)``. Unlike the ``forward_velocity_controller``, which commands joint-space velocities,
+this controller commands tool-space velocities in the robot's ``base`` frame.
+
+**Key features:**
+
+* Cartesian velocity control in the robot's ``base`` frame via ``geometry_msgs/msg/TwistStamped``.
+* Can be combined with the :ref:`tool_contact_controller <tool_contact_controller>` to stop motion
+  on tool contact or with :ref:`force_mode_controller <force_mode_controller>`.
+* Mutually exclusive with all other motion controllers.
+
+To activate:
+
+.. code-block:: console
+
+   $ ros2 control switch_controllers --deactivate joint_trajectory_controller \
+     --activate twist_controller
+
+Example command:
+
+.. code-block:: console
+
+   $ ros2 topic pub --rate 50 /twist_controller/twist geometry_msgs/msg/TwistStamped \
+     "{header: {frame_id: 'base'}, twist: {linear: {x: 0.05}}}"
+
+See the :ref:`twist_controller <twist_controller>` documentation for full details on parameters,
+frame requirements, and hardware interfaces.
+
 Controller Compatibility
 ------------------------
 
@@ -194,6 +228,9 @@ The following table summarizes how position and velocity controllers can be comb
    * - ``forward_velocity_controller``
      - Mutually exclusive with other motion controllers. Can combine with
        ``force_mode_controller``.
+   * - ``twist_controller``
+     - Mutually exclusive with other motion controllers. Can combine with
+       ``tool_contact_controller``.
    * - ``motion_primitive_forward_controller``
      - Mutually exclusive with other motion controllers. Can combine with
        ``force_mode_controller`` and ``tool_contact_controller``.
