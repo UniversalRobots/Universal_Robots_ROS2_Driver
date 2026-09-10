@@ -90,7 +90,10 @@ from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 TIMEOUT_WAIT_SERVICE = 10
-TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
+# Booting URSim (and possibly pulling the image) plus starting the dashboard client can take
+# several minutes. This must outlast wait_robot_booted's default 180s timeout on humble, where
+# ReadyToTest cannot be delayed via ready_to_test_action_timeout.
+TIMEOUT_WAIT_SERVICE_INITIAL = 240
 TIMEOUT_WAIT_ACTION = 10
 TIMEOUT_EXECUTE_TRAJECTORY = 30
 
@@ -569,14 +572,18 @@ def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", 
     )
     wait_robot_booted = _wait_robot_booted_action()
 
+    # On humble, ReadyToTest cannot be given an extended timeout via
+    # launch_testing.ready_to_test_action_timeout. Start the test runner immediately and let
+    # service waits (TIMEOUT_WAIT_SERVICE_INITIAL) cover robot boot; only delay the dashboard
+    # client until the robot is reachable.
     starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_robot_booted, on_exit=[ReadyToTest(), dashboard_client])
+        OnProcessExit(target_action=wait_robot_booted, on_exit=dashboard_client)
     )
 
     return (
         LaunchDescription(
             _declare_launch_arguments()
-            + [wait_robot_booted, starter, _ursim_action(ursim_version, ur_type)]
+            + [ReadyToTest(), wait_robot_booted, starter, _ursim_action(ursim_version, ur_type)]
         ),
         {"wait_robot_booted": wait_robot_booted},
     )
