@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.1.0 (2026-09-10)
+------------------
 * Fix a typo in launch file arg docstring (`#1917 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1917>`_)
 * Contributors: Felix Exner
 
