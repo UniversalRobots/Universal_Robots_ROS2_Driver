@@ -1,5 +1,5 @@
-Forthcoming
------------
+6.1.0 (2026-09-10)
+------------------
 * Allow using blocking read in controller manager (backport `#1760 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1760>`_) (`#1922 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1922>`_)
 * Update dashboard client for 10.14.0 (backport `#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_) (`#1975 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1975>`_)
 * Fix tolerance parsing in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1967 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1967>`_)
