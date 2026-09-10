@@ -75,6 +75,7 @@ def generate_launch_description():
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
     use_currents_as_efforts = LaunchConfiguration("use_currents_as_efforts")
+    blocking_read = LaunchConfiguration("blocking_read")
 
     script_filename = PathJoinSubstitution(
         [
@@ -194,6 +195,9 @@ def generate_launch_description():
             " ",
             "use_currents_as_efforts:=",
             use_currents_as_efforts,
+            " ",
+            "blocking_read:=",
+            blocking_read,
         ]
     )
     robot_description = {
@@ -205,7 +209,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
-            description="Typo/series of used UR robot.",
+            description="Robot model of the used UR robot.",
             choices=[
                 "ur3",
                 "ur5",
@@ -465,6 +469,12 @@ def generate_launch_description():
             "use_currents_as_efforts",
             default_value="true",
             description="Report motor currents as efforts. When set to false, the torques as reported from the robot are used. Note that this requires software 5.23.0 / 10.11.0.",
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "blocking_read",
+            default_value="false",
+            description="Block in read() effectively synchronizing the driver with the robot controller.",
         )
     )
 
