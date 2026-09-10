@@ -34,6 +34,8 @@
   <xacro:arg name="script_sender_port" default="50002"/>
   <xacro:arg name="trajectory_port" default="50003"/>
   <xacro:arg name="verify_robot_model" default="true" />
+  <xacro:arg name="use_currents_as_efforts" default="true"/>
+
   <xacro:arg name="blocking_read" default="false" />
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />
@@ -107,6 +109,7 @@
     trajectory_port="$(arg trajectory_port)"
     ur_type="$(arg ur_type)"
     verify_robot_model="$(arg verify_robot_model)"
+    use_currents_as_efforts="$(arg use_currents_as_efforts)"
     non_blocking_read="${not blocking_read}"
   />
 
