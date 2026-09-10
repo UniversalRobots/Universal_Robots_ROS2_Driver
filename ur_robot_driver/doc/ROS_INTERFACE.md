@@ -104,7 +104,7 @@ Should the tool's RS485 interface be forwarded to the ROS machine? This is only 
 
 ##### add_to_log ([ur_dashboard_msgs/AddToLog](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/AddToLog.html))
 
-Service to add a message to the robot's log
+Service to add a message to the robot's log. On PolyScope X this requires version >= 10.14.0.
 
 ##### brake_release ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
@@ -116,15 +116,15 @@ If this service is called the operational mode can again be changed from PolySco
 
 ##### close_popup ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
-Close a (non-safety) popup on the teach pendant.
+Close a (non-safety) popup on the teach pendant. On PolyScope X this requires version >= 10.14.0.
 
 ##### close_safety_popup ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
-Close a safety popup on the teach pendant.
+Close a safety popup on the teach pendant. On PolyScope X this requires version >= 10.14.0.
 
 ##### connect ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
-Service to reconnect to the dashboard server
+Service to connect or reconnect to the dashboard server. Required after startup when `autoconnect` is `false`.
 
 ##### download_program ([ur_dashboard_msgs/Download](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/DownloadProgram.html))
 
@@ -134,12 +134,16 @@ Service to reconnect to the dashboard server
 
 ##### generate_flight_report ([ur_dashboard_msgs/GenerateFlightReport](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GenerateFlightReport.html))
 
-**CB3 | PolyScope 5** Generate flight report of the chosen type, defaults to SYSTEM. It is required to wait at least 30 seconds between triggering software or controller reports.
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Generate flight report of the chosen type, defaults to SYSTEM. On PolyScope 5 / CB3 it is required to wait at least 30 seconds between triggering software or controller reports. On PolyScope X the `report_type` argument is ignored.
 
 ##### generate_support_file ([ur_dashboard_msgs/GenerateSupportFile](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GenerateSupportFile.html))
 
 **CB3 | PolyScope 5** Generate a support file at the specified location. Location is relative to the programs folder, if saving to a subfolder it must exist prior to the service call.
-Defaults to saving to the programs folder
+Defaults to saving to the programs folder. On PolyScope X use [download_support_file](#download_support_file) instead.
+
+##### download_support_file ([ur_dashboard_msgs/DownloadSupportFile](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_dashboard_msgs/srv/DownloadSupportFile.srv))
+
+**PolyScope X only (>= 10.14.0)**: Download the robot's support files as a zip archive to `target_path` on the machine running the dashboard client.
 
 ##### get_loaded_program ([ur_dashboard_msgs/GetLoadedProgram](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetLoadedProgram.html))
 
@@ -151,7 +155,7 @@ Get the name of the currently loaded program.
 
 ##### get_polyscope_version ([ur_dashboard_msgs/GetPolyScopeVersion](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetPolyScopeVersion.html))
 
-**CB3 | PolyScope 5** Get polyScope version of robot
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Get PolyScope version of the robot
 
 ##### get_programs ([ur_dashboard_msgs/GetPrograms](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetPrograms.html))
 
@@ -164,7 +168,7 @@ Service to query the current robot mode
 
 ##### get_robot_model ([ur_dashboard_msgs/GetRobotModel](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetRobotModel.html))
 
-**CB3 | PolyScope 5** Get the robot model, in the format URx. It should be noted this call does not differentiate between e-series and CB3, so UR5 and UR5e will both report as UR5
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Get the robot model, in the format URx. It should be noted this call does not differentiate between e-series and CB3, so UR5 and UR5e will both report as UR5
 
 ##### get_safety_mode ([ur_dashboard_msgs/GetSafetyMode](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetSafetyMode.html))
 
@@ -176,7 +180,7 @@ Service to query the current safety mode
 
 ##### get_serial_number ([ur_dashboard_msgs/GetSerialNumber](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetSerialNumber.html))
 
-**CB3 | PolyScope 5** Get serial number of robot
+**CB3 | PolyScope 5 | PolyScope X >= 10.14.0** Get serial number of robot
 
 ##### get_user_role ([ur_dashboard_msgs/GetUserRole](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/GetUserRole.html))
 
@@ -207,7 +211,8 @@ Start execution of a previously loaded program
 
 ##### popup ([ur_dashboard_msgs/Popup](https://docs.ros.org/en/humble/p/ur_dashboard_msgs/srv/Popup.html))
 
-Service to show a popup on the UR Teach pendant.
+Service to show a popup on the UR Teach pendant. On PolyScope X (>= 10.14.0) an optional `title`
+can be provided; on PolyScope 5 / CB3 the title is ignored.
 
 ##### power_off ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
@@ -256,7 +261,7 @@ robot with version >= 10.11.0.
 
 ##### shutdown ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 
-Shutdown the robot controller
+Shutdown the robot controller. On PolyScope X this requires version >= 10.14.0.
 
 ##### stop ([std_srvs/Trigger](https://docs.ros.org/en/humble/p/std_srvs/srv/Trigger.html))
 

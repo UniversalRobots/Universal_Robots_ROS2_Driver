@@ -208,6 +208,7 @@ install(PROGRAMS
   scripts/tool_communication.py
   scripts/example_move.py
   scripts/start_ursim.sh
+  scripts/wait_robot_booted.py
   examples/examples.py
   examples/force_mode.py
   examples/move_until_example.py
@@ -250,7 +251,7 @@ if(BUILD_TESTING)
     )
     add_launch_test(test/dashboard_client.py
       TIMEOUT
-        180
+        800 # Booting the simulators can take quite some time. Increasing this timeout to avoid spurious failures.
     )
     add_launch_test(test/integration_test_scaled_joint_controller.py
       TIMEOUT
