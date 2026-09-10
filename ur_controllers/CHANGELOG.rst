@@ -2,6 +2,18 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix tolerance parsing in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1967 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1967>`_)
+* Set command interface in tool contact controller (backport `#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_) (`#1949 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1949>`_)
+* Add Cartesian twist controller (backport `#1586 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1586>`_) (`#1926 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1926>`_)
+* Allow setting payload inertia matrix via set_payload service in a backwards-compatible way (`#1811 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1811>`_)
+* Allow updating robot gravity (`#1606 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1606>`_)
+* Use a realtime_tools::RealtimePublisher for publishing the state (`#1822 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1822>`_)
+* Make GPIO controller publishers realtime-safe (`#1807 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1807>`_)
+* Update minimum CMake version to 3.28.3 (`#1814 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1814>`_)
+* Contributors: AdamPettinger, Felix Exner, Hasan Amin, Sergi Romero, mergify[bot]
+
 6.0.0 (2026-05-12)
 ------------------
 * Check payload state in gpio_controller (`#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_)

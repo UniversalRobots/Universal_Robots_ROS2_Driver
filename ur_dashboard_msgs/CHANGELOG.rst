@@ -2,6 +2,13 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update dashboard client for 10.14.0 (backport `#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_) (`#1975 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1975>`_)
+* Update safety status message with new IO plane stop (`#1817 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1817>`_)
+* Update minimum CMake version to 3.28.3 (`#1814 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1814>`_)
+* Contributors: Felix Exner, Mads Holm Peters, mergify[bot]
+
 6.0.0 (2026-05-12)
 ------------------
 
