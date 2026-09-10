@@ -2,6 +2,14 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix flaky quintic spline test in passthrough controller (`#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_)
+* Fix tool contact controller (`#1952 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1952>`_)
+* Set command interface in tool contact controller (`#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_)
+* Add Cartesian twist controller (`#1586 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1586>`_)
+* Contributors: Felix Exner, URJala
+
 7.0.0 (2026-07-09)
 ------------------
 * Allow setting payload inertia matrix via set_payload service   (`#1808 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1808>`_)

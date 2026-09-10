@@ -2,6 +2,11 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix a typo in launch file arg docstring (`#1917 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1917>`_)
+* Contributors: Felix Exner
+
 7.0.0 (2026-07-09)
 ------------------
 * Update minimum CMake version to 3.28.3 (`#1814 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1814>`_)
