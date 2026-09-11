@@ -22,7 +22,7 @@ To keep reporting motor currents as efforts (e.g. on a CB3 robot), set ``use_cur
      ur_type:=ur5e \
      use_currents_as_efforts:=true
 
-See :doc:`../hardware_interface_parameters` for details.
+See :ref:`hardware_interface_parameters` for details.
 
 Blocking read enabled by default in launch files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

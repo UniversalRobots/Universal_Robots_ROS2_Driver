@@ -36,7 +36,7 @@ Other important arguments are:
 * ``launch_rviz`` (default: *true*) - Start RViz together with the driver.
 * ``use_currents_as_efforts`` (default: *false*) - Report motor currents as joint efforts
   when ``true``. The default (``false``) reports joint torques instead (requires PolyScope
-  >= 5.23.0 / 10.11.0). See :doc:`../hardware_interface_parameters`.
+  >= 5.23.0 / 10.11.0). See :ref:`hardware_interface_parameters`.
 * ``initial_joint_controller`` (default: *joint_trajectory_controller*) - Use this if you
   want to start the robot with another controller.
 * ``blocking_read`` (default: *true*) - Make the robot's communication drive the ROS control loop's
