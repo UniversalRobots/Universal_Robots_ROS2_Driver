@@ -2,6 +2,11 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update dashboard client for 10.14.0 (backport `#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_) (`#1972 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1972>`_)
+* Contributors: mergify[bot]
+
 2.14.0 (2026-07-21)
 -------------------
 
