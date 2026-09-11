@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.9.0 (2026-09-11)
+------------------
 * Fix tolerance parsing in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1966 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1966>`_)
 * Set command interface in tool contact controller (backport `#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_) (`#1948 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1948>`_)
 * Add Cartesian twist controller (backport `#1586 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1586>`_) (`#1925 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1925>`_)
