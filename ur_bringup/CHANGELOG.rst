@@ -2,6 +2,9 @@
 Changelog for package ur_bringup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.15.0 (2026-09-11)
+-------------------
+
 2.14.0 (2026-07-21)
 -------------------
 * Fix sjtc sampling (`#1894 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1894>`_)
