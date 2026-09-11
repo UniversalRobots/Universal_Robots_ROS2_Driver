@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Set command interface in tool contact controller (backport `#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_) (`#1946 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1946>`_)
+* Fix flaky quintic spline test in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1964>`_)
+* Contributors: mergify[bot]
+
 2.14.0 (2026-07-21)
 -------------------
 * Fix sjtc sampling (`#1894 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1894>`_)

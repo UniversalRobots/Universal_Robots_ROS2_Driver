@@ -1,3 +1,15 @@
+Forthcoming
+-----------
+* [RobotStateHelper] Fix worker thread lifecycle management (backport `#1950 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1950>`_) (`#1968 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1968>`_)
+* Update dashboard client for 10.14.0 (backport `#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_) (`#1972 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1972>`_)
+* Fix flaky quintic spline test in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1964>`_)
+* [Docs] Update links to ROS installation documentation (`#1963 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1963>`_)
+* Fix/passthrough controller very short trajectories (backport `#1940 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1940>`_) (`#1954 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1954>`_)
+* Fix a typo in launch file arg docstring (backport `#1917 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1917>`_) (`#1929 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1929>`_)
+* Fix ``trajectory_until_node`` goal acceptance handshake (backport `#1909 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1909>`_) (`#1912 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1912>`_)
+* Add ``realtime_tools`` dependency to ur_robot_driver (`#1916 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1916>`_)
+* Contributors: Felix Exner, Plumezz, mergify[bot]
+
 2.14.0 (2026-07-21)
 -------------------
 * Add autoconnect parameter to dashboard client (backport `#1881 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1881>`_) (`#1887 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1887>`_)
