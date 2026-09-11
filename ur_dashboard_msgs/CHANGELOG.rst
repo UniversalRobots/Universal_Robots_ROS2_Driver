@@ -2,6 +2,11 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.9.0 (2026-09-11)
+------------------
+* Update dashboard client for 10.14.0 (backport `#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_) (`#1974 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1974>`_)
+* Contributors: mergify[bot]
+
 4.8.0 (2026-07-09)
 ------------------
 * Update safety status msg with new IO plane stop (backport `#1817 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1817>`_) (`#1820 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1820>`_)
