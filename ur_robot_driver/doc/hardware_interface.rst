@@ -25,7 +25,7 @@ The UR hardware interface supports the following control modes:
 - **Position control**: The robot's joints are controlled by specifying target positions.
 - **Velocity control**: The robot's joints are controlled by specifying target velocities.
 - **Effort control**: The robot's joints are controlled by specifying target efforts (torques).
-  (Only available when running PolyScope >= 5.23.0 / 10.11.0)
+  (Only available when running PolyScope >= 5.23.0 / 10.10.0)
 - **Effort state interfaces**: Joint efforts are reported as torques by default
   (``actual_current_as_torque``, requires PolyScope >= 5.23.0 / 10.11.0). Set
   ``use_currents_as_efforts`` to ``true`` to report motor currents instead.
