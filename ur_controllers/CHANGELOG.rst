@@ -2,6 +2,18 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.9.0 (2026-09-11)
+------------------
+* Fix flaky quintic spline test in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1965 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1965>`_)
+* Set command interface in tool contact controller (backport `#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_) (`#1947 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1947>`_)
+* Add Cartesian twist controller (backport `#1586 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1586>`_) (`#1924 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1924>`_)
+* Allow setting payload inertia matrix via ``set_payload`` service in a backwards-compatible way (backport `#1811 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1811>`_) (`#1879 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1879>`_)
+* Allow updating robot gravity (backport `#1606 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1606>`_) (`#1845 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1845>`_)
+* Use a ``realtime_tools::RealtimePublisher`` for publishing the state (backport `#1822 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1822>`_) (`#1824 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1824>`_)
+* Make GPIO controller publishers realtime-safe (backport `#1807 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1807>`_) (`#1826 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1826>`_)
+* Check payload state in ``gpio_controller`` (backport `#1770 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1770>`_) (`#1776 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1776>`_)
+* Contributors: mergify[bot]
+
 3.8.0 (2026-04-09)
 ------------------
 * Friction model controller (backport `#1704 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1704>`_) (`#1751 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1751>`_)
