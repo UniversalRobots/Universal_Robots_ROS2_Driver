@@ -1,5 +1,5 @@
-Forthcoming
------------
+3.9.0 (2026-09-11)
+------------------
 * Allow using blocking read in controller manager (backport `#1760 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1760>`_) (`#1920 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1920>`_)
 * [RobotStateHelper] Fix worker thread lifecycle management (backport `#1950 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1950>`_) (`#1969 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1969>`_)
 * Update dashboard client for 10.14.0 (`#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_) (`#1973 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1973>`_)
