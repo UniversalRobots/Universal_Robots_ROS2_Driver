@@ -56,8 +56,13 @@ with one value per joint.
 
 .. note::
 
-   The ``effort`` field in ``sensor_msgs/JointState`` (published by the ``joint_state_broadcaster``)
-   contains motor currents, not physical joint torques.
+   On older ROS distributions, the effort interfaces reported motor currents instead of actual
+   torques. This is no longer the case, and the driver now reports actual joint torques by
+   default, which requires PolyScope >= 5.23.0 / 10.11.0. If you are using an older robot
+   software version, the driver will fail to start and print an error about the missing RTDE
+   variable ``actual_current_as_torque``. To revert to the previous behavior, set the hardware
+   parameter ``use_currents_as_efforts`` to ``true``. See
+   :ref:`hardware_interface_parameters` for details.
 
 Friction Compensation
 ^^^^^^^^^^^^^^^^^^^^^
