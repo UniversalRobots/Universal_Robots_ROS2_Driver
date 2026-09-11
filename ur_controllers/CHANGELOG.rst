@@ -2,6 +2,14 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix tolerance parsing in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1966 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1966>`_)
+* Set command interface in tool contact controller (backport `#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_) (`#1948 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1948>`_)
+* Add Cartesian twist controller (backport `#1586 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1586>`_) (`#1925 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1925>`_)
+* Allow setting payload inertia matrix via set_payload service (backport `#1811 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1811>`_) (`#1878 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1878>`_)
+* Contributors: mergify[bot]
+
 4.8.0 (2026-07-09)
 ------------------
 * Allow updating robot gravity (backport `#1606 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1606>`_) (`#1846 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1846>`_)
