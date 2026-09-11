@@ -876,6 +876,8 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                    "Driver configured to use actual torques as efforts, which is not supported by this software "
                    "version %s. Please use version 5.23.0 / 10.11.0 or newer for this feature.",
                    version_info_.toString().c_str());
+      instruction_executor_.reset();
+      ur_driver_.reset();
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
