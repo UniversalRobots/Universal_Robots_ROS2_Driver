@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.9.0 (2026-09-11)
+------------------
 * Fix flaky quintic spline test in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1965 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1965>`_)
 * Set command interface in tool contact controller (backport `#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_) (`#1947 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1947>`_)
 * Add Cartesian twist controller (backport `#1586 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1586>`_) (`#1924 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1924>`_)
