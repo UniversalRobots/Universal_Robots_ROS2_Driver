@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.15.0 (2026-09-11)
+-------------------
 * [RobotStateHelper] Fix worker thread lifecycle management (backport `#1950 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1950>`_) (`#1968 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1968>`_)
 * Update dashboard client for 10.14.0 (backport `#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_) (`#1972 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1972>`_)
 * Fix flaky quintic spline test in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1964 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1964>`_)
