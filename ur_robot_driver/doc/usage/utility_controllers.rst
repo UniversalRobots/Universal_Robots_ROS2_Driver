@@ -19,12 +19,18 @@ joint_state_broadcaster
 
 Type: `joint_state_broadcaster/JointStateBroadcaster <https://control.ros.org/rolling/doc/ros2_controllers/joint_state_broadcaster/doc/userdoc.html>`_
 
-Publishes all joints' positions, velocities, and motor currents as ``sensor_msgs/JointState`` on the ``joint_states`` topic. This broadcaster is read-only and can run alongside any other controller.
+Publishes all joints' positions, velocities, and efforts as ``sensor_msgs/JointState`` on the
+``joint_states`` topic. This broadcaster is read-only and can run alongside any other controller.
 
 .. note::
 
-   The effort field contains the currents reported by the joints and not the actual efforts in a
-   physical sense.
+   On older ROS distributions, the effort interfaces reported motor currents instead of actual
+   torques. This is no longer the case, and the driver now reports actual joint torques by
+   default, which requires PolyScope >= 5.23.0 / 10.11.0. If you are using an older robot
+   software version, the driver will fail to start and print an error about the missing RTDE
+   variable ``actual_current_as_torque``. To revert to the previous behavior, set the hardware
+   parameter ``use_currents_as_efforts`` to ``true``. See
+   :ref:`hardware_interface_parameters` for details.
 
 speed_scaling_state_broadcaster
 -------------------------------

@@ -1,5 +1,7 @@
 :github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/hardware_interface_parameters.rst
 
+.. _hardware_interface_parameters:
+
 UR Hardware interface parameters
 ================================
 
@@ -116,6 +118,23 @@ tool_voltage (Required)
 Tool voltage that will be set as soon as the UR-Program on the robot is started. Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``. Then, this parameter is required.
 
 This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
+
+use_currents_as_efforts (default: "false")
+------------------------------------------
+
+Selects which RTDE values are exported on the joint effort state interfaces.
+
+* When set to ``false`` (default), the driver reports the joint torques from the RTDE field
+  ``actual_current_as_torque``. This requires PolyScope >= 5.23.0 / 10.11.0. On older software
+  versions, configuring the hardware interface will fail.
+* When set to ``true``, the driver keeps the previous behavior and reports motor currents from
+  ``actual_current`` as efforts.
+* When set to ``false`` on robot software versions < 5.23.0 / 10.11.0, the driver will
+  fail to initialize, printing an error about the missing variable ``actual_current_as_torque`` on
+  the robot.
+
+This parameter can also be set through the ``use_currents_as_efforts`` launch argument of
+``ur_control.launch.py`` / ``ur_rsp.launch.py``.
 
 use_tool_communication (Required)
 ---------------------------------
