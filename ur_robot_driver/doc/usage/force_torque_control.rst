@@ -60,7 +60,7 @@ with one value per joint.
    ``joint_state_broadcaster``) contains motor currents, not physical joint torques by default. On
    newer robot software versions (>= 5.23.0 / 10.11.0), the driver can report the actual joint
    torques as efforts. To achieve that, set the hardware parameter ``use_currents_as_efforts`` to
-   ``false``. See :doc:`../hardware_interface_parameters` for details.
+   ``false``. See :ref:`hardware_interface_parameters` for details.
 
 Friction Compensation
 ^^^^^^^^^^^^^^^^^^^^^

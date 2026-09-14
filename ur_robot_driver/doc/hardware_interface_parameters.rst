@@ -1,5 +1,7 @@
 :github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_robot_driver/doc/hardware_interface_parameters.rst
 
+.. _hardware_interface_parameters:
+
 UR Hardware interface parameters
 ================================
 
@@ -118,7 +120,7 @@ Tool voltage that will be set as soon as the UR-Program on the robot is started.
 This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
 
 use_currents_as_efforts (default: "true")
-------------------------------------------
+-----------------------------------------
 
 Selects which RTDE values are exported on the joint effort state interfaces.
 

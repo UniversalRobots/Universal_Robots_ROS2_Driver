@@ -27,9 +27,10 @@ The UR hardware interface supports the following control modes:
 - **Effort control**: The robot's joints are controlled by specifying target efforts (torques).
   (Only available when running PolyScope >= 5.23.0 / 10.10.0)
 - **Effort state interfaces**: Joint efforts are reported as currents by default
-  To report the efforts as torques (RTDE field ``actual_current_as_torque``, requires PolyScope >=
-  5.23.0 / 10.11.0), set ``use_currents_as_efforts`` to ``false``.
-  See :doc:`../hardware_interface_parameters` for more information.
+  (``actual_current``). Set ``use_currents_as_efforts`` to ``false`` to report joint
+  torques instead (``actual_current_as_torque``, requires PolyScope >= 5.23.0 / 10.11.0).
+  See :ref:`hardware_interface_parameters` for more information.
+
 - **Force control**: The robot's end-effector is controlled by specifying target forces
   in Cartesian space.
 - **Freedrive mode**: The robot can be moved freely by the user without any active control.

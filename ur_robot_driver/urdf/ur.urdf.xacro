@@ -37,6 +37,7 @@
   <xacro:arg name="use_currents_as_efforts" default="true"/>
 
   <xacro:arg name="blocking_read" default="false" />
+
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />
   <xacro:arg name="tool_voltage" default="0" />

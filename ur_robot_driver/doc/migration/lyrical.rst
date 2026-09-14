@@ -63,3 +63,25 @@ launch the driver without verifying the robot model:
 
    This feature is also available in previous ROS distributions, but is disabled by default. It is
    recommended to enable this feature to ensure that the correct robot model is being used.
+
+Option to report joint torques as efforts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The driver can now populate the joint effort state interfaces (and therefore the
+``effort`` field of ``sensor_msgs/JointState``) with joint torques from RTDE
+(``actual_current_as_torque``) instead of motor currents.
+
+The default remains motor currents. To report joint torques instead, set
+``use_currents_as_efforts`` to ``false``:
+
+.. code::
+
+   ros2 launch ur_robot_driver ur_control.launch.py \
+     robot_ip:=192.168.56.101 \
+     ur_type:=ur5e \
+     use_currents_as_efforts:=false
+
+This requires PolyScope >= 5.23.0 / 10.11.0. On older software versions the driver will fail to
+init and print an error about the missing variable ``actual_current_as_torque`` on the robot.
+
+See :ref:`hardware_interface_parameters` for details.
