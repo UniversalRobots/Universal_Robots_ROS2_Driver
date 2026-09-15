@@ -82,9 +82,9 @@ class SJTCTest(unittest.TestCase):
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
 
-        self._scaled_follow_joint_trajectory = ActionInterface(
+        self._follow_joint_trajectory = ActionInterface(
             self.node,
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            "/joint_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
 
@@ -98,18 +98,18 @@ class SJTCTest(unittest.TestCase):
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
 
         self._controller_manager_interface.wait_for_controller(
-            "scaled_joint_trajectory_controller", "active"
+            "joint_trajectory_controller", "active"
         )
 
     #
     # Test functions
     #
 
-    def test_start_scaled_jtc_controller(self):
+    def test_start_jtc_controller(self):
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
-                activate_controllers=["scaled_joint_trajectory_controller"],
+                activate_controllers=["joint_trajectory_controller"],
             ).ok
         )
 
@@ -125,7 +125,7 @@ class SJTCTest(unittest.TestCase):
             self._controller_manager_interface.switch_controller(
                 strictness=SwitchController.Request.BEST_EFFORT,
                 deactivate_controllers=["passthrough_trajectory_controller"],
-                activate_controllers=["scaled_joint_trajectory_controller"],
+                activate_controllers=["joint_trajectory_controller"],
             ).ok
         )
         # Construct test trajectory
@@ -144,17 +144,17 @@ class SJTCTest(unittest.TestCase):
 
         # Execute trajectory
         logging.info("Sending goal for robot to follow")
-        goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
+        goal_handle = self._follow_joint_trajectory.send_goal(trajectory=trajectory)
         self.assertTrue(goal_handle.accepted)
 
         # Verify execution
-        result = self._scaled_follow_joint_trajectory.get_result(
+        result = self._follow_joint_trajectory.get_result(
             goal_handle,
             TIMEOUT_EXECUTE_TRAJECTORY,
         )
         self.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
-    def test_trajectory_scaled_aborts_on_violation(self, tf_prefix):
+    def test_trajectory_aborts_on_violation(self, tf_prefix):
         """Test that the robot correctly aborts the trajectory when the constraints are violated."""
         # Construct test trajectory
         test_trajectory = [
@@ -188,11 +188,11 @@ class SJTCTest(unittest.TestCase):
 
         # Send goal
         logging.info("Sending goal for robot to follow")
-        goal_handle = self._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
+        goal_handle = self._follow_joint_trajectory.send_goal(trajectory=trajectory)
         self.assertTrue(goal_handle.accepted)
 
         # Get result
-        result = self._scaled_follow_joint_trajectory.get_result(
+        result = self._follow_joint_trajectory.get_result(
             goal_handle,
             TIMEOUT_EXECUTE_TRAJECTORY,
         )
@@ -225,11 +225,11 @@ class SJTCTest(unittest.TestCase):
     # self.node.get_logger().info("Sending scaled goal with time restrictions")
     #
     # goal.goal_time_tolerance = Duration(nanosec=10000000)
-    # goal_response = self.call_action("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal)
+    # goal_response = self.call_action("/joint_trajectory_controller/follow_joint_trajectory", goal)
     #
     # self.assertEqual(goal_response.accepted, True)
     #
     # if goal_response.accepted:
-    #     result = self.get_result("/scaled_joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
+    #     result = self.get_result("/joint_trajectory_controller/follow_joint_trajectory", goal_response, TIMEOUT_EXECUTE_TRAJECTORY)
     #     self.assertEqual(result.error_code, FollowJointTrajectory.Result.GOAL_TOLERANCE_VIOLATED)
     #     self.node.get_logger().info("Received result GOAL_TOLERANCE_VIOLATED")

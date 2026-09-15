@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28.3)
 project(ur_dashboard_msgs)
 
 find_package(ament_cmake REQUIRED)
@@ -20,6 +20,7 @@ set(msg_files
 set(srv_files
   srv/AddToLog.srv
   srv/DownloadProgram.srv
+  srv/DownloadSupportFile.srv
   srv/GetLoadedProgram.srv
   srv/GetPrograms.srv
   srv/GetProgramState.srv

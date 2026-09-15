@@ -35,6 +35,7 @@ from rclpy.node import Node
 from pathlib import Path
 from ament_index_python.packages import get_package_prefix
 
+
 class UrToolCommunication(Node):
     """
     Wrapper node for tool communication.
@@ -46,6 +47,11 @@ class UrToolCommunication(Node):
 
     def __init__(self):
         super().__init__("ur_tool_communication")
+
+        self.get_logger().warning(
+            "[DEPRECATION_WARNING] This node is deprecated and will be removed in ROS M. "
+            "Please use the ur_client_library tool_communication.py script directly."
+        )
 
         self.get_logger().info("Initializing tool communication wrapper node")
 
@@ -62,19 +68,26 @@ class UrToolCommunication(Node):
 
         # Path where the refactored (canonical) tool_communication script is located
         ur_client_lib_prefix = get_package_prefix("ur_client_library")
-        tool_comm_script = Path(ur_client_lib_prefix) / "lib" / "ur_client_library" / "tool_communication.py"
+        tool_comm_script = (
+            Path(ur_client_lib_prefix) / "lib" / "ur_client_library" / "tool_communication.py"
+        )
 
         # Pass the arguments to the refactored script
         cmd = [
             str(tool_comm_script),
-            robot_ip,                       
-            "--tcp-port", str(tcp_port),
-            "--device-name", device_name,
+            robot_ip,
+            "--tcp-port",
+            str(tcp_port),
+            "--device-name",
+            device_name,
         ]
 
-        self.get_logger().info("Launching tool communication via ur_client_library tool_communication.py")
+        self.get_logger().info(
+            "Launching tool communication via ur_client_library tool_communication.py"
+        )
 
         subprocess.call(cmd)
+
 
 def main():
     rclpy.init()

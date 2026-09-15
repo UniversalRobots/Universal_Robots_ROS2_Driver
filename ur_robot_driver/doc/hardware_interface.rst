@@ -26,6 +26,11 @@ The UR hardware interface supports the following control modes:
 - **Velocity control**: The robot's joints are controlled by specifying target velocities.
 - **Effort control**: The robot's joints are controlled by specifying target efforts (torques).
   (Only available when running PolyScope >= 5.23.0 / 10.10.0)
+- **Effort state interfaces**: Joint efforts are reported as torques by default
+  (``actual_current_as_torque``, requires PolyScope >= 5.23.0 / 10.11.0). Set
+  ``use_currents_as_efforts`` to ``true`` to report motor currents instead.
+  See :ref:`hardware_interface_parameters` for more information.
+
 - **Force control**: The robot's end-effector is controlled by specifying target forces
   in Cartesian space.
 - **Freedrive mode**: The robot can be moved freely by the user without any active control.
@@ -50,3 +55,8 @@ comfortably used through the ``ros2 control`` `command line tool
 
 E.g. ``ros2 control list_hardware_components`` will list all hardware components, including the UR
 hardware interface with its interfaces as listed above.
+
+When the launch files from this driver are used, a predefined set of controllers is already loaded.
+See :ref:`usage_controllers` for a description of the available controllers grouped by control mode.
+
+Users can also load other controllers that use the interfaces provided by the hardware interface.

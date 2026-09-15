@@ -45,6 +45,7 @@ from launch.substitutions import (
 
 def generate_launch_description():
     ur_type = LaunchConfiguration("ur_type")
+    verify_robot_model = LaunchConfiguration("verify_robot_model")
     robot_ip = LaunchConfiguration("robot_ip")
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
@@ -73,6 +74,8 @@ def generate_launch_description():
     reverse_port = LaunchConfiguration("reverse_port")
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
+    use_currents_as_efforts = LaunchConfiguration("use_currents_as_efforts")
+    blocking_read = LaunchConfiguration("blocking_read")
 
     script_filename = PathJoinSubstitution(
         [
@@ -120,6 +123,12 @@ def generate_launch_description():
             " ",
             "name:=",
             ur_type,
+            " ",
+            "ur_type:=",
+            ur_type,
+            " ",
+            "verify_robot_model:=",
+            verify_robot_model,
             " ",
             "script_filename:=",
             script_filename,
@@ -184,6 +193,11 @@ def generate_launch_description():
             "trajectory_port:=",
             trajectory_port,
             " ",
+            "use_currents_as_efforts:=",
+            use_currents_as_efforts,
+            " ",
+            "blocking_read:=",
+            blocking_read,
         ]
     )
     robot_description = {
@@ -195,7 +209,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
-            description="Typo/series of used UR robot.",
+            description="Robot model of the used UR robot.",
             choices=[
                 "ur3",
                 "ur5",
@@ -212,6 +226,14 @@ def generate_launch_description():
                 "ur20",
                 "ur30",
             ],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "verify_robot_model",
+            default_value="true",
+            description="Whether the robot model should be verified against the actual robot. "
+            "This is recommended to be true, but can be set to false for faster startup.",
         )
     )
     declared_arguments.append(
@@ -440,6 +462,20 @@ def generate_launch_description():
             "trajectory_port",
             default_value="50003",
             description="Port that will be opened for trajectory control.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_currents_as_efforts",
+            default_value="false",
+            description="Report motor currents as efforts. When set to false, the torques as reported from the robot are used. Note that this requires software 5.23.0 / 10.11.0.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "blocking_read",
+            default_value="false",
+            description="Block in read() effectively synchronizing the driver with the robot controller.",
         )
     )
 

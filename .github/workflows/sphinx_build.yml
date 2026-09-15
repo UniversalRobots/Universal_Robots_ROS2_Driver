@@ -17,14 +17,16 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           cache: 'pip'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r doc_requirements.txt
+      - name: Verify controller documentation coverage
+        run: python ur_robot_driver/test/test_controller_doc_coverage.py
       - name: Build documentation
         run: |
           sphinx-build -W -b html ur_calibration/doc _doc_build_calibration && \

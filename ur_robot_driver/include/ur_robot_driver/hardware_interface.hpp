@@ -97,6 +97,7 @@ enum StoppingInterface
   STOP_TOOL_CONTACT,
   STOP_MOTION_PRIMITIVES,
   STOP_TORQUE,
+  STOP_TWIST,
 };
 
 // We define our own quaternion to use it as a buffer, since we need to pass pointers to the state
@@ -120,6 +121,14 @@ struct Quaternion
   double z;
   double w;
 };
+
+struct RobotTypeWithSeries
+{
+  urcl::RobotType robot_type;
+  urcl::RobotSeries robot_series;
+};
+
+RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str);
 
 /*!
  * \brief The HardwareInterface class handles the interface between the ROS system and the main
@@ -194,6 +203,7 @@ protected:
   urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
   urcl::vector6d_t urcl_torque_commands_;
+  urcl::vector6d_t urcl_twist_commands_;
   urcl::vector6d_t urcl_joint_positions_;
   urcl::vector6d_t urcl_joint_velocities_;
   urcl::vector6d_t urcl_joint_efforts_;
@@ -278,10 +288,22 @@ protected:
   urcl::vector6d_t passthrough_trajectory_accelerations_;
   double passthrough_trajectory_time_from_start_;
 
+  bool twist_controller_running_;
+
   // payload stuff
   urcl::vector3d_t payload_center_of_gravity_;
+  urcl::vector6d_t payload_inertia_;
   double payload_mass_;
+  double payload_transition_time_;
   double payload_async_success_;
+  double rtde_payload_mass_ = 0.0;
+  urcl::vector3d_t rtde_payload_cog_{ 0.0, 0.0, 0.0 };
+  urcl::vector6d_t rtde_payload_inertia_{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+  // Friction model parameters
+  urcl::vector6d_t friction_model_viscous_;
+  urcl::vector6d_t friction_model_coulomb_;
+  double friction_model_async_success_;
 
   // force mode parameters
   urcl::vector6d_t force_mode_task_frame_;
@@ -294,6 +316,10 @@ protected:
   double force_mode_disable_cmd_;
   double force_mode_damping_;
   double force_mode_gain_scaling_;
+
+  // Gravity stuff
+  urcl::vector3d_t gravity_vector_;
+  double gravity_async_success_;
 
   //*************** Motion primitives stuff ***************
   std::shared_ptr<urcl::InstructionExecutor> instruction_executor_;
@@ -346,7 +372,8 @@ protected:
   std::array<double, 4> robot_status_bits_copy_;
   std::array<double, 11> safety_status_bits_copy_;
 
-  bool robot_program_running_;
+  std::atomic<bool> robot_program_running_;
+  std::atomic<bool> stop_requested_;
   bool non_blocking_read_;
   double robot_program_running_copy_;
 
@@ -379,11 +406,14 @@ protected:
   const std::string FORCE_MODE_GPIO = "force_mode";
   const std::string FREEDRIVE_MODE_GPIO = "freedrive_mode";
   const std::string TOOL_CONTACT_GPIO = "tool_contact";
+  const std::string TWIST_GPIO = "twist";
 
   std::unordered_map<std::string, std::unordered_map<std::string, bool>> mode_compatibility_;
 
   std::unique_ptr<urcl::rtde_interface::DataPackage> data_package_buffer_;
   std::function<bool()> get_data_package;
+
+  bool use_currents_as_efforts_ = false;
 };
 }  // namespace ur_robot_driver
 

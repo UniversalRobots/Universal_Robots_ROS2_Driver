@@ -37,10 +37,46 @@
 
 #include "ur_controllers/gpio_controller.hpp"
 
+#include <cmath>
+#include <lifecycle_msgs/msg/state.hpp>
 #include <string>
 
 namespace ur_controllers
 {
+namespace
+{
+// Publishes only when `field` changes, and commits the new value into `msg` only on a successful
+// try_publish.
+// If the publish is dropped (e.g. lock contention), `msg` is left unchanged and the change is retried on the next
+// cycle.
+template <typename MsgT, typename FieldT>
+bool try_publish_on_change(realtime_tools::RealtimePublisher<MsgT>& pub, MsgT& msg, FieldT MsgT::* field,
+                           const FieldT& new_value)
+{
+  if (msg.*field == new_value) {
+    return true;
+  }
+  MsgT candidate = msg;
+  candidate.*field = new_value;
+  if (!pub.try_publish(candidate)) {
+    return false;
+  }
+  msg.*field = new_value;
+  return true;
+}
+}  // namespace
+
+template <typename ResponseT>
+bool GPIOController::ensureActive(const ResponseT& resp)
+{
+  if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Controller is not running.");
+    resp->success = false;
+    return false;
+  }
+  return true;
+}
+
 controller_interface::CallbackReturn GPIOController::on_init()
 {
   try {
@@ -98,6 +134,14 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "hand_back_control/hand_back_control_async_success");
 
   config.names.emplace_back(tf_prefix + "gpio/analog_output_domain_cmd");
+
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixx");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.izz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
+  config.names.emplace_back(tf_prefix + "payload/transition_time");
 
   return config;
 }
@@ -160,6 +204,17 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   // program running
   config.names.emplace_back(tf_prefix + "gpio/program_running");
 
+  config.names.emplace_back(tf_prefix + "payload/mass");
+  config.names.emplace_back(tf_prefix + "payload/cog.x");
+  config.names.emplace_back(tf_prefix + "payload/cog.y");
+  config.names.emplace_back(tf_prefix + "payload/cog.z");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixx");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.izz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixy");
+  config.names.emplace_back(tf_prefix + "payload/inertia.ixz");
+  config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
+
   return config;
 }
 
@@ -189,6 +244,55 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
+
+  try {
+    auto qos_latched = rclcpp::SystemDefaultsQoS();
+    qos_latched.transient_local();
+    qos_latched.reliable();
+    // register publishers outside the realtime update loop
+    io_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>>(
+        get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS()));
+
+    tool_data_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>>(
+        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS()));
+
+    robot_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>>(
+        get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched));
+
+    safety_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>>(
+        get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", qos_latched));
+
+    program_state_pub_ = std::make_shared<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>>(
+        get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched));
+
+    // register services outside the realtime update loop; calls are rejected while the controller is not active
+    set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
+        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
+    set_analog_output_srv_ = get_node()->create_service<ur_msgs::srv::SetAnalogOutput>(
+        "~/set_analog_output",
+        std::bind(&GPIOController::setAnalogOutput, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
+        "~/set_speed_slider",
+        std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
+
+    resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/resend_robot_program",
+        std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
+
+    hand_back_control_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/hand_back_control",
+        std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
+
+    set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
+        "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
+
+    tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
+        "~/zero_ftsensor",
+        std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
+  } catch (...) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
 
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -220,7 +324,7 @@ void GPIOController::publishIO()
         static_cast<uint8_t>(state_interfaces_[i + StateInterfaces::ANALOG_IO_TYPES + 2].get_optional().value_or(0.0));
   }
 
-  io_pub_->publish(io_msg_);
+  io_pub_->try_publish(io_msg_);
 }
 
 void GPIOController::publishToolData()
@@ -241,27 +345,19 @@ void GPIOController::publishToolData()
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_optional().value_or(0.0));
   tool_data_msg_.tool_temperature =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_optional().value_or(0.0));
-  tool_data_pub_->publish(tool_data_msg_);
+  tool_data_pub_->try_publish(tool_data_msg_);
 }
 
 void GPIOController::publishRobotMode()
 {
   auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_optional().value_or(0.0));
-
-  if (robot_mode_msg_.mode != robot_mode) {
-    robot_mode_msg_.mode = robot_mode;
-    robot_mode_pub_->publish(robot_mode_msg_);
-  }
+  try_publish_on_change(*robot_mode_pub_, robot_mode_msg_, &ur_dashboard_msgs::msg::RobotMode::mode, robot_mode);
 }
 
 void GPIOController::publishSafetyMode()
 {
   auto safety_mode = static_cast<uint8_t>(state_interfaces_[StateInterfaces::SAFETY_MODE].get_optional().value_or(0.0));
-
-  if (safety_mode_msg_.mode != safety_mode) {
-    safety_mode_msg_.mode = safety_mode;
-    safety_mode_pub_->publish(safety_mode_msg_);
-  }
+  try_publish_on_change(*safety_mode_pub_, safety_mode_msg_, &ur_dashboard_msgs::msg::SafetyMode::mode, safety_mode);
 }
 
 void GPIOController::publishProgramRunning()
@@ -269,10 +365,7 @@ void GPIOController::publishProgramRunning()
   auto program_running_value =
       static_cast<uint8_t>(state_interfaces_[StateInterfaces::PROGRAM_RUNNING].get_optional().value_or(0.0));
   bool program_running = program_running_value == 1.0 ? true : false;
-  if (program_running_msg_.data != program_running) {
-    program_running_msg_.data = program_running;
-    program_state_pub_->publish(program_running_msg_);
-  }
+  try_publish_on_change(*program_state_pub_, program_running_msg_, &std_msgs::msg::Bool::data, program_running);
 }
 
 controller_interface::CallbackReturn
@@ -283,63 +376,34 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 
-  try {
-    auto qos_latched = rclcpp::SystemDefaultsQoS();
-    qos_latched.transient_local();
-    qos_latched.reliable();
-    // register publisher
-    io_pub_ = get_node()->create_publisher<ur_msgs::msg::IOStates>("~/io_states", rclcpp::SystemDefaultsQoS());
-
-    tool_data_pub_ =
-        get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS());
-
-    robot_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched);
-
-    safety_mode_pub_ = get_node()->create_publisher<ur_dashboard_msgs::msg::SafetyMode>("~/safety_mode", qos_latched);
-
-    program_state_pub_ = get_node()->create_publisher<std_msgs::msg::Bool>("~/robot_program_running", qos_latched);
-    set_io_srv_ = get_node()->create_service<ur_msgs::srv::SetIO>(
-        "~/set_io", std::bind(&GPIOController::setIO, this, std::placeholders::_1, std::placeholders::_2));
-    set_analog_output_srv_ = get_node()->create_service<ur_msgs::srv::SetAnalogOutput>(
-        "~/set_analog_output",
-        std::bind(&GPIOController::setAnalogOutput, this, std::placeholders::_1, std::placeholders::_2));
-
-    set_speed_slider_srv_ = get_node()->create_service<ur_msgs::srv::SetSpeedSliderFraction>(
-        "~/set_speed_slider",
-        std::bind(&GPIOController::setSpeedSlider, this, std::placeholders::_1, std::placeholders::_2));
-
-    resend_robot_program_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/resend_robot_program",
-        std::bind(&GPIOController::resendRobotProgram, this, std::placeholders::_1, std::placeholders::_2));
-
-    hand_back_control_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/hand_back_control",
-        std::bind(&GPIOController::handBackControl, this, std::placeholders::_1, std::placeholders::_2));
-
-    set_payload_srv_ = get_node()->create_service<ur_msgs::srv::SetPayload>(
-        "~/set_payload", std::bind(&GPIOController::setPayload, this, std::placeholders::_1, std::placeholders::_2));
-
-    tare_sensor_srv_ = get_node()->create_service<std_srvs::srv::Trigger>(
-        "~/zero_ftsensor",
-        std::bind(&GPIOController::zeroFTSensor, this, std::placeholders::_1, std::placeholders::_2));
-  } catch (...) {
-    return LifecycleNodeInterface::CallbackReturn::ERROR;
-  }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  // No teardown. Publishers and services are created in on_configure and released in on_cleanup.
+  // on_activate/on_deactivate run inside the realtime update loop, so we keep DDS management separate to avoid
+  // stalling the controller_manager update cycle.
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn
+ur_controllers::GPIOController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/)
+{
   try {
-    // reset publisher
     io_pub_.reset();
     tool_data_pub_.reset();
     robot_mode_pub_.reset();
     safety_mode_pub_.reset();
     program_state_pub_.reset();
     set_io_srv_.reset();
+    set_analog_output_srv_.reset();
     set_speed_slider_srv_.reset();
+    resend_robot_program_srv_.reset();
+    hand_back_control_srv_.reset();
+    set_payload_srv_.reset();
+    tare_sensor_srv_.reset();
   } catch (...) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
@@ -348,6 +412,10 @@ ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*p
 
 bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs::srv::SetIO::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= 17) {
     // io async success
     std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
@@ -407,6 +475,10 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::SharedPtr req,
                                      ur_msgs::srv::SetAnalogOutput::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   std::string domain_string = "UNKNOWN";
   switch (req->data.domain) {
     case ur_msgs::msg::Analog::CURRENT:
@@ -450,6 +522,10 @@ bool GPIOController::setAnalogOutput(ur_msgs::srv::SetAnalogOutput::Request::Sha
 bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Request::SharedPtr req,
                                     ur_msgs::srv::SetSpeedSliderFraction::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   if (req->speed_slider_fraction >= 0.01 && req->speed_slider_fraction <= 1.0) {
     RCLCPP_INFO(get_node()->get_logger(), "Setting speed slider to %.2f%%.", req->speed_slider_fraction * 100.0);
     // reset success flag
@@ -480,6 +556,10 @@ bool GPIOController::setSpeedSlider(ur_msgs::srv::SetSpeedSliderFraction::Reques
 bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                         std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   // call the service in the hardware
@@ -509,6 +589,10 @@ bool GPIOController::resendRobotProgram(std_srvs::srv::Trigger::Request::SharedP
 bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                      std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::HAND_BACK_CONTROL_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   // call the service in the hardware
@@ -537,13 +621,26 @@ bool GPIOController::handBackControl(std_srvs::srv::Trigger::Request::SharedPtr 
 bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedPtr req,
                                 ur_msgs::srv::SetPayload::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
 
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->mass));
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->center_of_gravity.x);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->center_of_gravity.y);
-  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->center_of_gravity.z);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_MASS].set_value(static_cast<double>(req->payload.m));
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_X].set_value(req->payload.com.x);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Y].set_value(req->payload.com.y);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_COG_Z].set_value(req->payload.com.z);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXX].set_value(req->payload.ixx);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYY].set_value(req->payload.iyy);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IZZ].set_value(req->payload.izz);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXY].set_value(req->payload.ixy);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IXZ].set_value(req->payload.ixz);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_INERTIA_IYZ].set_value(req->payload.iyz);
+  double transition_time_seconds =
+      static_cast<double>(req->transition_time.sec) + (static_cast<double>(req->transition_time.nanosec) * 1e-9);
+  std::ignore = command_interfaces_[CommandInterfaces::PAYLOAD_TRANSITION_TIME].set_value(transition_time_seconds);
 
   if (!waitForAsyncCommand([&]() {
         return command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
@@ -555,19 +652,37 @@ bool GPIOController::setPayload(const ur_msgs::srv::SetPayload::Request::SharedP
   resp->success = static_cast<bool>(
       command_interfaces_[CommandInterfaces::PAYLOAD_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
 
-  if (resp->success) {
-    RCLCPP_INFO(get_node()->get_logger(), "Payload has been set successfully");
-  } else {
+  if (!resp->success) {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not set the payload");
     return false;
   }
 
+  if (params_.verify_payload_on_set) {
+    if (!waitForPayloadRtdeMatch(static_cast<double>(req->payload.m), req->payload.com.x, req->payload.com.y,
+                                 req->payload.com.z, req->payload.ixx, req->payload.iyy, req->payload.izz,
+                                 req->payload.ixy, req->payload.ixz, req->payload.iyz, transition_time_seconds)) {
+      RCLCPP_WARN(get_node()->get_logger(), "setPayload reported success but RTDE payload / payload_cog / "
+                                            "payload_inertia do not match "
+                                            "the "
+                                            "request yet. (This might "
+                                            "happen when using the mocked interface.)");
+      resp->success = false;
+      RCLCPP_ERROR(get_node()->get_logger(), "Payload RTDE verification failed");
+      return false;
+    }
+
+    RCLCPP_INFO(get_node()->get_logger(), "Payload has been set and verified against RTDE feedback");
+  }
   return true;
 }
 
 bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                   std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (!ensureActive(resp)) {
+    return false;
+  }
+
   // reset success flag
   std::ignore = command_interfaces_[CommandInterfaces::ZERO_FTSENSOR_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
   // call the service in the hardware
@@ -614,6 +729,43 @@ bool GPIOController::waitForAsyncCommand(std::function<double(void)> get_value)
       return false;
   }
   return true;
+}
+
+bool GPIOController::waitForPayloadRtdeMatch(double mass, double cx, double cy, double cz, double ixx, double iyy,
+                                             double izz, double ixy, double ixz, double iyz, double transition_time)
+{
+  constexpr double tol_mass = 1e-3;
+  constexpr double tol_cog = 1e-4;
+  constexpr double tol_inertia = 1e-4;
+  const auto maximum_retries = params_.check_io_successfull_retries;
+
+  if (transition_time > 0.0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(transition_time * 1000)));
+  }
+
+  for (int retries = 0; retries <= maximum_retries; ++retries) {
+    const auto m = state_interfaces_[StateInterfaces::PAYLOAD_STATE_MASS].get_optional();
+    const auto sx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_X].get_optional();
+    const auto sy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Y].get_optional();
+    const auto sz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_COG_Z].get_optional();
+    const auto sixx = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXX].get_optional();
+    const auto siyy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYY].get_optional();
+    const auto sizz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IZZ].get_optional();
+    const auto sixy = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXY].get_optional();
+    const auto sixz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IXZ].get_optional();
+    const auto siyz = state_interfaces_[StateInterfaces::PAYLOAD_STATE_INERTIA_IYZ].get_optional();
+    if (m && sx && sy && sz && sixx && siyy && sizz && sixy && sixz && siyz) {
+      if (std::abs(*m - mass) <= tol_mass && std::abs(*sx - cx) <= tol_cog && std::abs(*sy - cy) <= tol_cog &&
+          std::abs(*sz - cz) <= tol_cog && std::abs(*sixx - ixx) <= tol_inertia &&
+          std::abs(*siyy - iyy) <= tol_inertia && std::abs(*sizz - izz) <= tol_inertia &&
+          std::abs(*sixy - ixy) <= tol_inertia && std::abs(*sixz - ixz) <= tol_inertia &&
+          std::abs(*siyz - iyz) <= tol_inertia) {
+        return true;
+      }
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+  return false;
 }
 
 }  // namespace ur_controllers

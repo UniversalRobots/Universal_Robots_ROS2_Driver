@@ -796,14 +796,15 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
     if (!joint_pos.has_value()) {
       return false;
     }
-    if (std::abs(joint_pos.value() - setpoint) > joint_tol.position) {
+    if (joint_tol.position != 0.0 && std::abs(joint_pos.value() - setpoint) > joint_tol.position) {
       // RCLCPP_ERROR(
       // get_node()->get_logger(), "Joint %s should be at position %f, but is at position %f, where tolerance is %f",
       // joint_position_state_interface_[i].get().get_name().c_str(), setpoint, joint_pos, joint_tol.position);
       return false;
     }
 
-    if (!active_joint_traj_.points.back().velocities.empty() && !joint_velocity_state_interface_.empty()) {
+    if (joint_tol.velocity != 0.0 && !active_joint_traj_.points.back().velocities.empty() &&
+        !joint_velocity_state_interface_.empty()) {
       const auto joint_vel = joint_velocity_state_interface_[i].get().get_optional();
       if (!joint_vel.has_value()) {
         return false;
@@ -813,7 +814,8 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
         return false;
       }
     }
-    if (!active_joint_traj_.points.back().accelerations.empty() && !joint_acceleration_state_interface_.empty()) {
+    if (joint_tol.acceleration != 0.0 && !active_joint_traj_.points.back().accelerations.empty() &&
+        !joint_acceleration_state_interface_.empty()) {
       const auto joint_acc = joint_acceleration_state_interface_[i].get().get_optional();
       if (!joint_acc.has_value()) {
         return false;

@@ -73,6 +73,12 @@ def launch_setup(context):
         executable="ros2_control_node",
         parameters=[
             LaunchConfiguration("update_rate_config_file"),
+            {
+                "hardware_synchronization.expect_blocking_read_write": LaunchConfiguration(
+                    "blocking_read"
+                ),
+                "overruns.print_warnings": NotSubstitution(LaunchConfiguration("blocking_read")),
+            },
             ParameterFile(controllers_file, allow_substs=True),
             # We use the tf_prefix as substitution in there, so that's why we keep it as an
             # argument for this launchfile
@@ -106,12 +112,14 @@ def launch_setup(context):
         ],
     )
 
-    tool_comm_path = PathJoinSubstitution([
-        FindPackagePrefix("ur_client_library"),
-        "lib",
-        "ur_client_library",
-        "tool_communication.py",
-    ])
+    tool_comm_path = PathJoinSubstitution(
+        [
+            FindPackagePrefix("ur_client_library"),
+            "lib",
+            "ur_client_library",
+            "tool_communication.py",
+        ]
+    )
 
     tool_communication_script = ExecuteProcess(
         name="ur_tool_comm",
@@ -119,10 +127,12 @@ def launch_setup(context):
         cmd=[
             tool_comm_path,
             robot_ip,
-            "--tcp-port", tool_tcp_port,
-            "--device-name", tool_device_name,
+            "--tcp-port",
+            tool_tcp_port,
+            "--device-name",
+            tool_device_name,
         ],
-        output="screen"
+        output="screen",
     )
 
     urscript_interface = Node(
@@ -151,6 +161,7 @@ def launch_setup(context):
                     "speed_scaling_state_broadcaster",
                     "tcp_pose_broadcaster",
                     "ur_configuration_controller",
+                    "gravity_update_controller",
                 ]
             },
         ],
@@ -185,6 +196,7 @@ def launch_setup(context):
             package="controller_manager",
             executable="spawner",
             parameters=[
+                {"verify_payload_on_set": NotSubstitution(use_mock_hardware)},
                 ParameterFile(controllers_file, allow_substs=True),
             ],
             arguments=[
@@ -204,9 +216,10 @@ def launch_setup(context):
         "force_torque_sensor_broadcaster",
         "tcp_pose_broadcaster",
         "ur_configuration_controller",
+        "gravity_update_controller",
+        "friction_model_controller",
     ]
     controllers_inactive = [
-        "scaled_joint_trajectory_controller",
         "joint_trajectory_controller",
         "forward_velocity_controller",
         "forward_position_controller",
@@ -216,6 +229,7 @@ def launch_setup(context):
         "freedrive_mode_controller",
         "tool_contact_controller",
         "motion_primitive_forward_controller",
+        "twist_controller",
     ]
     if activate_joint_controller.perform(context) == "true":
         controllers_active.append(initial_joint_controller.perform(context))
@@ -258,7 +272,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "ur_type",
-            description="Type/series of used UR robot.",
+            description="Robot model of the used UR robot.",
             choices=[
                 "ur3",
                 "ur5",
@@ -365,9 +379,8 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "initial_joint_controller",
-            default_value="scaled_joint_trajectory_controller",
+            default_value="joint_trajectory_controller",
             choices=[
-                "scaled_joint_trajectory_controller",
                 "joint_trajectory_controller",
                 "forward_velocity_controller",
                 "forward_position_controller",
@@ -512,6 +525,16 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "use_currents_as_efforts",
+            default_value="false",
+            description=(
+                "Report motor currents as efforts. When set to false, the torques as reported "
+                "from the robot are used. Note that this requires software 5.23.0 / 10.11.0."
+            ),
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             name="update_rate_config_file",
             default_value=[
                 PathJoinSubstitution(
@@ -524,6 +547,13 @@ def generate_launch_description():
                 LaunchConfiguration("ur_type"),
                 "_update_rate.yaml",
             ],
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "blocking_read",
+            default_value="true",
+            description="Block in read() effectively synchronizing the driver with the robot controller.",
         )
     )
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

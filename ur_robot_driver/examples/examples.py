@@ -91,7 +91,7 @@ class Robot:
 
         self.jtc_action_client = waitForAction(
             self.node,
-            "/scaled_joint_trajectory_controller/follow_joint_trajectory",
+            "/joint_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectory,
         )
         self.passthrough_trajectory_action_client = waitForAction(

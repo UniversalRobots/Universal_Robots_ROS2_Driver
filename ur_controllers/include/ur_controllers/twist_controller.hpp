@@ -1,4 +1,4 @@
-// Copyright 2019, FZI Forschungszentrum Informatik
+// Copyright 2026, Universal Robots A/S
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -26,40 +26,50 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//----------------------------------------------------------------------
-/*!\file
- *
- * \author  Marvin Große Besselmann grosse@fzi.de
- * \date    2021-02-18
- *
- */
-//----------------------------------------------------------------------
+#ifndef UR_CONTROLLERS__TWIST_CONTROLLER_HPP_
+#define UR_CONTROLLERS__TWIST_CONTROLLER_HPP_
 
 #include <memory>
 
-#include "ur_controllers/scaled_joint_trajectory_controller.hpp"
+#include <controller_interface/controller_interface.hpp>
+#include <realtime_tools/realtime_thread_safe_box.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+
+#include "ur_controllers/twist_controller_parameters.hpp"
 
 namespace ur_controllers
 {
-
-controller_interface::CallbackReturn ScaledJointTrajectoryController::on_init()
+class TwistController : public controller_interface::ControllerInterface
 {
-  // Translate speed scaling state interface parameter
-  scaled_param_listener_ = std::make_shared<scaled_joint_trajectory_controller::ParamListener>(get_node());
-  scaled_params_ = scaled_param_listener_->get_params();
-  if (!scaled_params_.speed_scaling_interface_name.empty()) {
-    get_node()->declare_parameter("speed_scaling.state_interface", scaled_params_.speed_scaling_interface_name);
-    get_node()->set_parameter(
-        rclcpp::Parameter("speed_scaling.state_interface", scaled_params_.speed_scaling_interface_name));
-  }
+public:
+  controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
-  RCLCPP_WARN(get_node()->get_logger(), "DEPRECATION WARNING: Using the scaled joint trajectory controller is "
-                                        "considered deprecated. It will get removed with ROS Lyrical Luth. Please "
-                                        "use the joint_trajectory_controller that supports the same features.");
-  return JointTrajectoryController::on_init();
-}
+  controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
+  controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
+
+  CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) override;
+
+  CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) override;
+
+  CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
+
+  CallbackReturn on_init() override;
+
+private:
+  void reset();
+
+  using TwistStamped = geometry_msgs::msg::TwistStamped;
+
+  std::atomic<bool> subscriber_is_active_ = false;
+  rclcpp::Subscription<TwistStamped>::SharedPtr twist_command_subscriber_ = nullptr;
+
+  realtime_tools::RealtimeThreadSafeBox<TwistStamped> received_twist_msg_;
+  TwistStamped command_msg_;
+
+  std::shared_ptr<twist_controller::ParamListener> param_listener_;
+  twist_controller::Params controller_params_;
+};
 }  // namespace ur_controllers
 
-#include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(ur_controllers::ScaledJointTrajectoryController, controller_interface::ControllerInterface)
+#endif  // UR_CONTROLLERS__TWIST_CONTROLLER_HPP_

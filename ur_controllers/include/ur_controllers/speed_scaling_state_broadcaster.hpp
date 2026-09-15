@@ -42,12 +42,11 @@
 #include <string>
 #include <vector>
 
-#include "controller_interface/controller_interface.hpp"
-#include "rclcpp_lifecycle/lifecycle_publisher.hpp"
-#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp/duration.hpp"
-#include "std_msgs/msg/float64.hpp"
+#include <realtime_tools/realtime_publisher.hpp>
+#include <controller_interface/controller_interface.hpp>
+#include <rclcpp/time.hpp>
+#include <rclcpp/duration.hpp>
+#include <std_msgs/msg/float64.hpp>
 #include "ur_controllers/speed_scaling_state_broadcaster_parameters.hpp"
 
 namespace ur_controllers
@@ -69,13 +68,15 @@ public:
 
   controller_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State& previous_state) override;
 
+  controller_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) override;
+
   controller_interface::CallbackReturn on_init() override;
 
 protected:
   std::vector<std::string> sensor_names_;
   double publish_rate_;
 
-  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Float64>> speed_scaling_state_publisher_;
   std_msgs::msg::Float64 speed_scaling_state_msg_;
 
   // Parameters from ROS for SpeedScalingStateBroadcaster

@@ -1,4 +1,4 @@
-// Copyright 2019, FZI Forschungszentrum Informatik
+// Copyright 2026, Universal Robots A/S
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -26,35 +26,35 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//----------------------------------------------------------------------
-/*!\file
- *
- * \author  Marvin Große Besselmann grosse@fzi.de
- * \date    2021-02-18
- *
- */
-//----------------------------------------------------------------------
-#ifndef UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
-#define UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
+#include <gmock/gmock.h>
+#include "controller_manager/controller_manager.hpp"
+#include "rclcpp/executor.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/utilities.hpp"
+#include "ros2_control_test_assets/descriptions.hpp"
 
-#include <memory>
-#include "joint_trajectory_controller/joint_trajectory_controller.hpp"
-#include "ur_controllers/scaled_joint_trajectory_controller_parameters.hpp"
-
-namespace ur_controllers
+TEST(TestLoadTwistController, load_controller)
 {
-class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController
+  std::shared_ptr<rclcpp::Executor> executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+
+  controller_manager::ControllerManager cm{ executor, ros2_control_test_assets::minimal_robot_urdf, true,
+                                            "test_controller_manager" };
+
+  const std::string test_file_path = std::string{ TEST_FILES_DIRECTORY } + "/twist_controller_params.yaml";
+  cm.set_parameter({ "test_twist_controller.params_file", test_file_path });
+
+  cm.set_parameter({ "test_twist_controller.type", "ur_controllers/TwistController" });
+
+  ASSERT_NE(cm.load_controller("test_twist_controller"), nullptr);
+}
+
+int main(int argc, char* argv[])
 {
-public:
-  ScaledJointTrajectoryController() = default;
-  ~ScaledJointTrajectoryController() override = default;
+  ::testing::InitGoogleMock(&argc, argv);
+  rclcpp::init(argc, argv);
 
-  CallbackReturn on_init() override;
+  int result = RUN_ALL_TESTS();
+  rclcpp::shutdown();
 
-private:
-  std::shared_ptr<scaled_joint_trajectory_controller::ParamListener> scaled_param_listener_;
-  scaled_joint_trajectory_controller::Params scaled_params_;
-};
-}  // namespace ur_controllers
-
-#endif  // UR_CONTROLLERS__SCALED_JOINT_TRAJECTORY_CONTROLLER_HPP_
+  return result;
+}

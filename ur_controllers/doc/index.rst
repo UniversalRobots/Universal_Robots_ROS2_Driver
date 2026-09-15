@@ -1,5 +1,7 @@
 :github_url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_controllers/doc/index.rst
 
+.. _ur_controllers:
+
 ur_controllers
 ==============
 
@@ -9,11 +11,11 @@ robot family. Currently this contains:
 
 * A **speed_scaling_state_broadcaster** that publishes the current execution speed as reported by
   the robot to a topic interface. Values are floating points between 0 and 1.
-* A **scaled_joint_trajectory_controller** that is similar to the *joint_trajectory_controller*\ ,
   but it uses the speed scaling reported to align progress of the trajectory between the robot and controller.
 * A **io_and_status_controller** that allows setting I/O ports, controlling some UR-specific
   functionality and publishes status information about the robot.
 * A **tool_contact_controller** that exposes an action to enable the tool contact function on the robot.
+* A **twist_controller** that streams Cartesian TCP velocities to the robot.
 
 About this package
 ------------------
@@ -44,70 +46,6 @@ this is calculated by multiplying the two `RTDE
 fields ``speed_scaling`` (which should be equal to the value shown by the speed slider position on the
 teach pendant) and ``target_speed_fraction`` (Which is the fraction to which execution gets slowed
 down by the controller).
-
-.. _scaled_jtc:
-
-ur_controlers/ScaledJointTrajectoryController
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. note::
-   The upstream joint_trajectory_controller has been updated to support the scaling feature
-   explained below. Hence, we have decided to deprecate the scaled joint trajectory controller.
-   It will get removed in ROS Lyrical Luth.
-
-These controllers work similar to the well-known
-`joint_trajectory_controller <https://control.ros.org/master/doc/ros2_controllers/joint_trajectory_controller/doc/userdoc.html>`_.
-
-However, they are extended to handle the robot's execution speed specifically. Because the default
-``joint_trajectory_controller`` would interpolate the trajectory with the configured time constraints (ie: always assume maximum velocity and acceleration supported by the robot),
-this could lead to significant path deviation due to multiple reasons:
-
-
-* The speed slider on the robot might not be at 100%, so motion commands sent from ROS would
-  effectively get scaled down resulting in a slower execution.
-* The robot could scale down motions based on configured safety limits resulting in a slower motion
-  than expected and therefore not reaching the desired target in a control cycle.
-* Motions might not be executed at all, e.g. because the robot is E-stopped or in a protective stop
-* Motion commands sent to the robot might not be interpreted, e.g. because there is no
-  `external_control <https://github.com/UniversalRobots/Universal_Robots_ROS_Driver#prepare-the-robot>`_
-  program node running on the robot controller.
-* The program interpreting motion commands could be paused.
-
-The following plot illustrates the problem:
-
-.. image:: traj_without_speed_scaling.png
-   :target: traj_without_speed_scaling.png
-   :alt: Trajectory execution with default trajectory controller
-
-
-The graph shows a trajectory with one joint being moved to a target point and back to its starting
-point. As the joint's speed is limited to a very low setting on the teach pendant, speed scaling
-(black line) activates and limits the joint speed (green line). As a result, the target
-trajectory (light blue) doesn't get executed by the robot, but instead the pink trajectory is executed.
-The vertical distance between the light blue line and the pink line is the path error in each
-control cycle. We can see that the path deviation gets above 300 degrees at some point and the
-target point at -6 radians never gets reached.
-
-All of the cases mentioned above are addressed by the scaled trajectory versions. Trajectory execution
-can be transparently scaled down using the speed slider on the teach pendant without leading to
-additional path deviations. Pausing the program or hitting the E-stop effectively leads to
-``speed_scaling`` being 0 meaning the trajectory will not be continued until the program is continued.
-This way, trajectory executions can be explicitly paused and continued.
-
-With the scaled version of the trajectory controller the example motion shown in the previous diagram becomes:
-
-.. image:: traj_with_speed_scaling.png
-   :target: traj_with_speed_scaling.png
-   :alt: Trajectory execution with scaled_joint_trajectory_controller
-
-
-The deviation between trajectory interpolation on the ROS side and actual robot execution stays minimal and the
-robot reaches the intermediate setpoint instead of returning "too early" as in the example above.
-
-Under the hood this is implemented by proceeding the trajectory not by a full time step but only by
-the fraction determined by the current speed scaling. If speed scaling is currently at 50% then
-interpolation of the current control cycle will start half a time step after the beginning of the
-previous control cycle.
 
 .. _io_and_status_controller:
 
@@ -189,6 +127,10 @@ filled with all joint names.
 
 A **goal time tolerance** of ``0.0`` means that no goal time tolerance is set and the action will
 not fail when execution takes too long.
+
+A goal tolerance of ``0.0`` disables the corresponding tolerance check. For example, a
+position tolerance of ``0.0`` means that the final joint position is not checked. The same
+applies to velocity and acceleration tolerances.
 
 Action interface / usage
 """"""""""""""""""""""""
@@ -273,6 +215,113 @@ Implementation details / dataflow
   command interface), the action will be aborted.
 * When the action is preempted, execution on the hardware is preempted.
 
+.. _twist_controller:
+
+ur_controllers/TwistController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller streams Cartesian TCP velocities to the robot. It accepts velocity commands on a
+topic and forwards them to the hardware interface, which executes them using the URScript function
+``speedl(...)``.
+
+Unlike the ``forward_velocity_controller``, which commands joint-space velocities via ``speedj``,
+this controller commands tool-space velocities in the robot's ``base`` frame.
+
+.. warning::
+
+   With the twist controller, the user is responsible for sending commands that are safe and
+   achievable. The robot will try to follow commands as fast as possible without trajectory
+   planning.
+
+.. note::
+
+   The robot will scale down the execution speed if its safety limits or speed slider require it.
+   Unlike trajectory-based controllers, the twist controller does not automatically account for
+   this scaling. Monitor the :ref:`speed_scaling_state_broadcaster <speed_scaling_state_broadcaster>` to
+   detect when the robot is scaling down and adapt your commands accordingly.
+
+Parameters
+""""""""""
+
++---------------+--------+---------------+----------------------------------------+
+| Parameter name| Type   | Default value | Description                            |
+|               |        |               |                                        |
++---------------+--------+---------------+----------------------------------------+
+| ``tf_prefix`` | string | <empty>       | Urdf prefix of the corresponding arm   |
++---------------+--------+---------------+----------------------------------------+
+
+Topic interface / usage
+"""""""""""""""""""""""
+
+The controller provides the ``~/twist`` topic of type ``geometry_msgs/msg/TwistStamped`` for
+streaming velocity commands. To use this topic, the controller has to be in ``active`` state.
+
+The ``header.frame_id`` must be the robot's base frame (``base`` or ``${tf_prefix}base`` when using
+a prefixed robot). Commands in other frames are currently ignored.
+
+Linear velocities are given in m/s and angular velocities in rad/s. Both are expressed in the
+robot's ``base`` frame.
+
+When the controller is activated or deactivated, all velocity commands are reset to zero. While
+active, the last received command is held until a new message arrives.
+
+To activate the controller, first deactivate any other motion controller that claims the same
+hardware interfaces:
+
+.. code-block:: console
+
+   ros2 control switch_controllers --deactivate joint_trajectory_controller \
+     --activate twist_controller
+
+Example command to move the TCP slowly along the base x axis:
+
+.. code-block:: console
+
+   ros2 topic pub --rate 50 /twist_controller/twist geometry_msgs/msg/TwistStamped \
+     "{header: {frame_id: 'base'}, twist: {linear: {x: 0.05}}}"
+
+.. note::
+
+   For continuous motion, publish commands at a steady rate. When you stop publishing, the robot
+   will continue executing the last received velocity until you send a zero twist or deactivate the
+   controller.
+
+Controller compatibility
+""""""""""""""""""""""""
+
+The twist controller is mutually exclusive with all other motion controllers
+(``joint_trajectory_controller``, ``passthrough_trajectory_controller``,
+``forward_position_controller``, ``forward_velocity_controller``, ``forward_effort_controller``,
+``freedrive_mode_controller`` and ``motion_primitive_forward_controller``).
+It can be combined with the
+:ref:`tool_contact_controller <tool_contact_controller>` and the :ref:`force_mode_controller <force_mode_controller>`\*.
+
+.. note::
+   When combining force_mode and twist remember that force_mode will "claim" axes that aren't
+   available for twist commands anymore.
+
+Interfaces
+""""""""""
+
+In order to use this controller, the hardware has to export command interfaces for Cartesian
+velocities:
+
+.. code:: xml
+
+   <gpio name="${tf_prefix}twist">
+     <command_interface name="linear_velocity_x"/>
+     <command_interface name="linear_velocity_y"/>
+     <command_interface name="linear_velocity_z"/>
+     <command_interface name="angular_velocity_x"/>
+     <command_interface name="angular_velocity_y"/>
+     <command_interface name="angular_velocity_z"/>
+   </gpio>
+
+.. note::
+
+   The hardware component ensures that the twist command interfaces cannot be activated in
+   parallel to other streaming or trajectory command interfaces.
+
 .. _force_mode_controller:
 
 ur_controllers/ForceModeController
@@ -348,6 +397,38 @@ damping_factor
 gain_scaling
    Force mode gain scaling factor. Scales the gain in force mode. scaling parameter is in range [0;2], default is 0.5.
    A value larger than 1 can make force mode unstable, e.g. in case of collisions or pushing against hard surfaces.
+
+.. _friction_model_controller:
+
+ur_controllers/FrictionModelController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller allows setting per-joint viscous and Coulomb friction scale factors for direct
+torque control. The friction model scales control how much internal friction compensation the robot
+applies during direct torque control mode.
+
+Parameters
+""""""""""
+
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+| Parameter name                     | Type   | Default value | Description                                                          |
+|                                    |        |               |                                                                      |
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+| ``tf_prefix``                      | string | <empty>       | Urdf prefix of the corresponding arm                                 |
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+| ``check_io_successful_retries``    | int    | 10            | Amount of retries for checking if setting friction scales was        |
+|                                    |        |               | successful                                                           |
++------------------------------------+--------+---------------+----------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+The controller provides a service for setting friction scale factors. To use this service, the
+controller has to be in ``active`` state.
+
+* ``~/set_friction_model_parameters [ur_msgs/srv/SetFrictionModelParameters]``: Set per-joint viscous and Coulomb
+  friction scale factors for direct torque control. Each array must contain exactly one value for each joint in
+  range [0-1] where 0 means no compensation and 1 means full compensation.
 
 .. _freedrive_mode_controller:
 
@@ -429,3 +510,98 @@ The controller provides one action for enabling tool contact. For the controller
   .. code-block::
 
      ros2 action send_goal /tool_contact_controller/detect_tool_contact ur_msgs/action/ToolContact
+
+.. _ur_configuration_controller:
+
+ur_controllers/URConfigurationController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller provides access to UR-specific robot configuration data. Currently, it provides a
+service to query the robot's software version.
+
+Parameters
+""""""""""
+
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| Parameter name          | Type   | Default value | Description                                                                           |
+|                         |        |               |                                                                                       |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+| ``tf_prefix``           | string | <empty>       | Urdf prefix of the corresponding arm                                                  |
++-------------------------+--------+---------------+---------------------------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+* ``~/get_software_version [ur_msgs/srv/GetRobotSoftwareVersion]``: Get the robot's software
+  version. The response contains the major, minor and patch version of the robot's software, as
+  well as the build number if available. For example, for a robot running PolyScope 5.12.1 the
+  response would be major version 5, minor version 12 and patch version 1.
+
+.. _gravity_update_controller:
+
+ur_controllers/GravityUpdateController
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This controller updates the gravity vector used by the robot controller. The robot uses this
+vector for gravity compensation during motion and torque control. By default, the robot assumes a
+gravity vector pointing straight down in its base frame (typically ``[0, 0, -9.82]`` m/s² in a
+standard floor-mounted setup).
+
+Use this controller when the robot is mounted in a non-standard orientation, for example on a wall
+or ceiling, or when the base frame does not align with the physical gravity direction. The
+controller forwards the requested gravity vector to the robot through the URScript ``set_gravity()``
+function.
+
+The service accepts the gravity direction in any frame that can be transformed to the robot's
+``base`` frame. The controller rotates the vector into the base frame and forwards it to the
+hardware interface.
+
+.. note::
+
+   The service expects the **direction of gravity**, pointing towards the Earth's center. The
+   controller negates this vector internally before sending it to the robot, as the underlying UR
+   client library expects an anti-gravity vector (pointing away from the Earth's center).
+
+Parameters
+""""""""""
+
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+| Parameter name                      | Type   | Default value | Description                                                         |
+|                                     |        |               |                                                                     |
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``tf_prefix``                       | string | <empty>       | Urdf prefix of the corresponding arm                                |
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+| ``check_io_successfull_retries``    | int    | 10            | Amount of retries for checking if setting gravity was successful    |
++-------------------------------------+--------+---------------+---------------------------------------------------------------------+
+
+Service interface / usage
+"""""""""""""""""""""""""
+
+The controller provides a service for setting the gravity vector. To use this service, the
+controller has to be in ``active`` state.
+
+* ``~/set_gravity [ur_msgs/srv/SetGravity]``: Set the gravity direction experienced by the robot.
+
+The request contains a ``geometry_msgs/Vector3Stamped`` named ``gravity``. The vector specifies
+the direction of gravity (towards the Earth's center) and ``header.frame_id`` specifies the frame
+in which the vector is expressed. Any frame that can be transformed to the robot's ``base`` frame
+can be used.
+
+Example for a standard floor-mounted robot (gravity pointing down in the ``base`` frame):
+
+.. code-block:: console
+
+   ros2 service call /gravity_update_controller/set_gravity ur_msgs/srv/SetGravity \
+     "{gravity: {header: {frame_id: 'base'}, vector: {x: 0.0, y: 0.0, z: -9.82}}}"
+
+Example for a ceiling-mounted robot (gravity pointing up in the ``base`` frame):
+
+.. code-block:: console
+
+   ros2 service call /gravity_update_controller/set_gravity ur_msgs/srv/SetGravity \
+     "{gravity: {header: {frame_id: 'base'}, vector: {x: 0.0, y: 0.0, z: 9.82}}}"
+
+.. note::
+
+   When using the mocked hardware interface, the service may report failure even though the command
+   was accepted, because the mock does not emulate the asynchronous success feedback from the robot.

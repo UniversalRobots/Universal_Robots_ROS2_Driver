@@ -9,3 +9,8 @@ gpio_controller:
       default_value: 10,
       description: "Amount of retries for checking if the selected gpio was set successfully"
    }
+   verify_payload_on_set: {
+      type: bool,
+      default_value: true,
+      description: "Whether to check if the payload of the set command is correct. If false, the controller will only check if the command was successful, but not if the correct value was set. Setting this to false can be useful if the controller is used on a robot with mock hardware or GZ simulation."
+   }

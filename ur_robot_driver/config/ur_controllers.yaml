@@ -15,9 +15,6 @@ controller_manager:
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-    scaled_joint_trajectory_controller:
-      type: ur_controllers/ScaledJointTrajectoryController
-
     forward_velocity_controller:
       type: forward_command_controller/ForwardCommandController
 
@@ -29,6 +26,9 @@ controller_manager:
 
     force_mode_controller:
       type: ur_controllers/ForceModeController
+
+    friction_model_controller:
+      type: ur_controllers/FrictionModelController
 
     freedrive_mode_controller:
       type: ur_controllers/FreedriveModeController
@@ -44,6 +44,12 @@ controller_manager:
 
     tool_contact_controller:
       type: ur_controllers/ToolContactController
+
+    gravity_update_controller:
+      type: ur_controllers/GravityUpdateController
+
+    twist_controller:
+      type: ur_controllers/TwistController
 
     # The way this is currently implemented upstream doesn't really work for us. When using
     # position control, the robot will have a tracking error. However, limits will be enforced
@@ -66,6 +72,10 @@ io_and_status_controller:
     tf_prefix: "$(var tf_prefix)"
 
 ur_configuration_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+twist_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
 
@@ -114,35 +124,6 @@ joint_trajectory_controller:
       # Setting the command interface currently would clash with the io_and_status_controller
       # This will probably be changed in the future.
       # command_interface: $(var tf_prefix)speed_scaling/target_speed_fraction_cmd
-
-
-scaled_joint_trajectory_controller:
-  ros__parameters:
-    joints:
-      - $(var tf_prefix)shoulder_pan_joint
-      - $(var tf_prefix)shoulder_lift_joint
-      - $(var tf_prefix)elbow_joint
-      - $(var tf_prefix)wrist_1_joint
-      - $(var tf_prefix)wrist_2_joint
-      - $(var tf_prefix)wrist_3_joint
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-    state_publish_rate: 100.0
-    action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
-    constraints:
-      stopped_velocity_tolerance: 0.2
-      goal_time: 0.0
-      $(var tf_prefix)shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)elbow_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)wrist_1_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
-      $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
-    speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
 
 passthrough_trajectory_controller:
   ros__parameters:
@@ -196,6 +177,10 @@ force_mode_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
 
+friction_model_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
 freedrive_mode_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
@@ -213,5 +198,9 @@ tool_contact_controller:
 
 
 motion_primitive_forward_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"
+
+gravity_update_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"

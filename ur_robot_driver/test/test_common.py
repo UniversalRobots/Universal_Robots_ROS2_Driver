@@ -29,6 +29,8 @@ import logging
 import time
 
 import rclpy
+from rclpy.qos import QoSProfile, DurabilityPolicy
+
 from controller_manager_msgs.srv import (
     ListControllers,
     SwitchController,
@@ -54,6 +56,7 @@ from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
     DownloadProgram,
+    DownloadSupportFile,
     GetLoadedProgram,
     GetProgramState,
     GetPrograms,
@@ -72,11 +75,20 @@ from ur_dashboard_msgs.srv import (
     GetSafetyStatus,
     SetOperationalMode,
     SetUserRole,
+    AddToLog,
+    Popup,
 )
-from ur_msgs.srv import SetIO, GetRobotSoftwareVersion, SetForceMode
+from ur_msgs.srv import (
+    SetIO,
+    SetPayload,
+    GetRobotSoftwareVersion,
+    SetForceMode,
+    SetFrictionModelParameters,
+)
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from std_msgs.msg import Bool as BoolMsg
 
 TIMEOUT_WAIT_SERVICE = 10
 TIMEOUT_WAIT_SERVICE_INITIAL = 120  # If we download the docker image simultaneously to the tests, it can take quite some time until the dashboard server is reachable and usable.
@@ -115,6 +127,28 @@ def _wait_for_action(node, action_name, action_type, timeout):
 
     logging.info("  Successfully connected to action server '%s'", action_name)
     return client
+
+
+def wait_for_robot_program_state(node, state, timeout):
+    received_state = None
+
+    def callback(msg):
+        nonlocal received_state
+        received_state = msg.data
+
+    subscription = node.create_subscription(
+        BoolMsg,
+        "/io_and_status_controller/robot_program_running",
+        callback,
+        QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL),
+    )
+
+    start_time = time.time()
+    while time.time() - start_time < timeout and received_state != state:
+        rclpy.spin_once(node, timeout_sec=0.1)
+
+    node.destroy_subscription(subscription)
+    return received_state
 
 
 def _call_service(node, client, request):
@@ -228,6 +262,22 @@ class ActionInterface:
             )
 
 
+def connect_dashboard_client(node, timeout=TIMEOUT_WAIT_SERVICE_INITIAL):
+    """Call ~/connect until it succeeds. Used when the dashboard client is launched with autoconnect disabled."""
+    connect_client = _wait_for_service(node, "/dashboard_client/connect", Trigger, timeout)
+    end_time = time.time() + timeout
+    last_result = None
+    while time.time() < end_time:
+        last_result = _call_service(node, connect_client, Trigger.Request())
+        if last_result.success:
+            return last_result
+        time.sleep(1.0)
+    raise Exception(
+        "Failed to connect to dashboard client with autoconnect disabled"
+        + (f": {last_result.message}" if last_result is not None else "")
+    )
+
+
 class DashboardInterface(
     _ServiceInterface,
     namespace="/dashboard_client",
@@ -243,6 +293,7 @@ class DashboardInterface(
         "load_installation": Load,
         "load_program": Load,
         "close_popup": Trigger,
+        "close_safety_popup": Trigger,
         "get_loaded_program": GetLoadedProgram,
         "program_state": GetProgramState,
         "program_running": IsProgramRunning,
@@ -253,6 +304,7 @@ class DashboardInterface(
         "upload_program": UploadProgram,
         "update_program": UploadProgram,
         "download_program": DownloadProgram,
+        "download_support_file": DownloadSupportFile,
         "clear_operational_mode": Trigger,
         "generate_flight_report": GenerateFlightReport,
         "generate_support_file": GenerateSupportFile,
@@ -264,9 +316,15 @@ class DashboardInterface(
         "get_user_role": GetUserRole,
         "set_operational_mode": SetOperationalMode,
         "set_user_role": SetUserRole,
+        "add_to_log": AddToLog,
+        "popup": Popup,
+        "shutdown": Trigger,
     },
 ):
     def start_robot(self):
+        self._check_call(self.close_popup())
+        self._check_call(self.close_safety_popup())
+        self._check_call(self.stop())
         self._check_call(self.power_off())
         self._check_call(self.power_on())
         self._check_call(self.brake_release())
@@ -326,6 +384,8 @@ class IoStatusInterface(
     initial_services={"set_io": SetIO},
     services={
         "resend_robot_program": Trigger,
+        "set_payload": SetPayload,
+        "hand_back_control": Trigger,
     },
 ):
     pass
@@ -349,13 +409,22 @@ class ForceModeInterface(
     pass
 
 
+class FrictionModelInterface(
+    _ServiceInterface,
+    namespace="/friction_model_controller",
+    initial_services={},
+    services={"set_friction_model_parameters": SetFrictionModelParameters},
+):
+    pass
+
+
 def sjtc_trajectory_test(tester, tf_prefix):
     """Test robot movement."""
     tester.assertTrue(
         tester._controller_manager_interface.switch_controller(
             strictness=SwitchController.Request.BEST_EFFORT,
             deactivate_controllers=["passthrough_trajectory_controller"],
-            activate_controllers=["scaled_joint_trajectory_controller"],
+            activate_controllers=["joint_trajectory_controller"],
         ).ok
     )
     # Construct test trajectory
@@ -375,13 +444,11 @@ def sjtc_trajectory_test(tester, tf_prefix):
 
     # Sending trajectory goal
     logging.info("Sending simple goal")
-    goal_handle = tester._scaled_follow_joint_trajectory.send_goal(trajectory=trajectory)
+    goal_handle = tester._follow_joint_trajectory.send_goal(trajectory=trajectory)
     tester.assertTrue(goal_handle.accepted)
 
     # Verify execution
-    result = tester._scaled_follow_joint_trajectory.get_result(
-        goal_handle, TIMEOUT_EXECUTE_TRAJECTORY
-    )
+    result = tester._follow_joint_trajectory.get_result(goal_handle, TIMEOUT_EXECUTE_TRAJECTORY)
     tester.assertEqual(result.error_code, FollowJointTrajectory.Result.SUCCESSFUL)
 
 
@@ -395,7 +462,7 @@ def sjtc_illegal_trajectory_test(tester, tf_prefix):
         tester._controller_manager_interface.switch_controller(
             strictness=SwitchController.Request.BEST_EFFORT,
             deactivate_controllers=["passthrough_trajectory_controller"],
-            activate_controllers=["scaled_joint_trajectory_controller"],
+            activate_controllers=["joint_trajectory_controller"],
         ).ok
     )
     # Construct test trajectory, the second point wrongly starts before the first
@@ -414,7 +481,7 @@ def sjtc_illegal_trajectory_test(tester, tf_prefix):
 
     # Send illegal goal
     logging.info("Sending illegal goal")
-    goal_handle = tester._scaled_follow_joint_trajectory.send_goal(
+    goal_handle = tester._follow_joint_trajectory.send_goal(
         trajectory=trajectory,
     )
 
@@ -452,28 +519,60 @@ def _declare_launch_arguments():
     return declared_arguments
 
 
-def _ursim_action(ursim_version="latest", ur_type="ur5e"):
+def _wait_robot_booted_action():
+    """Wait until dashboard or Robot API is reachable. Not a ROS node."""
     return ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
                 [
-                    FindPackagePrefix("ur_client_library"),
+                    FindPackagePrefix("ur_robot_driver"),
                     "lib",
-                    "ur_client_library",
-                    "start_ursim.sh",
+                    "ur_robot_driver",
+                    "wait_robot_booted.py",
                 ]
             ),
-            "-m",
-            ur_type,
-            "-v",
-            ursim_version,
+            "192.168.56.101",
         ],
+        name="wait_robot_booted",
+        output="screen",
+    )
+
+
+def _ursim_action(
+    ursim_version="latest",
+    ur_type="ur5e",
+    container_name=None,
+    program_folder=None,
+    urcap_folder=None,
+):
+    cmd = [
+        PathJoinSubstitution(
+            [
+                FindPackagePrefix("ur_client_library"),
+                "lib",
+                "ur_client_library",
+                "start_ursim.sh",
+            ]
+        ),
+        "-m",
+        ur_type,
+        "-v",
+        ursim_version,
+    ]
+    if container_name is not None:
+        cmd += ["-n", container_name]
+    if program_folder is not None:
+        cmd += ["-p", program_folder]
+    if urcap_folder is not None:
+        cmd += ["-u", urcap_folder]
+    return ExecuteProcess(
+        cmd=cmd,
         name="start_ursim",
         output="screen",
     )
 
 
-def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e"):
+def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", autoconnect="true"):
     dashboard_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -486,18 +585,27 @@ def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e"):
         ),
         launch_arguments={
             "robot_ip": "192.168.56.101",
+            "autoconnect": autoconnect,
         }.items(),
     )
+    wait_robot_booted = _wait_robot_booted_action()
 
-    return LaunchDescription(
-        _declare_launch_arguments()
-        + [ReadyToTest(), dashboard_client, _ursim_action(ursim_version, ur_type)]
+    starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_robot_booted, on_exit=[ReadyToTest(), dashboard_client])
+    )
+
+    return (
+        LaunchDescription(
+            _declare_launch_arguments()
+            + [wait_robot_booted, starter, _ursim_action(ursim_version, ur_type)]
+        ),
+        {"wait_robot_booted": wait_robot_booted},
     )
 
 
 def generate_mock_hardware_test_description(
     tf_prefix="",
-    initial_joint_controller="scaled_joint_trajectory_controller",
+    initial_joint_controller="joint_trajectory_controller",
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
 ):
 
@@ -532,21 +640,27 @@ def generate_mock_hardware_test_description(
 
 def generate_driver_test_description(
     tf_prefix="",
-    initial_joint_controller="scaled_joint_trajectory_controller",
+    initial_joint_controller="joint_trajectory_controller",
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+    headless_mode=True,
+    ursim_version="latest",
+    ur_type="ur5e",
+    ursim_program_folder=None,
+    urcap_folder=None,
+    use_currents_as_efforts=None,
 ):
-    ur_type = LaunchConfiguration("ur_type")
-
     launch_arguments = {
         "robot_ip": "192.168.56.101",
         "ur_type": ur_type,
         "launch_rviz": "false",
         "controller_spawner_timeout": str(controller_spawner_timeout),
         "initial_joint_controller": initial_joint_controller,
-        "headless_mode": "true",
+        "headless_mode": "true" if headless_mode else "false",
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
+    if use_currents_as_efforts is not None:
+        launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
 
@@ -571,7 +685,92 @@ def generate_driver_test_description(
         OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
     )
 
+    ursim_starter = _ursim_action(
+        ursim_version=ursim_version,
+        ur_type=ur_type,
+        program_folder=ursim_program_folder,
+        urcap_folder=urcap_folder,
+    )
+
     return LaunchDescription(
         _declare_launch_arguments()
-        + [ReadyToTest(), wait_dashboard_server, _ursim_action(), driver_starter]
+        + [ReadyToTest(), wait_dashboard_server, ursim_starter, driver_starter]
+    )
+
+
+def generate_driver_test_description_for_model(
+    ur_type,
+    tf_prefix="",
+    initial_joint_controller="joint_trajectory_controller",
+    controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
+    ursim_version="latest",
+    ursim_type=None,
+    use_currents_as_efforts=None,
+):
+    """
+    Generate a launch description that brings up URSim and the driver for an explicit ``ur_type``.
+
+    Unlike :func:`generate_driver_test_description`, this helper does not read the
+    ``ur_type`` launch argument but uses the value passed in. This makes it suitable
+    for tests parametrized over multiple robot models, where each parametrization
+    needs to spawn its own URSim of the matching model.
+
+    The optional ``ursim_type`` argument allows the URSim model to differ from the
+    driver's ``ur_type``. This is useful for negative tests that verify the driver
+    rejects a configuration mismatch. If not given, URSim is started for the same
+    model as the driver.
+    """
+    if ursim_type is None:
+        ursim_type = ur_type
+
+    launch_arguments = {
+        "robot_ip": "192.168.56.101",
+        "ur_type": ur_type,
+        "launch_rviz": "false",
+        "controller_spawner_timeout": str(controller_spawner_timeout),
+        "initial_joint_controller": initial_joint_controller,
+        "headless_mode": "true",
+        "launch_dashboard_client": "true",
+        "start_joint_controller": "false",
+    }
+    if use_currents_as_efforts is not None:
+        launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
+    if tf_prefix:
+        launch_arguments["tf_prefix"] = tf_prefix
+
+    robot_driver = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
+            )
+        ),
+        launch_arguments=launch_arguments.items(),
+    )
+    wait_dashboard_server = ExecuteProcess(
+        cmd=[
+            PathJoinSubstitution(
+                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
+            )
+        ],
+        name="wait_dashboard_server",
+        output="screen",
+    )
+    driver_starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_dashboard_server, on_exit=robot_driver)
+    )
+
+    # Use a per-model container name so leftover containers from a previous
+    # parametrization can never be confused with the current one.
+    container_name = f"ursim_{ursim_type}"
+
+    return LaunchDescription(
+        _declare_launch_arguments()
+        + [
+            ReadyToTest(),
+            wait_dashboard_server,
+            _ursim_action(
+                ursim_version=ursim_version, ur_type=ursim_type, container_name=container_name
+            ),
+            driver_starter,
+        ]
     )

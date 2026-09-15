@@ -12,7 +12,7 @@ First check the controllers' state using ``ros2 control list_controllers``, befo
 
   .. code-block:: console
 
-     $ ros2 launch ur_robot_driver test_scaled_joint_trajectory_controller.launch.py
+     $ ros2 launch ur_robot_driver test_joint_trajectory_controller.launch.py
 
   The robot should move, after a few seconds.
 
@@ -53,7 +53,7 @@ In case you want to write your own ROS node to move the robot, there is an examp
 .. code-block:: console
 
    $ ros2 run ur_robot_driver example_move.py
-   [INFO] [1720623611.547903428] [jtc_client]: Waiting for action server on scaled_joint_trajectory_controller/follow_joint_trajectory
+   [INFO] [1720623611.547903428] [jtc_client]: Waiting for action server on joint_trajectory_controller/follow_joint_trajectory
    [INFO] [1720623611.548368095] [jtc_client]: Executing trajectory traj0
    [INFO] [1720623620.530203889] [jtc_client]: Done with result: SUCCESSFUL
    [INFO] [1720623622.530668700] [jtc_client]: Executing trajectory traj1

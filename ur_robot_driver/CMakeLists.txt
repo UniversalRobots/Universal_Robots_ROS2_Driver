@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28.3)
 project(ur_robot_driver)
 
 # Default to off as this only works in environments where a new docker container can be started with the appropriate networking, which
@@ -6,6 +6,15 @@ project(ur_robot_driver)
 option(
   UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS
   "Build integration tests using the start_ursim script"
+  OFF
+)
+
+# This test spins up a fresh URSim container for every supported robot model
+# (and one model-mismatch case), which takes a long time. It is therefore kept
+# behind its own flag so a normal integration-test run is not slowed down by it.
+option(
+  UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST
+  "Run the integration test that runs the driver against URSim for every supported robot model"
   OFF
 )
 
@@ -47,6 +56,7 @@ add_library(ur_robot_driver_plugin
   SHARED
   src/dashboard_client_ros.cpp
   src/hardware_interface.cpp
+  src/mode_compatibility.cpp
   src/urcl_log_handler.cpp
 )
 target_link_libraries(ur_robot_driver_plugin PUBLIC
@@ -64,12 +74,17 @@ target_link_libraries(ur_robot_driver_plugin PUBLIC
   rclcpp::rclcpp
   rclcpp_lifecycle::rclcpp_lifecycle
   ur_client_library::urcl
-  motion_primitives_controllers::motion_primitives_controllers
 )
+# NOTE: only headers (enums) are used from motion_primitives_controllers. Linking
+# against its shared library causes it to be eagerly loaded as a DT_NEEDED
+# dependency of this plugin, which breaks class_loader's registration of the
+# MotionPrimitivesForwardController controller (results in
+# "MultiLibraryClassLoader: no factory exists for it" at runtime).
 target_include_directories(
   ur_robot_driver_plugin
   PRIVATE
   include
+  ${motion_primitives_controllers_INCLUDE_DIRS}
 )
 pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
 
@@ -118,12 +133,15 @@ target_link_libraries(controller_stopper_node PRIVATE
 #
 # robot_state_helper
 #
-add_executable(robot_state_helper
+add_library(robot_state_helper_lib SHARED
   src/robot_state_helper.cpp
-  src/robot_state_helper_node.cpp
   src/urcl_log_handler.cpp
 )
-target_link_libraries(robot_state_helper PUBLIC
+target_include_directories(robot_state_helper_lib PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+target_link_libraries(robot_state_helper_lib PUBLIC
   ${std_msgs_TARGETS}
   ${std_srvs_TARGETS}
   ${ur_dashboard_msgs_TARGETS}
@@ -131,13 +149,22 @@ target_link_libraries(robot_state_helper PUBLIC
   rclcpp_action::rclcpp_action
   ur_client_library::urcl
 )
+add_executable(robot_state_helper
+  src/robot_state_helper_node.cpp
+)
+target_link_libraries(robot_state_helper
+  robot_state_helper_lib
+)
 
 add_executable(urscript_interface
   src/urscript_interface.cpp
 )
 target_link_libraries(urscript_interface PUBLIC
   rclcpp::rclcpp
+  rclcpp_action::rclcpp_action
   ${std_msgs_TARGETS}
+  ${ur_msgs_TARGETS}
+  rclcpp::rclcpp
   ur_client_library::urcl
 )
 
@@ -162,6 +189,12 @@ install(
     robot_state_helper
     trajectory_until_node
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  TARGETS robot_state_helper_lib
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION lib
 )
 
 # INSTALL
@@ -198,6 +231,7 @@ ament_export_dependencies(
   hardware_interface
   pluginlib
   rclcpp
+  rclcpp_action
   rclcpp_lifecycle
   controller_manager
   controller_manager_msgs
@@ -219,6 +253,7 @@ install(PROGRAMS
   scripts/wait_for_robot_description
   scripts/example_move.py
   scripts/start_ursim.sh
+  scripts/wait_robot_booted.py
   examples/examples.py
   examples/force_mode.py
   examples/send_dummy_motion_primitives_ur10e.py
@@ -237,10 +272,28 @@ install(DIRECTORY config launch urdf
 ament_package()
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gmock REQUIRED)
   find_package(ur_controllers REQUIRED)
   find_package(ur_description REQUIRED)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
+
+  ament_add_gmock(test_mode_compatibility_symmetry
+    test/test_mode_compatibility_symmetry.cpp
+  )
+  target_link_libraries(test_mode_compatibility_symmetry
+    ur_robot_driver_plugin
+  )
+
+  ament_add_gmock(test_robot_state_helper
+    test/test_robot_state_helper.cpp
+  )
+  target_link_libraries(test_robot_state_helper
+    robot_state_helper_lib
+    rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+    ${std_srvs_TARGETS}
+  )
 
   add_launch_test(test/test_mock_hardware.py
     TIMEOUT
@@ -258,7 +311,7 @@ if(BUILD_TESTING)
     )
     add_launch_test(test/dashboard_client.py
       TIMEOUT
-        180
+        800 # Booting the simulators can take quite some time. Increasing this timeout to avoid spurious failures.
     )
     add_launch_test(test/example_move.py
       TIMEOUT
@@ -273,6 +326,10 @@ if(BUILD_TESTING)
         800
     )
     add_launch_test(test/integration_test_force_mode.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_friction_model.py
       TIMEOUT
         800
     )
@@ -292,7 +349,19 @@ if(BUILD_TESTING)
       TIMEOUT
         800
     )
+    add_launch_test(test/integration_test_joint_efforts.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_hand_back_control.py
+      TIMEOUT
+        800
+    )
     add_launch_test(test/integration_test_tool_contact.py
+      TIMEOUT
+        800
+    )
+    add_launch_test(test/integration_test_twist_controller.py
       TIMEOUT
         800
     )
@@ -300,5 +369,11 @@ if(BUILD_TESTING)
       TIMEOUT
         800
     )
+    if(${UR_ROBOT_DRIVER_RUN_ROBOT_MODELS_TEST})
+      add_launch_test(test/integration_test_robot_models.py
+        TIMEOUT
+          2700
+      )
+    endif()
   endif()
 endif()

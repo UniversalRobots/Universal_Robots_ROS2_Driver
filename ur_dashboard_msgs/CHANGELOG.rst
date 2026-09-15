@@ -2,6 +2,27 @@
 Changelog for package ur_dashboard_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.1.0 (2026-09-10)
+------------------
+* Update dashboard client for 10.14.0 (`#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_)
+* Contributors: Felix Exner
+
+7.0.0 (2026-07-09)
+------------------
+* Update safety status msg with new IO plane stop (`#1817 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1817>`_)
+* Update minimum CMake version to 3.28.3 (`#1814 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1814>`_)
+* Contributors: Felix Exner, Mads Holm Peters
+
+6.0.0 (2026-05-12)
+------------------
+
+5.0.0 (2026-04-09)
+------------------
+* Use integer representation of SafetyStatus.msg (`#1734 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1734>`_)
+* Services to support various dashboard calls (`#1674 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1674>`_)
+* Dashboard client new x commands (`#1679 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1679>`_)
+* Contributors: Felix Exner, URJala
+
 4.5.0 (2026-01-13)
 ------------------
 

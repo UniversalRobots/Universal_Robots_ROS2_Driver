@@ -4,11 +4,6 @@
       This controller publishes the readings of all available speed scaling factors.
     </description>
   </class>
-  <class name="ur_controllers/ScaledJointTrajectoryController" type="ur_controllers::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerInterface">
-    <description>
-      Scaled position-based joint trajectory controller.
-    </description>
-  </class>
   <class name="ur_controllers/GPIOController" type="ur_controllers::GPIOController" base_class_type="controller_interface::ControllerInterface">
     <description>
       This controller publishes the Tool IO.
@@ -17,6 +12,11 @@
   <class name="ur_controllers/ForceModeController" type="ur_controllers::ForceModeController" base_class_type="controller_interface::ControllerInterface">
     <description>
       Controller to use UR's force_mode.
+    </description>
+  </class>
+  <class name="ur_controllers/FrictionModelController" type="ur_controllers::FrictionModelController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to set per-joint viscous and Coulomb friction scale factors for direct torque control.
     </description>
   </class>
   <class name="ur_controllers/FreedriveModeController" type="ur_controllers::FreedriveModeController" base_class_type="controller_interface::ControllerInterface">
@@ -37,6 +37,16 @@
   <class name="ur_controllers/ToolContactController" type="ur_controllers::ToolContactController" base_class_type="controller_interface::ControllerInterface">
     <description>
       Controller to use the tool contact functionality of the robot.
+    </description>
+  </class>
+  <class name="ur_controllers/GravityUpdateController" type="ur_controllers::GravityUpdateController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to set the gravity direction of the robot.
+    </description>
+  </class>
+  <class name="ur_controllers/TwistController" type="ur_controllers::TwistController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controller to move a manipulator's TCP using Cartesian velocities.
     </description>
   </class>
 </library>
