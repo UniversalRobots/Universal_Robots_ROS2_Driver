@@ -649,6 +649,7 @@ def generate_driver_test_description(
     ur_type="ur5e",
     ursim_program_folder=None,
     urcap_folder=None,
+    use_currents_as_efforts=None,
 ):
     launch_arguments = {
         "robot_ip": "192.168.56.101",
@@ -660,6 +661,8 @@ def generate_driver_test_description(
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
+    if use_currents_as_efforts is not None:
+        launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
 
@@ -704,6 +707,7 @@ def generate_driver_test_description_for_model(
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
     ursim_version="latest",
     ursim_type=None,
+    use_currents_as_efforts=None,
 ):
     """
     Generate a launch description that brings up URSim and the driver for an explicit ``ur_type``.
@@ -732,6 +736,8 @@ def generate_driver_test_description_for_model(
         "start_joint_controller": "false",
         "verify_robot_model": "true",
     }
+    if use_currents_as_efforts is not None:
+        launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
 
