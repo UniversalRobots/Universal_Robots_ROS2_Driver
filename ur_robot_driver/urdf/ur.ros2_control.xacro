@@ -28,12 +28,8 @@
     non_blocking_read:=true
     robot_receive_timeout:=0.04
     rw_rate:=0
-<<<<<<< HEAD
     verify_robot_model:=false
-=======
-    verify_robot_model:=true
     use_currents_as_efforts:=true
->>>>>>> f2817d7 (Currents as efforts (#1918))
     ">
     <!-- rw_rate of 0 uses the rate of the controller_manager -->
 
