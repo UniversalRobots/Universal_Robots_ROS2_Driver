@@ -724,42 +724,20 @@ def generate_driver_test_description_for_model(
     if ursim_type is None:
         ursim_type = ur_type
 
-<<<<<<< HEAD
     description_launchfile = (
         PathJoinSubstitution([FindPackageShare("ur_robot_driver"), "launch", "ur_rsp.launch.py"]),
-=======
+    )
     launch_arguments = {
         "robot_ip": "192.168.56.101",
         "ur_type": ur_type,
-        "launch_rviz": "false",
-        "controller_spawner_timeout": str(controller_spawner_timeout),
-        "initial_joint_controller": initial_joint_controller,
-        "headless_mode": "true",
-        "launch_dashboard_client": "true",
-        "start_joint_controller": "false",
+        "verify_robot_model": "true",
     }
     if use_currents_as_efforts is not None:
         launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
-    if tf_prefix:
-        launch_arguments["tf_prefix"] = tf_prefix
-
-    robot_driver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
-            )
-        ),
-        launch_arguments=launch_arguments.items(),
->>>>>>> f2817d7 (Currents as efforts (#1918))
-    )
 
     rsp = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(description_launchfile),
-        launch_arguments={
-            "robot_ip": "192.168.56.101",
-            "ur_type": ur_type,
-            "verify_robot_model": "true",
-        }.items(),
+        launch_arguments=launch_arguments.items(),
     )
 
     control_node = Node(

@@ -681,12 +681,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // distiguishable in the log
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
-<<<<<<< HEAD
   registerUrclLogHandler(tf_prefix);
-=======
   std::string ur_type = info_.hardware_parameters["ur_type"];
   auto expected_type = robotTypeFromString(ur_type);
->>>>>>> f2817d7 (Currents as efforts (#1918))
   try {
     auto input_recipe = urcl::rtde_interface::RTDEClient::readRecipe(input_recipe_filename);
     auto output_recipe = urcl::rtde_interface::RTDEClient::readRecipe(output_recipe_filename);
@@ -798,11 +795,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                         "README.md] for details.");
   }
 
-<<<<<<< HEAD
-=======
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing InstructionExecutor");
-  instruction_executor_ = std::make_shared<urcl::InstructionExecutor>(ur_driver_);
-
   if (!use_currents_as_efforts_) {
     if ((version_info_.major == 5 && version_info_.minor < 23) ||
         (version_info_.major == 10 && version_info_.minor < 11) || version_info_.major < 5) {
@@ -810,13 +802,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                    "Driver configured to use actual torques as efforts, which is not supported by this software "
                    "version %s. Please use version 5.23.0 / 10.11.0 or newer for this feature.",
                    version_info_.toString().c_str());
-      instruction_executor_.reset();
       ur_driver_.reset();
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
 
->>>>>>> f2817d7 (Currents as efforts (#1918))
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");
