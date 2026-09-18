@@ -702,12 +702,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // distiguishable in the log
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
-<<<<<<< HEAD
   registerUrclLogHandler(tf_prefix);
-=======
   std::string ur_type = info_.hardware_parameters["ur_type"];
   auto expected_type = robotTypeFromString(ur_type);
->>>>>>> f2817d7 (Currents as efforts (#1918))
   try {
     auto input_recipe = urcl::rtde_interface::RTDEClient::readRecipe(input_recipe_filename);
     auto output_recipe = urcl::rtde_interface::RTDEClient::readRecipe(output_recipe_filename);
@@ -743,14 +740,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     driver_config.tool_comm_setup = std::move(tool_comm_setup);
     driver_config.handle_program_state =
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
-<<<<<<< HEAD
     ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
-=======
-    ur_driver_ = std::make_shared<urcl::UrDriver>(driver_config);
-    if (ur_driver_->getControlFrequency() != info_.rw_rate) {
-      ur_driver_->resetRTDEClient(output_recipe, input_recipe, info_.rw_rate);
-    }
->>>>>>> f2817d7 (Currents as efforts (#1918))
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
@@ -785,12 +775,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   get_robot_software_version_build_ = version_info_.build;
   get_robot_software_version_bugfix_ = version_info_.bugfix;
 
-<<<<<<< HEAD
-=======
-  auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
-  auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
-
->>>>>>> f2817d7 (Currents as efforts (#1918))
   bool verify_robot_model = false;
   if (info_.hardware_parameters.find("verify_robot_model") != info_.hardware_parameters.end()) {
     verify_robot_model =
@@ -798,8 +782,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                                                                                                   "model"] == "True");
   }
   if (verify_robot_model) {
-    std::string ur_type = info_.hardware_parameters["ur_type"];
-    auto expected_type = robotTypeFromString(ur_type);
     auto robot_type = ur_driver_->getPrimaryClient()->getRobotType();
     auto robot_series = ur_driver_->getPrimaryClient()->getRobotSeries();
 
@@ -832,25 +814,18 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
                         "README.md] for details.");
   }
 
-<<<<<<< HEAD
-=======
-  RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing InstructionExecutor");
-  instruction_executor_ = std::make_shared<urcl::InstructionExecutor>(ur_driver_);
-
   if (!use_currents_as_efforts_) {
     if ((version_info_.major == 5 && version_info_.minor < 23) ||
         (version_info_.major == 10 && version_info_.minor < 11) || version_info_.major < 5) {
-      RCLCPP_ERROR(get_logger(),
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"),
                    "Driver configured to use actual torques as efforts, which is not supported by this software "
                    "version %s. Please use version 5.23.0 / 10.11.0 or newer for this feature.",
                    version_info_.toString().c_str());
-      instruction_executor_.reset();
       ur_driver_.reset();
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
 
->>>>>>> f2817d7 (Currents as efforts (#1918))
   async_thread_ = std::make_shared<std::thread>(&URPositionHardwareInterface::asyncThread, this);
 
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "System successfully started!");

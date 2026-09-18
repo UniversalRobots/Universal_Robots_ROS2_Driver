@@ -92,6 +92,7 @@ def launch_setup(context, *args, **kwargs):
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
     verify_robot_model = LaunchConfiguration("verify_robot_model")
+    use_currents_as_efforts = LaunchConfiguration("use_currents_as_efforts")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -213,6 +214,9 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "verify_robot_model:=",
             verify_robot_model,
+            " ",
+            "use_currents_as_efforts:=",
+            use_currents_as_efforts,
         ]
     )
     robot_description = {
@@ -714,40 +718,20 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-<<<<<<< HEAD
             "verify_robot_model",
-=======
+            default_value="false",
+            description="Whether the robot model should be verified against the actual robot. "
+            "This is recommended to be true, but can be set to false for faster startup.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "use_currents_as_efforts",
             default_value="true",
             description=(
                 "Report motor currents as efforts. When set to false, the torques as reported "
                 "from the robot are used. Note that this requires software 5.23.0 / 10.11.0."
             ),
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            name="update_rate_config_file",
-            default_value=[
-                PathJoinSubstitution(
-                    [
-                        FindPackageShare("ur_robot_driver"),
-                        "config",
-                    ]
-                ),
-                "/",
-                LaunchConfiguration("ur_type"),
-                "_update_rate.yaml",
-            ],
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "blocking_read",
->>>>>>> f2817d7 (Currents as efforts (#1918))
-            default_value="false",
-            description="Whether the robot model should be verified against the actual robot. "
-            "This is recommended to be true, but can be set to false for faster startup.",
         )
     )
 

@@ -707,33 +707,8 @@ def generate_driver_test_description_for_model(
     if ursim_type is None:
         ursim_type = ur_type
 
-<<<<<<< HEAD
     script_filename = PathJoinSubstitution(
         [FindPackageShare("ur_client_library"), "resources", "external_control.urscript"]
-=======
-    launch_arguments = {
-        "robot_ip": "192.168.56.101",
-        "ur_type": ur_type,
-        "launch_rviz": "false",
-        "controller_spawner_timeout": str(controller_spawner_timeout),
-        "initial_joint_controller": initial_joint_controller,
-        "headless_mode": "true",
-        "launch_dashboard_client": "true",
-        "start_joint_controller": "false",
-    }
-    if use_currents_as_efforts is not None:
-        launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
-    if tf_prefix:
-        launch_arguments["tf_prefix"] = tf_prefix
-
-    robot_driver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("ur_robot_driver"), "launch", "ur_control.launch.py"]
-            )
-        ),
-        launch_arguments=launch_arguments.items(),
->>>>>>> f2817d7 (Currents as efforts (#1918))
     )
     input_recipe_filename = PathJoinSubstitution(
         [FindPackageShare("ur_robot_driver"), "resources", "rtde_input_recipe.txt"]
@@ -769,6 +744,9 @@ def generate_driver_test_description_for_model(
             ur_type,
             " ",
             "verify_robot_model:=true",
+            " ",
+            "use_currents_as_efforts:=",
+            use_currents_as_efforts if use_currents_as_efforts is not None else "true",
         ]
     )
     robot_description = {
