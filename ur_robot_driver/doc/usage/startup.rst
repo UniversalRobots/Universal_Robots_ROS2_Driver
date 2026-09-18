@@ -34,6 +34,9 @@ Other important arguments are:
 * ``use_mock_hardware`` (default: *false* ) - Use simple hardware emulator from ros2_control. Useful for testing launch files, descriptions, etc.
 * ``headless_mode`` (default: *false*) - Start driver in :ref:`headless_mode`.
 * ``launch_rviz`` (default: *true*) - Start RViz together with the driver.
+* ``use_currents_as_efforts`` (default: *true*) - Report motor currents as joint efforts
+  when ``true``. When ``false``, joint torques from the robot are used instead (requires
+  PolyScope >= 5.23.0 / 10.11.0). See :ref:`hardware_interface_parameters`.
 * ``initial_joint_controller`` (default: *scaled_joint_trajectory_controller*) - Use this if you
   want to start the robot with another controller.
 * ``blocking_read`` (default: *false*) - Make the robot's communication drive the ROS control loop's
