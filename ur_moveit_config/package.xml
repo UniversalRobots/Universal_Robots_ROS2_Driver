@@ -11,7 +11,7 @@
   <maintainer email="rsk@universal-robots.com">Rune Søe-Knudsen</maintainer>
   <maintainer email="ros@universal-robots.com">Universal Robots A/S</maintainer>
 
-  <license>Apache2.0</license>
+  <license>BSD-3-Clause</license>
 
   <author email="lovro.ivanov@gmail.com">Lovro Ivanov</author>
   <author email="zelenak@picknik.ai">Andy Zelenak</author>
