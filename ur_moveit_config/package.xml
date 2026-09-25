@@ -10,7 +10,7 @@
   <maintainer email="rsk@universal-robots.com">Rune Søe-Knudsen</maintainer>
   <maintainer email="ros@universal-robots.com">Universal Robots A/S</maintainer>
 
-  <license>Apache2.0</license>
+  <license>BSD-3-Clause</license>
 
   <url type="website">https://docs.universal-robots.com/Universal_Robots_ROS_Documentation/</url>
 
