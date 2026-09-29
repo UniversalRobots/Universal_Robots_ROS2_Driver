@@ -139,7 +139,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   pausing_state_ = PausingState::RUNNING;
   pausing_ramp_up_increment_ = 0.01;
   controllers_initialized_ = false;
-  first_pass_ = true;
   initialized_ = false;
   async_thread_shutdown_ = false;
   system_interface_initialized_ = 0.0;
@@ -986,6 +985,7 @@ void URPositionHardwareInterface::resetActivationState()
   packet_read_ = false;
   async_thread_shutdown_ = false;
   async_moprim_thread_shutdown_ = false;
+  initialized_ = false;
 }
 
 template <typename T>
@@ -1102,7 +1102,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       speed_scaling_combined_ = speed_scaling_ * target_speed_fraction_;
     }
 
-    if (first_pass_ && !initialized_) {
+    if (!initialized_) {
       initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;

@@ -57,6 +57,7 @@ public:
     time_since_successful_read_ = rclcpp::Duration(0, 0);
     rtde_comm_has_been_started_ = true;  // skip the ur_driver_->startRTDECommunication() call
     packet_read_ = false;
+    initialized_ = false;
     stop_requested_ = false;
     robot_program_running_ = false;
     runtime_state_ = static_cast<uint32_t>(urcl::rtde_interface::RUNTIME_STATE::STOPPED);
@@ -107,6 +108,14 @@ public:
   void setRtdeCommHasBeenStarted(bool val)
   {
     rtde_comm_has_been_started_ = val;
+  }
+  void setInitialized(bool val)
+  {
+    initialized_ = val;
+  }
+  bool isInitialized() const
+  {
+    return initialized_.load();
   }
   void callResetActivationState()
   {
@@ -263,6 +272,28 @@ TEST(HardwareInterfaceReadFaults, BlockingReadFailureReturnsError)
   hw.setGetDataPackageResult(false);
 
   EXPECT_EQ(hw.read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+}
+
+TEST(HardwareInterfaceReadFaults, ReadMissDoesNotMarkHardwareInitialized)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setNonBlockingRead(true);
+  hw.setNonBlockingReadTimeout(rclcpp::Duration::from_seconds(0.04));
+  hw.setGetDataPackageResult(false);
+
+  EXPECT_FALSE(hw.isInitialized());
+  EXPECT_EQ(hw.read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
+  EXPECT_FALSE(hw.isInitialized());
+}
+
+TEST(HardwareInterfaceReadFaults, ActivationResetClearsInitializedState)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setInitialized(true);
+
+  hw.callResetActivationState();
+
+  EXPECT_FALSE(hw.isInitialized());
 }
 
 TEST(HardwareInterfaceReadFaults, NonBlockingMissesStayOkUnderTimeout)

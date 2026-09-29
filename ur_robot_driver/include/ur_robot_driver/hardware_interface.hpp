@@ -269,8 +269,7 @@ protected:
   double zero_ftsensor_async_success_;
   double hand_back_control_cmd_;
   double hand_back_control_async_success_;
-  bool first_pass_;
-  bool initialized_;
+  std::atomic_bool initialized_;
   double system_interface_initialized_;
   std::atomic_bool async_thread_shutdown_;
   urcl::VersionInformation version_info_;
