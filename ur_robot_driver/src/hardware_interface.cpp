@@ -990,6 +990,17 @@ void URPositionHardwareInterface::resetActivationState()
   // stop() (used by on_shutdown/on_cleanup/on_error) leaves this state past its limit / signalling
   // shutdown, so a reconfigure must reset it before the read timeout is checked or the worker threads
   // are (re)spawned again.
+  // The worker has been joined by stop(), so no other consumer can run queued motion commands.
+  // Drain the queue
+  std::ignore = moprim_cmd_queue_.get_latest(current_moprim_command_);
+  current_moprim_command_.fill(std::numeric_limits<double>::quiet_NaN());
+  resetMoprimCmdInterfaces();
+  build_moprim_sequence_ = false;
+  moprim_sequence_.clear();
+  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+  ready_for_new_moprim_ = false;
+  hw_moprim_states_[0] = static_cast<double>(MoprimExecutionState::IDLE);
+  hw_moprim_states_[1] = 0.0;
   time_since_successful_read_ = rclcpp::Duration(0, 0);
   rtde_comm_has_been_started_ = false;
   packet_read_ = false;

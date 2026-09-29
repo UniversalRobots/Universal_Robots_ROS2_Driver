@@ -191,6 +191,27 @@ public:
   {
     return ready_for_new_moprim_;
   }
+  size_t queuedMoprimCommands() const
+  {
+    return moprim_cmd_queue_.size();
+  }
+  void setMoprimSequenceInProgress()
+  {
+    build_moprim_sequence_ = true;
+    moprim_sequence_.push_back(nullptr);
+    current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
+  }
+  bool moprimStateIsReset() const
+  {
+    return !build_moprim_sequence_ && moprim_sequence_.empty() &&
+           current_moprim_execution_status_ == MoprimExecutionState::IDLE && !ready_for_new_moprim_ &&
+           std::isnan(hw_moprim_commands_[0]) &&
+           hw_moprim_states_[0] == static_cast<double>(MoprimExecutionState::IDLE) && hw_moprim_states_[1] == 0.0;
+  }
+  void setKeepaliveResult(bool val)
+  {
+    keepalive_result_ = val;
+  }
 
   void setWriteJointCommandResult(bool val)
   {
@@ -238,7 +259,7 @@ protected:
   bool writeKeepaliveToDriver() override
   {
     ++keepalive_calls_;
-    return true;
+    return keepalive_result_;
   }
   bool startToolContactOnDriver() override
   {
@@ -255,6 +276,7 @@ private:
   bool write_joint_command_result_ = true;
   bool start_tool_contact_result_ = true;
   bool trajectory_control_result_ = true;
+  bool keepalive_result_ = true;
   int write_joint_command_calls_ = 0;
   int start_tool_contact_calls_ = 0;
   int trajectory_control_calls_ = 0;
@@ -406,6 +428,25 @@ TEST(HardwareInterfaceWriteFaults, FullMoprimQueueReturnsError)
 
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
   EXPECT_FALSE(hw.readyForNewMoprim());
+}
+
+TEST(HardwareInterfaceWriteFaults, MoprimQueueAndSequenceResetAfterWriteFault)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setMotionPrimitivesControllerRunning(true);
+  hw.setMoprimMotionType(MoprimMotionType::LINEAR_JOINT);
+  hw.setKeepaliveResult(false);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  ASSERT_EQ(hw.queuedMoprimCommands(), 1u);
+  hw.setMoprimSequenceInProgress();
+
+  hw.callResetActivationState();
+
+  EXPECT_EQ(hw.queuedMoprimCommands(), 0u);
+  EXPECT_TRUE(hw.moprimStateIsReset());
 }
 
 TEST(HardwareInterfaceWriteFaults, ToolContactHelperFailureReturnsError)
