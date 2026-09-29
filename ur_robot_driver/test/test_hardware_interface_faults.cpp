@@ -353,7 +353,7 @@ TEST_P(HardwareInterfaceTimeoutParameterTest, InvalidValueReturnsLifecycleError)
 }
 
 INSTANTIATE_TEST_SUITE_P(InvalidValues, HardwareInterfaceTimeoutParameterTest,
-                         ::testing::Values("", "not-a-number", "0.04s", "nan", "1e999"));
+                         ::testing::Values("", "not-a-number", "0.04s", "nan", "1e999", "1e10"));
 
 TEST(HardwareInterfaceWriteFaults, JointCommandFailureReturnsError)
 {

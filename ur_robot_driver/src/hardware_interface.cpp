@@ -40,6 +40,8 @@
  */
 //----------------------------------------------------------------------
 #include <algorithm>
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -690,6 +692,12 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
       if (parsed_characters != timeout_it->second.size() || !std::isfinite(non_blocking_read_timeout)) {
         throw std::invalid_argument("value is not a finite number");
       }
+      if (non_blocking_read_timeout > 0.0 &&
+          static_cast<long double>(non_blocking_read_timeout) >=
+              static_cast<long double>(std::numeric_limits<int64_t>::max()) / 1'000'000'000.0L) {
+        RCLCPP_ERROR(get_logger(), "Given duration exceeds the range of signed 64-bit nanoseconds");
+        return hardware_interface::CallbackReturn::ERROR;
+      }
     } catch (const std::invalid_argument& e) {
       RCLCPP_ERROR(get_logger(), "Invalid value '%s' for hardware parameter 'non_blocking_read_timeout': %s",
                    timeout_it->second.c_str(), e.what());
@@ -700,7 +708,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
-  non_blocking_read_timeout_ = rclcpp::Duration::from_seconds(non_blocking_read_timeout);
+  non_blocking_read_timeout_ = non_blocking_read_timeout > 0.0 ?
+                                   rclcpp::Duration::from_seconds(non_blocking_read_timeout) :
+                                   rclcpp::Duration(0, 0);
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.
