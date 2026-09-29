@@ -683,8 +683,25 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   }
 
   const auto timeout_it = info_.hardware_parameters.find("non_blocking_read_timeout");
-  non_blocking_read_timeout_ = rclcpp::Duration::from_seconds(
-      timeout_it == info_.hardware_parameters.end() ? 0.04 : std::stod(timeout_it->second));
+  double non_blocking_read_timeout = 0.04;
+  if (timeout_it != info_.hardware_parameters.end()) {
+    try {
+      size_t parsed_characters = 0;
+      non_blocking_read_timeout = std::stod(timeout_it->second, &parsed_characters);
+      if (parsed_characters != timeout_it->second.size() || !std::isfinite(non_blocking_read_timeout)) {
+        throw std::invalid_argument("value is not a finite number");
+      }
+    } catch (const std::invalid_argument& e) {
+      RCLCPP_ERROR(get_logger(), "Invalid value '%s' for hardware parameter 'non_blocking_read_timeout': %s",
+                   timeout_it->second.c_str(), e.what());
+      return hardware_interface::CallbackReturn::ERROR;
+    } catch (const std::out_of_range& e) {
+      RCLCPP_ERROR(get_logger(), "Value '%s' for hardware parameter 'non_blocking_read_timeout' is out of range: %s",
+                   timeout_it->second.c_str(), e.what());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+  }
+  non_blocking_read_timeout_ = rclcpp::Duration::from_seconds(non_blocking_read_timeout);
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.

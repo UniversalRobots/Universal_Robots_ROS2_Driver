@@ -115,6 +115,24 @@ public:
     // startup; re-arm it here since ur_driver_ is a fake pointer in this test.
     rtde_comm_has_been_started_ = true;
   }
+  void setNonBlockingReadTimeoutParameter(const std::string& value)
+  {
+    info_.hardware_parameters = {
+      { "robot_ip", "127.0.0.1" },
+      { "script_filename", "unused" },
+      { "output_recipe_filename", "unused" },
+      { "input_recipe_filename", "unused" },
+      { "headless_mode", "false" },
+      { "reverse_port", "50001" },
+      { "script_sender_port", "50002" },
+      { "use_currents_as_efforts", "true" },
+      { "reverse_ip", "127.0.0.1" },
+      { "trajectory_port", "50003" },
+      { "script_command_port", "50004" },
+      { "non_blocking_read", "true" },
+      { "non_blocking_read_timeout", value },
+    };
+  }
 
   void setRuntimeStatePlaying()
   {
@@ -232,6 +250,21 @@ TEST(HardwareInterfaceReadFaults, TimeoutStateResetAllowsRecoveryAfterReconfigur
 
   EXPECT_EQ(hw.read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
 }
+
+class HardwareInterfaceTimeoutParameterTest : public ::testing::TestWithParam<std::string>
+{
+};
+
+TEST_P(HardwareInterfaceTimeoutParameterTest, InvalidValueReturnsLifecycleError)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setNonBlockingReadTimeoutParameter(GetParam());
+
+  EXPECT_EQ(hw.on_configure(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::ERROR);
+}
+
+INSTANTIATE_TEST_SUITE_P(InvalidValues, HardwareInterfaceTimeoutParameterTest,
+                         ::testing::Values("", "not-a-number", "0.04s", "nan", "1e999"));
 
 TEST(HardwareInterfaceWriteFaults, JointCommandFailureReturnsError)
 {

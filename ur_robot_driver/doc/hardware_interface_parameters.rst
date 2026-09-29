@@ -40,6 +40,7 @@ non_blocking_read_timeout (default: 0.04 (seconds))
 
 Timeout value to be used when non_blocking_read is ``true``.
 If the value is 0 (or less) the timeout will be disabled.
+Non-numeric, non-finite, and out-of-range values cause hardware configuration to fail.
 Note: for values <0.010 the driver might fail on startup, especially if used with URSim.
 
 output_recipe_filename (Required)
