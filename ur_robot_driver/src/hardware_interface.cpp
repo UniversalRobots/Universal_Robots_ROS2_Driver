@@ -604,6 +604,40 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   resetHardwareInterfaceState();
 
+  const auto timeout_it = info_.hardware_parameters.find("non_blocking_read_timeout");
+  double non_blocking_read_timeout = 0.04;
+  if (timeout_it != info_.hardware_parameters.end()) {
+    try {
+      size_t parsed_characters = 0;
+      non_blocking_read_timeout = std::stod(timeout_it->second, &parsed_characters);
+      if (parsed_characters != timeout_it->second.size() || !std::isfinite(non_blocking_read_timeout)) {
+        throw std::invalid_argument("value is not a finite number");
+      }
+      if (non_blocking_read_timeout > 0.0 &&
+          static_cast<long double>(non_blocking_read_timeout) >=
+              static_cast<long double>(std::numeric_limits<int64_t>::max()) / 1'000'000'000.0L) {
+        RCLCPP_ERROR(get_logger(), "Given duration exceeds the range of signed 64-bit nanoseconds");
+        return hardware_interface::CallbackReturn::ERROR;
+      }
+    } catch (const std::invalid_argument& e) {
+      RCLCPP_ERROR(get_logger(), "Invalid value '%s' for hardware parameter 'non_blocking_read_timeout': %s",
+                   timeout_it->second.c_str(), e.what());
+      return hardware_interface::CallbackReturn::ERROR;
+    } catch (const std::out_of_range& e) {
+      RCLCPP_ERROR(get_logger(), "Value '%s' for hardware parameter 'non_blocking_read_timeout' is out of range: %s",
+                   timeout_it->second.c_str(), e.what());
+      return hardware_interface::CallbackReturn::ERROR;
+    }
+  }
+  non_blocking_read_timeout_ = non_blocking_read_timeout > 0.0 ?
+                                   rclcpp::Duration::from_seconds(non_blocking_read_timeout) :
+                                   rclcpp::Duration(0, 0);
+
+  return configureHardwareResources();
+}
+
+hardware_interface::CallbackReturn URPositionHardwareInterface::configureHardwareResources()
+{
   // The robot's IP address.
   const std::string robot_ip = info_.hardware_parameters["robot_ip"];
   // Path to the urscript code that will be sent to the robot
@@ -647,35 +681,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   } else {
     get_data_package = [this]() { return ur_driver_->getDataPackageBlocking(data_package_buffer_); };
   }
-
-  const auto timeout_it = info_.hardware_parameters.find("non_blocking_read_timeout");
-  double non_blocking_read_timeout = 0.04;
-  if (timeout_it != info_.hardware_parameters.end()) {
-    try {
-      size_t parsed_characters = 0;
-      non_blocking_read_timeout = std::stod(timeout_it->second, &parsed_characters);
-      if (parsed_characters != timeout_it->second.size() || !std::isfinite(non_blocking_read_timeout)) {
-        throw std::invalid_argument("value is not a finite number");
-      }
-      if (non_blocking_read_timeout > 0.0 &&
-          static_cast<long double>(non_blocking_read_timeout) >=
-              static_cast<long double>(std::numeric_limits<int64_t>::max()) / 1'000'000'000.0L) {
-        RCLCPP_ERROR(get_logger(), "Given duration exceeds the range of signed 64-bit nanoseconds");
-        return hardware_interface::CallbackReturn::ERROR;
-      }
-    } catch (const std::invalid_argument& e) {
-      RCLCPP_ERROR(get_logger(), "Invalid value '%s' for hardware parameter 'non_blocking_read_timeout': %s",
-                   timeout_it->second.c_str(), e.what());
-      return hardware_interface::CallbackReturn::ERROR;
-    } catch (const std::out_of_range& e) {
-      RCLCPP_ERROR(get_logger(), "Value '%s' for hardware parameter 'non_blocking_read_timeout' is out of range: %s",
-                   timeout_it->second.c_str(), e.what());
-      return hardware_interface::CallbackReturn::ERROR;
-    }
-  }
-  non_blocking_read_timeout_ = non_blocking_read_timeout > 0.0 ?
-                                   rclcpp::Duration::from_seconds(non_blocking_read_timeout) :
-                                   rclcpp::Duration(0, 0);
 
   // Specify gain for servoing to position in joint space.
   // A higher gain can sharpen the trajectory.

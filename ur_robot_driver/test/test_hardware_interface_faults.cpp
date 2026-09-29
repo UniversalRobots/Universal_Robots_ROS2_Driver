@@ -82,9 +82,7 @@ public:
     force_mode_damping_ = NO_NEW_CMD_;
     force_mode_gain_scaling_ = NO_NEW_CMD_;
 
-    // Non-null but never dereferenced: only used for `ur_driver_ != nullptr` guard checks, since the
-    // overridden seams below never touch the real driver.
-    ur_driver_ = std::shared_ptr<urcl::UrDriver>(reinterpret_cast<urcl::UrDriver*>(this), [](urcl::UrDriver*) {});
+    installFakeDriver();
 
     get_data_package = [this]() { return get_data_package_result_; };
   }
@@ -141,6 +139,23 @@ public:
       { "non_blocking_read", "true" },
       { "non_blocking_read_timeout", value },
     };
+  }
+  void setLifecycleRecoveryParameters()
+  {
+    setNonBlockingReadTimeoutParameter("0.04");
+    info_.hardware_parameters["non_blocking_read"] = "false";
+  }
+  bool hasDriver() const
+  {
+    return ur_driver_ != nullptr;
+  }
+  bool readTimeoutAgeIsZero() const
+  {
+    return time_since_successful_read_.nanoseconds() == 0;
+  }
+  int configureResourcesCallCount() const
+  {
+    return configure_resources_calls_;
   }
 
   void setRuntimeStatePlaying()
@@ -344,6 +359,16 @@ public:
   }
 
 protected:
+  hardware_interface::CallbackReturn configureHardwareResources() override
+  {
+    ++configure_resources_calls_;
+    non_blocking_read_ = false;
+    rtde_comm_has_been_started_ = true;
+    installFakeDriver();
+    get_data_package = [this]() { return get_data_package_result_; };
+    return hardware_interface::CallbackReturn::SUCCESS;
+  }
+
   bool writeJointCommandToDriver(const urcl::vector6d_t& /*values*/, urcl::comm::ControlMode /*control_mode*/,
                                  const urcl::RobotReceiveTimeout& /*timeout*/) override
   {
@@ -379,6 +404,12 @@ protected:
   }
 
 private:
+  void installFakeDriver()
+  {
+    // Non-null but never dereferenced: only used for `ur_driver_ != nullptr` guard checks.
+    ur_driver_ = std::shared_ptr<urcl::UrDriver>(reinterpret_cast<urcl::UrDriver*>(this), [](urcl::UrDriver*) {});
+  }
+
   bool get_data_package_result_ = false;
   bool write_joint_command_result_ = true;
   bool start_tool_contact_result_ = true;
@@ -392,6 +423,7 @@ private:
   int keepalive_calls_ = 0;
   int end_tool_contact_calls_ = 0;
   int end_force_mode_calls_ = 0;
+  int configure_resources_calls_ = 0;
 };
 
 namespace
@@ -511,6 +543,41 @@ TEST(HardwareInterfaceWriteFaults, JointCommandFailureReturnsError)
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
   EXPECT_EQ(hw.writeJointCommandCallCount(), 1);
   EXPECT_EQ(hw.startToolContactCallCount(), 0);
+}
+
+TEST(HardwareInterfaceLifecycleRecovery, WriteFaultRecoversAfterErrorAndReconfigure)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setLifecycleRecoveryParameters();
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setAllControllerModesRunning();
+  hw.setInitialized(true);
+  hw.setTimeSinceSuccessfulRead(rclcpp::Duration::from_seconds(0.05));
+  hw.setPendingForceModeCommand();
+  hw.setPendingPassthroughTransfer();
+  hw.setWriteJointCommandResult(false);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  EXPECT_EQ(hw.on_error(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::SUCCESS);
+  EXPECT_FALSE(hw.hasDriver());
+
+  EXPECT_EQ(hw.on_configure(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::SUCCESS);
+  EXPECT_EQ(hw.configureResourcesCallCount(), 1);
+  EXPECT_TRUE(hw.hasDriver());
+  EXPECT_FALSE(hw.isInitialized());
+  EXPECT_TRUE(hw.controllerModesStopped());
+  EXPECT_TRUE(hw.deferredCommandsCleared());
+  EXPECT_TRUE(hw.readTimeoutAgeIsZero());
+
+  EXPECT_EQ(hw.on_activate(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::SUCCESS);
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setPositionControllerRunning(true);
+  hw.setWriteJointCommandResult(true);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
+  EXPECT_EQ(hw.writeJointCommandCallCount(), 2);
 }
 
 TEST(HardwareInterfaceWriteFaults, PassthroughNoopFailureSkipsCancel)

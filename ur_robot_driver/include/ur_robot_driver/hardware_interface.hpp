@@ -186,6 +186,8 @@ protected:
   // stop function used by on_shutdown, on_cleanup and on_error
   hardware_interface::CallbackReturn stop();
 
+  virtual hardware_interface::CallbackReturn configureHardwareResources();
+
   // Resets controller and activation state during initial setup and reconfiguration.
   void resetHardwareInterfaceState();
   void resetControllerState();
