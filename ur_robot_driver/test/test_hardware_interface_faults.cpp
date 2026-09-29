@@ -208,6 +208,47 @@ public:
            std::isnan(hw_moprim_commands_[0]) &&
            hw_moprim_states_[0] == static_cast<double>(MoprimExecutionState::IDLE) && hw_moprim_states_[1] == 0.0;
   }
+  void setPendingForceModeCommand()
+  {
+    force_mode_task_frame_.fill(0.0);
+    force_mode_selection_vector_.fill(1.0);
+    force_mode_wrench_.fill(0.0);
+    force_mode_limits_.fill(0.1);
+    force_mode_type_ = 2.0;
+    force_mode_damping_ = 0.8;
+    force_mode_gain_scaling_ = 0.5;
+  }
+  void setPendingPassthroughTransfer()
+  {
+    passthrough_trajectory_transfer_state_ = 2.0;
+    passthrough_trajectory_size_ = 3.0;
+    passthrough_trajectory_time_from_start_ = 0.5;
+    passthrough_last_point_time_ = 0.5;
+    passthrough_point_index_received_ = 2;
+    passthrough_point_index_sent_ = 1;
+    passthrough_trajectory_started_ = true;
+    trajectory_joint_positions_.resize(3);
+    trajectory_times_.resize(3);
+  }
+  bool deferredCommandsCleared() const
+  {
+    const bool force_mode_cleared =
+        std::isnan(force_mode_task_frame_[0]) && std::isnan(force_mode_selection_vector_[0]) &&
+        std::isnan(force_mode_wrench_[0]) && std::isnan(force_mode_limits_[0]) && std::isnan(force_mode_type_) &&
+        std::isnan(force_mode_damping_) && std::isnan(force_mode_gain_scaling_) && std::isnan(force_mode_disable_cmd_);
+    const bool passthrough_cleared = passthrough_trajectory_transfer_state_ == 0.0 &&
+                                     passthrough_trajectory_abort_ == 0.0 && passthrough_trajectory_size_ == 0.0 &&
+                                     passthrough_trajectory_time_from_start_ == 0.0 &&
+                                     trajectory_joint_positions_.empty() && trajectory_times_.empty() &&
+                                     passthrough_last_point_time_ == 0.0 && passthrough_point_index_received_ == 0 &&
+                                     passthrough_point_index_sent_ == 0 && !passthrough_trajectory_started_;
+    const bool misc_cleared = std::isnan(target_speed_fraction_cmd_) && std::isnan(resend_robot_program_cmd_) &&
+                              std::isnan(zero_ftsensor_cmd_) && std::isnan(hand_back_control_cmd_) &&
+                              std::isnan(freedrive_mode_enable_) && std::isnan(freedrive_mode_abort_) &&
+                              !freedrive_activated_ && std::isnan(payload_mass_) && std::isnan(gravity_vector_[0]) &&
+                              std::isnan(tool_voltage_cmd_) && std::isnan(standard_dig_out_bits_cmd_[0]);
+    return force_mode_cleared && passthrough_cleared && misc_cleared;
+  }
   void setKeepaliveResult(bool val)
   {
     keepalive_result_ = val;
@@ -447,6 +488,27 @@ TEST(HardwareInterfaceWriteFaults, MoprimQueueAndSequenceResetAfterWriteFault)
 
   EXPECT_EQ(hw.queuedMoprimCommands(), 0u);
   EXPECT_TRUE(hw.moprimStateIsReset());
+}
+
+TEST(HardwareInterfaceWriteFaults, DeferredCommandsClearedAfterWriteFault)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setPositionControllerRunning(true);
+  hw.setPendingForceModeCommand();
+  hw.setPendingPassthroughTransfer();
+  hw.setWriteJointCommandResult(false);
+
+  ASSERT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+
+  hw.callResetActivationState();
+  EXPECT_TRUE(hw.deferredCommandsCleared());
+
+  // The stale force mode request must not be executed by the first write after the reconfigure;
+  // start_force_mode() would dereference the fake driver pointer if it were still pending.
+  hw.setWriteJointCommandResult(true);
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
 }
 
 TEST(HardwareInterfaceWriteFaults, ToolContactHelperFailureReturnsError)

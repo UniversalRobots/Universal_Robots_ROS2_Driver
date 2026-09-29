@@ -300,6 +300,11 @@ protected:
   urcl::vector6d_t passthrough_trajectory_velocities_;
   urcl::vector6d_t passthrough_trajectory_accelerations_;
   double passthrough_trajectory_time_from_start_;
+  // Transfer progress of the passthrough trajectory currently being forwarded
+  double passthrough_last_point_time_ = 0.0;
+  size_t passthrough_point_index_received_ = 0;
+  size_t passthrough_point_index_sent_ = 0;
+  bool passthrough_trajectory_started_ = false;
 
   bool twist_controller_running_;
 

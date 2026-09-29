@@ -1003,6 +1003,50 @@ void URPositionHardwareInterface::resetActivationState()
   ready_for_new_moprim_ = false;
   hw_moprim_states_[0] = static_cast<double>(MoprimExecutionState::IDLE);
   hw_moprim_states_[1] = 0.0;
+
+  // Any command that was still pending when the previous activation failed must not be executed
+  // after the reconfigure.
+  initAsyncIO();
+  target_speed_fraction_cmd_ = NO_NEW_CMD_;
+  resend_robot_program_cmd_ = NO_NEW_CMD_;
+  zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  hand_back_control_cmd_ = NO_NEW_CMD_;
+
+  force_mode_task_frame_.fill(NO_NEW_CMD_);
+  force_mode_selection_vector_.fill(NO_NEW_CMD_);
+  force_mode_wrench_.fill(NO_NEW_CMD_);
+  force_mode_limits_.fill(NO_NEW_CMD_);
+  force_mode_type_ = NO_NEW_CMD_;
+  force_mode_damping_ = NO_NEW_CMD_;
+  force_mode_gain_scaling_ = NO_NEW_CMD_;
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
+  force_mode_async_success_ = NO_NEW_CMD_;
+
+  freedrive_mode_enable_ = NO_NEW_CMD_;
+  freedrive_mode_abort_ = NO_NEW_CMD_;
+  freedrive_mode_async_success_ = NO_NEW_CMD_;
+  freedrive_activated_ = false;
+
+  tool_contact_set_state_ = 0.0;
+  tool_contact_state_ = 0.0;
+  tool_contact_result_ = NO_NEW_CMD_;
+
+  passthrough_trajectory_transfer_state_ = 0.0;
+  passthrough_trajectory_abort_ = 0.0;
+  passthrough_trajectory_size_ = 0.0;
+  passthrough_trajectory_time_from_start_ = 0.0;
+  passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_accelerations_.fill(NO_NEW_CMD_);
+  trajectory_joint_positions_.clear();
+  trajectory_joint_velocities_.clear();
+  trajectory_joint_accelerations_.clear();
+  trajectory_times_.clear();
+  passthrough_last_point_time_ = 0.0;
+  passthrough_point_index_received_ = 0;
+  passthrough_point_index_sent_ = 0;
+  passthrough_trajectory_started_ = false;
+
   time_since_successful_read_ = rclcpp::Duration(0, 0);
   rtde_comm_has_been_started_ = false;
   packet_read_ = false;
@@ -1854,10 +1898,10 @@ bool URPositionHardwareInterface::stop_force_mode()
 
 bool URPositionHardwareInterface::check_passthrough_trajectory_controller()
 {
-  static double last_time = 0.0;
-  static size_t point_index_received = 0;
-  static size_t point_index_sent = 0;
-  static bool trajectory_started = false;
+  auto& last_time = passthrough_last_point_time_;
+  auto& point_index_received = passthrough_point_index_received_;
+  auto& point_index_sent = passthrough_point_index_sent_;
+  auto& trajectory_started = passthrough_trajectory_started_;
   // See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
 
   // Check every write to the hardware to report back to "write" function
