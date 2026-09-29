@@ -151,6 +151,22 @@ public:
     tool_contact_controller_running_ = val;
     tool_contact_set_state_ = set_state;
   }
+  void setPassthroughTrajectoryControllerRunning(bool val, double transfer_state, double abort)
+  {
+    passthrough_trajectory_controller_running_ = val;
+    passthrough_trajectory_transfer_state_ = transfer_state;
+    passthrough_trajectory_abort_ = abort;
+    info_.rw_rate = 500;
+  }
+  void setMotionPrimitivesControllerRunning(bool val)
+  {
+    motion_primitives_forward_controller_running_ = val;
+  }
+  void setMoprimMotionType(MoprimMotionHelperType motion_type)
+  {
+    hw_moprim_commands_.fill(NO_NEW_CMD_);
+    hw_moprim_commands_[0] = static_cast<double>(motion_type);
+  }
 
   void setWriteJointCommandResult(bool val)
   {
@@ -160,6 +176,10 @@ public:
   {
     start_tool_contact_result_ = val;
   }
+  void setTrajectoryControlResult(bool val)
+  {
+    trajectory_control_result_ = val;
+  }
   int writeJointCommandCallCount() const
   {
     return write_joint_command_calls_;
@@ -168,6 +188,14 @@ public:
   {
     return start_tool_contact_calls_;
   }
+  int trajectoryControlCallCount() const
+  {
+    return trajectory_control_calls_;
+  }
+  int keepaliveCallCount() const
+  {
+    return keepalive_calls_;
+  }
 
 protected:
   bool writeJointCommandToDriver(const urcl::vector6d_t& /*values*/, urcl::comm::ControlMode /*control_mode*/,
@@ -175,6 +203,18 @@ protected:
   {
     ++write_joint_command_calls_;
     return write_joint_command_result_;
+  }
+  bool writeTrajectoryControlMessageToDriver(urcl::control::TrajectoryControlMessage /*trajectory_action*/,
+                                             int /*point_number*/,
+                                             const urcl::RobotReceiveTimeout& /*timeout*/) override
+  {
+    ++trajectory_control_calls_;
+    return trajectory_control_result_;
+  }
+  bool writeKeepaliveToDriver() override
+  {
+    ++keepalive_calls_;
+    return true;
   }
   bool startToolContactOnDriver() override
   {
@@ -190,8 +230,11 @@ private:
   bool get_data_package_result_ = false;
   bool write_joint_command_result_ = true;
   bool start_tool_contact_result_ = true;
+  bool trajectory_control_result_ = true;
   int write_joint_command_calls_ = 0;
   int start_tool_contact_calls_ = 0;
+  int trajectory_control_calls_ = 0;
+  int keepalive_calls_ = 0;
 };
 
 namespace
@@ -273,9 +316,37 @@ TEST(HardwareInterfaceWriteFaults, JointCommandFailureReturnsError)
   hw.setRobotProgramRunning(true);
   hw.setPositionControllerRunning(true);
   hw.setWriteJointCommandResult(false);
+  hw.setToolContactControllerRunning(true, /*set_state=*/2.0);
 
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
   EXPECT_EQ(hw.writeJointCommandCallCount(), 1);
+  EXPECT_EQ(hw.startToolContactCallCount(), 0);
+}
+
+TEST(HardwareInterfaceWriteFaults, PassthroughNoopFailureSkipsCancel)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setPassthroughTrajectoryControllerRunning(true, /*transfer_state=*/1.0, /*abort=*/1.0);
+  hw.setTrajectoryControlResult(false);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  EXPECT_EQ(hw.trajectoryControlCallCount(), 1);
+}
+
+TEST(HardwareInterfaceWriteFaults, MoprimCancelFailureSkipsKeepalive)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setMotionPrimitivesControllerRunning(true);
+  hw.setMoprimMotionType(MoprimMotionHelperType::STOP_MOTION);
+  hw.setTrajectoryControlResult(false);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  EXPECT_EQ(hw.trajectoryControlCallCount(), 1);
+  EXPECT_EQ(hw.keepaliveCallCount(), 0);
 }
 
 TEST(HardwareInterfaceWriteFaults, ToolContactHelperFailureReturnsError)

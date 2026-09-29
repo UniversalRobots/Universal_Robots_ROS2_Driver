@@ -206,6 +206,10 @@ protected:
   virtual bool
   writeJointCommandToDriver(const urcl::vector6d_t& values, urcl::comm::ControlMode control_mode,
                             const urcl::RobotReceiveTimeout& timeout = urcl::RobotReceiveTimeout::millisec(20));
+  virtual bool writeTrajectoryControlMessageToDriver(
+      urcl::control::TrajectoryControlMessage trajectory_action, int point_number = 0,
+      const urcl::RobotReceiveTimeout& timeout = urcl::RobotReceiveTimeout::millisec(200));
+  virtual bool writeKeepaliveToDriver();
   virtual bool startToolContactOnDriver();
   virtual bool endToolContactOnDriver();
 

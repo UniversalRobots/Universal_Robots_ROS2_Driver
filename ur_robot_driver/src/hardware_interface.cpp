@@ -1162,47 +1162,48 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
     if (stop_requested_) {
-      write_success &= writeJointCommandToDriver(urcl_position_commands_, urcl::comm::ControlMode::MODE_STOPPED);
+      write_success = writeJointCommandToDriver(urcl_position_commands_, urcl::comm::ControlMode::MODE_STOPPED);
       stop_requested_ = false;
       robot_program_running_ = false;  // We reset that here, as well to avoid a race condition
                                        // between the reverse interface callback and the next write.
     } else if (position_controller_running_) {
-      write_success &=
+      write_success =
           writeJointCommandToDriver(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
     } else if (velocity_controller_running_) {
-      write_success &=
+      write_success =
           writeJointCommandToDriver(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
     } else if (torque_controller_running_) {
-      write_success &=
+      write_success =
           writeJointCommandToDriver(urcl_torque_commands_, urcl::comm::ControlMode::MODE_TORQUE, receive_timeout_);
     } else if (freedrive_mode_controller_running_ && freedrive_activated_) {
-      write_success &= ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
+      write_success = ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
 
     } else if (passthrough_trajectory_controller_running_) {
-      write_success &= ur_driver_->writeTrajectoryControlMessage(
+      write_success = writeTrajectoryControlMessageToDriver(
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
           urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
-      write_success &= check_passthrough_trajectory_controller();
+      write_success = write_success && check_passthrough_trajectory_controller();
 
     } else if (motion_primitives_forward_controller_running_) {
-      write_success &= handleMoprimCommands();
+      write_success = handleMoprimCommands();
     } else if (twist_controller_running_) {
-      write_success &=
+      write_success =
           writeJointCommandToDriver(urcl_twist_commands_, urcl::comm::ControlMode::MODE_SPEEDL, receive_timeout_);
     } else {
-      write_success &= ur_driver_->writeKeepalive();
+      write_success = writeKeepaliveToDriver();
     }
 
-    if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
+    if (write_success && !std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
         !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
         !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
-      write_success &= start_force_mode();
-    } else if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
-      write_success &= stop_force_mode();
+      write_success = start_force_mode();
+    } else if (write_success && !std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr &&
+               force_mode_async_success_ == 2.0) {
+      write_success = stop_force_mode();
     }
 
-    if (tool_contact_controller_running_) {
-      write_success &= check_tool_contact_controller();
+    if (write_success && tool_contact_controller_running_) {
+      write_success = check_tool_contact_controller();
     }
 
     packet_read_ = false;
@@ -1388,6 +1389,18 @@ bool URPositionHardwareInterface::writeJointCommandToDriver(const urcl::vector6d
                                                             const urcl::RobotReceiveTimeout& timeout)
 {
   return ur_driver_->writeJointCommand(values, control_mode, timeout);
+}
+
+bool URPositionHardwareInterface::writeTrajectoryControlMessageToDriver(
+    urcl::control::TrajectoryControlMessage trajectory_action, int point_number,
+    const urcl::RobotReceiveTimeout& timeout)
+{
+  return ur_driver_->writeTrajectoryControlMessage(trajectory_action, point_number, timeout);
+}
+
+bool URPositionHardwareInterface::writeKeepaliveToDriver()
+{
+  return ur_driver_->writeKeepalive();
 }
 
 bool URPositionHardwareInterface::startToolContactOnDriver()
@@ -1780,7 +1793,7 @@ bool URPositionHardwareInterface::start_force_mode()
   }
   /* Check version of robot to ensure that the correct startForceMode is called. */
   if (ur_driver_->getVersion().major < 5) {
-    write_success &=
+    write_success =
         ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
                                    force_mode_type_, force_mode_limits_, force_mode_damping_);
     if (force_mode_gain_scaling_ != 0.5) {
@@ -1791,7 +1804,7 @@ bool URPositionHardwareInterface::start_force_mode()
                                                                      "gain scaling.");
     }
   } else {
-    write_success &=
+    write_success =
         ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
                                    force_mode_type_, force_mode_limits_, force_mode_damping_, force_mode_gain_scaling_);
   }
@@ -1829,8 +1842,9 @@ bool URPositionHardwareInterface::check_passthrough_trajectory_controller()
 
   // We should abort and are not in state IDLE
   if (passthrough_trajectory_abort_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
-    write_success &=
-        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+    if (!writeTrajectoryControlMessageToDriver(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL)) {
+      return false;
+    }
   } else if (passthrough_trajectory_transfer_state_ == 6.0) {
     if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
       trajectory_joint_positions_.resize(passthrough_trajectory_size_);
@@ -1862,8 +1876,10 @@ bool URPositionHardwareInterface::check_passthrough_trajectory_controller()
     if ((passthrough_trajectory_time_from_start_ > 5.0 / static_cast<double>(info_.rw_rate) ||
          point_index_received == passthrough_trajectory_size_) &&
         !trajectory_started) {
-      write_success &= ur_driver_->writeTrajectoryControlMessage(
-          urcl::control::TrajectoryControlMessage::TRAJECTORY_START, trajectory_joint_positions_.size());
+      if (!writeTrajectoryControlMessageToDriver(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
+                                                 trajectory_joint_positions_.size())) {
+        return false;
+      }
       trajectory_started = true;
     }
   } else if (passthrough_trajectory_transfer_state_ == 3.0) {
@@ -1889,12 +1905,12 @@ bool URPositionHardwareInterface::check_passthrough_trajectory_controller()
       if (is_valid_joint_information(trajectory_joint_positions_)) {
         if (!is_valid_joint_information(trajectory_joint_velocities_) &&
             !is_valid_joint_information(trajectory_joint_accelerations_)) {
-          write_success &= ur_driver_->writeTrajectorySplinePoint(
+          write_success = ur_driver_->writeTrajectorySplinePoint(
               trajectory_joint_positions_[i], urcl::vector6d_t{ 0, 0, 0, 0, 0, 0 }, trajectory_times_[i]);
         } else if (is_valid_joint_information(trajectory_joint_velocities_) &&
                    !is_valid_joint_information(trajectory_joint_accelerations_)) {
-          write_success &= ur_driver_->writeTrajectorySplinePoint(
-              trajectory_joint_positions_[i], trajectory_joint_velocities_[i], trajectory_times_[i]);
+          write_success = ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i],
+                                                                 trajectory_joint_velocities_[i], trajectory_times_[i]);
         } else if (!is_valid_joint_information(trajectory_joint_velocities_) &&
                    is_valid_joint_information(trajectory_joint_accelerations_)) {
           RCLCPP_ERROR(get_logger(), "Accelerations but no velocities given. If you want to specify accelerations with "
@@ -1904,7 +1920,7 @@ bool URPositionHardwareInterface::check_passthrough_trajectory_controller()
 
         } else if (is_valid_joint_information(trajectory_joint_velocities_) &&
                    is_valid_joint_information(trajectory_joint_accelerations_)) {
-          write_success &=
+          write_success =
               ur_driver_->writeTrajectorySplinePoint(trajectory_joint_positions_[i], trajectory_joint_velocities_[i],
                                                      trajectory_joint_accelerations_[i], trajectory_times_[i]);
         }
@@ -1912,6 +1928,9 @@ bool URPositionHardwareInterface::check_passthrough_trajectory_controller()
         RCLCPP_ERROR(get_logger(), "Trajectory points without position information are not supported.");
         error = true;
         break;
+      }
+      if (!write_success) {
+        return false;
       }
       point_index_sent++;
     }
@@ -1963,8 +1982,10 @@ bool URPositionHardwareInterface::handleMoprimCommands()
         resetMoprimCmdInterfaces();
         build_moprim_sequence_ = false;
         moprim_sequence_.clear();  // delete motion sequence
-        write_success &= ur_driver_->writeTrajectoryControlMessage(
-            urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1, urcl::RobotReceiveTimeout::millisec(2000));
+        if (!writeTrajectoryControlMessageToDriver(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1,
+                                                   urcl::RobotReceiveTimeout::millisec(2000))) {
+          return false;
+        }
         current_moprim_execution_status_ = MoprimExecutionState::STOPPING;
         ready_for_new_moprim_ = false;
         break;
@@ -1994,7 +2015,7 @@ bool URPositionHardwareInterface::handleMoprimCommands()
   }
   // Send keepalive if current_moprim_execution_status_ is not EXECUTING
   if (ur_driver_ && current_moprim_execution_status_ != MoprimExecutionState::EXECUTING) {
-    write_success &= ur_driver_->writeKeepalive();
+    write_success = writeKeepaliveToDriver();
   }
   return write_success;
 }
