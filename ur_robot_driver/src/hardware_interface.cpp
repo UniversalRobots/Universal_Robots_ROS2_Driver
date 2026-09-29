@@ -1121,7 +1121,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
          << "Time since last successful read of the hardware: " << time_since_successful_read_.seconds() * 1000
          << " milliseconds \n"
          << "The non blocking read time out is: " << non_blocking_read_timeout_.seconds() * 1000 << " milliseconds";
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), ss.str().c_str());
+      const std::string error_message = ss.str();
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "%s", error_message.c_str());
       // For very small values of non_blocking_read_timeout_ (< 10 ms) this might error on startup
       return hardware_interface::return_type::ERROR;
     }
