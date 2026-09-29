@@ -167,6 +167,21 @@ public:
     hw_moprim_commands_.fill(NO_NEW_CMD_);
     hw_moprim_commands_[0] = static_cast<double>(motion_type);
   }
+  void setMoprimMotionType(int8_t motion_type)
+  {
+    hw_moprim_commands_.fill(NO_NEW_CMD_);
+    hw_moprim_commands_[0] = static_cast<double>(motion_type);
+  }
+  void fillMoprimCommandQueue()
+  {
+    std::array<double, 25> command{};
+    while (moprim_cmd_queue_.push(command)) {
+    }
+  }
+  bool readyForNewMoprim() const
+  {
+    return ready_for_new_moprim_;
+  }
 
   void setWriteJointCommandResult(bool val)
   {
@@ -347,6 +362,19 @@ TEST(HardwareInterfaceWriteFaults, MoprimCancelFailureSkipsKeepalive)
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
   EXPECT_EQ(hw.trajectoryControlCallCount(), 1);
   EXPECT_EQ(hw.keepaliveCallCount(), 0);
+}
+
+TEST(HardwareInterfaceWriteFaults, FullMoprimQueueReturnsError)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setMotionPrimitivesControllerRunning(true);
+  hw.setMoprimMotionType(MoprimMotionType::LINEAR_JOINT);
+  hw.fillMoprimCommandQueue();
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  EXPECT_FALSE(hw.readyForNewMoprim());
 }
 
 TEST(HardwareInterfaceWriteFaults, ToolContactHelperFailureReturnsError)

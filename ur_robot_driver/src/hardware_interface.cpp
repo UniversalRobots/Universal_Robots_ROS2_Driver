@@ -2005,7 +2005,7 @@ bool URPositionHardwareInterface::handleMoprimCommands()
         if (!moprim_cmd_queue_.push(hw_moprim_commands_)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to push command to "
                                                                           "moprim_cmd_queue_");
-          return write_success;  // Should this stop the driver?
+          return false;
         }
         resetMoprimCmdInterfaces();
         ready_for_new_moprim_ = true;  // set to true to allow sending new commands
