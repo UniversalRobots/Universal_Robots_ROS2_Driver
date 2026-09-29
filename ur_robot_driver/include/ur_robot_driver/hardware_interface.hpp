@@ -186,10 +186,11 @@ protected:
   // stop function used by on_shutdown, on_cleanup and on_error
   hardware_interface::CallbackReturn stop();
 
-  // Resets per-activation state that must not survive a reconfigure; called from on_configure().
-  void resetActivationState();
+  // Resets controller and activation state during initial setup and reconfiguration.
+  void resetHardwareInterfaceState();
+  void resetControllerState();
 
-  void initAsyncIO();
+  void resetAsyncIO();
   void checkAsyncIO();
   void updateNonDoubleValues();
   void extractToolPose();

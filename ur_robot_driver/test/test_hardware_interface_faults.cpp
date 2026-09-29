@@ -50,7 +50,7 @@ class URPositionHardwareInterfaceTestWrapper : public URPositionHardwareInterfac
 public:
   URPositionHardwareInterfaceTestWrapper()
   {
-    // Mirror the relevant parts of on_init()/initAsyncIO() so every NaN-guarded field starts in its
+    // Mirror the relevant parts of on_init()/resetAsyncIO() so every NaN-guarded field starts in its
     // "no new command" state instead of whatever garbage an unconstructed member holds.
     non_blocking_read_ = false;
     non_blocking_read_timeout_ = rclcpp::Duration(0, 0);
@@ -119,8 +119,8 @@ public:
   }
   void callResetActivationState()
   {
-    resetActivationState();
-    // resetActivationState() also flips this to false so on_configure() re-triggers the real RTDE
+    resetHardwareInterfaceState();
+    // resetHardwareInterfaceState() also flips this to false so on_configure() re-triggers the real RTDE
     // startup; re-arm it here since ur_driver_ is a fake pointer in this test.
     rtde_comm_has_been_started_ = true;
   }

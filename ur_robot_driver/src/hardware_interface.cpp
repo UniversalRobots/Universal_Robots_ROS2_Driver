@@ -130,48 +130,11 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_twist_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  position_controller_running_ = false;
-  velocity_controller_running_ = false;
-  torque_controller_running_ = false;
-  freedrive_mode_controller_running_ = false;
-  passthrough_trajectory_controller_running_ = false;
-  tool_contact_controller_running_ = false;
-  twist_controller_running_ = false;
-  runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
-  pausing_state_ = PausingState::RUNNING;
+  resetHardwareInterfaceState();
   pausing_ramp_up_increment_ = 0.01;
-  controllers_initialized_ = false;
-  initialized_ = false;
-  async_thread_shutdown_ = false;
-  system_interface_initialized_ = 0.0;
-  freedrive_mode_abort_ = 0.0;
-  passthrough_trajectory_transfer_state_ = 0.0;
-  passthrough_trajectory_abort_ = 0.0;
-  passthrough_trajectory_size_ = 0.0;
-  tool_contact_result_ = NO_NEW_CMD_;
-  tool_contact_set_state_ = 0.0;
-  tool_contact_state_ = 0.0;
   trajectory_joint_positions_.reserve(32768);
   trajectory_joint_velocities_.reserve(32768);
   trajectory_joint_accelerations_.reserve(32768);
-  stop_requested_ = false;
-
-  // Motion primitives stuff
-  async_moprim_thread_shutdown_ = false;
-  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
-  ready_for_new_moprim_ = false;
-  motion_primitives_forward_controller_running_ = false;
-  hw_moprim_states_.fill(std::numeric_limits<double>::quiet_NaN());
-  hw_moprim_commands_.fill(std::numeric_limits<double>::quiet_NaN());
-  for (size_t i = 0; i < 6; i++) {
-    force_mode_task_frame_[i] = NO_NEW_CMD_;
-    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
-    force_mode_wrench_[i] = NO_NEW_CMD_;
-    force_mode_limits_[i] = NO_NEW_CMD_;
-  }
-  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
@@ -639,7 +602,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 {
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Starting ...please wait...");
 
-  resetActivationState();
+  resetHardwareInterfaceState();
 
   // The robot's IP address.
   const std::string robot_ip = info_.hardware_parameters["robot_ip"];
@@ -987,40 +950,20 @@ hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-void URPositionHardwareInterface::resetActivationState()
+void URPositionHardwareInterface::resetControllerState()
 {
-  // stop() (used by on_shutdown/on_cleanup/on_error) leaves this state past its limit / signalling
-  // shutdown, so a reconfigure must reset it before the read timeout is checked or the worker threads
-  // are (re)spawned again.
-  // The worker has been joined by stop(), so no other consumer can run queued motion commands.
-  // Drain the queue
-  std::ignore = moprim_cmd_queue_.get_latest(current_moprim_command_);
-  current_moprim_command_.fill(std::numeric_limits<double>::quiet_NaN());
-  resetMoprimCmdInterfaces();
-  build_moprim_sequence_ = false;
-  moprim_sequence_.clear();
-  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
-  ready_for_new_moprim_ = false;
-  hw_moprim_states_[0] = static_cast<double>(MoprimExecutionState::IDLE);
-  hw_moprim_states_[1] = 0.0;
-
-  // Any command that was still pending when the previous activation failed must not be executed
-  // after the reconfigure.
-  initAsyncIO();
-  target_speed_fraction_cmd_ = NO_NEW_CMD_;
-  resend_robot_program_cmd_ = NO_NEW_CMD_;
-  zero_ftsensor_cmd_ = NO_NEW_CMD_;
-  hand_back_control_cmd_ = NO_NEW_CMD_;
-
-  force_mode_task_frame_.fill(NO_NEW_CMD_);
-  force_mode_selection_vector_.fill(NO_NEW_CMD_);
-  force_mode_wrench_.fill(NO_NEW_CMD_);
-  force_mode_limits_.fill(NO_NEW_CMD_);
-  force_mode_type_ = NO_NEW_CMD_;
-  force_mode_damping_ = NO_NEW_CMD_;
-  force_mode_gain_scaling_ = NO_NEW_CMD_;
-  force_mode_disable_cmd_ = NO_NEW_CMD_;
-  force_mode_async_success_ = NO_NEW_CMD_;
+  position_controller_running_ = false;
+  velocity_controller_running_ = false;
+  torque_controller_running_ = false;
+  force_mode_controller_running_ = false;
+  freedrive_mode_controller_running_ = false;
+  passthrough_trajectory_controller_running_ = false;
+  tool_contact_controller_running_ = false;
+  twist_controller_running_ = false;
+  motion_primitives_forward_controller_running_ = false;
+  urcl_twist_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
 
   freedrive_mode_enable_ = NO_NEW_CMD_;
   freedrive_mode_abort_ = NO_NEW_CMD_;
@@ -1047,22 +990,49 @@ void URPositionHardwareInterface::resetActivationState()
   passthrough_point_index_sent_ = 0;
   passthrough_trajectory_started_ = false;
 
-  position_controller_running_ = false;
-  velocity_controller_running_ = false;
-  torque_controller_running_ = false;
-  force_mode_controller_running_ = false;
-  freedrive_mode_controller_running_ = false;
-  passthrough_trajectory_controller_running_ = false;
-  tool_contact_controller_running_ = false;
-  twist_controller_running_ = false;
-  motion_primitives_forward_controller_running_ = false;
-  urcl_twist_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  force_mode_task_frame_.fill(NO_NEW_CMD_);
+  force_mode_selection_vector_.fill(NO_NEW_CMD_);
+  force_mode_wrench_.fill(NO_NEW_CMD_);
+  force_mode_limits_.fill(NO_NEW_CMD_);
+  force_mode_type_ = NO_NEW_CMD_;
+  force_mode_damping_ = NO_NEW_CMD_;
+  force_mode_gain_scaling_ = NO_NEW_CMD_;
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
+  force_mode_async_success_ = NO_NEW_CMD_;
+
+  // No consumer is active during initialization or after stop() has joined the worker.
+  std::ignore = moprim_cmd_queue_.get_latest(current_moprim_command_);
+  current_moprim_command_.fill(std::numeric_limits<double>::quiet_NaN());
+  resetMoprimCmdInterfaces();
+  build_moprim_sequence_ = false;
+  moprim_sequence_.clear();
+  current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+  ready_for_new_moprim_ = false;
+  async_moprim_thread_shutdown_ = false;
+  hw_moprim_states_[0] = static_cast<double>(MoprimExecutionState::IDLE);
+  hw_moprim_states_[1] = 0.0;
+
+  controllers_initialized_ = false;
+  system_interface_initialized_ = 0.0;
+}
+
+void URPositionHardwareInterface::resetHardwareInterfaceState()
+{
+  // stop() (used by on_shutdown/on_cleanup/on_error) leaves this state past its limit / signalling
+  // shutdown, so a reconfigure must reset it before the read timeout is checked or the worker threads
+  // are (re)spawned again.
+  resetControllerState();
+  runtime_state_ = static_cast<uint32_t>(rtde::RUNTIME_STATE::STOPPED);
+  pausing_state_ = PausingState::RUNNING;
+
+  // Any command that was still pending when the previous activation failed must not be executed
+  // after the reconfigure.
+  resetAsyncIO();
 
   time_since_successful_read_ = rclcpp::Duration(0, 0);
   rtde_comm_has_been_started_ = false;
   packet_read_ = false;
   async_thread_shutdown_ = false;
-  async_moprim_thread_shutdown_ = false;
   initialized_ = false;
   stop_requested_ = false;
 }
@@ -1181,18 +1151,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     }
 
     if (!initialized_) {
-      initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
-      urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-      urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-      target_speed_fraction_cmd_ = NO_NEW_CMD_;
-      resend_robot_program_cmd_ = NO_NEW_CMD_;
-      zero_ftsensor_cmd_ = NO_NEW_CMD_;
-      hand_back_control_cmd_ = NO_NEW_CMD_;
-      force_mode_disable_cmd_ = NO_NEW_CMD_;
-      freedrive_mode_abort_ = NO_NEW_CMD_;
-      freedrive_mode_enable_ = NO_NEW_CMD_;
       initialized_ = true;
     }
 
@@ -1298,7 +1258,7 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
   robot_program_running_ = program_running;
 }
 
-void URPositionHardwareInterface::initAsyncIO()
+void URPositionHardwareInterface::resetAsyncIO()
 {
   for (size_t i = 0; i < 18; ++i) {
     standard_dig_out_bits_cmd_[i] = NO_NEW_CMD_;
@@ -1320,6 +1280,11 @@ void URPositionHardwareInterface::initAsyncIO()
   gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   friction_model_viscous_.fill(NO_NEW_CMD_);
   friction_model_coulomb_.fill(NO_NEW_CMD_);
+
+  target_speed_fraction_cmd_ = NO_NEW_CMD_;
+  resend_robot_program_cmd_ = NO_NEW_CMD_;
+  zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  hand_back_control_cmd_ = NO_NEW_CMD_;
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
