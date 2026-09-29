@@ -40,9 +40,11 @@
  */
 //----------------------------------------------------------------------
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
