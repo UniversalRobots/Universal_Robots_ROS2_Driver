@@ -1009,6 +1009,7 @@ void URPositionHardwareInterface::resetActivationState()
   async_thread_shutdown_ = false;
   async_moprim_thread_shutdown_ = false;
   initialized_ = false;
+  stop_requested_ = false;
 }
 
 template <typename T>
