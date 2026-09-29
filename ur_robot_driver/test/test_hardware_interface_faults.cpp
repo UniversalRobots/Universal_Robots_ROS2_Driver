@@ -155,6 +155,30 @@ public:
   {
     position_controller_running_ = val;
   }
+  void setAllControllerModesRunning()
+  {
+    position_controller_running_ = true;
+    velocity_controller_running_ = true;
+    torque_controller_running_ = true;
+    force_mode_controller_running_ = true;
+    freedrive_mode_controller_running_ = true;
+    passthrough_trajectory_controller_running_ = true;
+    tool_contact_controller_running_ = true;
+    twist_controller_running_ = true;
+    motion_primitives_forward_controller_running_ = true;
+    urcl_twist_commands_ = { { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 } };
+  }
+  bool controllerModesStopped() const
+  {
+    return !position_controller_running_ && !velocity_controller_running_ && !torque_controller_running_ &&
+           !force_mode_controller_running_ && !freedrive_mode_controller_running_ &&
+           !passthrough_trajectory_controller_running_ && !tool_contact_controller_running_ &&
+           !twist_controller_running_ && !motion_primitives_forward_controller_running_;
+  }
+  bool twistCommandIsZero() const
+  {
+    return urcl_twist_commands_ == urcl::vector6d_t{ { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  }
   void setToolContactControllerRunning(bool val, double set_state)
   {
     tool_contact_controller_running_ = val;
@@ -403,6 +427,17 @@ TEST(HardwareInterfaceReadFaults, ActivationResetClearsInitializedState)
   hw.callResetActivationState();
 
   EXPECT_FALSE(hw.isInitialized());
+}
+
+TEST(HardwareInterfaceReadFaults, ActivationResetClearsControllerModesAndTwistCommand)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setAllControllerModesRunning();
+
+  hw.callResetActivationState();
+
+  EXPECT_TRUE(hw.controllerModesStopped());
+  EXPECT_TRUE(hw.twistCommandIsZero());
 }
 
 TEST(HardwareInterfaceReadFaults, NonBlockingMissesStayOkUnderTimeout)

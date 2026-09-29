@@ -1047,6 +1047,17 @@ void URPositionHardwareInterface::resetActivationState()
   passthrough_point_index_sent_ = 0;
   passthrough_trajectory_started_ = false;
 
+  position_controller_running_ = false;
+  velocity_controller_running_ = false;
+  torque_controller_running_ = false;
+  force_mode_controller_running_ = false;
+  freedrive_mode_controller_running_ = false;
+  passthrough_trajectory_controller_running_ = false;
+  tool_contact_controller_running_ = false;
+  twist_controller_running_ = false;
+  motion_primitives_forward_controller_running_ = false;
+  urcl_twist_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+
   time_since_successful_read_ = rclcpp::Duration(0, 0);
   rtde_comm_has_been_started_ = false;
   packet_read_ = false;
