@@ -262,6 +262,34 @@ public:
   {
     start_tool_contact_result_ = val;
   }
+  void setEndToolContactResult(bool val)
+  {
+    end_tool_contact_result_ = val;
+  }
+  void setEndForceModeResult(bool val)
+  {
+    end_force_mode_result_ = val;
+  }
+  void setStopForceModeRequested()
+  {
+    stop_modes_ = { { STOP_FORCE_MODE } };
+    start_modes_.resize(1);
+    force_mode_controller_running_ = true;
+  }
+  void setStopToolContactRequested()
+  {
+    stop_modes_ = { { STOP_TOOL_CONTACT } };
+    start_modes_.resize(1);
+    tool_contact_controller_running_ = true;
+  }
+  bool forceModeControllerRunning() const
+  {
+    return force_mode_controller_running_;
+  }
+  bool toolContactControllerRunning() const
+  {
+    return tool_contact_controller_running_;
+  }
   void setTrajectoryControlResult(bool val)
   {
     trajectory_control_result_ = val;
@@ -281,6 +309,14 @@ public:
   int keepaliveCallCount() const
   {
     return keepalive_calls_;
+  }
+  int endToolContactCallCount() const
+  {
+    return end_tool_contact_calls_;
+  }
+  int endForceModeCallCount() const
+  {
+    return end_force_mode_calls_;
   }
 
 protected:
@@ -302,6 +338,11 @@ protected:
     ++keepalive_calls_;
     return keepalive_result_;
   }
+  bool endForceModeOnDriver() override
+  {
+    ++end_force_mode_calls_;
+    return end_force_mode_result_;
+  }
   bool startToolContactOnDriver() override
   {
     ++start_tool_contact_calls_;
@@ -309,19 +350,24 @@ protected:
   }
   bool endToolContactOnDriver() override
   {
-    return true;
+    ++end_tool_contact_calls_;
+    return end_tool_contact_result_;
   }
 
 private:
   bool get_data_package_result_ = false;
   bool write_joint_command_result_ = true;
   bool start_tool_contact_result_ = true;
+  bool end_tool_contact_result_ = true;
+  bool end_force_mode_result_ = true;
   bool trajectory_control_result_ = true;
   bool keepalive_result_ = true;
   int write_joint_command_calls_ = 0;
   int start_tool_contact_calls_ = 0;
   int trajectory_control_calls_ = 0;
   int keepalive_calls_ = 0;
+  int end_tool_contact_calls_ = 0;
+  int end_force_mode_calls_ = 0;
 };
 
 namespace
@@ -509,6 +555,28 @@ TEST(HardwareInterfaceWriteFaults, DeferredCommandsClearedAfterWriteFault)
   // start_force_mode() would dereference the fake driver pointer if it were still pending.
   hw.setWriteJointCommandResult(true);
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
+}
+
+TEST(HardwareInterfaceModeSwitchFaults, ForceModeStopFailureReturnsError)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setStopForceModeRequested();
+  hw.setEndForceModeResult(false);
+
+  EXPECT_EQ(hw.perform_command_mode_switch({}, {}), return_type::ERROR);
+  EXPECT_EQ(hw.endForceModeCallCount(), 1);
+  EXPECT_TRUE(hw.forceModeControllerRunning());
+}
+
+TEST(HardwareInterfaceModeSwitchFaults, ToolContactStopFailureReturnsError)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setStopToolContactRequested();
+  hw.setEndToolContactResult(false);
+
+  EXPECT_EQ(hw.perform_command_mode_switch({}, {}), return_type::ERROR);
+  EXPECT_EQ(hw.endToolContactCallCount(), 1);
+  EXPECT_TRUE(hw.toolContactControllerRunning());
 }
 
 TEST(HardwareInterfaceWriteFaults, ToolContactHelperFailureReturnsError)

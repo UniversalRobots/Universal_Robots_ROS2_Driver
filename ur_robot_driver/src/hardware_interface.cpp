@@ -1734,8 +1734,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   }
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
+    if (!stop_force_mode()) {
+      return hardware_interface::return_type::ERROR;
+    }
     force_mode_controller_running_ = false;
-    stop_force_mode();
   }
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
@@ -1761,9 +1763,11 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   }
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
+    if (!endToolContactOnDriver()) {
+      return hardware_interface::return_type::ERROR;
+    }
     tool_contact_controller_running_ = false;
     tool_contact_result_ = 3.0;
-    ur_driver_->endToolContact();
   }
 
   if (stop_modes_.size() != 0 &&
@@ -1890,10 +1894,15 @@ bool URPositionHardwareInterface::start_force_mode()
 
 bool URPositionHardwareInterface::stop_force_mode()
 {
-  bool write_success = ur_driver_->endForceMode();
+  bool write_success = endForceModeOnDriver();
   force_mode_async_success_ = static_cast<double>(write_success);
   force_mode_disable_cmd_ = NO_NEW_CMD_;
   return write_success;
+}
+
+bool URPositionHardwareInterface::endForceModeOnDriver()
+{
+  return ur_driver_->endForceMode();
 }
 
 bool URPositionHardwareInterface::check_passthrough_trajectory_controller()

@@ -210,6 +210,7 @@ protected:
       urcl::control::TrajectoryControlMessage trajectory_action, int point_number = 0,
       const urcl::RobotReceiveTimeout& timeout = urcl::RobotReceiveTimeout::millisec(200));
   virtual bool writeKeepaliveToDriver();
+  virtual bool endForceModeOnDriver();
   virtual bool startToolContactOnDriver();
   virtual bool endToolContactOnDriver();
 
