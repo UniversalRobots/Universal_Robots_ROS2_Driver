@@ -59,3 +59,13 @@ controller and therefore stop any ROS action being active on those controllers.
 
 The ``play_program`` flag is used to start the program after the robot state has been set. This has
 the same effects as explained in :ref:`continuation_after_interruptions`.
+
+.. note::
+   Starting programs through the dashboard client on PolyScope X robots is only available from
+   PolyScope 10.11.0 onwards. On earlier versions, requesting ``play_program`` outside headless mode
+   causes the ``set_mode`` action to report failure, and the program is not started.
+
+   The same thing is true for restarting the safety system. On PolyScope X robots, the safety system can be
+   restarted through the dashboard client from PolyScope 10.11.0 onwards. For earlier versions, the
+   safety system will not be restarted and the robot cannot recover from a fault using the robot
+   state helper.

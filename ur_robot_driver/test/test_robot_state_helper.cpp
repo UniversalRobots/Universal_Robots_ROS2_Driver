@@ -40,16 +40,20 @@
 #include <gtest/gtest.h>
 
 #include <atomic>
+#include <algorithm>
 #include <chrono>
 #include <functional>
 #include <future>
 #include <memory>
+#include <string>
 #include <thread>
+#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "std_srvs/srv/trigger.hpp"
 #include "ur_client_library/ur/datatypes.h"
+#include "ur_client_library/ur/version_information.h"
 #include "ur_dashboard_msgs/action/set_mode.hpp"
 #include "ur_robot_driver/robot_state_helper.hpp"
 
@@ -70,6 +74,25 @@ public:
     feedback_ = std::make_shared<SetMode::Feedback>();
     headless_mode_ = false;
     program_running_ = false;
+  }
+
+  explicit RobotStateHelperTestWrapper(RobotVersionQuery robot_version_query,
+                                       const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
+    : RobotStateHelper(options, std::move(robot_version_query))
+  {
+  }
+
+  bool hasPlayProgramClient() const
+  {
+    return play_program_srv_ != nullptr;
+  }
+  bool hasRestartSafetyClient() const
+  {
+    return restart_safety_srv_ != nullptr;
+  }
+  bool hasResendRobotProgramClient() const
+  {
+    return resend_robot_program_srv_ != nullptr;
   }
 
   void setRobotMode(urcl::RobotMode mode)
@@ -468,6 +491,54 @@ TEST_F(RobotStateHelperActionFixture, DestructorJoinsWorkerBlockedInDashboardTri
   const auto elapsed = std::chrono::steady_clock::now() - start;
   EXPECT_LT(elapsed, 2s);
 }
+
+// ---------------------------------------------------------------------------
+// Dashboard client creation from mocked PrimaryClient version
+// ---------------------------------------------------------------------------
+
+struct DashboardClientVersionCase
+{
+  const char* version;
+  bool expect_dashboard_clients;
+};
+
+class RobotStateHelperDashboardClients : public ::testing::TestWithParam<DashboardClientVersionCase>
+{
+};
+
+TEST_P(RobotStateHelperDashboardClients, CreatesExpectedServiceClientsForRobotVersion)
+{
+  const auto param = GetParam();
+  auto version_query = [version = param.version]() {
+    return std::make_shared<urcl::VersionInformation>(urcl::VersionInformation::fromString(version));
+  };
+
+  // Unique node name so parameterized cases can coexist with other helpers in this process.
+  static std::atomic<int> instance{ 0 };
+  const std::string node_name = "rsh_dashboard_clients_" + std::to_string(instance++);
+  rclcpp::NodeOptions options;
+  options.arguments(std::vector<std::string>{ "--ros-args", "-r", "__node:=" + node_name });
+
+  RobotStateHelperTestWrapper helper(version_query, options);
+
+  EXPECT_EQ(helper.hasPlayProgramClient(), param.expect_dashboard_clients);
+  EXPECT_EQ(helper.hasRestartSafetyClient(), param.expect_dashboard_clients);
+  EXPECT_TRUE(helper.hasResendRobotProgramClient());
+}
+
+INSTANTIATE_TEST_SUITE_P(RobotVersion, RobotStateHelperDashboardClients,
+                         ::testing::Values(DashboardClientVersionCase{ "3.15.8", true },    // CB3
+                                           DashboardClientVersionCase{ "5.21.0", true },    // PolyScope 5
+                                           DashboardClientVersionCase{ "10.10.0", false },  // PolyScope X before Robot
+                                                                                            // API
+                                           DashboardClientVersionCase{ "10.11.0", true },   // first PolyScope X with
+                                                                                            // Robot API
+                                           DashboardClientVersionCase{ "10.14.0", true }),
+                         [](const ::testing::TestParamInfo<DashboardClientVersionCase>& info) {
+                           std::string name = info.param.version;
+                           std::replace(name.begin(), name.end(), '.', '_');
+                           return name;
+                         });
 
 }  // namespace ur_robot_driver
 
