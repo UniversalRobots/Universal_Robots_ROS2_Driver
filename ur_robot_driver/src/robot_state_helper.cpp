@@ -89,29 +89,18 @@ RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options, RobotVers
     restart_safety_srv_ = create_client<std_srvs::srv::Trigger>("dashboard_client/restart_safety",
                                                                 rmw_qos_profile_services_default, service_cb_grp_);
     // Service to start UR program execution on the robot
-<<<<<<< HEAD
     play_program_srv_ = create_client<std_srvs::srv::Trigger>("dashboard_client/play", rmw_qos_profile_services_default,
                                                               service_cb_grp_);
-    play_program_srv_->wait_for_service();
-  }
-
-  resend_robot_program_srv_ = create_client<std_srvs::srv::Trigger>("io_and_status_controller/resend_robot_program",
-                                                                    rmw_qos_profile_services_default, service_cb_grp_);
-  resend_robot_program_srv_->wait_for_service();
-=======
-    play_program_srv_ = create_client<std_srvs::srv::Trigger>("dashboard_client/play",
-                                                              rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
     if (!mock_robot_version) {
       play_program_srv_->wait_for_service();
     }
   }
 
   resend_robot_program_srv_ = create_client<std_srvs::srv::Trigger>("io_and_status_controller/resend_robot_program",
-                                                                    rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+                                                                    rmw_qos_profile_services_default, service_cb_grp_);
   if (!mock_robot_version) {
     resend_robot_program_srv_->wait_for_service();
   }
->>>>>>> ca29b02 (Specify minimum required PolyScopeX version in robot_state_helper output (#1992))
 
   feedback_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Feedback>();
   result_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Result>();
