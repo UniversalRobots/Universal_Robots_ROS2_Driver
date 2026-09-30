@@ -37,7 +37,11 @@
 
 namespace ur_robot_driver
 {
-RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options)
+RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options) : RobotStateHelper(options, RobotVersionQuery{})
+{
+}
+
+RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options, RobotVersionQuery robot_version_query)
   : rclcpp::Node("robot_state_helper", options)
   , robot_mode_(urcl::RobotMode::UNKNOWN)
   , safety_mode_(urcl::SafetyMode::UNDEFINED_SAFETY_MODE)
@@ -66,13 +70,18 @@ RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options)
   declare_parameter("robot_ip", "192.168.56.101");
   robot_ip_ = get_parameter("robot_ip").as_string();
 
-  primary_client_ = std::make_shared<urcl::primary_interface::PrimaryClient>(robot_ip_, notifier_);
+  const bool mock_robot_version = static_cast<bool>(robot_version_query);
+  std::shared_ptr<urcl::VersionInformation> robot_version;
+  if (mock_robot_version) {
+    robot_version = robot_version_query();
+  } else {
+    primary_client_ = std::make_shared<urcl::primary_interface::PrimaryClient>(robot_ip_, notifier_);
+    primary_client_->start(0, std::chrono::seconds(10));
+    robot_version = primary_client_->getRobotVersion();
+  }
 
-  primary_client_->start(0, std::chrono::seconds(10));
-  auto robot_version = primary_client_->getRobotVersion();
-
-  if (robot_version->major > 5) {
-    RCLCPP_WARN(get_logger(), "Running on a PolyScopeX robot. The dashboard server is not "
+  if (robot_version->major == 10 && robot_version->minor < 11) {
+    RCLCPP_WARN(get_logger(), "Running on a PolyScopeX robot < 10.11.0. The Robot API is not "
                               "available, therefore the robot_state_helper cannot start "
                               "PolyScope programs and restart the safety.");
   } else {
@@ -80,6 +89,7 @@ RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options)
     restart_safety_srv_ = create_client<std_srvs::srv::Trigger>("dashboard_client/restart_safety",
                                                                 rmw_qos_profile_services_default, service_cb_grp_);
     // Service to start UR program execution on the robot
+<<<<<<< HEAD
     play_program_srv_ = create_client<std_srvs::srv::Trigger>("dashboard_client/play", rmw_qos_profile_services_default,
                                                               service_cb_grp_);
     play_program_srv_->wait_for_service();
@@ -88,6 +98,20 @@ RobotStateHelper::RobotStateHelper(const rclcpp::NodeOptions& options)
   resend_robot_program_srv_ = create_client<std_srvs::srv::Trigger>("io_and_status_controller/resend_robot_program",
                                                                     rmw_qos_profile_services_default, service_cb_grp_);
   resend_robot_program_srv_->wait_for_service();
+=======
+    play_program_srv_ = create_client<std_srvs::srv::Trigger>("dashboard_client/play",
+                                                              rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+    if (!mock_robot_version) {
+      play_program_srv_->wait_for_service();
+    }
+  }
+
+  resend_robot_program_srv_ = create_client<std_srvs::srv::Trigger>("io_and_status_controller/resend_robot_program",
+                                                                    rclcpp::QoS(rclcpp::KeepLast(10)), service_cb_grp_);
+  if (!mock_robot_version) {
+    resend_robot_program_srv_->wait_for_service();
+  }
+>>>>>>> ca29b02 (Specify minimum required PolyScopeX version in robot_state_helper output (#1992))
 
   feedback_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Feedback>();
   result_ = std::make_shared<ur_dashboard_msgs::action::SetMode::Result>();
