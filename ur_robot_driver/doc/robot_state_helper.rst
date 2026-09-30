@@ -62,8 +62,8 @@ the same effects as explained in :ref:`continuation_after_interruptions`.
 
 .. note::
    Starting programs through the dashboard client on PolyScope X robots is only available from
-   PolyScope 10.11.0 onwards. For earlier versions, the ``play_program`` flag will be ignored and
-   the program will not be started.
+   PolyScope 10.11.0 onwards. On earlier versions, requesting ``play_program`` outside headless mode
+   causes the ``set_mode`` action to report failure, and the program is not started.
 
    The same thing is true for restarting the safety system. On PolyScope X robots, the safety system can be
    restarted through the dashboard client from PolyScope 10.11.0 onwards. For earlier versions, the
