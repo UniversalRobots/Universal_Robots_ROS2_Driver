@@ -158,6 +158,7 @@ target_link_libraries(robot_state_helper
 
 add_executable(urscript_interface
   src/urscript_interface.cpp
+  src/urcl_log_handler.cpp
 )
 target_link_libraries(urscript_interface PUBLIC
   rclcpp::rclcpp

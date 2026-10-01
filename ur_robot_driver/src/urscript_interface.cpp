@@ -43,8 +43,10 @@
 #include <ur_msgs/action/send_script.hpp>
 
 #include <rclcpp/rclcpp.hpp>
-#include "rclcpp_action/rclcpp_action.hpp"
 #include <std_msgs/msg/string.hpp>
+
+#include <ur_robot_driver/urcl_log_handler.hpp>
+#include "rclcpp_action/rclcpp_action.hpp"
 
 using SendScript = ur_msgs::action::SendScript;
 
@@ -215,6 +217,7 @@ private:
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
+  ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
   auto node = std::make_shared<URScriptInterface>();
   rclcpp::on_shutdown([weak_node = std::weak_ptr(node)]() {
     if (auto node = weak_node.lock()) {
