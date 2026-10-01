@@ -58,9 +58,11 @@ public:
 
     primary_client_ =
         std::make_unique<urcl::primary_interface::PrimaryClient>(this->get_parameter("robot_ip").as_string(), notif_);
+  }
 
+  void start()
+  {
     primary_client_->start(10, std::chrono::seconds(10));
-
     script_sub_ = create_subscription<std_msgs::msg::String>(
         "~/script_command", 1, std::bind(&URScriptInterface::script_callback, this, std::placeholders::_1));
 
@@ -69,6 +71,11 @@ public:
         std::bind(&URScriptInterface::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
         std::bind(&URScriptInterface::handle_cancel, this, std::placeholders::_1),
         std::bind(&URScriptInterface::handle_accepted, this, std::placeholders::_1));
+  }
+
+  void stop()
+  {
+    primary_client_->stop();
   }
 
   ~URScriptInterface() override
@@ -208,7 +215,23 @@ private:
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_unique<URScriptInterface>());
+  auto node = std::make_shared<URScriptInterface>();
+  rclcpp::on_shutdown([weak_node = std::weak_ptr(node)]() {
+    if (auto node = weak_node.lock()) {
+      node->stop();
+    }
+  });
+  try {
+    node->start();
+  } catch (const urcl::UrException& e) {
+    if (rclcpp::ok()) {
+      RCLCPP_ERROR(node->get_logger(), "%s", e.what());
+    }
+  }
+  if (rclcpp::ok()) {
+    rclcpp::spin(node);
+  }
+  node->stop();
   rclcpp::shutdown();
   return 0;
 }
