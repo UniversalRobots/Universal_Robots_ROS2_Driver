@@ -103,8 +103,14 @@ bool DashboardClientROS::connect()
     return existing_client->connect(1);
   }
 
-  primary_client_.start(10, std::chrono::seconds(10));
-  auto robot_version = primary_client_.getRobotVersion();
+  std::shared_ptr<urcl::VersionInformation> robot_version;
+  try {
+    primary_client_.start(10, std::chrono::seconds(10));
+    robot_version = primary_client_.getRobotVersion();
+  } catch (...) {
+    primary_client_.stop();
+    throw;
+  }
   RCLCPP_INFO(node_->get_logger(), "Robot has version %s", robot_version->toString().c_str());
   primary_client_.stop();
 
