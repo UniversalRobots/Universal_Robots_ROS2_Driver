@@ -52,7 +52,6 @@
 // UR client library
 #include "ur_client_library/ur/dashboard_client.h"
 #include "ur_client_library/exceptions.h"
-#include "ur_client_library/primary/primary_client.h"
 #include "ur_dashboard_msgs/srv/add_to_log.hpp"
 #include "ur_dashboard_msgs/srv/get_loaded_program.hpp"
 #include "ur_dashboard_msgs/srv/get_program_state.hpp"
@@ -95,7 +94,8 @@ public:
    * be found
    * \param robot_ip IP address of the robot
    */
-  DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip);
+  DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip,
+                     const urcl::DashboardClient::ClientPolicy policy = urcl::DashboardClient::ClientPolicy::G5);
   DashboardClientROS() = delete;
   virtual ~DashboardClientROS() = default;
 
@@ -200,15 +200,12 @@ private:
   bool handleGetPolyScopeVersionQuery(ur_dashboard_msgs::srv::GetPolyScopeVersion::Request::SharedPtr req,
                                       ur_dashboard_msgs::srv::GetPolyScopeVersion::Response::SharedPtr resp);
 
-  bool connect();
+  bool connect(const urcl::DashboardClient::ClientPolicy dashboard_policy);
   void initServices(urcl::DashboardClient::ClientPolicy dashboard_policy);
 
   std::shared_ptr<rclcpp::Node> node_;
   std::string robot_ip_;
   std::unique_ptr<urcl::DashboardClient> client_;
-
-  urcl::comm::INotifier notifier_;
-  urcl::primary_interface::PrimaryClient primary_client_;
 
   // Commanding services
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr brake_release_service_;

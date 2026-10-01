@@ -35,13 +35,14 @@
  */
 //----------------------------------------------------------------------
 
-#include "ur_robot_driver/dashboard_client_ros.hpp"
+#include <ur_client_library/primary/primary_client.h>
 
 #include <memory>
 #include <string>
 
+#include <ur_robot_driver/dashboard_client_ros.hpp>
+#include <ur_robot_driver/urcl_log_handler.hpp>
 #include <rclcpp/logging.hpp>
-#include "ur_robot_driver/urcl_log_handler.hpp"
 
 int main(int argc, char** argv)
 {
@@ -54,9 +55,48 @@ int main(int argc, char** argv)
 
   ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
 
+  urcl::comm::INotifier notifier;
+  auto primary_client = std::make_shared<urcl::primary_interface::PrimaryClient>(robot_ip, notifier);
+
+  // Runs before spin() exists, so Ctrl-C can abort the blocking connection attempt.
+  rclcpp::on_shutdown([weak_client = std::weak_ptr<urcl::primary_interface::PrimaryClient>(primary_client)]() {
+    if (auto client = weak_client.lock()) {
+      client->stop();
+    }
+  });
+
+  std::shared_ptr<urcl::VersionInformation> robot_version;
+  try {
+    primary_client->start(10, std::chrono::seconds(10));
+    robot_version = primary_client->getRobotVersion();
+  } catch (const urcl::UrException& e) {
+    primary_client.reset();
+    if (!rclcpp::ok()) {
+      return 0;
+    }
+    RCLCPP_ERROR(node->get_logger(), "Could not determine robot version: %s", e.what());
+    rclcpp::shutdown();
+    return 1;
+  }
+
+  RCLCPP_INFO(node->get_logger(), "Robot has version %s", robot_version->toString().c_str());
+  primary_client->stop();
+  primary_client.reset();
+  auto dashboard_policy = urcl::DashboardClient::ClientPolicy::G5;
+  if (robot_version->major > 5) {
+    if (robot_version->major == 10 && robot_version->minor < 11) {
+      RCLCPP_FATAL(node->get_logger(),
+                   "The dashboard server for PolyScope X is only available from version 10.11.0 and later. The "
+                   "connected robot has version %s. Exiting now.",
+                   robot_version->toString().c_str());
+      exit(1);
+    }
+    dashboard_policy = urcl::DashboardClient::ClientPolicy::POLYSCOPE_X;
+  }
+
   std::shared_ptr<ur_robot_driver::DashboardClientROS> client;
   try {
-    client = std::make_shared<ur_robot_driver::DashboardClientROS>(node, robot_ip);
+    client = std::make_shared<ur_robot_driver::DashboardClientROS>(node, robot_ip, dashboard_policy);
   } catch (const urcl::UrException& e) {
     RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"),
                  "Error raised during Dashboard Client startup: %s. Exiting dashboard client now.", e.what());
