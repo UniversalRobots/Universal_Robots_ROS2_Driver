@@ -41,6 +41,7 @@
 #define UR_ROBOT_DRIVER__DASHBOARD_CLIENT_ROS_HPP_
 
 // System
+#include <mutex>
 #include <regex>
 #include <string>
 #include <memory>
@@ -52,6 +53,7 @@
 // UR client library
 #include "ur_client_library/ur/dashboard_client.h"
 #include "ur_client_library/exceptions.h"
+#include "ur_client_library/primary/primary_client.h"
 #include "ur_dashboard_msgs/srv/add_to_log.hpp"
 #include "ur_dashboard_msgs/srv/get_loaded_program.hpp"
 #include "ur_dashboard_msgs/srv/get_program_state.hpp"
@@ -94,10 +96,23 @@ public:
    * be found
    * \param robot_ip IP address of the robot
    */
-  DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip,
-                     const urcl::DashboardClient::ClientPolicy policy = urcl::DashboardClient::ClientPolicy::G5);
+  DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip);
   DashboardClientROS() = delete;
   virtual ~DashboardClientROS() = default;
+
+  /*!
+   * \brief Reads the robot version from the primary interface and connects to the dashboard server.
+   *
+   * \returns True when the dashboard server connection is established.
+   */
+  bool connect();
+
+  /*!
+   * \brief Stops the primary client and disconnects the dashboard client.
+   *
+   * This can be called from the ROS shutdown callback while connect() is blocked.
+   */
+  void stop();
 
 private:
   inline rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr
@@ -200,11 +215,13 @@ private:
   bool handleGetPolyScopeVersionQuery(ur_dashboard_msgs::srv::GetPolyScopeVersion::Request::SharedPtr req,
                                       ur_dashboard_msgs::srv::GetPolyScopeVersion::Response::SharedPtr resp);
 
-  bool connect(const urcl::DashboardClient::ClientPolicy dashboard_policy);
   void initServices(urcl::DashboardClient::ClientPolicy dashboard_policy);
 
   std::shared_ptr<rclcpp::Node> node_;
   std::string robot_ip_;
+  urcl::comm::INotifier notifier_;
+  urcl::primary_interface::PrimaryClient primary_client_;
+  std::mutex client_mutex_;
   std::unique_ptr<urcl::DashboardClient> client_;
 
   // Commanding services
