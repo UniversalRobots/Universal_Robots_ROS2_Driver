@@ -222,6 +222,7 @@ private:
   urcl::comm::INotifier notifier_;
   urcl::primary_interface::PrimaryClient primary_client_;
   std::mutex client_mutex_;
+  bool stop_requested_ = false;
   std::unique_ptr<urcl::DashboardClient> client_;
 
   // Commanding services

@@ -75,6 +75,7 @@ void DashboardClientROS::stop()
 {
   primary_client_.stop();
   std::lock_guard<std::mutex> lock(client_mutex_);
+  stop_requested_ = true;
   if (client_) {
     client_->disconnect();
   }
@@ -85,6 +86,9 @@ bool DashboardClientROS::connect()
   urcl::DashboardClient* existing_client = nullptr;
   {
     std::lock_guard<std::mutex> lock(client_mutex_);
+    if (stop_requested_) {
+      return false;
+    }
     if (client_) {
       timeval tv;
       double time_buffer = 0;
@@ -96,7 +100,7 @@ bool DashboardClientROS::connect()
     }
   }
   if (existing_client != nullptr) {
-    return existing_client->connect();
+    return existing_client->connect(1);
   }
 
   primary_client_.start(10, std::chrono::seconds(10));
@@ -118,10 +122,7 @@ bool DashboardClientROS::connect()
 
   RCLCPP_INFO(node_->get_logger(), "Connecting to Dashboard Server at %s with policy %s", robot_ip_.c_str(),
               dashboard_policy == urcl::DashboardClient::ClientPolicy::G5 ? "G5" : "Polyscope X");
-  {
-    std::lock_guard<std::mutex> lock(client_mutex_);
-    client_ = std::make_unique<urcl::DashboardClient>(robot_ip_, dashboard_policy);
-  }
+  auto client = std::make_unique<urcl::DashboardClient>(robot_ip_, dashboard_policy);
 
   timeval tv;
   // Timeout after which a call to the dashboard server will be considered failure if no answer has been received.
@@ -129,17 +130,25 @@ bool DashboardClientROS::connect()
   node_->get_parameter("receive_timeout", time_buffer);
   tv.tv_sec = time_buffer;
   tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
+  client->setReceiveTimeout(tv);
+
   bool connected = false;
   try {
-    client_->setReceiveTimeout(tv);
-    connected = client_->connect();
+    connected = client->connect(1);
   } catch (const urcl::UrException& e) {
     RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Connect failed: '%s'", e.what());
   }
   if (!connected) {
-    std::lock_guard<std::mutex> lock(client_mutex_);
-    client_.reset();
     return false;
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(client_mutex_);
+    if (stop_requested_) {
+      client->disconnect();
+      return false;
+    }
+    client_ = std::move(client);
   }
 
   RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s.", robot_ip_.c_str());
