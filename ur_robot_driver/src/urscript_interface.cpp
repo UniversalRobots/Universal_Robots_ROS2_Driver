@@ -227,9 +227,13 @@ int main(int argc, char** argv)
   try {
     node->start();
   } catch (const urcl::UrException& e) {
-    if (rclcpp::ok()) {
-      RCLCPP_ERROR(node->get_logger(), "%s", e.what());
+    if (!rclcpp::ok()) {
+      return 0;
     }
+    RCLCPP_ERROR(node->get_logger(), "%s", e.what());
+    node->stop();
+    rclcpp::shutdown();
+    return 1;
   }
   if (rclcpp::ok()) {
     rclcpp::spin(node);
