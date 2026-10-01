@@ -301,6 +301,16 @@ if(BUILD_TESTING)
       800
   )
 
+  add_launch_test(test/urscript_interface_interruptible_startup.py
+    TIMEOUT
+      30
+  )
+
+  add_launch_test(test/dashboard_client_interruptible_startup.py
+    TIMEOUT
+      30
+  )
+
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
     add_launch_test(test/launch_args.py
       TIMEOUT
