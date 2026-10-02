@@ -37,6 +37,7 @@
   <xacro:arg name="use_currents_as_efforts" default="false"/>
 
   <xacro:arg name="blocking_read" default="false" />
+  <xacro:arg name="non_blocking_read_timeout" default="0.04" />
 
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />
@@ -112,6 +113,7 @@
     verify_robot_model="$(arg verify_robot_model)"
     use_currents_as_efforts="$(arg use_currents_as_efforts)"
     non_blocking_read="${not blocking_read}"
+    non_blocking_read_timeout="$(arg non_blocking_read_timeout)"
   />
 
 </robot>
