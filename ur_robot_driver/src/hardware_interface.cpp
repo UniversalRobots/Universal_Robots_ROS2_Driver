@@ -91,6 +91,12 @@ RobotTypeWithSeries robotTypeFromString(const std::string& robot_type_str)
     return { urcl::RobotType::UR30, urcl::RobotSeries::UR_SERIES };
   } else if (robot_type_str == "ur8long") {
     return { urcl::RobotType::UR8LONG, urcl::RobotSeries::UR_SERIES };
+  } else if (robot_type_str == "ur10g-1750") {
+    return { urcl::RobotType::UR10G_1750, urcl::RobotSeries::G_SERIES };
+  } else if (robot_type_str == "ur17g-1300") {
+    return { urcl::RobotType::UR17G_1300, urcl::RobotSeries::G_SERIES };
+  } else if (robot_type_str == "ur18g-950") {
+    return { urcl::RobotType::UR18G_950, urcl::RobotSeries::G_SERIES };
   } else {
     throw std::invalid_argument("Unknown robot type: " + robot_type_str);
   }
