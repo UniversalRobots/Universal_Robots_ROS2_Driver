@@ -35,13 +35,12 @@
  */
 //----------------------------------------------------------------------
 
-#include "ur_robot_driver/dashboard_client_ros.hpp"
-
 #include <memory>
 #include <string>
 
+#include <ur_robot_driver/dashboard_client_ros.hpp>
+#include <ur_robot_driver/urcl_log_handler.hpp>
 #include <rclcpp/logging.hpp>
-#include "ur_robot_driver/urcl_log_handler.hpp"
 
 int main(int argc, char** argv)
 {
@@ -63,7 +62,48 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  rclcpp::spin(node);
+  // Runs before spin() exists, so Ctrl-C can abort a blocking connect().
+  rclcpp::on_shutdown([weak_client = std::weak_ptr<ur_robot_driver::DashboardClientROS>(client)]() {
+    if (auto locked_client = weak_client.lock()) {
+      locked_client->stop();
+    }
+  });
 
+  if (node->get_parameter("autoconnect").as_bool()) {
+    while (rclcpp::ok()) {
+      try {
+        if (client->connect()) {
+          break;
+        }
+      } catch (const urcl::UrException& e) {
+        if (!rclcpp::ok()) {
+          break;
+        }
+        RCLCPP_ERROR(node->get_logger(), "Could not determine robot version: %s", e.what());
+        client->stop();
+        rclcpp::shutdown();
+        return 1;
+      }
+      RCLCPP_ERROR(node->get_logger(),
+                   "Failed to connect to Dashboard Server at %s. Please check the IP address and ensure the robot is "
+                   "powered on and has the dashboard server enabled. Retrying in 5 seconds.",
+                   robot_ip.c_str());
+      if (!rclcpp::ok()) {
+        break;
+      }
+      rclcpp::sleep_for(std::chrono::seconds(5));
+    }
+  } else {
+    RCLCPP_INFO(node->get_logger(),
+                "Dashboard client started with autoconnect disabled. Call the ~/connect service to connect to %s.",
+                robot_ip.c_str());
+  }
+
+  if (rclcpp::ok()) {
+    rclcpp::spin(node);
+  }
+
+  client->stop();
+  rclcpp::shutdown();
   return 0;
 }
