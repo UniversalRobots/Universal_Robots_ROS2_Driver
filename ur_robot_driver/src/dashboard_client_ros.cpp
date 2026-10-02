@@ -128,15 +128,24 @@ bool DashboardClientROS::connect()
 
   RCLCPP_INFO(node_->get_logger(), "Connecting to Dashboard Server at %s with policy %s", robot_ip_.c_str(),
               dashboard_policy == urcl::DashboardClient::ClientPolicy::G5 ? "G5" : "Polyscope X");
-  auto client = std::make_unique<urcl::DashboardClient>(robot_ip_, dashboard_policy);
-
   timeval tv;
   // Timeout after which a call to the dashboard server will be considered failure if no answer has been received.
   double time_buffer = 0;
   node_->get_parameter("receive_timeout", time_buffer);
   tv.tv_sec = time_buffer;
   tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
-  client->setReceiveTimeout(tv);
+  auto new_client = std::make_unique<urcl::DashboardClient>(robot_ip_, dashboard_policy);
+  new_client->setReceiveTimeout(tv);
+  urcl::DashboardClient* client = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(client_mutex_);
+    if (stop_requested_) {
+      return false;
+    }
+    // Publish the in-flight client so stop() can interrupt the welcome receive.
+    client_ = std::move(new_client);
+    client = client_.get();
+  }
 
   bool connected = false;
   try {
@@ -145,6 +154,10 @@ bool DashboardClientROS::connect()
     RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Connect failed: '%s'", e.what());
   }
   if (!connected) {
+    std::lock_guard<std::mutex> lock(client_mutex_);
+    if (!stop_requested_) {
+      client_.reset();
+    }
     return false;
   }
 
@@ -154,7 +167,6 @@ bool DashboardClientROS::connect()
       client->disconnect();
       return false;
     }
-    client_ = std::move(client);
   }
 
   RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s.", robot_ip_.c_str());
