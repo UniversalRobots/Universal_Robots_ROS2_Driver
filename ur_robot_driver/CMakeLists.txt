@@ -311,6 +311,11 @@ if(BUILD_TESTING)
       30
   )
 
+  add_launch_test(test/dashboard_client_silent_greeting_shutdown.py
+    TIMEOUT
+      30
+  )
+
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
     add_launch_test(test/launch_args.py
       TIMEOUT
