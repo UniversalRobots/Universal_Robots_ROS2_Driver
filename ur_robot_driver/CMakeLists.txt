@@ -123,6 +123,7 @@ target_link_libraries(robot_state_helper
 
 add_executable(urscript_interface
   src/urscript_interface.cpp
+  src/urcl_log_handler.cpp
 )
 ament_target_dependencies(urscript_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
@@ -240,6 +241,16 @@ if(BUILD_TESTING)
   add_launch_test(test/test_mock_hardware.py
     TIMEOUT
       800
+  )
+
+  add_launch_test(test/urscript_interface_interruptible_startup.py
+    TIMEOUT
+      30
+  )
+
+  add_launch_test(test/dashboard_client_interruptible_startup.py
+    TIMEOUT
+      30
   )
 
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
