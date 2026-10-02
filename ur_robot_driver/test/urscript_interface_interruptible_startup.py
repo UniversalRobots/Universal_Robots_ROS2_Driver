@@ -67,13 +67,16 @@ class TestInterruptibleStartup(unittest.TestCase):
 
     def test_sigint_interrupts_connection_retry(self, proc_info, proc_output, urscript_interface):
         proc_info.assertWaitForStartup(urscript_interface, timeout=5)
-        proc_output.assertWaitFor(
-            "Starting primary client pipeline",
-            process=urscript_interface,
-            timeout=5,
-        )
-        # Let PrimaryClient::start() enter its blocking socket connection.
-        time.sleep(0.5)
+        try:
+            proc_output.assertWaitFor(
+                "Retrying in 10 seconds", process=urscript_interface, timeout=15
+            )
+        except AssertionError:
+            raise AssertionError(
+                "dashboard_client did not output 'Retrying in 10 seconds' within 15 seconds. "
+                "This may indicate that the dashboard_client connected to the robot, which is unexpected "
+                "in this test scenario. Make sure, there's nothing running on port 30001 of localhost."
+            )
 
         process_event = proc_info[urscript_interface]
         start = time.monotonic()
