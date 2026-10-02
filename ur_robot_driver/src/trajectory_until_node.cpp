@@ -311,7 +311,8 @@ void TrajectoryUntilNode::report_goal(TrajectoryResult result)
           if (server_goal_handle_->is_canceling()) {
             server_goal_handle_->canceled(prealloc_res_);
           } else {
-            RCLCPP_WARN(this->get_logger(), "The trajectory action reported CANCELED, aborting Move Until Contact action.");
+            RCLCPP_WARN(this->get_logger(), "The trajectory action reported CANCELED, aborting Move Until Contact "
+                                            "action.");
             prealloc_res_->error_string += " Goal was not canceling; aborting.";
             server_goal_handle_->abort(prealloc_res_);
           }
