@@ -38,7 +38,6 @@
 //----------------------------------------------------------------------
 
 #include <ur_client_library/exceptions.h>
-#include <ur_client_library/primary/primary_client.h>
 #include <ur_client_library/ur/dashboard_client.h>
 
 #include <memory>
@@ -50,7 +49,7 @@
 namespace ur_robot_driver
 {
 DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip)
-  : node_(node), robot_ip_(robot_ip), primary_client_(robot_ip, notifier_)
+  : node_(node), robot_ip_(robot_ip), primary_client_(robot_ip_, notifier_)
 {
   node_->declare_parameter<double>("receive_timeout", 20);
   node_->declare_parameter<bool>("autoconnect", true);
@@ -59,8 +58,8 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
       std::bind(&DashboardClientROS::parametersCallback, this, std::placeholders::_1));
 
   reconnect_service_ = node_->create_service<std_srvs::srv::Trigger>(
-      "~/connect",
-      [&](const std_srvs::srv::Trigger::Request::SharedPtr /*req*/, std_srvs::srv::Trigger::Response::SharedPtr resp) {
+      "~/connect", [this](const std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
+                          std_srvs::srv::Trigger::Response::SharedPtr resp) {
         try {
           resp->success = connect();
         } catch (const urcl::UrException& e) {
@@ -70,44 +69,52 @@ DashboardClientROS::DashboardClientROS(const rclcpp::Node::SharedPtr& node, cons
         }
         return true;
       });
+}
 
-  if (node_->get_parameter("autoconnect").as_bool()) {
-    while (!connect()) {
-      RCLCPP_ERROR(node_->get_logger(),
-                   "Failed to connect to Dashboard Server at %s. Please check the IP address and ensure the robot is "
-                   "powered on and has the dashboard server enabled. Retrying in 5 seconds.",
-                   robot_ip_.c_str());
-      if (rclcpp::ok()) {
-        rclcpp::sleep_for(std::chrono::seconds(5));
-      } else {
-        RCLCPP_ERROR(node_->get_logger(), "ROS is shutting down, exiting now.");
-        return;
-      }
-    }
-  } else {
-    RCLCPP_INFO(node_->get_logger(),
-                "Dashboard client started with autoconnect disabled. Call the ~/connect service to connect to %s.",
-                robot_ip_.c_str());
+void DashboardClientROS::stop()
+{
+  primary_client_.stop();
+  std::lock_guard<std::mutex> lock(client_mutex_);
+  stop_requested_ = true;
+  if (client_) {
+    client_->disconnect();
   }
 }
 
 bool DashboardClientROS::connect()
 {
-  if (client_) {
-    timeval tv;
-    double time_buffer = 0;
-    node_->get_parameter("receive_timeout", time_buffer);
-    tv.tv_sec = time_buffer;
-    tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
-    client_->setReceiveTimeout(tv);
-    return client_->connect();
+  urcl::DashboardClient* existing_client = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(client_mutex_);
+    if (stop_requested_) {
+      return false;
+    }
+    if (client_) {
+      timeval tv;
+      double time_buffer = 0;
+      node_->get_parameter("receive_timeout", time_buffer);
+      tv.tv_sec = time_buffer;
+      tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
+      client_->setReceiveTimeout(tv);
+      existing_client = client_.get();
+    }
+  }
+  if (existing_client != nullptr) {
+    return existing_client->connect(1);
   }
 
-  primary_client_.start(10, std::chrono::seconds(10));
-  auto robot_version = primary_client_.getRobotVersion();
+  std::shared_ptr<urcl::VersionInformation> robot_version;
+  try {
+    primary_client_.start(10, std::chrono::seconds(10));
+    robot_version = primary_client_.getRobotVersion();
+  } catch (...) {
+    primary_client_.stop();
+    throw;
+  }
+  RCLCPP_INFO(node_->get_logger(), "Robot has version %s", robot_version->toString().c_str());
   primary_client_.stop();
-  auto dashboard_policy = urcl::DashboardClient::ClientPolicy::G5;
 
+  auto dashboard_policy = urcl::DashboardClient::ClientPolicy::G5;
   if (robot_version->major > 5) {
     if (robot_version->major == 10 && robot_version->minor < 11) {
       RCLCPP_FATAL(node_->get_logger(),
@@ -121,7 +128,7 @@ bool DashboardClientROS::connect()
 
   RCLCPP_INFO(node_->get_logger(), "Connecting to Dashboard Server at %s with policy %s", robot_ip_.c_str(),
               dashboard_policy == urcl::DashboardClient::ClientPolicy::G5 ? "G5" : "Polyscope X");
-  client_ = std::make_unique<urcl::DashboardClient>(robot_ip_, dashboard_policy);
+  auto client = std::make_unique<urcl::DashboardClient>(robot_ip_, dashboard_policy);
 
   timeval tv;
   // Timeout after which a call to the dashboard server will be considered failure if no answer has been received.
@@ -129,20 +136,28 @@ bool DashboardClientROS::connect()
   node_->get_parameter("receive_timeout", time_buffer);
   tv.tv_sec = time_buffer;
   tv.tv_usec = (time_buffer - static_cast<int>(time_buffer)) * 1e6;
+  client->setReceiveTimeout(tv);
+
   bool connected = false;
   try {
-    client_->setReceiveTimeout(tv);
-    connected = client_->connect();
+    connected = client->connect(1);
   } catch (const urcl::UrException& e) {
     RCLCPP_ERROR(rclcpp::get_logger("Dashboard_Client"), "Connect failed: '%s'", e.what());
   }
   if (!connected) {
-    client_.reset();
     return false;
   }
 
-  RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s. Robot has version %s",
-              robot_ip_.c_str(), robot_version->toString().c_str());
+  {
+    std::lock_guard<std::mutex> lock(client_mutex_);
+    if (stop_requested_) {
+      client->disconnect();
+      return false;
+    }
+    client_ = std::move(client);
+  }
+
+  RCLCPP_INFO(node_->get_logger(), "Successfully connected to Dashboard Server at %s.", robot_ip_.c_str());
   initServices(dashboard_policy);
   return true;
 }
