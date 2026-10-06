@@ -947,6 +947,12 @@ hardware_interface::CallbackReturn URPositionHardwareInterface::stop()
   }
   if (async_moprim_cmd_thread_) {
     async_moprim_thread_shutdown_ = true;
+    // executeMotion() only returns once the motion finished or was cancelled. Retry, as a cancel issued
+    // before the executor registered the trajectory as running is overwritten by it.
+    while (moprim_motion_executing_) {
+      cancelMotionOnExecutor();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
     async_moprim_cmd_thread_->join();
     async_moprim_cmd_thread_.reset();
   }
@@ -2166,7 +2172,7 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                     moprim_sequence_.size());
         build_moprim_sequence_ = false;
         current_moprim_execution_status_ = MoprimExecutionState::EXECUTING;
-        bool success = instruction_executor_->executeMotion(moprim_sequence_);
+        bool success = executeMoprimMotion(moprim_sequence_);
         moprim_sequence_.clear();
         if (success) {
           current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
@@ -2213,7 +2219,9 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
                       joint_positions[0], joint_positions[1], joint_positions[2], joint_positions[3],
                       joint_positions[4], joint_positions[5], velocity, acceleration, move_time, blend_radius);
-          bool success = instruction_executor_->moveJ(joint_positions, acceleration, velocity, move_time, blend_radius);
+          bool success = executeMoprimMotion({ std::make_shared<urcl::control::MoveJPrimitive>(
+              joint_positions, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)),
+              acceleration, velocity) });
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
           }
@@ -2263,7 +2271,9 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                       "velocity: %f, acceleration: %f, move_time: %f, blend_radius: %f",
                       pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, velocity, acceleration, move_time,
                       blend_radius);
-          bool success = instruction_executor_->moveL(pose, acceleration, velocity, move_time, blend_radius);
+          bool success = executeMoprimMotion({ std::make_shared<urcl::control::MoveLPrimitive>(
+              pose, blend_radius, std::chrono::milliseconds(static_cast<int>(move_time * 1000)), acceleration,
+              velocity) });
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
           }
@@ -2324,7 +2334,8 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
                       via_pose.x, via_pose.y, via_pose.z, via_pose.rx, via_pose.ry, via_pose.rz, goal_pose.x,
                       goal_pose.y, goal_pose.z, goal_pose.rx, goal_pose.ry, goal_pose.rz, velocity, acceleration,
                       blend_radius, mode);
-          bool success = instruction_executor_->moveC(via_pose, goal_pose, acceleration, velocity, blend_radius, mode);
+          bool success = executeMoprimMotion({ std::make_shared<urcl::control::MoveCPrimitive>(
+              via_pose, goal_pose, blend_radius, acceleration, velocity, mode) });
           if (success) {
             current_moprim_execution_status_ = MoprimExecutionState::SUCCESS;
           }
@@ -2345,6 +2356,38 @@ void URPositionHardwareInterface::processMoprimMotionCmd(const std::array<double
     RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to execute motion command: %s", e.what());
     current_moprim_execution_status_ = MoprimExecutionState::ERROR;
   }
+}
+
+bool URPositionHardwareInterface::executeMoprimMotion(
+    const std::vector<std::shared_ptr<urcl::control::MotionPrimitive>>& motion_sequence)
+{
+  // Publish the flag before checking shutdown so stop() either sees it and cancels, or we see shutdown.
+  moprim_motion_executing_ = true;
+  if (async_moprim_thread_shutdown_) {
+    moprim_motion_executing_ = false;
+    RCLCPP_WARN(get_logger(), "Not executing motion primitive, hardware interface is stopping.");
+    return false;
+  }
+  bool success = false;
+  try {
+    success = executeMotionOnExecutor(motion_sequence);
+  } catch (...) {
+    moprim_motion_executing_ = false;
+    throw;
+  }
+  moprim_motion_executing_ = false;
+  return success;
+}
+
+bool URPositionHardwareInterface::executeMotionOnExecutor(
+    const std::vector<std::shared_ptr<urcl::control::MotionPrimitive>>& motion_sequence)
+{
+  return instruction_executor_->executeMotion(motion_sequence);
+}
+
+bool URPositionHardwareInterface::cancelMotionOnExecutor()
+{
+  return instruction_executor_ && instruction_executor_->cancelMotion();
 }
 
 void URPositionHardwareInterface::quaternionToRotVec(double qx, double qy, double qz, double qw, double& rx, double& ry,

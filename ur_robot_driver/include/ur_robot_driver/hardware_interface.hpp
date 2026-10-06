@@ -216,6 +216,9 @@ protected:
   virtual bool endForceModeOnDriver();
   virtual bool startToolContactOnDriver();
   virtual bool endToolContactOnDriver();
+  virtual bool
+  executeMotionOnExecutor(const std::vector<std::shared_ptr<urcl::control::MotionPrimitive>>& motion_sequence);
+  virtual bool cancelMotionOnExecutor();
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -349,6 +352,8 @@ protected:
   // Async thread handling
   std::shared_ptr<std::thread> async_moprim_cmd_thread_;
   std::atomic_bool async_moprim_thread_shutdown_;
+  // True while the worker is (about to be) blocked inside the instruction executor.
+  std::atomic_bool moprim_motion_executing_{ false };
   realtime_tools::LockFreeSPSCQueue<std::array<double, 25>, 1024> moprim_cmd_queue_;
   std::array<double, 25> current_moprim_command_;
 
@@ -373,6 +378,7 @@ protected:
   void resetMoprimCmdInterfaces();
   void asyncMoprimCmdThread();
   void processMoprimMotionCmd(const std::array<double, 25>& command);
+  bool executeMoprimMotion(const std::vector<std::shared_ptr<urcl::control::MotionPrimitive>>& motion_sequence);
   bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
                                 double& move_time);
   bool getMoprimVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,

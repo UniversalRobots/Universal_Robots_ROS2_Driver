@@ -36,7 +36,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <chrono>
 #include <limits>
+#include <thread>
 
 #include "ur_robot_driver/hardware_interface.hpp"
 
@@ -433,6 +436,44 @@ public:
     return end_force_mode_calls_;
   }
 
+  void startMoprimWorker()
+  {
+    async_moprim_cmd_thread_ =
+        std::make_shared<std::thread>(&URPositionHardwareInterfaceTestWrapper::asyncMoprimCmdThread, this);
+  }
+  void queueMoprimJointMotion()
+  {
+    std::array<double, 25> command;
+    command.fill(NO_NEW_CMD_);
+    command[0] = static_cast<double>(MoprimMotionType::LINEAR_JOINT);
+    for (size_t i = 1; i <= 6; ++i) {
+      command[i] = 0.0;
+    }
+    command[21] = 0.0;
+    command[24] = 1.0;
+    ASSERT_TRUE(moprim_cmd_queue_.push(command));
+  }
+  void setBlockMotionUntilCancelled(bool val)
+  {
+    block_motion_ = val;
+  }
+  bool waitForExecuteMotionCalls(int count, std::chrono::milliseconds timeout) const
+  {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (execute_motion_calls_ < count && std::chrono::steady_clock::now() < deadline) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return execute_motion_calls_ >= count;
+  }
+  int executeMotionCallCount() const
+  {
+    return execute_motion_calls_;
+  }
+  bool motionWasCancelled() const
+  {
+    return motion_cancelled_;
+  }
+
 protected:
   void transformForceTorque() override
   {
@@ -481,6 +522,34 @@ protected:
     ++end_tool_contact_calls_;
     return end_tool_contact_result_;
   }
+  // Mimics InstructionExecutor::executeMotion(): blocks until the motion is cancelled.
+  bool executeMotionOnExecutor(
+      const std::vector<std::shared_ptr<urcl::control::MotionPrimitive>>& /*motion_sequence*/) override
+  {
+    if (!block_motion_) {
+      ++execute_motion_calls_;
+      return true;
+    }
+    cancel_received_ = false;
+    motion_running_ = true;
+    ++execute_motion_calls_;
+    // Bounded so a regression fails the test instead of hanging it.
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (!cancel_received_ && std::chrono::steady_clock::now() < deadline) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    motion_running_ = false;
+    motion_cancelled_ = cancel_received_.load();
+    return false;
+  }
+  bool cancelMotionOnExecutor() override
+  {
+    if (!motion_running_) {
+      return false;
+    }
+    cancel_received_ = true;
+    return true;
+  }
 
 private:
   void installFakeDriver()
@@ -503,6 +572,11 @@ private:
   int end_tool_contact_calls_ = 0;
   int end_force_mode_calls_ = 0;
   int configure_resources_calls_ = 0;
+  std::atomic_bool block_motion_{ false };
+  std::atomic_bool motion_running_{ false };
+  std::atomic_bool cancel_received_{ false };
+  std::atomic_bool motion_cancelled_{ false };
+  std::atomic_int execute_motion_calls_{ 0 };
 };
 
 namespace
@@ -738,6 +812,45 @@ TEST(HardwareInterfaceLifecycleRecovery, WriteFaultRecoversAfterErrorAndReconfig
 
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
   EXPECT_EQ(hw.writeJointCommandCallCount(), 2);
+}
+
+TEST(HardwareInterfaceLifecycleRecovery, ErrorCancelsExecutingMotionPrimitiveAndRecovers)
+{
+  using std::chrono::milliseconds;
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setLifecycleRecoveryParameters();
+  hw.setBlockMotionUntilCancelled(true);
+  hw.startMoprimWorker();
+  hw.queueMoprimJointMotion();
+  ASSERT_TRUE(hw.waitForExecuteMotionCalls(1, milliseconds(2000)));
+  // Queued behind the executing motion; must not run once the interface is stopping.
+  hw.queueMoprimJointMotion();
+
+  // RTDE times out while the motion keeps running.
+  hw.setNonBlockingRead(true);
+  hw.setNonBlockingReadTimeout(rclcpp::Duration::from_seconds(0.04));
+  hw.setGetDataPackageResult(false);
+  hw.setTimeSinceSuccessfulRead(rclcpp::Duration::from_seconds(0.05));
+  EXPECT_EQ(hw.read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+
+  const auto error_start = std::chrono::steady_clock::now();
+  EXPECT_EQ(hw.on_error(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::SUCCESS);
+  EXPECT_LT(std::chrono::steady_clock::now() - error_start, milliseconds(2000));
+  EXPECT_TRUE(hw.motionWasCancelled());
+  EXPECT_EQ(hw.executeMotionCallCount(), 1);
+  EXPECT_FALSE(hw.hasDriver());
+
+  EXPECT_EQ(hw.on_configure(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::SUCCESS);
+  EXPECT_EQ(hw.queuedMoprimCommands(), 0u);
+  EXPECT_EQ(hw.on_activate(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::SUCCESS);
+
+  hw.setBlockMotionUntilCancelled(false);
+  hw.startMoprimWorker();
+  hw.queueMoprimJointMotion();
+  EXPECT_TRUE(hw.waitForExecuteMotionCalls(2, milliseconds(2000)));
+  EXPECT_EQ(hw.executeMotionCallCount(), 2);
+
+  EXPECT_EQ(hw.on_cleanup(rclcpp_lifecycle::State()), hardware_interface::CallbackReturn::SUCCESS);
 }
 
 TEST(HardwareInterfaceWriteFaults, PassthroughNoopFailureSkipsCancel)
