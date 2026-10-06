@@ -151,8 +151,8 @@ private:
   bool waitForAsyncCommand(std::function<double(void)> get_value);
 
   /**
-   * @brief Ask update() to withdraw a request the hardware has not processed yet and wait for it to do so.
-   * @return true if the request completed before it could be withdrawn, false if it was withdrawn.
+   * @brief Ask update() to withdraw an unprocessed request and wait within the configured retry budget.
+   * @return true if the request completed before withdrawal, false if withdrawn or still awaiting cancellation.
    */
   bool cancelPendingCommand();
 

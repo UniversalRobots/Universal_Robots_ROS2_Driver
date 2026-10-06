@@ -161,7 +161,8 @@ ur_controllers::ForceModeController::on_deactivate(const rclcpp_lifecycle::State
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
   // Stop force mode if this controller is deactivated.
-  if (!command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0)) {
+  if (!command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0) ||
+      !command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING)) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -285,6 +286,12 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
 bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
                                        ur_msgs::srv::SetForceMode::Response::SharedPtr resp)
 {
+  if (cancel_requested_) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Force mode cancellation is still pending.");
+    resp->success = false;
+    return false;
+  }
+
   // Reject if controller is not active
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Controller is not running.");
@@ -411,6 +418,12 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 bool ForceModeController::disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                            std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (cancel_requested_) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Force mode cancellation is still pending.");
+    resp->success = false;
+    return false;
+  }
+
   force_mode_active_ = false;
   change_requested_ = true;
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be disabled.");
@@ -451,11 +464,16 @@ bool ForceModeController::waitForAsyncCommand(std::function<double(void)> get_va
 bool ForceModeController::cancelPendingCommand()
 {
   cancel_requested_ = true;
+  const auto deadline =
+      std::chrono::steady_clock::now() + std::chrono::milliseconds(50) * (params_.check_io_successful_retries + 1);
   while (cancel_requested_) {
     if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       // on_deactivate() has already withdrawn any staged command.
       cancel_requested_ = false;
       change_requested_ = false;
+      return false;
+    }
+    if (std::chrono::steady_clock::now() >= deadline) {
       return false;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
