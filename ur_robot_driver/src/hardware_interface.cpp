@@ -632,6 +632,10 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   non_blocking_read_timeout_ = non_blocking_read_timeout > 0.0 ?
                                    rclcpp::Duration::from_seconds(non_blocking_read_timeout) :
                                    rclcpp::Duration(0, 0);
+  if (non_blocking_read_timeout > 0.0 && non_blocking_read_timeout_.nanoseconds() == 0) {
+    RCLCPP_ERROR(get_logger(), "Positive non_blocking_read_timeout is below nanosecond resolution");
+    return hardware_interface::CallbackReturn::ERROR;
+  }
 
   return configureHardwareResources();
 }
