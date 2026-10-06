@@ -41,6 +41,7 @@
 #define UR_ROBOT_DRIVER__DASHBOARD_CLIENT_ROS_HPP_
 
 // System
+#include <mutex>
 #include <regex>
 #include <string>
 #include <memory>
@@ -98,6 +99,20 @@ public:
   DashboardClientROS(const rclcpp::Node::SharedPtr& node, const std::string& robot_ip);
   DashboardClientROS() = delete;
   virtual ~DashboardClientROS() = default;
+
+  /*!
+   * \brief Reads the robot version from the primary interface and connects to the dashboard server.
+   *
+   * \returns True when the dashboard server connection is established.
+   */
+  bool connect();
+
+  /*!
+   * \brief Stops the primary client and disconnects the dashboard client.
+   *
+   * This can be called from the ROS shutdown callback while connect() is blocked.
+   */
+  void stop();
 
 private:
   inline rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr
@@ -200,15 +215,15 @@ private:
   bool handleGetPolyScopeVersionQuery(ur_dashboard_msgs::srv::GetPolyScopeVersion::Request::SharedPtr req,
                                       ur_dashboard_msgs::srv::GetPolyScopeVersion::Response::SharedPtr resp);
 
-  bool connect();
   void initServices(urcl::DashboardClient::ClientPolicy dashboard_policy);
 
   std::shared_ptr<rclcpp::Node> node_;
   std::string robot_ip_;
-  std::unique_ptr<urcl::DashboardClient> client_;
-
   urcl::comm::INotifier notifier_;
   urcl::primary_interface::PrimaryClient primary_client_;
+  std::mutex client_mutex_;
+  bool stop_requested_ = false;
+  std::unique_ptr<urcl::DashboardClient> client_;
 
   // Commanding services
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr brake_release_service_;

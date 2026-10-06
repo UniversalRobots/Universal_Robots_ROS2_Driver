@@ -29,6 +29,7 @@
 #ifndef UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 #define UR_ROBOT_DRIVER__ROBOT_STATE_HELPER_HPP_
 
+#include <functional>
 #include <string_view>
 #include <optional>
 #include <string>
@@ -44,6 +45,7 @@
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_client_library/ur/datatypes.h"
+#include "ur_client_library/ur/version_information.h"
 #include "ur_client_library/primary/primary_client.h"
 
 namespace ur_robot_driver
@@ -52,6 +54,7 @@ class RobotStateHelper : public rclcpp::Node
 {
 public:
   using SetModeGoalHandle = rclcpp_action::ServerGoalHandle<ur_dashboard_msgs::action::SetMode>;
+  using RobotVersionQuery = std::function<std::shared_ptr<urcl::VersionInformation>()>;
 
   explicit RobotStateHelper(const rclcpp::NodeOptions& options);
   ~RobotStateHelper();
@@ -66,6 +69,10 @@ protected:
     , in_action_(false)
   {
   }
+
+  // Constructs the full ROS interfaces but uses `robot_version_query` instead of contacting a
+  // robot via PrimaryClient. Intended for tests that should not require URSim.
+  RobotStateHelper(const rclcpp::NodeOptions& options, RobotVersionQuery robot_version_query);
 
 private:
   // Grant the test wrapper access to private state and action callbacks.
