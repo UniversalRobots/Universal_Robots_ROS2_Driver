@@ -137,7 +137,7 @@ protected:
     const auto result = client_executor_.spin_until_future_complete(pending, std::chrono::seconds(1));
     if (result != rclcpp::FutureReturnCode::SUCCESS) {
       update();
-      client_executor_.spin_until_future_complete(pending, std::chrono::seconds(1));
+      result = client_executor_.spin_until_future_complete(pending, std::chrono::seconds(1));
     }
     ASSERT_EQ(result, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_FALSE(pending.get()->success);
