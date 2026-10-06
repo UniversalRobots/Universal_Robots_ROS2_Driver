@@ -105,6 +105,48 @@ public:
   {
     get_data_package_result_ = val;
   }
+  void setValidDataPackage(const urcl::vector6d_t& joint_positions)
+  {
+    const std::vector<std::string> recipe = { "actual_q",
+                                              "actual_qd",
+                                              "actual_current_as_torque",
+                                              "target_speed_fraction",
+                                              "speed_scaling",
+                                              "runtime_state",
+                                              "actual_TCP_force",
+                                              "actual_TCP_pose",
+                                              "target_TCP_pose",
+                                              "standard_analog_input0",
+                                              "standard_analog_input1",
+                                              "standard_analog_output0",
+                                              "standard_analog_output1",
+                                              "tool_mode",
+                                              "tool_analog_input0",
+                                              "tool_analog_input1",
+                                              "tool_output_voltage",
+                                              "tool_output_current",
+                                              "tool_temperature",
+                                              "robot_mode",
+                                              "safety_mode",
+                                              "robot_status_bits",
+                                              "safety_status_bits",
+                                              "actual_digital_input_bits",
+                                              "actual_digital_output_bits",
+                                              "analog_io_types",
+                                              "tool_analog_input_types",
+                                              "tcp_offset",
+                                              "payload",
+                                              "payload_cog",
+                                              "payload_inertia" };
+    data_package_buffer_ = std::make_unique<urcl::rtde_interface::DataPackage>(recipe);
+    ASSERT_TRUE(data_package_buffer_->setData("actual_q", joint_positions));
+    ASSERT_TRUE(data_package_buffer_->setData("runtime_state",
+                                              static_cast<uint32_t>(urcl::rtde_interface::RUNTIME_STATE::STOPPED)));
+  }
+  bool positionCommandsMatch(const urcl::vector6d_t& joint_positions) const
+  {
+    return urcl_position_commands_ == joint_positions && urcl_position_commands_old_ == joint_positions;
+  }
   void setRtdeCommHasBeenStarted(bool val)
   {
     rtde_comm_has_been_started_ = val;
@@ -392,6 +434,10 @@ public:
   }
 
 protected:
+  void transformForceTorque() override
+  {
+  }
+
   hardware_interface::CallbackReturn configureHardwareResources() override
   {
     ++configure_resources_calls_;
@@ -547,6 +593,39 @@ TEST(HardwareInterfaceReadFaults, TimeoutStateResetAllowsRecoveryAfterReconfigur
   hw.callResetActivationState();
 
   EXPECT_EQ(hw.read(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
+}
+
+TEST(HardwareInterfaceReadFaults, SuccessfulReadAfterReconfigureInitializesAndRestartsTimeout)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setInitialized(true);
+  hw.callResetActivationState();
+  hw.setNonBlockingRead(true);
+  hw.setNonBlockingReadTimeout(rclcpp::Duration::from_seconds(0.04));
+  hw.setGetDataPackageResult(false);
+
+  const auto period = rclcpp::Duration::from_seconds(0.01);
+  for (int read_index = 0; read_index < 3; ++read_index) {
+    ASSERT_EQ(hw.read(rclcpp::Time(0), period), return_type::OK);
+  }
+  EXPECT_FALSE(hw.isInitialized());
+  EXPECT_FALSE(hw.readTimeoutAgeIsZero());
+
+  const urcl::vector6d_t joint_positions = { { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6 } };
+  hw.setValidDataPackage(joint_positions);
+  hw.setGetDataPackageResult(true);
+
+  ASSERT_EQ(hw.read(rclcpp::Time(0), period), return_type::OK);
+  EXPECT_TRUE(hw.isInitialized());
+  EXPECT_TRUE(hw.positionCommandsMatch(joint_positions));
+  EXPECT_TRUE(hw.readTimeoutAgeIsZero());
+
+  hw.setGetDataPackageResult(false);
+  for (int read_index = 0; read_index < 4; ++read_index) {
+    EXPECT_EQ(hw.read(rclcpp::Time(0), period), return_type::OK);
+  }
+  EXPECT_TRUE(hw.isInitialized());
+  EXPECT_EQ(hw.read(rclcpp::Time(0), period), return_type::ERROR);
 }
 
 class HardwareInterfaceTimeoutParameterTest : public ::testing::TestWithParam<std::string>

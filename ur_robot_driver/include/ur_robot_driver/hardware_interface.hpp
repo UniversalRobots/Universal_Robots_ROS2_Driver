@@ -196,7 +196,7 @@ protected:
   void checkAsyncIO();
   void updateNonDoubleValues();
   void extractToolPose();
-  void transformForceTorque();
+  virtual void transformForceTorque();
   bool start_force_mode();
   bool stop_force_mode();
   bool check_passthrough_trajectory_controller();
