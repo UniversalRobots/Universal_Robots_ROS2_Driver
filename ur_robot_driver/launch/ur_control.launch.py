@@ -67,6 +67,7 @@ def launch_setup(context):
     use_tool_communication = LaunchConfiguration("use_tool_communication")
     tool_device_name = LaunchConfiguration("tool_device_name")
     tool_tcp_port = LaunchConfiguration("tool_tcp_port")
+    non_blocking_read_timeout = LaunchConfiguration("non_blocking_read_timeout")
 
     control_node = Node(
         package="controller_manager",
@@ -248,6 +249,7 @@ def launch_setup(context):
         launch_arguments={
             "robot_ip": robot_ip,
             "ur_type": ur_type,
+            "non_blocking_read_timeout": non_blocking_read_timeout,
         }.items(),
     )
 
@@ -554,6 +556,13 @@ def generate_launch_description():
             "blocking_read",
             default_value="true",
             description="Block in read() effectively synchronizing the driver with the robot controller.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "non_blocking_read_timeout",
+            default_value="0.04",
+            description="Timeout in seconds before stopping the driver after a failed non-blocking read.",
         )
     )
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])
