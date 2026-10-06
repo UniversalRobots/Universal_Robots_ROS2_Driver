@@ -134,7 +134,7 @@ protected:
       ASSERT_DOUBLE_EQ(values_[ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS], 2.0);
     }
 
-    const auto result = client_executor_.spin_until_future_complete(pending, std::chrono::seconds(1));
+    auto result = client_executor_.spin_until_future_complete(pending, std::chrono::seconds(1));
     if (result != rclcpp::FutureReturnCode::SUCCESS) {
       update();
       result = client_executor_.spin_until_future_complete(pending, std::chrono::seconds(1));
