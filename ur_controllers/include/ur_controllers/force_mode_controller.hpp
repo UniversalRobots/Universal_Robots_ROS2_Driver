@@ -140,6 +140,7 @@ private:
   realtime_tools::RealtimeThreadSafeBox<ForceModeParameters> force_mode_params_buffer_;
   std::atomic<bool> force_mode_active_;
   std::atomic<bool> change_requested_;
+  std::atomic<bool> cancel_requested_{ false };
   std::atomic<double> async_state_;
 
   static constexpr double ASYNC_WAITING = 2.0;
@@ -148,5 +149,14 @@ private:
    * have been reached
    */
   bool waitForAsyncCommand(std::function<double(void)> get_value);
+
+  /**
+   * @brief Ask update() to withdraw a request the hardware has not processed yet and wait for it to do so.
+   * @return true if the request completed before it could be withdrawn, false if it was withdrawn.
+   */
+  bool cancelPendingCommand();
+
+  // Must only be called from the realtime thread (update / lifecycle transitions).
+  bool withdrawStagedCommand();
 };
 }  // namespace ur_controllers

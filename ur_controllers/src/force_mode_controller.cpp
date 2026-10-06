@@ -147,6 +147,7 @@ controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   change_requested_ = false;
+  cancel_requested_ = false;
   force_mode_active_ = false;
   async_state_ = std::numeric_limits<double>::quiet_NaN();
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -155,6 +156,10 @@ ur_controllers::ForceModeController::on_activate(const rclcpp_lifecycle::State& 
 controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  // A start staged before deactivation must not be executed once the robot program resumes.
+  if (!withdrawStagedCommand()) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
   // Stop force mode if this controller is deactivated.
   if (!command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0)) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
@@ -175,6 +180,20 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
 {
   async_state_ =
       command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+
+  if (cancel_requested_) {
+    // Only withdraw if the request is unstaged or still unprocessed; otherwise keep the hardware's result.
+    if (change_requested_ || async_state_ == ASYNC_WAITING) {
+      if (!withdrawStagedCommand()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Could not withdraw pending force mode command.");
+        return controller_interface::return_type::ERROR;
+      }
+      async_state_ = 0.0;
+    }
+    change_requested_ = false;
+    cancel_requested_ = false;
+    return controller_interface::return_type::OK;
+  }
 
   // Publish state of force_mode?
   if (change_requested_) {
@@ -416,15 +435,45 @@ bool ForceModeController::waitForAsyncCommand(std::function<double(void)> get_va
       return false;
     }
     if (retries > maximum_retries) {
+      if (cancelPendingCommand()) {
+        return true;
+      }
       RCLCPP_ERROR(get_node()->get_logger(), "Timed out waiting for the hardware to process the force mode "
                                              "request.");
-      change_requested_ = false;
       return false;
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     retries++;
   }
   return true;
+}
+
+bool ForceModeController::cancelPendingCommand()
+{
+  cancel_requested_ = true;
+  while (cancel_requested_) {
+    if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+      // on_deactivate() has already withdrawn any staged command.
+      cancel_requested_ = false;
+      change_requested_ = false;
+      return false;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  return async_state_ != 0.0;
+}
+
+bool ForceModeController::withdrawStagedCommand()
+{
+  bool write_successful = true;
+  for (size_t i = 0; i < command_interfaces_.size(); ++i) {
+    if (i != CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS) {
+      write_successful &= command_interfaces_[i].set_value(std::numeric_limits<double>::quiet_NaN());
+    }
+  }
+  // Resolve the acknowledgement so it can't be consumed by a later request.
+  write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(0.0);
+  return write_successful;
 }
 }  // namespace ur_controllers
 
