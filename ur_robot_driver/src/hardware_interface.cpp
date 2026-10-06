@@ -1244,10 +1244,29 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     } else if (write_success && !std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr &&
                force_mode_async_success_ == 2.0) {
       write_success = stop_force_mode();
+    } else if (!write_success && force_mode_async_success_ == 2.0) {
+      // Report the pending start/stop request as failed so the waiting service returns.
+      force_mode_task_frame_.fill(NO_NEW_CMD_);
+      force_mode_selection_vector_.fill(NO_NEW_CMD_);
+      force_mode_wrench_.fill(NO_NEW_CMD_);
+      force_mode_limits_.fill(NO_NEW_CMD_);
+      force_mode_type_ = NO_NEW_CMD_;
+      force_mode_damping_ = NO_NEW_CMD_;
+      force_mode_gain_scaling_ = NO_NEW_CMD_;
+      force_mode_disable_cmd_ = NO_NEW_CMD_;
+      force_mode_async_success_ = 0.0;
     }
 
     if (write_success && tool_contact_controller_running_) {
       write_success = check_tool_contact_controller();
+    } else if (!write_success && tool_contact_controller_running_) {
+      if (tool_contact_set_state_ == 2.0) {
+        // TOOL_CONTACT_FAILURE_BEGIN
+        tool_contact_state_ = 4.0;
+      } else if (tool_contact_set_state_ == 5.0) {
+        // TOOL_CONTACT_FAILURE_END
+        tool_contact_state_ = 7.0;
+      }
     }
 
     packet_read_ = false;
@@ -1697,7 +1716,41 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
 hardware_interface::return_type URPositionHardwareInterface::perform_command_mode_switch(
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
-  hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+  using hardware_return = hardware_interface::return_type;
+  hardware_return ret_val = hardware_return::OK;
+
+  // Check controllers that can fail first
+  hardware_return tool_contact_stop_success = hardware_return::OK;
+  bool tool_contact_stop_requested = false;
+  if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                           StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
+    if (!endToolContactOnDriver()) {
+      tool_contact_stop_success = hardware_return::ERROR;
+    }
+    tool_contact_stop_requested = true;
+  }
+
+  hardware_return force_mode_stop_success = hardware_return::OK;
+  bool force_mode_stop_requested = false;
+  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                              StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
+    if (!stop_force_mode()) {
+      force_mode_stop_success = hardware_return::ERROR;
+    }
+    force_mode_stop_requested = true;
+  }
+  // If both are successful, report them as stopped
+  if (force_mode_stop_success == hardware_return::OK && tool_contact_stop_success == hardware_return::OK) {
+    if (tool_contact_stop_requested) {
+      tool_contact_controller_running_ = false;
+      tool_contact_result_ = 3.0;
+    }
+    if (force_mode_stop_requested) {
+      force_mode_controller_running_ = false;
+    }
+  } else {  // Otherwise return error, before changing state of any other controllers
+    return hardware_return::ERROR;
+  }
 
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_POSITION) != stop_modes_[0].end()) {
@@ -1714,13 +1767,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     torque_controller_running_ = false;
     urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   }
-  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                              StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
-    if (!stop_force_mode()) {
-      return hardware_interface::return_type::ERROR;
-    }
-    force_mode_controller_running_ = false;
-  }
+
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;
@@ -1742,14 +1789,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     resetMoprimCmdInterfaces();
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
     ready_for_new_moprim_ = false;
-  }
-  if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                           StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
-    if (!endToolContactOnDriver()) {
-      return hardware_interface::return_type::ERROR;
-    }
-    tool_contact_controller_running_ = false;
-    tool_contact_result_ = 3.0;
   }
 
   if (stop_modes_.size() != 0 &&

@@ -81,6 +81,8 @@ public:
     force_mode_disable_cmd_ = NO_NEW_CMD_;
     force_mode_damping_ = NO_NEW_CMD_;
     force_mode_gain_scaling_ = NO_NEW_CMD_;
+    force_mode_async_success_ = NO_NEW_CMD_;
+    tool_contact_state_ = 0.0;
 
     installFakeDriver();
 
@@ -257,6 +259,26 @@ public:
     force_mode_damping_ = 0.8;
     force_mode_gain_scaling_ = 0.5;
   }
+  void setForceModeAsyncSuccess(double val)
+  {
+    force_mode_async_success_ = val;
+  }
+  void setForceModeDisableCmd(double val)
+  {
+    force_mode_disable_cmd_ = val;
+  }
+  double forceModeAsyncSuccess() const
+  {
+    return force_mode_async_success_;
+  }
+  bool forceModeCommandCleared() const
+  {
+    return std::isnan(force_mode_task_frame_[0]) && std::isnan(force_mode_type_) && std::isnan(force_mode_disable_cmd_);
+  }
+  double toolContactState() const
+  {
+    return tool_contact_state_;
+  }
   void setPendingPassthroughTransfer()
   {
     passthrough_trajectory_transfer_state_ = 2.0;
@@ -325,9 +347,20 @@ public:
   {
     return force_mode_controller_running_;
   }
+  bool positionControllerRunning() const
+  {
+    return position_controller_running_;
+  }
   bool toolContactControllerRunning() const
   {
     return tool_contact_controller_running_;
+  }
+  void setStopForceModeAndToolContactRequested()
+  {
+    stop_modes_ = { { STOP_FORCE_MODE, STOP_TOOL_CONTACT } };
+    start_modes_.resize(1);
+    force_mode_controller_running_ = true;
+    tool_contact_controller_running_ = true;
   }
   void setTrajectoryControlResult(bool val)
   {
@@ -543,6 +576,54 @@ TEST(HardwareInterfaceWriteFaults, JointCommandFailureReturnsError)
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
   EXPECT_EQ(hw.writeJointCommandCallCount(), 1);
   EXPECT_EQ(hw.startToolContactCallCount(), 0);
+  // TOOL_CONTACT_FAILURE_BEGIN
+  EXPECT_EQ(hw.toolContactState(), 4.0);
+}
+
+TEST(HardwareInterfaceWriteFaults, WriteFaultFailsPendingToolContactEnd)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setPositionControllerRunning(true);
+  hw.setWriteJointCommandResult(false);
+  hw.setToolContactControllerRunning(true, /*set_state=*/5.0);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  EXPECT_EQ(hw.endToolContactCallCount(), 0);
+  // TOOL_CONTACT_FAILURE_END
+  EXPECT_EQ(hw.toolContactState(), 7.0);
+}
+
+TEST(HardwareInterfaceWriteFaults, WriteFaultFailsPendingForceModeStart)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setPositionControllerRunning(true);
+  hw.setPendingForceModeCommand();
+  hw.setForceModeAsyncSuccess(2.0);
+  hw.setWriteJointCommandResult(false);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  EXPECT_EQ(hw.forceModeAsyncSuccess(), 0.0);
+  EXPECT_TRUE(hw.forceModeCommandCleared());
+}
+
+TEST(HardwareInterfaceWriteFaults, WriteFaultFailsPendingForceModeStop)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setPositionControllerRunning(true);
+  hw.setForceModeDisableCmd(1.0);
+  hw.setForceModeAsyncSuccess(2.0);
+  hw.setWriteJointCommandResult(false);
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::ERROR);
+  EXPECT_EQ(hw.endForceModeCallCount(), 0);
+  EXPECT_EQ(hw.forceModeAsyncSuccess(), 0.0);
+  EXPECT_TRUE(hw.forceModeCommandCleared());
 }
 
 TEST(HardwareInterfaceLifecycleRecovery, WriteFaultRecoversAfterErrorAndReconfigure)
@@ -679,6 +760,42 @@ TEST(HardwareInterfaceModeSwitchFaults, ToolContactStopFailureReturnsError)
   EXPECT_EQ(hw.perform_command_mode_switch({}, {}), return_type::ERROR);
   EXPECT_EQ(hw.endToolContactCallCount(), 1);
   EXPECT_TRUE(hw.toolContactControllerRunning());
+}
+
+TEST(HardwareInterfaceModeSwitchFaults, ForceModeStopFailureLeavesOtherControllersUnchanged)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setStopForceModeAndToolContactRequested();
+  hw.setPositionControllerRunning(true);
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setEndForceModeResult(false);
+
+  EXPECT_EQ(hw.perform_command_mode_switch({}, {}), return_type::ERROR);
+  EXPECT_TRUE(hw.forceModeControllerRunning());
+  EXPECT_TRUE(hw.toolContactControllerRunning());
+  EXPECT_TRUE(hw.positionControllerRunning());
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
+  EXPECT_EQ(hw.writeJointCommandCallCount(), 1);
+}
+
+TEST(HardwareInterfaceModeSwitchFaults, ToolContactStopFailureLeavesOtherControllersUnchanged)
+{
+  URPositionHardwareInterfaceTestWrapper hw;
+  hw.setStopForceModeAndToolContactRequested();
+  hw.setPositionControllerRunning(true);
+  hw.setRuntimeStatePlaying();
+  hw.setRobotProgramRunning(true);
+  hw.setEndToolContactResult(false);
+
+  EXPECT_EQ(hw.perform_command_mode_switch({}, {}), return_type::ERROR);
+  EXPECT_TRUE(hw.forceModeControllerRunning());
+  EXPECT_TRUE(hw.toolContactControllerRunning());
+  EXPECT_TRUE(hw.positionControllerRunning());
+
+  EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
+  EXPECT_EQ(hw.writeJointCommandCallCount(), 1);
 }
 
 TEST(HardwareInterfaceWriteFaults, ToolContactHelperFailureReturnsError)

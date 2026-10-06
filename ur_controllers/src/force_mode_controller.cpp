@@ -377,18 +377,7 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   change_requested_ = true;
 
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be set.");
-  const auto maximum_retries = params_.check_io_successful_retries;
-  int retries = 0;
-  while (async_state_ == ASYNC_WAITING || change_requested_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    retries++;
-
-    if (retries > maximum_retries) {
-      resp->success = false;
-    }
-  }
-
-  resp->success = async_state_ == 1.0;
+  resp->success = waitForAsyncCommand([&]() { return async_state_.load(); }) && async_state_ == 1.0;
 
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Force mode has been set successfully.");
@@ -406,16 +395,34 @@ bool ForceModeController::disableForceMode(const std_srvs::srv::Trigger::Request
   force_mode_active_ = false;
   change_requested_ = true;
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be disabled.");
-  while (async_state_ == ASYNC_WAITING || change_requested_) {
-    // Asynchronous wait until the hardware interface has set the force mode
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
-  resp->success = async_state_ == 1.0;
+  resp->success = waitForAsyncCommand([&]() { return async_state_.load(); }) && async_state_ == 1.0;
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Force mode has been disabled successfully.");
   } else {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not disable force mode.");
     return false;
+  }
+  return true;
+}
+
+bool ForceModeController::waitForAsyncCommand(std::function<double(void)> get_value)
+{
+  const auto maximum_retries = params_.check_io_successful_retries;
+  int retries = 0;
+  while (get_value() == ASYNC_WAITING || change_requested_) {
+    if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Controller is no longer active, aborting force mode request.");
+      change_requested_ = false;
+      return false;
+    }
+    if (retries > maximum_retries) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Timed out waiting for the hardware to process the force mode "
+                                             "request.");
+      change_requested_ = false;
+      return false;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    retries++;
   }
   return true;
 }
