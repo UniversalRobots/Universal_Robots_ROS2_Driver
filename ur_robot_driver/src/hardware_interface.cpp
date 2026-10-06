@@ -1034,6 +1034,7 @@ void URPositionHardwareInterface::resetHardwareInterfaceState()
   // after the reconfigure.
   resetAsyncIO();
 
+  robot_program_running_ = false;
   time_since_successful_read_ = rclcpp::Duration(0, 0);
   rtde_comm_has_been_started_ = false;
   packet_read_ = false;
