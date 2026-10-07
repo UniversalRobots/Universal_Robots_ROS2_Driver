@@ -260,18 +260,9 @@ void ToolContactController::action_handler()
   if (active_goal.value()) {
     // Allow the goal to handle any actions it needs to perform
     active_goal.value()->runNonRealtime();
-    // Release the goal handle only once it has reached a terminal state, or once the client has
-    // requested a cancel. A terminal transition requested between the runNonRealtime() call above
-    // and this check has not been delivered yet; dropping the last reference to the handle in that
-    // state destroys a still-executing rclcpp_action goal handle, whose destructor force-cancels
-    // the goal and the client receives CANCELED for a goal that may have succeeded.
-    // A canceling goal must be released here even though it is still active: if a success from the
-    // realtime thread raced ahead of the cancel request, the pending succeed can never be
-    // delivered (runNonRealtime() refuses to succeed a canceling goal), so waiting for a terminal
-    // state would hold the slot forever and every subsequent goal would be rejected. Dropping the
-    // handle lets its destructor terminate the goal as CANCELED — which the client asked for.
-    // A failed reset needs no retry bookkeeping: the handle stays in the box and this branch runs
-    // again on the next tick.
+    // Release only once the goal is terminal: destroying an active ServerGoalHandle cancels it.
+    // A canceling goal is released anyway, since a succeed that raced the cancel can never be
+    // delivered and the goal would otherwise hold the slot.
     const auto& goal_handle = active_goal.value()->gh_;
     if (!goal_handle || !goal_handle->is_active() || goal_handle->is_canceling()) {
       set_rt_goal_from_non_rt(RealtimeGoalHandlePtr());
