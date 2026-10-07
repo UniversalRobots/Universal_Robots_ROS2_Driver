@@ -188,7 +188,6 @@ ToolContactController::on_deactivate(const rclcpp_lifecycle::State& /* previous_
     // Mark the current goal as abort
     auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
     active_goal->setAborted(result);
-    should_reset_goal = true;
   }
   if (tool_contact_active_) {
     tool_contact_active_ = false;
@@ -261,11 +260,12 @@ void ToolContactController::action_handler()
   if (active_goal.value()) {
     // Allow the goal to handle any actions it needs to perform
     active_goal.value()->runNonRealtime();
-    // If one of the goal ending conditions were met, reset our active goal pointer
-    if (should_reset_goal) {
-      if (set_rt_goal_from_non_rt(RealtimeGoalHandlePtr())) {
-        should_reset_goal = false;
-      }
+    // Release only once the goal is terminal: destroying an active ServerGoalHandle cancels it.
+    // A canceling goal is released anyway, since a succeed that raced the cancel can never be
+    // delivered and the goal would otherwise hold the slot.
+    const auto& goal_handle = active_goal.value()->gh_;
+    if (!goal_handle || !goal_handle->is_active() || goal_handle->is_canceling()) {
+      set_rt_goal_from_non_rt(RealtimeGoalHandlePtr());
     }
   }
 }
@@ -286,7 +286,6 @@ rclcpp_action::CancelResponse ToolContactController::goal_canceled_callback(
     // Mark the current goal as canceled
     auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
     active_goal.value()->setCanceled(result);
-    should_reset_goal = true;
     tool_contact_abort_ = true;
     tool_contact_enable_ = false;
   }
@@ -373,7 +372,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
           active_goal->setSucceeded(result);
-          should_reset_goal = true;
         }
       } else if (result.value() == 1.0) {
         tool_contact_active_ = false;
@@ -383,7 +381,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
         if (active_goal) {
           auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
           active_goal->setAborted(result);
-          should_reset_goal = true;
         }
       } else {
         // Set command interface, so "startToolContact" is only sent once in the hardware interface
@@ -400,7 +397,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
         active_goal->setAborted(result);
-        should_reset_goal = true;
       }
     } break;
 
@@ -422,7 +418,6 @@ controller_interface::return_type ToolContactController::update(const rclcpp::Ti
       if (active_goal) {
         auto result = std::make_shared<ur_msgs::action::ToolContact::Result>();
         active_goal->setAborted(result);
-        should_reset_goal = true;
       }
     } break;
     case static_cast<int>(TOOL_CONTACT_STANDBY):
