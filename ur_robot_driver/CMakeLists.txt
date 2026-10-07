@@ -296,6 +296,17 @@ if(BUILD_TESTING)
     ${std_srvs_TARGETS}
   )
 
+  ament_add_gmock(test_hardware_interface_faults
+    test/test_hardware_interface_faults.cpp
+  )
+  target_link_libraries(test_hardware_interface_faults
+    ur_robot_driver_plugin
+  )
+  target_include_directories(test_hardware_interface_faults
+    PRIVATE
+    ${motion_primitives_controllers_INCLUDE_DIRS}
+  )
+
   add_launch_test(test/test_mock_hardware.py
     TIMEOUT
       800

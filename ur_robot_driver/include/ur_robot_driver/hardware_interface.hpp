@@ -152,6 +152,7 @@ public:
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& previous_state) final;
+  hardware_interface::CallbackReturn on_error(const rclcpp_lifecycle::State& previous_state) final;
 
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) final;
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) final;
@@ -182,21 +183,42 @@ protected:
   void readBitsetData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
                       std::bitset<N>& data);
 
-  // stop function used by on_shutdown and on_cleanup
+  // stop function used by on_shutdown, on_cleanup and on_error
   hardware_interface::CallbackReturn stop();
 
-  void initAsyncIO();
+  virtual hardware_interface::CallbackReturn configureHardwareResources();
+
+  // Resets controller and activation state during initial setup and reconfiguration.
+  void resetHardwareInterfaceState();
+  void resetControllerState();
+
+  void resetAsyncIO();
   void checkAsyncIO();
   void updateNonDoubleValues();
   void extractToolPose();
-  void transformForceTorque();
-  void start_force_mode();
-  void stop_force_mode();
-  void check_passthrough_trajectory_controller();
+  virtual void transformForceTorque();
+  bool start_force_mode();
+  bool stop_force_mode();
+  bool check_passthrough_trajectory_controller();
   void trajectory_done_callback(urcl::control::TrajectoryResult result);
   bool is_valid_joint_information(std::vector<std::array<double, 6>> data);
   void tool_contact_callback(urcl::control::ToolContactResult);
-  void check_tool_contact_controller();
+  bool check_tool_contact_controller();
+
+  // Thin wrappers around ur_driver_ calls used by write(), overridable in tests to inject faults.
+  virtual bool
+  writeJointCommandToDriver(const urcl::vector6d_t& values, urcl::comm::ControlMode control_mode,
+                            const urcl::RobotReceiveTimeout& timeout = urcl::RobotReceiveTimeout::millisec(20));
+  virtual bool writeTrajectoryControlMessageToDriver(
+      urcl::control::TrajectoryControlMessage trajectory_action, int point_number = 0,
+      const urcl::RobotReceiveTimeout& timeout = urcl::RobotReceiveTimeout::millisec(200));
+  virtual bool writeKeepaliveToDriver();
+  virtual bool endForceModeOnDriver();
+  virtual bool startToolContactOnDriver();
+  virtual bool endToolContactOnDriver();
+  virtual bool
+  executeMotionOnExecutor(const std::vector<std::shared_ptr<urcl::control::MotionPrimitive>>& motion_sequence);
+  virtual bool cancelMotionOnExecutor();
 
   urcl::vector6d_t urcl_position_commands_;
   urcl::vector6d_t urcl_position_commands_old_;
@@ -212,6 +234,9 @@ protected:
   urcl::vector6d_t tcp_offset_;
   tf2::Quaternion tcp_rotation_quat_;
   Quaternion tcp_rotation_buffer;
+
+  rclcpp::Duration time_since_successful_read_ = rclcpp::Duration(0, 0);
+  rclcpp::Duration non_blocking_read_timeout_ = rclcpp::Duration(0, 0);
 
   bool packet_read_;
 
@@ -251,8 +276,7 @@ protected:
   double zero_ftsensor_async_success_;
   double hand_back_control_cmd_;
   double hand_back_control_async_success_;
-  bool first_pass_;
-  bool initialized_;
+  std::atomic_bool initialized_;
   double system_interface_initialized_;
   std::atomic_bool async_thread_shutdown_;
   urcl::VersionInformation version_info_;
@@ -283,6 +307,11 @@ protected:
   urcl::vector6d_t passthrough_trajectory_velocities_;
   urcl::vector6d_t passthrough_trajectory_accelerations_;
   double passthrough_trajectory_time_from_start_;
+  // Transfer progress of the passthrough trajectory currently being forwarded
+  double passthrough_last_point_time_ = 0.0;
+  size_t passthrough_point_index_received_ = 0;
+  size_t passthrough_point_index_sent_ = 0;
+  bool passthrough_trajectory_started_ = false;
 
   bool twist_controller_running_;
 
@@ -323,6 +352,8 @@ protected:
   // Async thread handling
   std::shared_ptr<std::thread> async_moprim_cmd_thread_;
   std::atomic_bool async_moprim_thread_shutdown_;
+  // True while the worker is (about to be) blocked inside the instruction executor.
+  std::atomic_bool moprim_motion_executing_{ false };
   realtime_tools::LockFreeSPSCQueue<std::array<double, 25>, 1024> moprim_cmd_queue_;
   std::array<double, 25> current_moprim_command_;
 
@@ -343,10 +374,11 @@ protected:
   std::atomic_bool build_moprim_sequence_{ false };
   std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> moprim_sequence_;
 
-  void handleMoprimCommands();
+  bool handleMoprimCommands();
   void resetMoprimCmdInterfaces();
   void asyncMoprimCmdThread();
   void processMoprimMotionCmd(const std::array<double, 25>& command);
+  bool executeMoprimMotion(const std::vector<std::shared_ptr<urcl::control::MotionPrimitive>>& motion_sequence);
   bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
                                 double& move_time);
   bool getMoprimVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
