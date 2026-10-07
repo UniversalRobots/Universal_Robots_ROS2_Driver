@@ -141,11 +141,6 @@ protected:
   {
     return controller_.logged_once_;
   }
-  bool should_reset_goal() const
-  {
-    return controller_.should_reset_goal;
-  }
-
   controller_interface::return_type run_update()
   {
     return controller_.update(rclcpp::Time(0, 0, RCL_ROS_TIME), rclcpp::Duration::from_seconds(0.01));
@@ -230,7 +225,6 @@ TEST_F(ToolContactControllerTest, ExecutingNonTerminalResultAcknowledgesExecutin
   EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
   EXPECT_TRUE(is_active());
   EXPECT_TRUE(logged_once());
-  EXPECT_FALSE(should_reset_goal());
 }
 
 TEST_F(ToolContactControllerTest, ExecutingSuccessResultRequestsWaitingEnd)
@@ -243,8 +237,6 @@ TEST_F(ToolContactControllerTest, ExecutingSuccessResultRequestsWaitingEnd)
   EXPECT_EQ(run_update(), controller_interface::return_type::OK);
   EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_WAITING_END);
   EXPECT_FALSE(is_active());
-  // No active goal handle, so should_reset_goal stays false.
-  EXPECT_FALSE(should_reset_goal());
 }
 
 TEST_F(ToolContactControllerTest, ExecutingHardwareAbortResultSetsStandby)
@@ -260,6 +252,79 @@ TEST_F(ToolContactControllerTest, ExecutingHardwareAbortResultSetsStandby)
 }
 
 // ---------------------------------------------------------------------------
+<<<<<<< HEAD
+=======
+// Goal-box contention: try_get fails while another thread holds the mutex
+// ---------------------------------------------------------------------------
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingNonTerminalAcknowledgesExecuting)
+{
+  // Non-terminal EXECUTING must still be acknowledged so startToolContact is
+  // not retriggered, even when the goal handle cannot be read this cycle.
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_WAITING_BEGIN;
+  set_hw_state(TOOL_CONTACT_EXECUTING, 3.0);
+  set_logged_once(false);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
+    EXPECT_TRUE(is_active());
+    EXPECT_TRUE(logged_once());
+  });
+}
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingSuccessDefersTerminalHandling)
+{
+  // Terminal success must NOT write WAITING_END while the goal box is
+  // contended; goal/result handling is deferred to a later cycle.
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_EXECUTING;
+  set_hw_state(TOOL_CONTACT_EXECUTING, 0.0);
+  set_active(true);
+  set_logged_once(true);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
+    EXPECT_TRUE(is_active());
+  });
+}
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingHardwareAbortDefersTerminalHandling)
+{
+  // Terminal hardware abort must NOT write STANDBY while the goal box is
+  // contended; goal/result handling is deferred to a later cycle.
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_EXECUTING;
+  set_hw_state(TOOL_CONTACT_EXECUTING, 1.0);
+  set_active(true);
+  set_logged_once(true);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
+    EXPECT_TRUE(is_active());
+  });
+}
+
+TEST_F(ToolContactControllerTest, ContendedGoalBoxNonExecutingLeavesCommandUnchanged)
+{
+  clear_requests();
+  set_state_value_ = TOOL_CONTACT_STANDBY;
+  set_hw_state(TOOL_CONTACT_STANDBY);
+  set_logged_once(true);
+
+  with_goal_box_contended([this]() {
+    EXPECT_EQ(run_update(), controller_interface::return_type::OK);
+    EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_STANDBY);
+    // STANDBY logging clear only runs in the uncontended switch.
+    EXPECT_TRUE(logged_once());
+  });
+}
+
+// ---------------------------------------------------------------------------
+>>>>>>> 7e03142 (Do not drop a tool contact goal handle before its terminal state is delivered (#2005))
 // TOOL_CONTACT_FAILURE_BEGIN / SUCCESS_END / FAILURE_END / STANDBY
 // ---------------------------------------------------------------------------
 

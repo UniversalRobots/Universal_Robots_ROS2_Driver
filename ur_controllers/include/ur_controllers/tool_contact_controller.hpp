@@ -113,7 +113,6 @@ private:
   std::atomic<bool> tool_contact_abort_ = false;
   std::atomic<bool> change_requested_ = false;
   std::atomic<bool> logged_once_ = false;
-  std::atomic<bool> should_reset_goal = false;
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> tool_contact_result_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> major_version_state_interface_;
