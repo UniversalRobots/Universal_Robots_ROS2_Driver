@@ -94,6 +94,9 @@ Currently supported motion types:
 * ``CIRCULAR_CARTESIAN``: Circular move in Cartesian space through a via-point to a target pose
   (moveC).
 
+For ``LINEAR_JOINT`` and ``LINEAR_CARTESIAN``, the target can be specified as either a pose or a
+vector of joint positions; the robot will do the forward or inverse kinematics if necessary.
+
 The underlying `Universal Robots Client Library
 <https://github.com/UniversalRobots/Universal_Robots_Client_Library>`_ supports additional motion
 types such as moveP (process move with constant TCP velocity), optiMoveJ, optiMoveL, and spline
