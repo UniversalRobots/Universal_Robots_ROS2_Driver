@@ -182,10 +182,7 @@ protected:
   // stop function used by on_shutdown and on_cleanup
   hardware_interface::CallbackReturn stop();
 
-  // Interface names, built once in on_init() (matching kassow_kord_hardware_interface's
-  // convention) instead of concatenating "<prefix>/<interface>" fresh on every read()/write()
-  // cycle. set_state()/get_command()/set_command() still do a name lookup per call - only the
-  // string-building is cached, not the resolved handle.
+  // Interface names, built once in on_init()
   void build_interface_names();
 
   void initAsyncIO();

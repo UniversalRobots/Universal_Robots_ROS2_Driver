@@ -295,7 +295,9 @@ if(BUILD_TESTING)
     include
     ${motion_primitives_controllers_INCLUDE_DIRS}
   )
-  ament_target_dependencies(test_hardware_interface_exports hardware_interface)
+  target_link_libraries(test_hardware_interface_exports
+    hardware_interface::hardware_interface
+  )
 
   ament_add_gmock(test_robot_state_helper
     test/test_robot_state_helper.cpp
