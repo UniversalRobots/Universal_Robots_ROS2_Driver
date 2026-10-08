@@ -251,7 +251,8 @@ void URPositionHardwareInterface::build_interface_names()
   state_push_list_.clear();
   state_push_list_.emplace_back(tf_prefix + "speed_scaling/speed_scaling_factor", &speed_scaling_combined_);
   for (size_t i = 0; i < 18; ++i) {
-    state_push_list_.emplace_back(tf_prefix + "gpio/digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]);
+    state_push_list_.emplace_back(tf_prefix + "gpio/digital_output_" + std::to_string(i),
+                                  &actual_dig_out_bits_copy_[i]);
     state_push_list_.emplace_back(tf_prefix + "gpio/digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]);
   }
   for (size_t i = 0; i < 11; ++i) {
@@ -260,7 +261,8 @@ void URPositionHardwareInterface::build_interface_names()
   }
   for (size_t i = 0; i < 4; ++i) {
     state_push_list_.emplace_back(tf_prefix + "gpio/analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]);
-    state_push_list_.emplace_back(tf_prefix + "gpio/robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]);
+    state_push_list_.emplace_back(tf_prefix + "gpio/robot_status_bit_" + std::to_string(i),
+                                  &robot_status_bits_copy_[i]);
   }
   for (size_t i = 0; i < 2; ++i) {
     state_push_list_.emplace_back(tf_prefix + "gpio/tool_analog_input_type_" + std::to_string(i),
@@ -332,8 +334,8 @@ void URPositionHardwareInterface::build_interface_names()
   payload_mass_name_ = tf_prefix + "payload/mass";
   payload_cog_names_ = { tf_prefix + "payload/cog.x", tf_prefix + "payload/cog.y", tf_prefix + "payload/cog.z" };
   payload_inertia_names_ = { tf_prefix + "payload/inertia.ixx", tf_prefix + "payload/inertia.iyy",
-                            tf_prefix + "payload/inertia.izz", tf_prefix + "payload/inertia.ixy",
-                            tf_prefix + "payload/inertia.ixz", tf_prefix + "payload/inertia.iyz" };
+                             tf_prefix + "payload/inertia.izz", tf_prefix + "payload/inertia.ixy",
+                             tf_prefix + "payload/inertia.ixz", tf_prefix + "payload/inertia.iyz" };
   payload_transition_time_name_ = tf_prefix + "payload/transition_time";
   payload_async_success_name_ = tf_prefix + "payload/payload_async_success";
 
@@ -353,25 +355,23 @@ void URPositionHardwareInterface::build_interface_names()
   freedrive_abort_name_ = tf_prefix + FREEDRIVE_MODE_GPIO + "/abort";
   freedrive_async_success_name_ = tf_prefix + FREEDRIVE_MODE_GPIO + "/async_success";
 
-  force_mode_task_frame_names_ = { tf_prefix + FORCE_MODE_GPIO + "/task_frame_x",
-                                  tf_prefix + FORCE_MODE_GPIO + "/task_frame_y",
-                                  tf_prefix + FORCE_MODE_GPIO + "/task_frame_z",
-                                  tf_prefix + FORCE_MODE_GPIO + "/task_frame_rx",
-                                  tf_prefix + FORCE_MODE_GPIO + "/task_frame_ry",
-                                  tf_prefix + FORCE_MODE_GPIO + "/task_frame_rz" };
-  force_mode_selection_vector_names_ = { tf_prefix + FORCE_MODE_GPIO + "/selection_vector_x",
-                                       tf_prefix + FORCE_MODE_GPIO + "/selection_vector_y",
-                                       tf_prefix + FORCE_MODE_GPIO + "/selection_vector_z",
-                                       tf_prefix + FORCE_MODE_GPIO + "/selection_vector_rx",
-                                       tf_prefix + FORCE_MODE_GPIO + "/selection_vector_ry",
-                                       tf_prefix + FORCE_MODE_GPIO + "/selection_vector_rz" };
-  force_mode_wrench_names_ = { tf_prefix + FORCE_MODE_GPIO + "/wrench_x", tf_prefix + FORCE_MODE_GPIO + "/wrench_y",
-                              tf_prefix + FORCE_MODE_GPIO + "/wrench_z", tf_prefix + FORCE_MODE_GPIO + "/wrench_rx",
-                              tf_prefix + FORCE_MODE_GPIO + "/wrench_ry", tf_prefix + FORCE_MODE_GPIO + "/wrench_rz" };
+  force_mode_task_frame_names_ = {
+    tf_prefix + FORCE_MODE_GPIO + "/task_frame_x",  tf_prefix + FORCE_MODE_GPIO + "/task_frame_y",
+    tf_prefix + FORCE_MODE_GPIO + "/task_frame_z",  tf_prefix + FORCE_MODE_GPIO + "/task_frame_rx",
+    tf_prefix + FORCE_MODE_GPIO + "/task_frame_ry", tf_prefix + FORCE_MODE_GPIO + "/task_frame_rz"
+  };
+  force_mode_selection_vector_names_ = {
+    tf_prefix + FORCE_MODE_GPIO + "/selection_vector_x",  tf_prefix + FORCE_MODE_GPIO + "/selection_vector_y",
+    tf_prefix + FORCE_MODE_GPIO + "/selection_vector_z",  tf_prefix + FORCE_MODE_GPIO + "/selection_vector_rx",
+    tf_prefix + FORCE_MODE_GPIO + "/selection_vector_ry", tf_prefix + FORCE_MODE_GPIO + "/selection_vector_rz"
+  };
+  force_mode_wrench_names_ = { tf_prefix + FORCE_MODE_GPIO + "/wrench_x",  tf_prefix + FORCE_MODE_GPIO + "/wrench_y",
+                               tf_prefix + FORCE_MODE_GPIO + "/wrench_z",  tf_prefix + FORCE_MODE_GPIO + "/wrench_rx",
+                               tf_prefix + FORCE_MODE_GPIO + "/wrench_ry", tf_prefix + FORCE_MODE_GPIO + "/wrench_rz" };
   force_mode_type_name_ = tf_prefix + FORCE_MODE_GPIO + "/type";
-  force_mode_limits_names_ = { tf_prefix + FORCE_MODE_GPIO + "/limits_x", tf_prefix + FORCE_MODE_GPIO + "/limits_y",
-                              tf_prefix + FORCE_MODE_GPIO + "/limits_z", tf_prefix + FORCE_MODE_GPIO + "/limits_rx",
-                              tf_prefix + FORCE_MODE_GPIO + "/limits_ry", tf_prefix + FORCE_MODE_GPIO + "/limits_rz" };
+  force_mode_limits_names_ = { tf_prefix + FORCE_MODE_GPIO + "/limits_x",  tf_prefix + FORCE_MODE_GPIO + "/limits_y",
+                               tf_prefix + FORCE_MODE_GPIO + "/limits_z",  tf_prefix + FORCE_MODE_GPIO + "/limits_rx",
+                               tf_prefix + FORCE_MODE_GPIO + "/limits_ry", tf_prefix + FORCE_MODE_GPIO + "/limits_rz" };
   force_mode_async_success_name_ = tf_prefix + FORCE_MODE_GPIO + "/force_mode_async_success";
   force_mode_disable_cmd_name_ = tf_prefix + FORCE_MODE_GPIO + "/disable_cmd";
   force_mode_damping_name_ = tf_prefix + FORCE_MODE_GPIO + "/damping";
@@ -387,21 +387,21 @@ void URPositionHardwareInterface::build_interface_names()
     passthrough_accelerations_names_[i] = tf_prefix + PASSTHROUGH_GPIO + "/setpoint_accelerations_" + std::to_string(i);
   }
 
-  twist_command_names_ = { tf_prefix + TWIST_GPIO + "/linear_velocity_x", tf_prefix + TWIST_GPIO + "/linear_velocity_y",
-                          tf_prefix + TWIST_GPIO + "/linear_velocity_z",
-                          tf_prefix + TWIST_GPIO + "/angular_velocity_x",
-                          tf_prefix + TWIST_GPIO + "/angular_velocity_y",
-                          tf_prefix + TWIST_GPIO + "/angular_velocity_z" };
+  twist_command_names_ = {
+    tf_prefix + TWIST_GPIO + "/linear_velocity_x",  tf_prefix + TWIST_GPIO + "/linear_velocity_y",
+    tf_prefix + TWIST_GPIO + "/linear_velocity_z",  tf_prefix + TWIST_GPIO + "/angular_velocity_x",
+    tf_prefix + TWIST_GPIO + "/angular_velocity_y", tf_prefix + TWIST_GPIO + "/angular_velocity_z"
+  };
 
   tool_contact_set_state_name_ = tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_set_state";
   tool_contact_result_name_ = tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_result";
   tool_contact_state_name_ = tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_state";
 
   const std::vector<std::string> moprim_suffixes = {
-    "motion_type", "q1",  "q2",         "q3",         "q4",         "q5",         "q6",        "pos_x",
-    "pos_y",      "pos_z", "pos_qx",    "pos_qy",     "pos_qz",     "pos_qw",     "pos_via_x", "pos_via_y",
-    "pos_via_z",  "pos_via_qx", "pos_via_qy", "pos_via_qz", "pos_via_qw", "blend_radius", "velocity",
-    "acceleration", "move_time"
+    "motion_type",  "q1",        "q2",           "q3",         "q4",         "q5",         "q6",
+    "pos_x",        "pos_y",     "pos_z",        "pos_qx",     "pos_qy",     "pos_qz",     "pos_qw",
+    "pos_via_x",    "pos_via_y", "pos_via_z",    "pos_via_qx", "pos_via_qy", "pos_via_qz", "pos_via_qw",
+    "blend_radius", "velocity",  "acceleration", "move_time"
   };
   for (size_t i = 0; i < moprim_suffixes.size(); ++i) {
     moprim_command_names_[i] = tf_prefix + HW_IF_MOTION_PRIMITIVES + "/" + moprim_suffixes[i];
