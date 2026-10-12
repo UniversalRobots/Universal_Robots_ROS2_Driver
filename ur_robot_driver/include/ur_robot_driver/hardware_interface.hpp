@@ -151,6 +151,9 @@ public:
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_shutdown(const rclcpp_lifecycle::State& previous_state) final;
 
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces() final;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces() final;
+
   hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period) final;
   hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period) final;
 
@@ -186,7 +189,7 @@ protected:
   // Interface names, built once in on_init()
   void build_interface_names();
 
-  void initAsyncIO();
+  bool initAsyncIO();
   void checkAsyncIO();
   void updateNonDoubleValues();
   void extractToolPose();
@@ -413,6 +416,16 @@ protected:
   bool use_currents_as_efforts_ = false;
 
   // --- Interface names, built once in build_interface_names() (called from on_init()) ---
+
+  std::unordered_map<std::string, hardware_interface::StateInterface::SharedPtr> state_interface_handles_;
+  std::unordered_map<std::string, hardware_interface::CommandInterface::SharedPtr> command_interface_handles_;
+
+  template <typename T>
+  bool set_state_nonblocking(const std::string& name, const T& value);
+  template <typename T>
+  bool get_command_nonblocking(const std::string& name, T& value);
+  template <typename T>
+  bool set_command_nonblocking(const std::string& name, const T& value);
 
   std::vector<std::string> joint_position_state_names_;
   std::vector<std::string> joint_velocity_state_names_;

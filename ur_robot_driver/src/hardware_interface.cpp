@@ -228,6 +228,59 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
+std::vector<hardware_interface::StateInterface::ConstSharedPtr>
+URPositionHardwareInterface::on_export_state_interfaces()
+{
+  auto interfaces = hardware_interface::SystemInterface::on_export_state_interfaces();
+  state_interface_handles_.clear();
+  state_interface_handles_.reserve(interfaces.size());
+  for (const auto& interface : interfaces) {
+    state_interface_handles_.emplace(interface->get_name(), get_state_interface_handle(interface->get_name()));
+  }
+  return interfaces;
+}
+
+std::vector<hardware_interface::CommandInterface::SharedPtr> URPositionHardwareInterface::on_export_command_interfaces()
+{
+  auto interfaces = hardware_interface::SystemInterface::on_export_command_interfaces();
+  command_interface_handles_.clear();
+  command_interface_handles_.reserve(interfaces.size());
+  for (const auto& interface : interfaces) {
+    command_interface_handles_.emplace(interface->get_name(), interface);
+  }
+  return interfaces;
+}
+
+template <typename T>
+bool URPositionHardwareInterface::set_state_nonblocking(const std::string& name, const T& value)
+{
+  const auto interface = state_interface_handles_.find(name);
+  if (interface == state_interface_handles_.end()) {
+    return false;
+  }
+  return set_state(interface->second, value, false);
+}
+
+template <typename T>
+bool URPositionHardwareInterface::get_command_nonblocking(const std::string& name, T& value)
+{
+  const auto interface = command_interface_handles_.find(name);
+  if (interface == command_interface_handles_.end()) {
+    return false;
+  }
+  return get_command(interface->second, value, false);
+}
+
+template <typename T>
+bool URPositionHardwareInterface::set_command_nonblocking(const std::string& name, const T& value)
+{
+  const auto interface = command_interface_handles_.find(name);
+  if (interface == command_interface_handles_.end()) {
+    return false;
+  }
+  return set_command(interface->second, value, false);
+}
+
 void URPositionHardwareInterface::build_interface_names()
 {
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
@@ -850,7 +903,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     }
 
     if (first_pass_ && !initialized_) {
-      initAsyncIO();
+      bool command_interfaces_initialized = initAsyncIO();
       // initialize commands
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
       urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
@@ -863,21 +916,31 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       freedrive_mode_abort_ = NO_NEW_CMD_;
       freedrive_mode_enable_ = NO_NEW_CMD_;
       for (size_t i = 0; i < info_.joints.size(); ++i) {
-        set_command(joint_position_command_names_[i], urcl_position_commands_[i]);
-        set_command(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
+        command_interfaces_initialized &=
+            set_command_nonblocking(joint_position_command_names_[i], urcl_position_commands_[i]);
+        command_interfaces_initialized &=
+            set_command_nonblocking(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
         if (has_command(joint_effort_command_names_[i])) {
-          set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+          command_interfaces_initialized &=
+              set_command_nonblocking(joint_effort_command_names_[i], urcl_torque_commands_[i]);
         }
       }
-      set_command(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
-      set_command(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
-      set_command(zero_ftsensor_cmd_name_, zero_ftsensor_cmd_);
-      set_command(hand_back_control_cmd_name_, hand_back_control_cmd_);
-      set_command(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
-      set_command(freedrive_abort_name_, freedrive_mode_abort_);
-      set_command(freedrive_enable_name_, freedrive_mode_enable_);
-      set_command(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
-      initialized_ = true;
+      command_interfaces_initialized &=
+          set_command_nonblocking(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
+      command_interfaces_initialized &=
+          set_command_nonblocking(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
+      command_interfaces_initialized &= set_command_nonblocking(zero_ftsensor_cmd_name_, zero_ftsensor_cmd_);
+      command_interfaces_initialized &= set_command_nonblocking(hand_back_control_cmd_name_, hand_back_control_cmd_);
+      command_interfaces_initialized &= set_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
+      command_interfaces_initialized &= set_command_nonblocking(freedrive_abort_name_, freedrive_mode_abort_);
+      command_interfaces_initialized &= set_command_nonblocking(freedrive_enable_name_, freedrive_mode_enable_);
+      command_interfaces_initialized &=
+          set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+      initialized_ = command_interfaces_initialized;
+      if (!initialized_) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                             "Could not initialize all command interfaces without blocking. Retrying.");
+      }
     }
 
     updateNonDoubleValues();
@@ -886,16 +949,20 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     hw_moprim_states_[0] = static_cast<uint8_t>(current_moprim_execution_status_.load());
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
 
+    bool states_updated = true;
     for (size_t i = 0; i < info_.joints.size(); ++i) {
-      set_state(joint_position_state_names_[i], urcl_joint_positions_[i]);
-      set_state(joint_velocity_state_names_[i], urcl_joint_velocities_[i]);
-      set_state(joint_effort_state_names_[i], urcl_joint_efforts_[i]);
+      states_updated &= set_state_nonblocking(joint_position_state_names_[i], urcl_joint_positions_[i]);
+      states_updated &= set_state_nonblocking(joint_velocity_state_names_[i], urcl_joint_velocities_[i]);
+      states_updated &= set_state_nonblocking(joint_effort_state_names_[i], urcl_joint_efforts_[i]);
     }
     for (const auto& [name, value_ptr] : state_push_list_) {
-      set_state(name, *value_ptr);
+      states_updated &= set_state_nonblocking(name, *value_ptr);
     }
-    set_state(moprim_state_names_[0], hw_moprim_states_[0]);
-    set_state(moprim_state_names_[1], hw_moprim_states_[1]);
+    states_updated &= set_state_nonblocking(moprim_state_names_[0], hw_moprim_states_[0]);
+    states_updated &= set_state_nonblocking(moprim_state_names_[1], hw_moprim_states_[1]);
+    if (!states_updated) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not update all state interfaces without blocking.");
+    }
 
     return hardware_interface::return_type::OK;
   }
@@ -908,35 +975,41 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
+  bool commands_read = true;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    urcl_position_commands_[i] = get_command<double>(joint_position_command_names_[i]);
-    urcl_velocity_commands_[i] = get_command<double>(joint_velocity_command_names_[i]);
+    commands_read &= get_command_nonblocking(joint_position_command_names_[i], urcl_position_commands_[i]);
+    commands_read &= get_command_nonblocking(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
     if (has_command(joint_effort_command_names_[i])) {
-      urcl_torque_commands_[i] = get_command<double>(joint_effort_command_names_[i]);
+      commands_read &= get_command_nonblocking(joint_effort_command_names_[i], urcl_torque_commands_[i]);
     }
   }
   for (size_t i = 0; i < 6; ++i) {
-    urcl_twist_commands_[i] = get_command<double>(twist_command_names_[i]);
-    force_mode_task_frame_[i] = get_command<double>(force_mode_task_frame_names_[i]);
-    force_mode_selection_vector_[i] = get_command<double>(force_mode_selection_vector_names_[i]);
-    force_mode_wrench_[i] = get_command<double>(force_mode_wrench_names_[i]);
-    force_mode_limits_[i] = get_command<double>(force_mode_limits_names_[i]);
-    passthrough_trajectory_positions_[i] = get_command<double>(passthrough_positions_names_[i]);
-    passthrough_trajectory_velocities_[i] = get_command<double>(passthrough_velocities_names_[i]);
-    passthrough_trajectory_accelerations_[i] = get_command<double>(passthrough_accelerations_names_[i]);
+    commands_read &= get_command_nonblocking(twist_command_names_[i], urcl_twist_commands_[i]);
+    commands_read &= get_command_nonblocking(force_mode_task_frame_names_[i], force_mode_task_frame_[i]);
+    commands_read &= get_command_nonblocking(force_mode_selection_vector_names_[i], force_mode_selection_vector_[i]);
+    commands_read &= get_command_nonblocking(force_mode_wrench_names_[i], force_mode_wrench_[i]);
+    commands_read &= get_command_nonblocking(force_mode_limits_names_[i], force_mode_limits_[i]);
+    commands_read &= get_command_nonblocking(passthrough_positions_names_[i], passthrough_trajectory_positions_[i]);
+    commands_read &= get_command_nonblocking(passthrough_velocities_names_[i], passthrough_trajectory_velocities_[i]);
+    commands_read &=
+        get_command_nonblocking(passthrough_accelerations_names_[i], passthrough_trajectory_accelerations_[i]);
   }
-  force_mode_type_ = get_command<double>(force_mode_type_name_);
-  force_mode_damping_ = get_command<double>(force_mode_damping_name_);
-  force_mode_gain_scaling_ = get_command<double>(force_mode_gain_scaling_name_);
-  force_mode_async_success_ = get_command<double>(force_mode_async_success_name_);
-  force_mode_disable_cmd_ = get_command<double>(force_mode_disable_cmd_name_);
-  passthrough_trajectory_transfer_state_ = get_command<double>(passthrough_transfer_state_name_);
-  passthrough_trajectory_time_from_start_ = get_command<double>(passthrough_time_from_start_name_);
-  passthrough_trajectory_abort_ = get_command<double>(passthrough_abort_name_);
-  passthrough_trajectory_size_ = get_command<double>(passthrough_size_name_);
-  tool_contact_set_state_ = get_command<double>(tool_contact_set_state_name_);
+  commands_read &= get_command_nonblocking(force_mode_type_name_, force_mode_type_);
+  commands_read &= get_command_nonblocking(force_mode_damping_name_, force_mode_damping_);
+  commands_read &= get_command_nonblocking(force_mode_gain_scaling_name_, force_mode_gain_scaling_);
+  commands_read &= get_command_nonblocking(force_mode_async_success_name_, force_mode_async_success_);
+  commands_read &= get_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
+  commands_read &= get_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+  commands_read &= get_command_nonblocking(passthrough_time_from_start_name_, passthrough_trajectory_time_from_start_);
+  commands_read &= get_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
+  commands_read &= get_command_nonblocking(passthrough_size_name_, passthrough_trajectory_size_);
+  commands_read &= get_command_nonblocking(tool_contact_set_state_name_, tool_contact_set_state_);
   for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
-    hw_moprim_commands_[i] = get_command<double>(moprim_command_names_[i]);
+    commands_read &= get_command_nonblocking(moprim_command_names_[i], hw_moprim_commands_[i]);
+  }
+  if (!commands_read) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not read all command interfaces without blocking. Reusing their previous values.");
   }
 
   // If there is no interpreting program running on the robot, we do not want to send anything.
@@ -996,46 +1069,48 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
   robot_program_running_ = program_running;
 }
 
-void URPositionHardwareInterface::initAsyncIO()
+bool URPositionHardwareInterface::initAsyncIO()
 {
+  bool success = true;
   for (size_t i = 0; i < 18; ++i) {
     standard_dig_out_bits_cmd_[i] = NO_NEW_CMD_;
-    set_command(standard_dig_out_bits_cmd_names_[i], standard_dig_out_bits_cmd_[i]);
+    success &= set_command_nonblocking(standard_dig_out_bits_cmd_names_[i], standard_dig_out_bits_cmd_[i]);
   }
 
   for (size_t i = 0; i < 2; ++i) {
     standard_analog_output_cmd_[i] = NO_NEW_CMD_;
-    set_command(standard_analog_output_cmd_names_[i], standard_analog_output_cmd_[i]);
+    success &= set_command_nonblocking(standard_analog_output_cmd_names_[i], standard_analog_output_cmd_[i]);
   }
 
   analog_output_domain_cmd_ = NO_NEW_CMD_;
   tool_voltage_cmd_ = NO_NEW_CMD_;
-  set_command(analog_output_domain_cmd_name_, analog_output_domain_cmd_);
-  set_command(tool_voltage_cmd_name_, tool_voltage_cmd_);
+  success &= set_command_nonblocking(analog_output_domain_cmd_name_, analog_output_domain_cmd_);
+  success &= set_command_nonblocking(tool_voltage_cmd_name_, tool_voltage_cmd_);
 
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   payload_inertia_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   payload_transition_time_ = NO_NEW_CMD_;
-  set_command(payload_mass_name_, payload_mass_);
+  success &= set_command_nonblocking(payload_mass_name_, payload_mass_);
   for (size_t i = 0; i < 3; ++i) {
-    set_command(payload_cog_names_[i], payload_center_of_gravity_[i]);
+    success &= set_command_nonblocking(payload_cog_names_[i], payload_center_of_gravity_[i]);
   }
   for (size_t i = 0; i < 6; ++i) {
-    set_command(payload_inertia_names_[i], payload_inertia_[i]);
+    success &= set_command_nonblocking(payload_inertia_names_[i], payload_inertia_[i]);
   }
-  set_command(payload_transition_time_name_, payload_transition_time_);
+  success &= set_command_nonblocking(payload_transition_time_name_, payload_transition_time_);
 
   gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   for (size_t i = 0; i < 3; ++i) {
-    set_command(gravity_vector_names_[i], gravity_vector_[i]);
+    success &= set_command_nonblocking(gravity_vector_names_[i], gravity_vector_[i]);
   }
   friction_model_viscous_.fill(NO_NEW_CMD_);
   friction_model_coulomb_.fill(NO_NEW_CMD_);
   for (size_t i = 0; i < 6; ++i) {
-    set_command(friction_viscous_names_[i], friction_model_viscous_[i]);
-    set_command(friction_coulomb_names_[i], friction_model_coulomb_[i]);
+    success &= set_command_nonblocking(friction_viscous_names_[i], friction_model_viscous_[i]);
+    success &= set_command_nonblocking(friction_coulomb_names_[i], friction_model_coulomb_[i]);
   }
+  return success;
 }
 
 void URPositionHardwareInterface::checkAsyncIO()
@@ -1244,8 +1319,11 @@ void URPositionHardwareInterface::check_tool_contact_controller()
       tool_contact_state_ = cmd_state;
     }
   }
-  set_state(tool_contact_state_name_, tool_contact_state_);
-  set_state(tool_contact_result_name_, tool_contact_result_);
+  const bool state_updated = set_state_nonblocking(tool_contact_state_name_, tool_contact_state_);
+  const bool result_updated = set_state_nonblocking(tool_contact_result_name_, tool_contact_result_);
+  if (!state_updated || !result_updated) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not update tool contact state without blocking.");
+  }
 }
 
 void URPositionHardwareInterface::tool_contact_callback(urcl::control::ToolContactResult result)
@@ -1622,19 +1700,24 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   // Push every command/state value this function may have just reset or changed directly (write()'s
   // own per-cycle pull/push will overwrite the command values again on the next cycle regardless -
   // this is for exposed-value fidelity in the brief window before that).
+  bool interfaces_updated = true;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    set_command(joint_position_command_names_[i], urcl_position_commands_[i]);
-    set_command(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
+    interfaces_updated &= set_command_nonblocking(joint_position_command_names_[i], urcl_position_commands_[i]);
+    interfaces_updated &= set_command_nonblocking(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
     if (has_command(joint_effort_command_names_[i])) {
-      set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+      interfaces_updated &= set_command_nonblocking(joint_effort_command_names_[i], urcl_torque_commands_[i]);
     }
   }
   for (size_t i = 0; i < 6; ++i) {
-    set_command(twist_command_names_[i], urcl_twist_commands_[i]);
+    interfaces_updated &= set_command_nonblocking(twist_command_names_[i], urcl_twist_commands_[i]);
   }
-  set_command(passthrough_abort_name_, passthrough_trajectory_abort_);
-  set_command(freedrive_abort_name_, freedrive_mode_abort_);
-  set_state(tool_contact_result_name_, tool_contact_result_);
+  interfaces_updated &= set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
+  interfaces_updated &= set_command_nonblocking(freedrive_abort_name_, freedrive_mode_abort_);
+  interfaces_updated &= set_state_nonblocking(tool_contact_result_name_, tool_contact_result_);
+  if (!interfaces_updated) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not update all interfaces during command mode switch without blocking.");
+  }
 
   return ret_val;
 }
@@ -1662,31 +1745,40 @@ void URPositionHardwareInterface::start_force_mode()
                                    force_mode_type_, force_mode_limits_, force_mode_damping_, force_mode_gain_scaling_);
   }
 
+  bool commands_updated = true;
   for (size_t i = 0; i < 6; i++) {
     force_mode_task_frame_[i] = NO_NEW_CMD_;
     force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
     force_mode_wrench_[i] = NO_NEW_CMD_;
     force_mode_limits_[i] = NO_NEW_CMD_;
-    set_command(force_mode_task_frame_names_[i], force_mode_task_frame_[i]);
-    set_command(force_mode_selection_vector_names_[i], force_mode_selection_vector_[i]);
-    set_command(force_mode_wrench_names_[i], force_mode_wrench_[i]);
-    set_command(force_mode_limits_names_[i], force_mode_limits_[i]);
+    commands_updated &= set_command_nonblocking(force_mode_task_frame_names_[i], force_mode_task_frame_[i]);
+    commands_updated &= set_command_nonblocking(force_mode_selection_vector_names_[i], force_mode_selection_vector_[i]);
+    commands_updated &= set_command_nonblocking(force_mode_wrench_names_[i], force_mode_wrench_[i]);
+    commands_updated &= set_command_nonblocking(force_mode_limits_names_[i], force_mode_limits_[i]);
   }
   force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
   force_mode_damping_ = NO_NEW_CMD_;
   force_mode_gain_scaling_ = NO_NEW_CMD_;
-  set_command(force_mode_type_name_, force_mode_type_);
-  set_command(force_mode_damping_name_, force_mode_damping_);
-  set_command(force_mode_gain_scaling_name_, force_mode_gain_scaling_);
-  set_command(force_mode_async_success_name_, force_mode_async_success_);
+  commands_updated &= set_command_nonblocking(force_mode_type_name_, force_mode_type_);
+  commands_updated &= set_command_nonblocking(force_mode_damping_name_, force_mode_damping_);
+  commands_updated &= set_command_nonblocking(force_mode_gain_scaling_name_, force_mode_gain_scaling_);
+  commands_updated &= set_command_nonblocking(force_mode_async_success_name_, force_mode_async_success_);
+  if (!commands_updated) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not update all force mode command interfaces without blocking.");
+  }
 }
 
 void URPositionHardwareInterface::stop_force_mode()
 {
   force_mode_async_success_ = ur_driver_->endForceMode();
   force_mode_disable_cmd_ = NO_NEW_CMD_;
-  set_command(force_mode_async_success_name_, force_mode_async_success_);
-  set_command(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
+  const bool success_updated = set_command_nonblocking(force_mode_async_success_name_, force_mode_async_success_);
+  const bool disable_updated = set_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
+  if (!success_updated || !disable_updated) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not update force mode stop command interfaces without blocking.");
+  }
 }
 
 void URPositionHardwareInterface::check_passthrough_trajectory_controller()
@@ -1786,14 +1878,24 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     if (error) {
       passthrough_trajectory_abort_ = 1.0;
       passthrough_trajectory_transfer_state_ = 5.0;
-      set_command(passthrough_abort_name_, passthrough_trajectory_abort_);
-      set_command(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+      const bool abort_updated = set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
+      const bool state_updated =
+          set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+      if (!abort_updated || !state_updated) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                             "Could not update passthrough failure state without blocking.");
+      }
       return;
     }
   }
 
-  set_command(passthrough_abort_name_, passthrough_trajectory_abort_);
-  set_command(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+  const bool abort_updated = set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
+  const bool state_updated =
+      set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+  if (!abort_updated || !state_updated) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not update passthrough trajectory state without blocking.");
+  }
 }
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
@@ -1830,7 +1932,10 @@ void URPositionHardwareInterface::handleMoprimCommands()
     // set state interface immediately
     // --> if waiting for next read() cycle it happens sometimes that a command is overwritten
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
-    set_state(moprim_state_names_[1], hw_moprim_states_[1]);
+    if (!set_state_nonblocking(moprim_state_names_[1], hw_moprim_states_[1])) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not update motion primitive state without blocking.");
+    }
 
     switch (static_cast<uint8_t>(hw_moprim_commands_[0])) {
       case static_cast<uint8_t>(MoprimMotionHelperType::STOP_MOTION):
@@ -1877,8 +1982,13 @@ void URPositionHardwareInterface::handleMoprimCommands()
 void URPositionHardwareInterface::resetMoprimCmdInterfaces()
 {
   std::fill(hw_moprim_commands_.begin(), hw_moprim_commands_.end(), std::numeric_limits<double>::quiet_NaN());
+  bool commands_updated = true;
   for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
-    set_command(moprim_command_names_[i], hw_moprim_commands_[i]);
+    commands_updated &= set_command_nonblocking(moprim_command_names_[i], hw_moprim_commands_[i]);
+  }
+  if (!commands_updated) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not reset all motion primitive commands without blocking.");
   }
 }
 
