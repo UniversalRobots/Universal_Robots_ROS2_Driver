@@ -912,6 +912,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   force_mode_type_ = get_command<double>(force_mode_type_name_);
   force_mode_damping_ = get_command<double>(force_mode_damping_name_);
   force_mode_gain_scaling_ = get_command<double>(force_mode_gain_scaling_name_);
+  force_mode_async_success_ = get_command<double>(force_mode_async_success_name_);
   force_mode_disable_cmd_ = get_command<double>(force_mode_disable_cmd_name_);
   passthrough_trajectory_transfer_state_ = get_command<double>(passthrough_transfer_state_name_);
   passthrough_trajectory_time_from_start_ = get_command<double>(passthrough_time_from_start_name_);
