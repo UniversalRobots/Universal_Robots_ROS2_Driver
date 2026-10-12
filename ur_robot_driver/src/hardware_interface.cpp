@@ -876,6 +876,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       set_command(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
       set_command(freedrive_abort_name_, freedrive_mode_abort_);
       set_command(freedrive_enable_name_, freedrive_mode_enable_);
+      set_command(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
       initialized_ = true;
     }
 
