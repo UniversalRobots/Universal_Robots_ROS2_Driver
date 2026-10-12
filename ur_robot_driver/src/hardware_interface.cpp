@@ -250,6 +250,17 @@ void URPositionHardwareInterface::build_interface_names()
 
   state_push_list_.clear();
   state_push_list_.emplace_back(tf_prefix + "speed_scaling/speed_scaling_factor", &speed_scaling_combined_);
+  for (const auto& sensor : info_.sensors) {
+    if (sensor.name == tf_prefix + "tcp_fts_sensor") {
+      const std::array<std::string, 6> fts_names = {
+        "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
+      };
+      for (size_t i = 0; i < fts_names.size(); ++i) {
+        state_push_list_.emplace_back(sensor.name + "/" + fts_names[i], &urcl_ft_sensor_measurements_[i]);
+      }
+      break;
+    }
+  }
   for (size_t i = 0; i < 18; ++i) {
     state_push_list_.emplace_back(tf_prefix + "gpio/digital_output_" + std::to_string(i),
                                   &actual_dig_out_bits_copy_[i]);
