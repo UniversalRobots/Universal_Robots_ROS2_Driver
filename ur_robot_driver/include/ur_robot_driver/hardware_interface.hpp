@@ -45,6 +45,7 @@
 // System
 #include <limits>
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -421,7 +422,7 @@ protected:
 
   // resources switching aux vars
   std::vector<std::vector<uint32_t>> stop_modes_;
-  std::vector<std::vector<std::string>> start_modes_;
+  std::vector<std::set<std::string>> start_modes_;
   bool position_controller_running_;
   bool velocity_controller_running_;
   bool torque_controller_running_;

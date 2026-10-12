@@ -1411,7 +1411,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-  start_modes_ = std::vector<std::vector<std::string>>(info_.joints.size());
+  start_modes_ = std::vector<std::set<std::string>>(info_.joints.size());
   stop_modes_ = std::vector<std::vector<uint32_t>>(info_.joints.size());
   std::vector<std::vector<std::string>> control_modes(info_.joints.size());
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
@@ -1447,7 +1447,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     }
   }
 
-  auto is_mode_compatible = [this](const std::string& mode, const std::vector<std::string>& other_modes) {
+  auto is_mode_compatible = [this](const std::string& mode, const auto& other_modes) {
     for (auto& other : other_modes) {
       if (mode == other)
         continue;
@@ -1482,7 +1482,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           if (!is_mode_compatible(item.second, start_modes_[i])) {
             return hardware_interface::return_type::ERROR;
           }
-          start_modes_[i].push_back(item.second);
+          start_modes_[i].insert(item.second);
           continue;
         }
       }
@@ -1490,7 +1490,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   }
 
   // effort control is only available from 5.23.0 / 10.10.0
-  if (std::any_of(start_modes_.begin(), start_modes_.end(), [&](const std::vector<std::string>& modes) {
+  if (std::any_of(start_modes_.begin(), start_modes_.end(), [&](const std::set<std::string>& modes) {
         return std::any_of(modes.begin(), modes.end(),
                            [&](const std::string& mode) { return mode == hardware_interface::HW_IF_EFFORT; });
       })) {
@@ -1503,7 +1503,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   }
 
   if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
-                   [&](const std::vector<std::string>& other) { return other == start_modes_[0]; })) {
+                   [&](const std::set<std::string>& other) { return other == start_modes_[0]; })) {
     RCLCPP_ERROR(get_logger(), "Start modes of all joints have to be the same.");
     return hardware_interface::return_type::ERROR;
   }
