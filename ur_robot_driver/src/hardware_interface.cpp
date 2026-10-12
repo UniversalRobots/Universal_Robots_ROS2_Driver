@@ -142,6 +142,15 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   first_pass_ = true;
   initialized_ = false;
   async_thread_shutdown_ = false;
+  io_async_success_ = NO_NEW_CMD_;
+  scaling_async_success_ = NO_NEW_CMD_;
+  resend_robot_program_async_success_ = NO_NEW_CMD_;
+  hand_back_control_async_success_ = NO_NEW_CMD_;
+  payload_async_success_ = NO_NEW_CMD_;
+  gravity_async_success_ = NO_NEW_CMD_;
+  friction_model_async_success_ = NO_NEW_CMD_;
+  zero_ftsensor_async_success_ = NO_NEW_CMD_;
+  freedrive_mode_async_success_ = NO_NEW_CMD_;
   system_interface_initialized_ = 0.0;
   freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0.0;
@@ -1165,6 +1174,7 @@ void URPositionHardwareInterface::checkAsyncIO()
       }
       standard_dig_out_bits_cmd_[i] = NO_NEW_CMD_;
       set_command(standard_dig_out_bits_cmd_names_[i], standard_dig_out_bits_cmd_[i]);
+      set_command(io_async_success_name_, io_async_success_);
     }
   }
 
@@ -1180,6 +1190,7 @@ void URPositionHardwareInterface::checkAsyncIO()
           ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i], domain);
       standard_analog_output_cmd_[i] = NO_NEW_CMD_;
       set_command(standard_analog_output_cmd_names_[i], standard_analog_output_cmd_[i]);
+      set_command(io_async_success_name_, io_async_success_);
     }
   }
 
@@ -1187,15 +1198,18 @@ void URPositionHardwareInterface::checkAsyncIO()
     io_async_success_ = ur_driver_->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage_cmd_));
     tool_voltage_cmd_ = NO_NEW_CMD_;
     set_command(tool_voltage_cmd_name_, tool_voltage_cmd_);
+    set_command(io_async_success_name_, io_async_success_);
   }
 
   if (!std::isnan(target_speed_fraction_cmd_) && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
     target_speed_fraction_cmd_ = NO_NEW_CMD_;
     set_command(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
+    set_command(scaling_async_success_name_, scaling_async_success_);
   }
 
   if (!std::isnan(resend_robot_program_cmd_) && ur_driver_ != nullptr) {
+    resend_robot_program_async_success_ = false;
     try {
       resend_robot_program_async_success_ = ur_driver_->sendRobotProgram();
     } catch (const urcl::UrException& e) {
@@ -1203,6 +1217,7 @@ void URPositionHardwareInterface::checkAsyncIO()
     }
     resend_robot_program_cmd_ = NO_NEW_CMD_;
     set_command(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
+    set_command(resend_robot_program_async_success_name_, resend_robot_program_async_success_);
   }
 
   if (!std::isnan(hand_back_control_cmd_) && ur_driver_ != nullptr) {
@@ -1210,6 +1225,7 @@ void URPositionHardwareInterface::checkAsyncIO()
     hand_back_control_async_success_ = true;
     hand_back_control_cmd_ = NO_NEW_CMD_;
     set_command(hand_back_control_cmd_name_, hand_back_control_cmd_);
+    set_command(hand_back_control_async_success_name_, hand_back_control_async_success_);
   }
 
   if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) &&
@@ -1232,6 +1248,7 @@ void URPositionHardwareInterface::checkAsyncIO()
       set_command(payload_inertia_names_[i], payload_inertia_[i]);
     }
     set_command(payload_transition_time_name_, payload_transition_time_);
+    set_command(payload_async_success_name_, payload_async_success_);
   }
 
   if (!std::isnan(gravity_vector_[0]) && !std::isnan(gravity_vector_[1]) && !std::isnan(gravity_vector_[2]) &&
@@ -1241,6 +1258,7 @@ void URPositionHardwareInterface::checkAsyncIO()
     for (size_t i = 0; i < 3; ++i) {
       set_command(gravity_vector_names_[i], gravity_vector_[i]);
     }
+    set_command(gravity_async_success_name_, gravity_async_success_);
   }
   if (!std::isnan(friction_model_viscous_[0]) && ur_driver_ != nullptr) {
     friction_model_async_success_ = ur_driver_->setFrictionScales(friction_model_viscous_, friction_model_coulomb_);
@@ -1250,12 +1268,14 @@ void URPositionHardwareInterface::checkAsyncIO()
       set_command(friction_viscous_names_[i], friction_model_viscous_[i]);
       set_command(friction_coulomb_names_[i], friction_model_coulomb_[i]);
     }
+    set_command(friction_async_success_name_, friction_model_async_success_);
   }
 
   if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
     zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
     zero_ftsensor_cmd_ = NO_NEW_CMD_;
     set_command(zero_ftsensor_cmd_name_, zero_ftsensor_cmd_);
+    set_command(zero_ftsensor_async_success_name_, zero_ftsensor_async_success_);
   }
 
   if (!std::isnan(freedrive_mode_enable_) && ur_driver_ != nullptr) {
@@ -1264,6 +1284,7 @@ void URPositionHardwareInterface::checkAsyncIO()
         ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
     freedrive_mode_enable_ = NO_NEW_CMD_;
     set_command(freedrive_enable_name_, freedrive_mode_enable_);
+    set_command(freedrive_async_success_name_, freedrive_mode_async_success_);
     freedrive_activated_ = true;
   }
 
@@ -1275,20 +1296,8 @@ void URPositionHardwareInterface::checkAsyncIO()
     freedrive_activated_ = false;
     freedrive_mode_abort_ = NO_NEW_CMD_;
     set_command(freedrive_abort_name_, freedrive_mode_abort_);
+    set_command(freedrive_async_success_name_, freedrive_mode_async_success_);
   }
-
-  // Async-success flags: pushed once as a batch here rather than after each individual
-  // assignment above - behaviorally equivalent (last-write-wins, same as the original
-  // raw-pointer aliasing), and avoids scattering near-identical set_command() calls throughout.
-  set_command(io_async_success_name_, io_async_success_);
-  set_command(scaling_async_success_name_, scaling_async_success_);
-  set_command(resend_robot_program_async_success_name_, resend_robot_program_async_success_);
-  set_command(hand_back_control_async_success_name_, hand_back_control_async_success_);
-  set_command(payload_async_success_name_, payload_async_success_);
-  set_command(gravity_async_success_name_, gravity_async_success_);
-  set_command(friction_async_success_name_, friction_model_async_success_);
-  set_command(zero_ftsensor_async_success_name_, zero_ftsensor_async_success_);
-  set_command(freedrive_async_success_name_, freedrive_mode_async_success_);
 }
 
 void URPositionHardwareInterface::check_tool_contact_controller()
