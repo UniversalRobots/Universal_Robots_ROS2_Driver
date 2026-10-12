@@ -147,6 +147,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
   passthrough_trajectory_size_ = 0.0;
+  trajectory_result_ = static_cast<int>(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE);
   tool_contact_result_ = NO_NEW_CMD_;
   tool_contact_set_state_ = 0.0;
   tool_contact_state_ = 0.0;
@@ -1011,6 +1012,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not read all command interfaces without blocking. Reusing their previous values.");
   }
+  process_trajectory_result();
 
   // If there is no interpreting program running on the robot, we do not want to send anything.
   // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
@@ -1898,19 +1900,33 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   }
 }
 
+void URPositionHardwareInterface::process_trajectory_result()
+{
+  const uint64_t result_sequence = trajectory_result_sequence_.load(std::memory_order_acquire);
+  if (result_sequence == consumed_trajectory_result_sequence_) {
+    return;
+  }
+
+  const auto result = static_cast<urcl::control::TrajectoryResult>(trajectory_result_.load(std::memory_order_acquire));
+  passthrough_trajectory_abort_ = result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE ? 1.0 : 0.0;
+  passthrough_trajectory_transfer_state_ = 5.0;
+
+  const bool abort_updated = set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
+  const bool state_updated =
+      set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+  if (abort_updated && state_updated) {
+    consumed_trajectory_result_sequence_ = result_sequence;
+  } else {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not publish passthrough trajectory result without blocking. Retrying.");
+  }
+}
+
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
 {
   RCLCPP_INFO(get_logger(), "Trajectory done callback called with result: %d", static_cast<int>(result));
-  if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE) {
-    passthrough_trajectory_abort_ = 1.0;
-  } else {
-    passthrough_trajectory_abort_ = 0.0;
-  }
-  passthrough_trajectory_transfer_state_ = 5.0;
-  // Called from a urcl-internal callback thread, not the RT read()/write() cycle - push
-  // immediately rather than waiting for write()'s next per-cycle pull/push.
-  set_command(passthrough_abort_name_, passthrough_trajectory_abort_);
-  set_command(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+  trajectory_result_.store(static_cast<int>(result), std::memory_order_relaxed);
+  trajectory_result_sequence_.fetch_add(1, std::memory_order_release);
 
   if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED) {
     RCLCPP_INFO(get_logger(), "Robot stopped, TRAJECTORY_RESULT_CANCELED");
