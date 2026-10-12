@@ -124,9 +124,10 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   urcl_joint_efforts_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_position_commands_.fill(NO_NEW_CMD_);
+  urcl_position_commands_old_.fill(NO_NEW_CMD_);
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_twist_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   position_controller_running_ = false;
   velocity_controller_running_ = false;
@@ -141,6 +142,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   controllers_initialized_ = false;
   first_pass_ = true;
   initialized_ = false;
+  command_snapshot_initialized_ = false;
   async_thread_shutdown_ = false;
   io_async_success_ = NO_NEW_CMD_;
   scaling_async_success_ = NO_NEW_CMD_;
@@ -156,6 +158,10 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   passthrough_trajectory_transfer_state_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
   passthrough_trajectory_size_ = 0.0;
+  passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_accelerations_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_time_from_start_ = NO_NEW_CMD_;
   trajectory_result_ = static_cast<int>(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE);
   tool_contact_result_ = NO_NEW_CMD_;
   tool_contact_set_state_ = 0.0;
@@ -174,11 +180,15 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   hw_moprim_commands_.fill(std::numeric_limits<double>::quiet_NaN());
   for (size_t i = 0; i < 6; i++) {
     force_mode_task_frame_[i] = NO_NEW_CMD_;
-    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_selection_vector_[i] = NO_NEW_CMD_;
     force_mode_wrench_[i] = NO_NEW_CMD_;
     force_mode_limits_[i] = NO_NEW_CMD_;
   }
-  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+  force_mode_type_ = NO_NEW_CMD_;
+  force_mode_async_success_ = NO_NEW_CMD_;
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
+  force_mode_damping_ = NO_NEW_CMD_;
+  force_mode_gain_scaling_ = NO_NEW_CMD_;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
@@ -985,6 +995,12 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
+  // Position commands are seeded from the first RTDE joint-state sample in read(). Never send a
+  // motion command before that initialization has completed.
+  if (!initialized_) {
+    return hardware_interface::return_type::OK;
+  }
+
   bool commands_read = true;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
     commands_read &= get_command_nonblocking(joint_position_command_names_[i], urcl_position_commands_[i]);
@@ -1017,9 +1033,15 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
     commands_read &= get_command_nonblocking(moprim_command_names_[i], hw_moprim_commands_[i]);
   }
-  if (!commands_read) {
+  if (commands_read) {
+    command_snapshot_initialized_ = true;
+  } else if (command_snapshot_initialized_) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not read all command interfaces without blocking. Reusing their previous values.");
+  } else {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not read the initial command snapshot without blocking. Deferring command processing.");
+    return hardware_interface::return_type::OK;
   }
   process_trajectory_result();
 
@@ -1759,7 +1781,7 @@ void URPositionHardwareInterface::start_force_mode()
   bool commands_updated = true;
   for (size_t i = 0; i < 6; i++) {
     force_mode_task_frame_[i] = NO_NEW_CMD_;
-    force_mode_selection_vector_[i] = static_cast<uint32_t>(NO_NEW_CMD_);
+    force_mode_selection_vector_[i] = NO_NEW_CMD_;
     force_mode_wrench_[i] = NO_NEW_CMD_;
     force_mode_limits_[i] = NO_NEW_CMD_;
     commands_updated &= set_command_nonblocking(force_mode_task_frame_names_[i], force_mode_task_frame_[i]);
@@ -1767,7 +1789,7 @@ void URPositionHardwareInterface::start_force_mode()
     commands_updated &= set_command_nonblocking(force_mode_wrench_names_[i], force_mode_wrench_[i]);
     commands_updated &= set_command_nonblocking(force_mode_limits_names_[i], force_mode_limits_[i]);
   }
-  force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
+  force_mode_type_ = NO_NEW_CMD_;
   force_mode_damping_ = NO_NEW_CMD_;
   force_mode_gain_scaling_ = NO_NEW_CMD_;
   commands_updated &= set_command_nonblocking(force_mode_type_name_, force_mode_type_);

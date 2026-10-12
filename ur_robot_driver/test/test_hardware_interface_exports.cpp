@@ -279,6 +279,11 @@ protected:
   std::unique_ptr<hardware_interface::System> hw_;
 };
 
+TEST_F(URHardwareInterfaceExportTest, DefersWritesUntilPositionCommandsAreSeeded)
+{
+  EXPECT_EQ(hw_->write(rclcpp::Time(0), rclcpp::Duration(0, 0)), hardware_interface::return_type::OK);
+}
+
 // Interfaces exported by the removed raw-pointer export_state_interfaces(), for comparison.
 TEST_F(URHardwareInterfaceExportTest, ExportsExpectedStateInterfaces)
 {
