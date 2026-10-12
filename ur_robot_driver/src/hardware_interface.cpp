@@ -865,7 +865,9 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       for (size_t i = 0; i < info_.joints.size(); ++i) {
         set_command(joint_position_command_names_[i], urcl_position_commands_[i]);
         set_command(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
-        set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+        if (has_command(joint_effort_command_names_[i])) {
+          set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+        }
       }
       set_command(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
       set_command(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
@@ -908,7 +910,9 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   for (size_t i = 0; i < info_.joints.size(); ++i) {
     urcl_position_commands_[i] = get_command<double>(joint_position_command_names_[i]);
     urcl_velocity_commands_[i] = get_command<double>(joint_velocity_command_names_[i]);
-    urcl_torque_commands_[i] = get_command<double>(joint_effort_command_names_[i]);
+    if (has_command(joint_effort_command_names_[i])) {
+      urcl_torque_commands_[i] = get_command<double>(joint_effort_command_names_[i]);
+    }
   }
   for (size_t i = 0; i < 6; ++i) {
     urcl_twist_commands_[i] = get_command<double>(twist_command_names_[i]);
@@ -1620,7 +1624,9 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   for (size_t i = 0; i < info_.joints.size(); ++i) {
     set_command(joint_position_command_names_[i], urcl_position_commands_[i]);
     set_command(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
-    set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+    if (has_command(joint_effort_command_names_[i])) {
+      set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+    }
   }
   for (size_t i = 0; i < 6; ++i) {
     set_command(twist_command_names_[i], urcl_twist_commands_[i]);

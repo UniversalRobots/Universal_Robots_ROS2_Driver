@@ -39,6 +39,7 @@
 
 #include <gmock/gmock.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -441,6 +442,32 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedCommandInterfaces)
   }
 
   EXPECT_THAT(exported_names, ::testing::UnorderedElementsAreArray(expected_names));
+}
+
+TEST(URHardwareInterfaceExport, SupportsDescriptionsWithoutEffortCommands)
+{
+  auto info = BuildTestHardwareInfo();
+  for (auto& joint : info.joints) {
+    joint.command_interfaces.erase(
+        std::remove_if(joint.command_interfaces.begin(), joint.command_interfaces.end(),
+                       [](const auto& interface) { return interface.name == hardware_interface::HW_IF_EFFORT; }),
+        joint.command_interfaces.end());
+  }
+
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = info;
+  params.clock = std::make_shared<rclcpp::Clock>();
+  params.logger = rclcpp::get_logger("test_ur_hardware_interface_without_effort_commands");
+
+  hardware_interface::System hardware(std::make_unique<ur_robot_driver::URPositionHardwareInterface>());
+  const auto state = hardware.initialize(params);
+  ASSERT_EQ(state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+  const auto exported_names = GetNames(hardware.export_command_interfaces());
+  for (size_t i = 1; i <= kJointCount; ++i) {
+    EXPECT_THAT(exported_names, ::testing::Not(::testing::Contains("joint_" + std::to_string(i) + "/" +
+                                                                   hardware_interface::HW_IF_EFFORT)));
+  }
 }
 
 int main(int argc, char** argv)
