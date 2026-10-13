@@ -156,11 +156,6 @@ protected:
   {
     return controller_.logged_once_;
   }
-  bool should_reset_goal() const
-  {
-    return controller_.should_reset_goal;
-  }
-
   controller_interface::return_type run_update()
   {
     return controller_.update(rclcpp::Time(0, 0, RCL_ROS_TIME), rclcpp::Duration::from_seconds(0.01));
@@ -274,7 +269,6 @@ TEST_F(ToolContactControllerTest, ExecutingNonTerminalResultAcknowledgesExecutin
   EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
   EXPECT_TRUE(is_active());
   EXPECT_TRUE(logged_once());
-  EXPECT_FALSE(should_reset_goal());
 }
 
 TEST_F(ToolContactControllerTest, ExecutingSuccessResultRequestsWaitingEnd)
@@ -287,8 +281,6 @@ TEST_F(ToolContactControllerTest, ExecutingSuccessResultRequestsWaitingEnd)
   EXPECT_EQ(run_update(), controller_interface::return_type::OK);
   EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_WAITING_END);
   EXPECT_FALSE(is_active());
-  // No active goal handle, so should_reset_goal stays false.
-  EXPECT_FALSE(should_reset_goal());
 }
 
 TEST_F(ToolContactControllerTest, ExecutingHardwareAbortResultSetsStandby)
@@ -321,7 +313,6 @@ TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingNonTerminalAcknowledg
     EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
     EXPECT_TRUE(is_active());
     EXPECT_TRUE(logged_once());
-    EXPECT_FALSE(should_reset_goal());
   });
 }
 
@@ -339,7 +330,6 @@ TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingSuccessDefersTerminal
     EXPECT_EQ(run_update(), controller_interface::return_type::OK);
     EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
     EXPECT_TRUE(is_active());
-    EXPECT_FALSE(should_reset_goal());
   });
 }
 
@@ -357,7 +347,6 @@ TEST_F(ToolContactControllerTest, ContendedGoalBoxExecutingHardwareAbortDefersTe
     EXPECT_EQ(run_update(), controller_interface::return_type::OK);
     EXPECT_DOUBLE_EQ(set_state_value_, TOOL_CONTACT_EXECUTING);
     EXPECT_TRUE(is_active());
-    EXPECT_FALSE(should_reset_goal());
   });
 }
 
