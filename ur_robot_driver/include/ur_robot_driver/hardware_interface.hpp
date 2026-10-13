@@ -270,7 +270,7 @@ protected:
   // Tool contact controller interface values
   double tool_contact_set_state_;
   double tool_contact_state_;
-  double tool_contact_result_;
+  std::atomic<double> tool_contact_result_;
   bool tool_contact_controller_running_;
 
   // Freedrive mode controller interface values

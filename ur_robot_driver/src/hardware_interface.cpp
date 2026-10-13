@@ -380,7 +380,6 @@ void URPositionHardwareInterface::build_interface_names()
                                 &get_robot_software_version_bugfix_);
   state_push_list_.emplace_back(tf_prefix + "get_robot_software_version/get_version_build",
                                 &get_robot_software_version_build_);
-  state_push_list_.emplace_back(tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_result", &tool_contact_result_);
   state_push_list_.emplace_back(tf_prefix + TOOL_CONTACT_GPIO + "/tool_contact_state", &tool_contact_state_);
   state_push_list_.emplace_back(tf_prefix + "payload/mass", &rtde_payload_mass_);
   state_push_list_.emplace_back(tf_prefix + "payload/cog.x", &rtde_payload_cog_[0]);
@@ -980,6 +979,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     }
     states_updated &= set_state_nonblocking(moprim_state_names_[0], hw_moprim_states_[0]);
     states_updated &= set_state_nonblocking(moprim_state_names_[1], hw_moprim_states_[1]);
+
+    states_updated &= set_state_nonblocking(tool_contact_result_name_, tool_contact_result_.load());
     if (!states_updated) {
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not update all state interfaces without blocking.");
     }
@@ -1353,8 +1354,7 @@ void URPositionHardwareInterface::check_tool_contact_controller()
     }
   }
   const bool state_updated = set_state_nonblocking(tool_contact_state_name_, tool_contact_state_);
-  const bool result_updated = set_state_nonblocking(tool_contact_result_name_, tool_contact_result_);
-  if (!state_updated || !result_updated) {
+  if (!state_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not update tool contact state without blocking.");
   }
 }
@@ -1362,9 +1362,6 @@ void URPositionHardwareInterface::check_tool_contact_controller()
 void URPositionHardwareInterface::tool_contact_callback(urcl::control::ToolContactResult result)
 {
   tool_contact_result_ = static_cast<double>(result);
-  // Called from a urcl-internal callback thread, not the RT read()/write() cycle - push
-  // immediately.
-  set_state(tool_contact_result_name_, tool_contact_result_);
   return;
 }
 
@@ -1746,7 +1743,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   }
   interfaces_updated &= set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
   interfaces_updated &= set_command_nonblocking(freedrive_abort_name_, freedrive_mode_abort_);
-  interfaces_updated &= set_state_nonblocking(tool_contact_result_name_, tool_contact_result_);
   if (!interfaces_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not update all interfaces during command mode switch without blocking.");
