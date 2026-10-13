@@ -43,6 +43,7 @@
 #define UR_ROBOT_DRIVER__HARDWARE_INTERFACE_HPP_
 
 // System
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <set>
@@ -281,13 +282,13 @@ protected:
   double freedrive_mode_abort_;
 
   // Passthrough trajectory controller interface values
-  double passthrough_trajectory_transfer_state_;
-  double passthrough_trajectory_transfer_state_command_;
-  double passthrough_trajectory_transfer_sequence_;
-  double passthrough_trajectory_transfer_sequence_command_;
-  double passthrough_trajectory_abort_;
-  double passthrough_trajectory_abort_command_;
-  double passthrough_trajectory_size_;
+  uint8_t passthrough_trajectory_transfer_state_;
+  uint8_t passthrough_trajectory_transfer_state_command_;
+  uint32_t passthrough_trajectory_transfer_sequence_;
+  uint32_t passthrough_trajectory_transfer_sequence_command_;
+  bool passthrough_trajectory_abort_;
+  bool passthrough_trajectory_abort_command_;
+  uint32_t passthrough_trajectory_size_;
   bool passthrough_trajectory_controller_running_;
   urcl::vector6d_t passthrough_trajectory_positions_;
   urcl::vector6d_t passthrough_trajectory_velocities_;

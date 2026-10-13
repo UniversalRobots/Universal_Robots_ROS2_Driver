@@ -70,22 +70,22 @@ namespace ur_controllers
 {
 
 /*
- * 0.0: No trajectory to forward, the controller is idling and ready to receive a new trajectory.
- * 1.0: The controller has received and accepted a new trajectory. When the state is 1.0, the controller will write a
+ * 0: No trajectory to forward, the controller is idling and ready to receive a new trajectory.
+ * 1: The controller has received and accepted a new trajectory. When the state is 1, the controller will write a
  * point to the hardware interface.
- * 2.0: The hardware interface will read the point written from the controller.
- * 3.0: The hardware interface has read all the points, and will now write all the points to the physical robot
+ * 2: The hardware interface will read the point written from the controller.
+ * 3: The hardware interface has read all the points, and will now write all the points to the physical robot
  * controller.
- * 4.0: The robot is moving through the trajectory.
- * 5.0: The robot finished executing the trajectory.
+ * 4: The robot is moving through the trajectory.
+ * 5: The robot finished executing the trajectory.
  */
-constexpr double TRANSFER_STATE_IDLE = 0.0;
-constexpr double TRANSFER_STATE_NEW_TRAJECTORY = 6.0;
-constexpr double TRANSFER_STATE_WAITING_FOR_POINT = 1.0;
-constexpr double TRANSFER_STATE_TRANSFERRING = 2.0;
-constexpr double TRANSFER_STATE_TRANSFER_DONE = 3.0;
-constexpr double TRANSFER_STATE_IN_MOTION = 4.0;
-constexpr double TRANSFER_STATE_DONE = 5.0;
+constexpr uint8_t TRANSFER_STATE_IDLE = 0;
+constexpr uint8_t TRANSFER_STATE_NEW_TRAJECTORY = 6;
+constexpr uint8_t TRANSFER_STATE_WAITING_FOR_POINT = 1;
+constexpr uint8_t TRANSFER_STATE_TRANSFERRING = 2;
+constexpr uint8_t TRANSFER_STATE_TRANSFER_DONE = 3;
+constexpr uint8_t TRANSFER_STATE_IN_MOTION = 4;
+constexpr uint8_t TRANSFER_STATE_DONE = 5;
 
 using namespace std::chrono_literals;  // NOLINT
 
@@ -127,7 +127,7 @@ private:
   void end_goal();
 
   bool check_goal_tolerance();
-  bool write_transfer_request(double transfer_state);
+  bool write_transfer_request(uint8_t transfer_state);
 
   // Get a mapping between the trajectory's joint order and the internal one
   std::unordered_map<std::string, size_t> create_joint_mapping(const std::vector<std::string>& joint_names) const;
@@ -169,8 +169,8 @@ private:
 
   std::atomic<size_t> current_index_;
   std::atomic<bool> trajectory_active_;
-  double next_transfer_sequence_ = 1.0;
-  double pending_transfer_sequence_ = 0.0;
+  uint32_t next_transfer_sequence_ = 1;
+  uint32_t pending_transfer_sequence_ = 0;
   bool transfer_pending_ = false;
   rclcpp::Duration active_trajectory_elapsed_time_ = rclcpp::Duration::from_nanoseconds(0);
   rclcpp::Duration max_trajectory_time_ = rclcpp::Duration::from_nanoseconds(0);

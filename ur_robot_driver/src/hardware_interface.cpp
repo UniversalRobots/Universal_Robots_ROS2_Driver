@@ -155,13 +155,13 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   freedrive_mode_async_success_ = NO_NEW_CMD_;
   system_interface_initialized_ = 0.0;
   freedrive_mode_abort_ = 0.0;
-  passthrough_trajectory_transfer_state_ = 0.0;
-  passthrough_trajectory_transfer_state_command_ = 0.0;
-  passthrough_trajectory_transfer_sequence_ = 0.0;
-  passthrough_trajectory_transfer_sequence_command_ = 0.0;
-  passthrough_trajectory_abort_ = 0.0;
-  passthrough_trajectory_abort_command_ = 0.0;
-  passthrough_trajectory_size_ = 0.0;
+  passthrough_trajectory_transfer_state_ = 0;
+  passthrough_trajectory_transfer_state_command_ = 0;
+  passthrough_trajectory_transfer_sequence_ = 0;
+  passthrough_trajectory_transfer_sequence_command_ = 0;
+  passthrough_trajectory_abort_ = false;
+  passthrough_trajectory_abort_command_ = false;
+  passthrough_trajectory_size_ = 0;
   passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
   passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
   passthrough_trajectory_accelerations_.fill(NO_NEW_CMD_);
@@ -1647,7 +1647,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;
-    passthrough_trajectory_abort_ = 1.0;
+    passthrough_trajectory_abort_ = true;
     trajectory_joint_positions_.clear();
     trajectory_joint_accelerations_.clear();
     trajectory_joint_velocities_.clear();
@@ -1716,8 +1716,8 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     motion_primitives_forward_controller_running_ = false;
     torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
-    passthrough_trajectory_abort_ = 0.0;
-    passthrough_trajectory_transfer_state_ = 0.0;
+    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_transfer_state_ = 0;
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
@@ -1850,10 +1850,10 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       passthrough_trajectory_transfer_sequence_command_ != passthrough_trajectory_transfer_sequence_;
 
   // We should abort and are not in state IDLE
-  if (passthrough_trajectory_abort_command_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
+  if (passthrough_trajectory_abort_command_ && passthrough_trajectory_transfer_state_ != 0) {
     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
-  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 6.0) {
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 6) {
     if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
       trajectory_joint_positions_.resize(passthrough_trajectory_size_);
       trajectory_joint_velocities_.resize(passthrough_trajectory_size_);
@@ -1866,18 +1866,18 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     point_index_sent = 0;
     trajectory_started = false;
     last_time = 0.0;
-    passthrough_trajectory_transfer_state_ = 1.0;
-    passthrough_trajectory_abort_ = 0.0;
+    passthrough_trajectory_transfer_state_ = 1;
+    passthrough_trajectory_abort_ = false;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
-  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 2.0) {
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 2) {
     if (point_index_received >= trajectory_joint_positions_.size()) {
       RCLCPP_ERROR(get_logger(), "Received more passthrough trajectory points than announced.");
-      passthrough_trajectory_abort_ = 1.0;
-      passthrough_trajectory_transfer_state_ = 5.0;
+      passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_transfer_state_ = 5;
       passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
       return;
     }
-    passthrough_trajectory_abort_ = 0.0;
+    passthrough_trajectory_abort_ = false;
     trajectory_joint_positions_[point_index_received] = passthrough_trajectory_positions_;
 
     trajectory_times_[point_index_received] = passthrough_trajectory_time_from_start_ - last_time;
@@ -1887,7 +1887,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     trajectory_joint_accelerations_[point_index_received] = passthrough_trajectory_accelerations_;
 
     point_index_received++;
-    passthrough_trajectory_transfer_state_ = 1.0;
+    passthrough_trajectory_transfer_state_ = 1;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
 
     // Once we received enough points so we can move for at least 5 cycles, we start executing
@@ -1898,21 +1898,21 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
                                                 trajectory_joint_positions_.size());
       trajectory_started = true;
     }
-  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 3.0) {
-    passthrough_trajectory_abort_ = 0.0;
-    passthrough_trajectory_transfer_state_ = 4.0;
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 3) {
+    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_transfer_state_ = 4;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
-  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 0.0) {
-    passthrough_trajectory_abort_ = 0.0;
-    passthrough_trajectory_transfer_state_ = 0.0;
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 0) {
+    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_transfer_state_ = 0;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
   } else if (has_new_request) {
-    RCLCPP_ERROR(get_logger(), "Received invalid passthrough trajectory transfer state: %f",
-                 passthrough_trajectory_transfer_state_command_);
-    passthrough_trajectory_abort_ = 1.0;
-    passthrough_trajectory_transfer_state_ = 5.0;
+    RCLCPP_ERROR(get_logger(), "Received invalid passthrough trajectory transfer state: %u",
+                 static_cast<unsigned int>(passthrough_trajectory_transfer_state_command_));
+    passthrough_trajectory_abort_ = true;
+    passthrough_trajectory_transfer_state_ = 5;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
-  } else if (passthrough_trajectory_transfer_state_ == 4.0) {
+  } else if (passthrough_trajectory_transfer_state_ == 4) {
     if (point_index_sent == trajectory_joint_positions_.size()) {
       trajectory_joint_positions_.clear();
       trajectory_joint_accelerations_.clear();
@@ -1958,8 +1958,8 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       point_index_sent++;
     }
     if (error) {
-      passthrough_trajectory_abort_ = 1.0;
-      passthrough_trajectory_transfer_state_ = 5.0;
+      passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_transfer_state_ = 5;
       return;
     }
   }
@@ -1973,8 +1973,8 @@ void URPositionHardwareInterface::process_trajectory_result()
   }
 
   const auto result = static_cast<urcl::control::TrajectoryResult>(trajectory_result_.load(std::memory_order_acquire));
-  passthrough_trajectory_abort_ = result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE ? 1.0 : 0.0;
-  passthrough_trajectory_transfer_state_ = 5.0;
+  passthrough_trajectory_abort_ = result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE;
+  passthrough_trajectory_transfer_state_ = 5;
   consumed_trajectory_result_sequence_ = result_sequence;
 }
 

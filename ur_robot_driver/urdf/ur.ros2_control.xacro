@@ -353,19 +353,19 @@
         <command_interface name="setpoint_accelerations_3"/>
         <command_interface name="setpoint_accelerations_4"/>
         <command_interface name="setpoint_accelerations_5"/>
-        <command_interface name="transfer_state"/>
-        <command_interface name="transfer_sequence"/>
+        <command_interface name="transfer_state" data_type="uint8"/>
+        <command_interface name="transfer_sequence" data_type="uint32"/>
         <command_interface name="time_from_start"/>
-        <command_interface name="abort"/>
-        <command_interface name="trajectory_size"/>
-        <state_interface name="transfer_state">
-          <param name="initial_value">0.0</param>
+        <command_interface name="abort" data_type="bool"/>
+        <command_interface name="trajectory_size" data_type="uint32"/>
+        <state_interface name="transfer_state" data_type="uint8">
+          <param name="initial_value">0</param>
         </state_interface>
-        <state_interface name="transfer_sequence">
-          <param name="initial_value">0.0</param>
+        <state_interface name="transfer_sequence" data_type="uint32">
+          <param name="initial_value">0</param>
         </state_interface>
-        <state_interface name="abort">
-          <param name="initial_value">0.0</param>
+        <state_interface name="abort" data_type="bool">
+          <param name="initial_value">false</param>
         </state_interface>
       </gpio>
 
