@@ -763,6 +763,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   ur_driver_->registerToolContactResultCallback(
       std::bind(&URPositionHardwareInterface::tool_contact_callback, this, std::placeholders::_1));
 
+  // Command handles already exist. Initialize every interface whose initial value does not depend on
+  // robot state here, outside the real-time loop. Position commands are seeded later from the first
+  // joint-state sample.
+  initializeCommandInterfaces();
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -930,47 +935,18 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     }
 
     if (first_pass_ && !initialized_) {
-      bool command_interfaces_initialized = initAsyncIO();
-      // initialize commands
+      // Position commands must match the measured joint state. This stays in read() because the
+      // sample is not available during on_configure(), and the write has to stay nonblocking.
       urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
-      urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-      urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-      target_speed_fraction_cmd_ = NO_NEW_CMD_;
-      resend_robot_program_cmd_ = NO_NEW_CMD_;
-      zero_ftsensor_cmd_ = NO_NEW_CMD_;
-      hand_back_control_cmd_ = NO_NEW_CMD_;
-      force_mode_disable_cmd_ = NO_NEW_CMD_;
-      freedrive_mode_abort_ = NO_NEW_CMD_;
-      freedrive_mode_enable_ = NO_NEW_CMD_;
+      bool position_commands_initialized = true;
       for (size_t i = 0; i < info_.joints.size(); ++i) {
-        command_interfaces_initialized &=
+        position_commands_initialized &=
             set_command_nonblocking(joint_position_command_names_[i], urcl_position_commands_[i]);
-        command_interfaces_initialized &=
-            set_command_nonblocking(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
-        if (has_command(joint_effort_command_names_[i])) {
-          command_interfaces_initialized &=
-              set_command_nonblocking(joint_effort_command_names_[i], urcl_torque_commands_[i]);
-        }
       }
-      command_interfaces_initialized &=
-          set_command_nonblocking(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
-      command_interfaces_initialized &=
-          set_command_nonblocking(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
-      command_interfaces_initialized &= set_command_nonblocking(zero_ftsensor_cmd_name_, zero_ftsensor_cmd_);
-      command_interfaces_initialized &= set_command_nonblocking(hand_back_control_cmd_name_, hand_back_control_cmd_);
-      command_interfaces_initialized &= set_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
-      command_interfaces_initialized &= set_command_nonblocking(freedrive_abort_name_, freedrive_mode_abort_);
-      command_interfaces_initialized &= set_command_nonblocking(freedrive_enable_name_, freedrive_mode_enable_);
-      command_interfaces_initialized &=
-          set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_command_);
-      command_interfaces_initialized &= set_command_nonblocking(passthrough_transfer_sequence_name_,
-                                                                passthrough_trajectory_transfer_sequence_command_);
-      command_interfaces_initialized &=
-          set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_command_);
-      initialized_ = command_interfaces_initialized;
+      initialized_ = position_commands_initialized;
       if (!initialized_) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                             "Could not initialize all command interfaces without blocking. Retrying.");
+                             "Could not initialize position command interfaces without blocking. Retrying.");
       }
     }
 
@@ -1140,48 +1116,81 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
   robot_program_running_ = program_running;
 }
 
-bool URPositionHardwareInterface::initAsyncIO()
+void URPositionHardwareInterface::initializeCommandInterfaces()
 {
-  bool success = true;
+  initialized_ = false;
+  command_snapshot_initialized_ = false;
+
+  urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  target_speed_fraction_cmd_ = NO_NEW_CMD_;
+  resend_robot_program_cmd_ = NO_NEW_CMD_;
+  zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  hand_back_control_cmd_ = NO_NEW_CMD_;
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
+  freedrive_mode_abort_ = NO_NEW_CMD_;
+  freedrive_mode_enable_ = NO_NEW_CMD_;
+
+  for (size_t i = 0; i < info_.joints.size(); ++i) {
+    set_command(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
+    if (has_command(joint_effort_command_names_[i])) {
+      set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+    }
+  }
+  set_command(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
+  set_command(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
+  set_command(zero_ftsensor_cmd_name_, zero_ftsensor_cmd_);
+  set_command(hand_back_control_cmd_name_, hand_back_control_cmd_);
+  set_command(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
+  set_command(freedrive_abort_name_, freedrive_mode_abort_);
+  set_command(freedrive_enable_name_, freedrive_mode_enable_);
+  set_command(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_command_);
+  set_command(passthrough_transfer_sequence_name_, passthrough_trajectory_transfer_sequence_command_);
+  set_command(passthrough_abort_name_, passthrough_trajectory_abort_command_);
+
+  initAsyncIO();
+}
+
+void URPositionHardwareInterface::initAsyncIO()
+{
   for (size_t i = 0; i < 18; ++i) {
     standard_dig_out_bits_cmd_[i] = NO_NEW_CMD_;
-    success &= set_command_nonblocking(standard_dig_out_bits_cmd_names_[i], standard_dig_out_bits_cmd_[i]);
+    set_command(standard_dig_out_bits_cmd_names_[i], standard_dig_out_bits_cmd_[i]);
   }
 
   for (size_t i = 0; i < 2; ++i) {
     standard_analog_output_cmd_[i] = NO_NEW_CMD_;
-    success &= set_command_nonblocking(standard_analog_output_cmd_names_[i], standard_analog_output_cmd_[i]);
+    set_command(standard_analog_output_cmd_names_[i], standard_analog_output_cmd_[i]);
   }
 
   analog_output_domain_cmd_ = NO_NEW_CMD_;
   tool_voltage_cmd_ = NO_NEW_CMD_;
-  success &= set_command_nonblocking(analog_output_domain_cmd_name_, analog_output_domain_cmd_);
-  success &= set_command_nonblocking(tool_voltage_cmd_name_, tool_voltage_cmd_);
+  set_command(analog_output_domain_cmd_name_, analog_output_domain_cmd_);
+  set_command(tool_voltage_cmd_name_, tool_voltage_cmd_);
 
   payload_mass_ = NO_NEW_CMD_;
   payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   payload_inertia_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   payload_transition_time_ = NO_NEW_CMD_;
-  success &= set_command_nonblocking(payload_mass_name_, payload_mass_);
+  set_command(payload_mass_name_, payload_mass_);
   for (size_t i = 0; i < 3; ++i) {
-    success &= set_command_nonblocking(payload_cog_names_[i], payload_center_of_gravity_[i]);
+    set_command(payload_cog_names_[i], payload_center_of_gravity_[i]);
   }
   for (size_t i = 0; i < 6; ++i) {
-    success &= set_command_nonblocking(payload_inertia_names_[i], payload_inertia_[i]);
+    set_command(payload_inertia_names_[i], payload_inertia_[i]);
   }
-  success &= set_command_nonblocking(payload_transition_time_name_, payload_transition_time_);
+  set_command(payload_transition_time_name_, payload_transition_time_);
 
   gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   for (size_t i = 0; i < 3; ++i) {
-    success &= set_command_nonblocking(gravity_vector_names_[i], gravity_vector_[i]);
+    set_command(gravity_vector_names_[i], gravity_vector_[i]);
   }
   friction_model_viscous_.fill(NO_NEW_CMD_);
   friction_model_coulomb_.fill(NO_NEW_CMD_);
   for (size_t i = 0; i < 6; ++i) {
-    success &= set_command_nonblocking(friction_viscous_names_[i], friction_model_viscous_[i]);
-    success &= set_command_nonblocking(friction_coulomb_names_[i], friction_model_coulomb_[i]);
+    set_command(friction_viscous_names_[i], friction_model_viscous_[i]);
+    set_command(friction_coulomb_names_[i], friction_model_coulomb_[i]);
   }
-  return success;
 }
 
 void URPositionHardwareInterface::checkAsyncIO()

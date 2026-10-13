@@ -190,7 +190,8 @@ protected:
   // Interface names, built once in on_init()
   void build_interface_names();
 
-  bool initAsyncIO();
+  void initializeCommandInterfaces();
+  void initAsyncIO();
   void checkAsyncIO();
   void updateNonDoubleValues();
   void extractToolPose();
