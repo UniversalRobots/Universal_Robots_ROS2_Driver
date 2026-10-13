@@ -196,7 +196,9 @@ protected:
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
-  void start_force_mode();
+  void start_force_mode(const urcl::vector6d_t& task_frame, const urcl::vector6d_t& selection_vector,
+                        const urcl::vector6d_t& wrench, double type, const urcl::vector6d_t& limits, double damping,
+                        double gain_scaling);
   void stop_force_mode();
   void check_passthrough_trajectory_controller();
   void process_trajectory_result();
@@ -206,7 +208,6 @@ protected:
   void check_tool_contact_controller();
 
   urcl::vector6d_t urcl_position_commands_;
-  urcl::vector6d_t urcl_position_commands_old_;
   urcl::vector6d_t urcl_velocity_commands_;
   urcl::vector6d_t urcl_torque_commands_;
   urcl::vector6d_t urcl_twist_commands_;
@@ -244,20 +245,6 @@ protected:
   std::bitset<4> robot_status_bits_;
   std::bitset<11> safety_status_bits_;
 
-  // asynchronous commands
-  std::array<double, 18> standard_dig_out_bits_cmd_;
-  std::array<double, 2> standard_analog_output_cmd_;
-  double analog_output_domain_cmd_;
-  double tool_voltage_cmd_;
-  double io_async_success_;
-  double target_speed_fraction_cmd_;
-  double scaling_async_success_;
-  double resend_robot_program_cmd_;
-  double resend_robot_program_async_success_;
-  double zero_ftsensor_cmd_;
-  double zero_ftsensor_async_success_;
-  double hand_back_control_cmd_;
-  double hand_back_control_async_success_;
   bool first_pass_;
   bool initialized_;
   bool command_snapshot_initialized_;
@@ -275,12 +262,9 @@ protected:
   std::atomic<double> tool_contact_result_;
   bool tool_contact_controller_running_;
 
-  // Freedrive mode controller interface values
+  // Freedrive mode controller state. Enable and abort commands are read from their interfaces.
   bool freedrive_activated_;
   bool freedrive_mode_controller_running_;
-  double freedrive_mode_async_success_;
-  double freedrive_mode_enable_;
-  double freedrive_mode_abort_;
 
   // Passthrough trajectory controller interface values
   uint8_t passthrough_trajectory_transfer_state_;
@@ -301,36 +285,10 @@ protected:
 
   bool twist_controller_running_;
 
-  // payload stuff
-  urcl::vector3d_t payload_center_of_gravity_;
-  urcl::vector6d_t payload_inertia_;
-  double payload_mass_;
-  double payload_transition_time_;
-  double payload_async_success_;
+  // Payload reported by RTDE. Commanded payload is read from the command interfaces.
   double rtde_payload_mass_ = 0.0;
   urcl::vector3d_t rtde_payload_cog_{ 0.0, 0.0, 0.0 };
   urcl::vector6d_t rtde_payload_inertia_{ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-
-  // Friction model parameters
-  urcl::vector6d_t friction_model_viscous_;
-  urcl::vector6d_t friction_model_coulomb_;
-  double friction_model_async_success_;
-
-  // force mode parameters
-  urcl::vector6d_t force_mode_task_frame_;
-  urcl::vector6d_t force_mode_selection_vector_;
-  urcl::vector6uint32_t force_mode_selection_vector_copy_;
-  urcl::vector6d_t force_mode_wrench_;
-  urcl::vector6d_t force_mode_limits_;
-  double force_mode_type_;
-  double force_mode_async_success_;
-  double force_mode_disable_cmd_;
-  double force_mode_damping_;
-  double force_mode_gain_scaling_;
-
-  // Gravity stuff
-  urcl::vector3d_t gravity_vector_;
-  double gravity_async_success_;
 
   //*************** Motion primitives stuff ***************
   std::shared_ptr<urcl::InstructionExecutor> instruction_executor_;

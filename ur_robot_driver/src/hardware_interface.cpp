@@ -125,7 +125,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   urcl_ft_sensor_measurements_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_tcp_pose_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_.fill(NO_NEW_CMD_);
-  urcl_position_commands_old_.fill(NO_NEW_CMD_);
   urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_twist_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
@@ -144,17 +143,7 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   initialized_ = false;
   command_snapshot_initialized_ = false;
   async_thread_shutdown_ = false;
-  io_async_success_ = NO_NEW_CMD_;
-  scaling_async_success_ = NO_NEW_CMD_;
-  resend_robot_program_async_success_ = NO_NEW_CMD_;
-  hand_back_control_async_success_ = NO_NEW_CMD_;
-  payload_async_success_ = NO_NEW_CMD_;
-  gravity_async_success_ = NO_NEW_CMD_;
-  friction_model_async_success_ = NO_NEW_CMD_;
-  zero_ftsensor_async_success_ = NO_NEW_CMD_;
-  freedrive_mode_async_success_ = NO_NEW_CMD_;
   system_interface_initialized_ = 0.0;
-  freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0;
   passthrough_trajectory_transfer_state_command_ = 0;
   passthrough_trajectory_transfer_sequence_ = 0;
@@ -185,17 +174,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   motion_primitives_forward_controller_running_ = false;
   hw_moprim_states_.fill(std::numeric_limits<double>::quiet_NaN());
   hw_moprim_commands_.fill(std::numeric_limits<double>::quiet_NaN());
-  for (size_t i = 0; i < 6; i++) {
-    force_mode_task_frame_[i] = NO_NEW_CMD_;
-    force_mode_selection_vector_[i] = NO_NEW_CMD_;
-    force_mode_wrench_[i] = NO_NEW_CMD_;
-    force_mode_limits_[i] = NO_NEW_CMD_;
-  }
-  force_mode_type_ = NO_NEW_CMD_;
-  force_mode_async_success_ = NO_NEW_CMD_;
-  force_mode_disable_cmd_ = NO_NEW_CMD_;
-  force_mode_damping_ = NO_NEW_CMD_;
-  force_mode_gain_scaling_ = NO_NEW_CMD_;
 
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
@@ -937,7 +915,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     if (first_pass_ && !initialized_) {
       // Position commands must match the measured joint state. This stays in read() because the
       // sample is not available during on_configure(), and the write has to stay nonblocking.
-      urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+      urcl_position_commands_ = urcl_joint_positions_;
       bool position_commands_initialized = true;
       for (size_t i = 0; i < info_.joints.size(); ++i) {
         position_commands_initialized &=
@@ -1009,10 +987,6 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   }
   for (size_t i = 0; i < 6; ++i) {
     commands_read &= get_command_nonblocking(twist_command_names_[i], urcl_twist_commands_[i]);
-    commands_read &= get_command_nonblocking(force_mode_task_frame_names_[i], force_mode_task_frame_[i]);
-    commands_read &= get_command_nonblocking(force_mode_selection_vector_names_[i], force_mode_selection_vector_[i]);
-    commands_read &= get_command_nonblocking(force_mode_wrench_names_[i], force_mode_wrench_[i]);
-    commands_read &= get_command_nonblocking(force_mode_limits_names_[i], force_mode_limits_[i]);
     passthrough_commands_read &=
         get_command_nonblocking(passthrough_positions_names_[i], passthrough_trajectory_positions_[i]);
     passthrough_commands_read &=
@@ -1020,11 +994,6 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     passthrough_commands_read &=
         get_command_nonblocking(passthrough_accelerations_names_[i], passthrough_trajectory_accelerations_[i]);
   }
-  commands_read &= get_command_nonblocking(force_mode_type_name_, force_mode_type_);
-  commands_read &= get_command_nonblocking(force_mode_damping_name_, force_mode_damping_);
-  commands_read &= get_command_nonblocking(force_mode_gain_scaling_name_, force_mode_gain_scaling_);
-  commands_read &= get_command_nonblocking(force_mode_async_success_name_, force_mode_async_success_);
-  commands_read &= get_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
   passthrough_commands_read &=
       get_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_command_);
   passthrough_commands_read &=
@@ -1090,11 +1059,38 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       ur_driver_->writeKeepalive();
     }
 
-    if (!std::isnan(force_mode_task_frame_[0]) && !std::isnan(force_mode_selection_vector_[0]) &&
-        !std::isnan(force_mode_wrench_[0]) && !std::isnan(force_mode_type_) && !std::isnan(force_mode_limits_[0]) &&
-        !std::isnan(force_mode_damping_) && !std::isnan(force_mode_gain_scaling_) && ur_driver_ != nullptr) {
-      start_force_mode();
-    } else if (!std::isnan(force_mode_disable_cmd_) && ur_driver_ != nullptr && force_mode_async_success_ == 2.0) {
+    urcl::vector6d_t force_mode_task_frame{};
+    urcl::vector6d_t force_mode_selection_vector{};
+    urcl::vector6d_t force_mode_wrench{};
+    urcl::vector6d_t force_mode_limits{};
+    double force_mode_type = NO_NEW_CMD_;
+    double force_mode_damping = NO_NEW_CMD_;
+    double force_mode_gain_scaling = NO_NEW_CMD_;
+    double force_mode_async_success = NO_NEW_CMD_;
+    double force_mode_disable_cmd = NO_NEW_CMD_;
+    bool force_commands_read = true;
+    for (size_t i = 0; i < force_mode_task_frame.size(); ++i) {
+      force_commands_read &= get_command_nonblocking(force_mode_task_frame_names_[i], force_mode_task_frame[i]);
+      force_commands_read &=
+          get_command_nonblocking(force_mode_selection_vector_names_[i], force_mode_selection_vector[i]);
+      force_commands_read &= get_command_nonblocking(force_mode_wrench_names_[i], force_mode_wrench[i]);
+      force_commands_read &= get_command_nonblocking(force_mode_limits_names_[i], force_mode_limits[i]);
+    }
+    force_commands_read &= get_command_nonblocking(force_mode_type_name_, force_mode_type);
+    force_commands_read &= get_command_nonblocking(force_mode_damping_name_, force_mode_damping);
+    force_commands_read &= get_command_nonblocking(force_mode_gain_scaling_name_, force_mode_gain_scaling);
+    force_commands_read &= get_command_nonblocking(force_mode_async_success_name_, force_mode_async_success);
+    force_commands_read &= get_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd);
+    if (!force_commands_read) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not read force mode command interfaces without blocking. Skipping force mode for "
+                           "this cycle.");
+    } else if (!std::isnan(force_mode_task_frame[0]) && !std::isnan(force_mode_selection_vector[0]) &&
+               !std::isnan(force_mode_wrench[0]) && !std::isnan(force_mode_type) && !std::isnan(force_mode_limits[0]) &&
+               !std::isnan(force_mode_damping) && !std::isnan(force_mode_gain_scaling) && ur_driver_ != nullptr) {
+      start_force_mode(force_mode_task_frame, force_mode_selection_vector, force_mode_wrench, force_mode_type,
+                       force_mode_limits, force_mode_damping, force_mode_gain_scaling);
+    } else if (!std::isnan(force_mode_disable_cmd) && ur_driver_ != nullptr && force_mode_async_success == 2.0) {
       stop_force_mode();
     }
 
@@ -1121,29 +1117,19 @@ void URPositionHardwareInterface::initializeCommandInterfaces()
   initialized_ = false;
   command_snapshot_initialized_ = false;
 
-  urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  target_speed_fraction_cmd_ = NO_NEW_CMD_;
-  resend_robot_program_cmd_ = NO_NEW_CMD_;
-  zero_ftsensor_cmd_ = NO_NEW_CMD_;
-  hand_back_control_cmd_ = NO_NEW_CMD_;
-  force_mode_disable_cmd_ = NO_NEW_CMD_;
-  freedrive_mode_abort_ = NO_NEW_CMD_;
-  freedrive_mode_enable_ = NO_NEW_CMD_;
-
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    set_command(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
+    set_command(joint_velocity_command_names_[i], 0.0);
     if (has_command(joint_effort_command_names_[i])) {
-      set_command(joint_effort_command_names_[i], urcl_torque_commands_[i]);
+      set_command(joint_effort_command_names_[i], 0.0);
     }
   }
-  set_command(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
-  set_command(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
-  set_command(zero_ftsensor_cmd_name_, zero_ftsensor_cmd_);
-  set_command(hand_back_control_cmd_name_, hand_back_control_cmd_);
-  set_command(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
-  set_command(freedrive_abort_name_, freedrive_mode_abort_);
-  set_command(freedrive_enable_name_, freedrive_mode_enable_);
+  set_command(target_speed_fraction_cmd_name_, NO_NEW_CMD_);
+  set_command(resend_robot_program_cmd_name_, NO_NEW_CMD_);
+  set_command(zero_ftsensor_cmd_name_, NO_NEW_CMD_);
+  set_command(hand_back_control_cmd_name_, NO_NEW_CMD_);
+  set_command(force_mode_disable_cmd_name_, NO_NEW_CMD_);
+  set_command(freedrive_abort_name_, NO_NEW_CMD_);
+  set_command(freedrive_enable_name_, NO_NEW_CMD_);
   set_command(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_command_);
   set_command(passthrough_transfer_sequence_name_, passthrough_trajectory_transfer_sequence_command_);
   set_command(passthrough_abort_name_, passthrough_trajectory_abort_command_);
@@ -1154,42 +1140,31 @@ void URPositionHardwareInterface::initializeCommandInterfaces()
 void URPositionHardwareInterface::initAsyncIO()
 {
   for (size_t i = 0; i < 18; ++i) {
-    standard_dig_out_bits_cmd_[i] = NO_NEW_CMD_;
-    set_command(standard_dig_out_bits_cmd_names_[i], standard_dig_out_bits_cmd_[i]);
+    set_command(standard_dig_out_bits_cmd_names_[i], NO_NEW_CMD_);
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    standard_analog_output_cmd_[i] = NO_NEW_CMD_;
-    set_command(standard_analog_output_cmd_names_[i], standard_analog_output_cmd_[i]);
+    set_command(standard_analog_output_cmd_names_[i], NO_NEW_CMD_);
   }
 
-  analog_output_domain_cmd_ = NO_NEW_CMD_;
-  tool_voltage_cmd_ = NO_NEW_CMD_;
-  set_command(analog_output_domain_cmd_name_, analog_output_domain_cmd_);
-  set_command(tool_voltage_cmd_name_, tool_voltage_cmd_);
+  set_command(analog_output_domain_cmd_name_, NO_NEW_CMD_);
+  set_command(tool_voltage_cmd_name_, NO_NEW_CMD_);
 
-  payload_mass_ = NO_NEW_CMD_;
-  payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
-  payload_inertia_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
-  payload_transition_time_ = NO_NEW_CMD_;
-  set_command(payload_mass_name_, payload_mass_);
+  set_command(payload_mass_name_, NO_NEW_CMD_);
   for (size_t i = 0; i < 3; ++i) {
-    set_command(payload_cog_names_[i], payload_center_of_gravity_[i]);
+    set_command(payload_cog_names_[i], NO_NEW_CMD_);
   }
   for (size_t i = 0; i < 6; ++i) {
-    set_command(payload_inertia_names_[i], payload_inertia_[i]);
+    set_command(payload_inertia_names_[i], NO_NEW_CMD_);
   }
-  set_command(payload_transition_time_name_, payload_transition_time_);
+  set_command(payload_transition_time_name_, NO_NEW_CMD_);
 
-  gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
   for (size_t i = 0; i < 3; ++i) {
-    set_command(gravity_vector_names_[i], gravity_vector_[i]);
+    set_command(gravity_vector_names_[i], NO_NEW_CMD_);
   }
-  friction_model_viscous_.fill(NO_NEW_CMD_);
-  friction_model_coulomb_.fill(NO_NEW_CMD_);
   for (size_t i = 0; i < 6; ++i) {
-    set_command(friction_viscous_names_[i], friction_model_viscous_[i]);
-    set_command(friction_coulomb_names_[i], friction_model_coulomb_[i]);
+    set_command(friction_viscous_names_[i], NO_NEW_CMD_);
+    set_command(friction_coulomb_names_[i], NO_NEW_CMD_);
   }
 }
 
@@ -1199,173 +1174,163 @@ void URPositionHardwareInterface::checkAsyncIO()
     return;
   }
 
-  for (size_t i = 0; i < 18; ++i) {
-    standard_dig_out_bits_cmd_[i] = get_command<double>(standard_dig_out_bits_cmd_names_[i]);
+  std::array<double, 18> standard_dig_out_bits_cmd;
+  for (size_t i = 0; i < standard_dig_out_bits_cmd.size(); ++i) {
+    standard_dig_out_bits_cmd[i] = get_command<double>(standard_dig_out_bits_cmd_names_[i]);
   }
-  for (size_t i = 0; i < 2; ++i) {
-    standard_analog_output_cmd_[i] = get_command<double>(standard_analog_output_cmd_names_[i]);
+  std::array<double, 2> standard_analog_output_cmd;
+  for (size_t i = 0; i < standard_analog_output_cmd.size(); ++i) {
+    standard_analog_output_cmd[i] = get_command<double>(standard_analog_output_cmd_names_[i]);
   }
-  analog_output_domain_cmd_ = get_command<double>(analog_output_domain_cmd_name_);
-  tool_voltage_cmd_ = get_command<double>(tool_voltage_cmd_name_);
-  target_speed_fraction_cmd_ = get_command<double>(target_speed_fraction_cmd_name_);
-  resend_robot_program_cmd_ = get_command<double>(resend_robot_program_cmd_name_);
-  hand_back_control_cmd_ = get_command<double>(hand_back_control_cmd_name_);
-  payload_mass_ = get_command<double>(payload_mass_name_);
-  for (size_t i = 0; i < 3; ++i) {
-    payload_center_of_gravity_[i] = get_command<double>(payload_cog_names_[i]);
+  double analog_output_domain_cmd = get_command<double>(analog_output_domain_cmd_name_);
+  const double tool_voltage_cmd = get_command<double>(tool_voltage_cmd_name_);
+  const double target_speed_fraction_cmd = get_command<double>(target_speed_fraction_cmd_name_);
+  const double resend_robot_program_cmd = get_command<double>(resend_robot_program_cmd_name_);
+  const double hand_back_control_cmd = get_command<double>(hand_back_control_cmd_name_);
+  const double payload_mass = get_command<double>(payload_mass_name_);
+  urcl::vector3d_t payload_center_of_gravity;
+  for (size_t i = 0; i < payload_center_of_gravity.size(); ++i) {
+    payload_center_of_gravity[i] = get_command<double>(payload_cog_names_[i]);
   }
-  for (size_t i = 0; i < 6; ++i) {
-    payload_inertia_[i] = get_command<double>(payload_inertia_names_[i]);
+  urcl::vector6d_t payload_inertia;
+  urcl::vector6d_t friction_model_viscous;
+  urcl::vector6d_t friction_model_coulomb;
+  for (size_t i = 0; i < payload_inertia.size(); ++i) {
+    payload_inertia[i] = get_command<double>(payload_inertia_names_[i]);
+    friction_model_viscous[i] = get_command<double>(friction_viscous_names_[i]);
+    friction_model_coulomb[i] = get_command<double>(friction_coulomb_names_[i]);
   }
-  payload_transition_time_ = get_command<double>(payload_transition_time_name_);
-  for (size_t i = 0; i < 3; ++i) {
-    gravity_vector_[i] = get_command<double>(gravity_vector_names_[i]);
+  const double payload_transition_time = get_command<double>(payload_transition_time_name_);
+  urcl::vector3d_t gravity_vector;
+  for (size_t i = 0; i < gravity_vector.size(); ++i) {
+    gravity_vector[i] = get_command<double>(gravity_vector_names_[i]);
   }
-  for (size_t i = 0; i < 6; ++i) {
-    friction_model_viscous_[i] = get_command<double>(friction_viscous_names_[i]);
-    friction_model_coulomb_[i] = get_command<double>(friction_coulomb_names_[i]);
-  }
-  zero_ftsensor_cmd_ = get_command<double>(zero_ftsensor_cmd_name_);
-  freedrive_mode_enable_ = get_command<double>(freedrive_enable_name_);
-  freedrive_mode_abort_ = get_command<double>(freedrive_abort_name_);
+  const double zero_ftsensor_cmd = get_command<double>(zero_ftsensor_cmd_name_);
+  const double freedrive_mode_enable = get_command<double>(freedrive_enable_name_);
+  const double freedrive_mode_abort = get_command<double>(freedrive_abort_name_);
 
-  for (size_t i = 0; i < 18; ++i) {
-    if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
+  for (size_t i = 0; i < standard_dig_out_bits_cmd.size(); ++i) {
+    if (!std::isnan(standard_dig_out_bits_cmd[i]) && ur_driver_ != nullptr) {
+      double io_async_success = 0.0;
       if (i <= 7) {
-        io_async_success_ =
-            ur_driver_->getRTDEWriter().sendStandardDigitalOutput(i, static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+        io_async_success =
+            ur_driver_->getRTDEWriter().sendStandardDigitalOutput(i, static_cast<bool>(standard_dig_out_bits_cmd[i]));
       } else if (i <= 15) {
-        io_async_success_ = ur_driver_->getRTDEWriter().sendConfigurableDigitalOutput(
-            static_cast<uint8_t>(i - 8), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+        io_async_success = ur_driver_->getRTDEWriter().sendConfigurableDigitalOutput(
+            static_cast<uint8_t>(i - 8), static_cast<bool>(standard_dig_out_bits_cmd[i]));
       } else {
-        io_async_success_ = ur_driver_->getRTDEWriter().sendToolDigitalOutput(
-            static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+        io_async_success = ur_driver_->getRTDEWriter().sendToolDigitalOutput(
+            static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd[i]));
       }
-      standard_dig_out_bits_cmd_[i] = NO_NEW_CMD_;
-      set_command(standard_dig_out_bits_cmd_names_[i], standard_dig_out_bits_cmd_[i]);
-      set_command(io_async_success_name_, io_async_success_);
+      set_command(standard_dig_out_bits_cmd_names_[i], NO_NEW_CMD_);
+      set_command(io_async_success_name_, io_async_success);
     }
   }
 
-  for (size_t i = 0; i < 2; ++i) {
-    if (!std::isnan(standard_analog_output_cmd_[i]) && ur_driver_ != nullptr) {
+  for (size_t i = 0; i < standard_analog_output_cmd.size(); ++i) {
+    if (!std::isnan(standard_analog_output_cmd[i]) && ur_driver_ != nullptr) {
       urcl::AnalogOutputType domain = urcl::AnalogOutputType::SET_ON_TEACH_PENDANT;
-      if (!std::isnan(analog_output_domain_cmd_) && ur_driver_ != nullptr) {
-        domain = static_cast<urcl::AnalogOutputType>(analog_output_domain_cmd_);
-        analog_output_domain_cmd_ = NO_NEW_CMD_;
-        set_command(analog_output_domain_cmd_name_, analog_output_domain_cmd_);
+      if (!std::isnan(analog_output_domain_cmd) && ur_driver_ != nullptr) {
+        domain = static_cast<urcl::AnalogOutputType>(analog_output_domain_cmd);
+        analog_output_domain_cmd = NO_NEW_CMD_;
+        set_command(analog_output_domain_cmd_name_, NO_NEW_CMD_);
       }
-      io_async_success_ =
-          ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd_[i], domain);
-      standard_analog_output_cmd_[i] = NO_NEW_CMD_;
-      set_command(standard_analog_output_cmd_names_[i], standard_analog_output_cmd_[i]);
-      set_command(io_async_success_name_, io_async_success_);
+      const double io_async_success =
+          ur_driver_->getRTDEWriter().sendStandardAnalogOutput(i, standard_analog_output_cmd[i], domain);
+      set_command(standard_analog_output_cmd_names_[i], NO_NEW_CMD_);
+      set_command(io_async_success_name_, io_async_success);
     }
   }
 
-  if (!std::isnan(tool_voltage_cmd_) && ur_driver_ != nullptr) {
-    io_async_success_ = ur_driver_->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage_cmd_));
-    tool_voltage_cmd_ = NO_NEW_CMD_;
-    set_command(tool_voltage_cmd_name_, tool_voltage_cmd_);
-    set_command(io_async_success_name_, io_async_success_);
+  if (!std::isnan(tool_voltage_cmd) && ur_driver_ != nullptr) {
+    const double io_async_success = ur_driver_->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage_cmd));
+    set_command(tool_voltage_cmd_name_, NO_NEW_CMD_);
+    set_command(io_async_success_name_, io_async_success);
   }
 
-  if (!std::isnan(target_speed_fraction_cmd_) && ur_driver_ != nullptr) {
-    scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
-    target_speed_fraction_cmd_ = NO_NEW_CMD_;
-    set_command(target_speed_fraction_cmd_name_, target_speed_fraction_cmd_);
-    set_command(scaling_async_success_name_, scaling_async_success_);
+  if (!std::isnan(target_speed_fraction_cmd) && ur_driver_ != nullptr) {
+    const double scaling_async_success = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd);
+    set_command(target_speed_fraction_cmd_name_, NO_NEW_CMD_);
+    set_command(scaling_async_success_name_, scaling_async_success);
   }
 
-  if (!std::isnan(resend_robot_program_cmd_) && ur_driver_ != nullptr) {
-    resend_robot_program_async_success_ = false;
+  if (!std::isnan(resend_robot_program_cmd) && ur_driver_ != nullptr) {
+    double resend_robot_program_async_success = false;
     try {
-      resend_robot_program_async_success_ = ur_driver_->sendRobotProgram();
+      resend_robot_program_async_success = ur_driver_->sendRobotProgram();
     } catch (const urcl::UrException& e) {
       RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
     }
-    resend_robot_program_cmd_ = NO_NEW_CMD_;
-    set_command(resend_robot_program_cmd_name_, resend_robot_program_cmd_);
-    set_command(resend_robot_program_async_success_name_, resend_robot_program_async_success_);
+    set_command(resend_robot_program_cmd_name_, NO_NEW_CMD_);
+    set_command(resend_robot_program_async_success_name_, resend_robot_program_async_success);
   }
 
-  if (!std::isnan(hand_back_control_cmd_) && ur_driver_ != nullptr) {
+  if (!std::isnan(hand_back_control_cmd) && ur_driver_ != nullptr) {
     stop_requested_ = true;
-    hand_back_control_async_success_ = true;
-    hand_back_control_cmd_ = NO_NEW_CMD_;
-    set_command(hand_back_control_cmd_name_, hand_back_control_cmd_);
-    set_command(hand_back_control_async_success_name_, hand_back_control_async_success_);
+    set_command(hand_back_control_cmd_name_, NO_NEW_CMD_);
+    set_command(hand_back_control_async_success_name_, 1.0);
   }
 
-  if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) &&
-      !std::isnan(payload_center_of_gravity_[1]) && !std::isnan(payload_center_of_gravity_[2]) &&
-      !std::isnan(payload_inertia_[0]) && !std::isnan(payload_inertia_[1]) && !std::isnan(payload_inertia_[2]) &&
-      !std::isnan(payload_inertia_[3]) && !std::isnan(payload_inertia_[4]) && !std::isnan(payload_inertia_[5]) &&
-      !std::isnan(payload_transition_time_) && ur_driver_ != nullptr) {
-    payload_async_success_ = ur_driver_->setTargetPayload(payload_mass_, payload_center_of_gravity_, payload_inertia_,
-                                                          payload_transition_time_);
+  if (!std::isnan(payload_mass) && !std::isnan(payload_center_of_gravity[0]) &&
+      !std::isnan(payload_center_of_gravity[1]) && !std::isnan(payload_center_of_gravity[2]) &&
+      !std::isnan(payload_inertia[0]) && !std::isnan(payload_inertia[1]) && !std::isnan(payload_inertia[2]) &&
+      !std::isnan(payload_inertia[3]) && !std::isnan(payload_inertia[4]) && !std::isnan(payload_inertia[5]) &&
+      !std::isnan(payload_transition_time) && ur_driver_ != nullptr) {
+    const double payload_async_success =
+        ur_driver_->setTargetPayload(payload_mass, payload_center_of_gravity, payload_inertia, payload_transition_time);
 
-    payload_mass_ = NO_NEW_CMD_;
-    payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
-    payload_inertia_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
-    payload_transition_time_ = NO_NEW_CMD_;
-    set_command(payload_mass_name_, payload_mass_);
-    for (size_t i = 0; i < 3; ++i) {
-      set_command(payload_cog_names_[i], payload_center_of_gravity_[i]);
+    set_command(payload_mass_name_, NO_NEW_CMD_);
+    for (size_t i = 0; i < payload_center_of_gravity.size(); ++i) {
+      set_command(payload_cog_names_[i], NO_NEW_CMD_);
     }
-    for (size_t i = 0; i < 6; ++i) {
-      set_command(payload_inertia_names_[i], payload_inertia_[i]);
+    for (size_t i = 0; i < payload_inertia.size(); ++i) {
+      set_command(payload_inertia_names_[i], NO_NEW_CMD_);
     }
-    set_command(payload_transition_time_name_, payload_transition_time_);
-    set_command(payload_async_success_name_, payload_async_success_);
+    set_command(payload_transition_time_name_, NO_NEW_CMD_);
+    set_command(payload_async_success_name_, payload_async_success);
   }
 
-  if (!std::isnan(gravity_vector_[0]) && !std::isnan(gravity_vector_[1]) && !std::isnan(gravity_vector_[2]) &&
+  if (!std::isnan(gravity_vector[0]) && !std::isnan(gravity_vector[1]) && !std::isnan(gravity_vector[2]) &&
       ur_driver_ != nullptr) {
-    gravity_async_success_ = ur_driver_->setGravity(gravity_vector_);
-    gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
-    for (size_t i = 0; i < 3; ++i) {
-      set_command(gravity_vector_names_[i], gravity_vector_[i]);
+    const double gravity_async_success = ur_driver_->setGravity(gravity_vector);
+    for (size_t i = 0; i < gravity_vector.size(); ++i) {
+      set_command(gravity_vector_names_[i], NO_NEW_CMD_);
     }
-    set_command(gravity_async_success_name_, gravity_async_success_);
+    set_command(gravity_async_success_name_, gravity_async_success);
   }
-  if (!std::isnan(friction_model_viscous_[0]) && ur_driver_ != nullptr) {
-    friction_model_async_success_ = ur_driver_->setFrictionScales(friction_model_viscous_, friction_model_coulomb_);
-    friction_model_viscous_.fill(NO_NEW_CMD_);
-    friction_model_coulomb_.fill(NO_NEW_CMD_);
-    for (size_t i = 0; i < 6; ++i) {
-      set_command(friction_viscous_names_[i], friction_model_viscous_[i]);
-      set_command(friction_coulomb_names_[i], friction_model_coulomb_[i]);
+  if (!std::isnan(friction_model_viscous[0]) && ur_driver_ != nullptr) {
+    const double friction_model_async_success =
+        ur_driver_->setFrictionScales(friction_model_viscous, friction_model_coulomb);
+    for (size_t i = 0; i < friction_model_viscous.size(); ++i) {
+      set_command(friction_viscous_names_[i], NO_NEW_CMD_);
+      set_command(friction_coulomb_names_[i], NO_NEW_CMD_);
     }
-    set_command(friction_async_success_name_, friction_model_async_success_);
+    set_command(friction_async_success_name_, friction_model_async_success);
   }
 
-  if (!std::isnan(zero_ftsensor_cmd_) && ur_driver_ != nullptr) {
-    zero_ftsensor_async_success_ = ur_driver_->zeroFTSensor();
-    zero_ftsensor_cmd_ = NO_NEW_CMD_;
-    set_command(zero_ftsensor_cmd_name_, zero_ftsensor_cmd_);
-    set_command(zero_ftsensor_async_success_name_, zero_ftsensor_async_success_);
+  if (!std::isnan(zero_ftsensor_cmd) && ur_driver_ != nullptr) {
+    const double zero_ftsensor_async_success = ur_driver_->zeroFTSensor();
+    set_command(zero_ftsensor_cmd_name_, NO_NEW_CMD_);
+    set_command(zero_ftsensor_async_success_name_, zero_ftsensor_async_success);
   }
 
-  if (!std::isnan(freedrive_mode_enable_) && ur_driver_ != nullptr) {
+  if (!std::isnan(freedrive_mode_enable) && ur_driver_ != nullptr) {
     RCLCPP_INFO(get_logger(), "Starting freedrive mode.");
-    freedrive_mode_async_success_ =
+    const double freedrive_mode_async_success =
         ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
-    freedrive_mode_enable_ = NO_NEW_CMD_;
-    set_command(freedrive_enable_name_, freedrive_mode_enable_);
-    set_command(freedrive_async_success_name_, freedrive_mode_async_success_);
+    set_command(freedrive_enable_name_, NO_NEW_CMD_);
+    set_command(freedrive_async_success_name_, freedrive_mode_async_success);
     freedrive_activated_ = true;
   }
 
-  if (!std::isnan(freedrive_mode_abort_) && freedrive_mode_abort_ == 1.0 && freedrive_activated_ &&
+  if (!std::isnan(freedrive_mode_abort) && freedrive_mode_abort == 1.0 && freedrive_activated_ &&
       ur_driver_ != nullptr) {
     RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
-    freedrive_mode_async_success_ =
+    const double freedrive_mode_async_success =
         ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
     freedrive_activated_ = false;
-    freedrive_mode_abort_ = NO_NEW_CMD_;
-    set_command(freedrive_abort_name_, freedrive_mode_abort_);
-    set_command(freedrive_async_success_name_, freedrive_mode_async_success_);
+    set_command(freedrive_abort_name_, NO_NEW_CMD_);
+    set_command(freedrive_async_success_name_, freedrive_mode_async_success);
   }
 }
 
@@ -1641,11 +1606,12 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+  bool freedrive_abort_updated = true;
 
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_POSITION) != stop_modes_[0].end()) {
     position_controller_running_ = false;
-    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+    urcl_position_commands_ = urcl_joint_positions_;
   }
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_VELOCITY) != stop_modes_[0].end()) {
@@ -1679,7 +1645,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                            StoppingInterface::STOP_FREEDRIVE) != stop_modes_[0].end()) {
     freedrive_mode_controller_running_ = false;
     freedrive_activated_ = false;
-    freedrive_mode_abort_ = 1.0;
+    freedrive_abort_updated = set_command_nonblocking(freedrive_abort_name_, 1.0);
   }
 
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
@@ -1709,7 +1675,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = false;
     motion_primitives_forward_controller_running_ = false;
-    urcl_position_commands_ = urcl_position_commands_old_ = urcl_joint_positions_;
+    urcl_position_commands_ = urcl_joint_positions_;
     position_controller_running_ = true;
 
   } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
@@ -1797,7 +1763,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   for (size_t i = 0; i < 6; ++i) {
     interfaces_updated &= set_command_nonblocking(twist_command_names_[i], urcl_twist_commands_[i]);
   }
-  interfaces_updated &= set_command_nonblocking(freedrive_abort_name_, freedrive_mode_abort_);
+  interfaces_updated &= freedrive_abort_updated;
   if (!interfaces_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not update all interfaces during command mode switch without blocking.");
@@ -1806,17 +1772,20 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   return ret_val;
 }
 
-void URPositionHardwareInterface::start_force_mode()
+void URPositionHardwareInterface::start_force_mode(const urcl::vector6d_t& task_frame,
+                                                   const urcl::vector6d_t& selection_vector,
+                                                   const urcl::vector6d_t& wrench, double type,
+                                                   const urcl::vector6d_t& limits, double damping, double gain_scaling)
 {
-  for (size_t i = 0; i < force_mode_selection_vector_.size(); i++) {
-    force_mode_selection_vector_copy_[i] = force_mode_selection_vector_[i];
+  urcl::vector6uint32_t selection_vector_copy{};
+  for (size_t i = 0; i < selection_vector.size(); ++i) {
+    selection_vector_copy[i] = static_cast<uint32_t>(selection_vector[i]);
   }
+  double async_success = 0.0;
   /* Check version of robot to ensure that the correct startForceMode is called. */
   if (ur_driver_->getVersion().major < 5) {
-    force_mode_async_success_ =
-        ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
-                                   force_mode_type_, force_mode_limits_, force_mode_damping_);
-    if (force_mode_gain_scaling_ != 0.5) {
+    async_success = ur_driver_->startForceMode(task_frame, selection_vector_copy, wrench, type, limits, damping);
+    if (gain_scaling != 0.5) {
       RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"), "Force mode gain scaling cannot be used on "
                                                                      "CB3 "
                                                                      "robots. Starting force mode, but "
@@ -1824,29 +1793,21 @@ void URPositionHardwareInterface::start_force_mode()
                                                                      "gain scaling.");
     }
   } else {
-    force_mode_async_success_ =
-        ur_driver_->startForceMode(force_mode_task_frame_, force_mode_selection_vector_copy_, force_mode_wrench_,
-                                   force_mode_type_, force_mode_limits_, force_mode_damping_, force_mode_gain_scaling_);
+    async_success =
+        ur_driver_->startForceMode(task_frame, selection_vector_copy, wrench, type, limits, damping, gain_scaling);
   }
 
   bool commands_updated = true;
-  for (size_t i = 0; i < 6; i++) {
-    force_mode_task_frame_[i] = NO_NEW_CMD_;
-    force_mode_selection_vector_[i] = NO_NEW_CMD_;
-    force_mode_wrench_[i] = NO_NEW_CMD_;
-    force_mode_limits_[i] = NO_NEW_CMD_;
-    commands_updated &= set_command_nonblocking(force_mode_task_frame_names_[i], force_mode_task_frame_[i]);
-    commands_updated &= set_command_nonblocking(force_mode_selection_vector_names_[i], force_mode_selection_vector_[i]);
-    commands_updated &= set_command_nonblocking(force_mode_wrench_names_[i], force_mode_wrench_[i]);
-    commands_updated &= set_command_nonblocking(force_mode_limits_names_[i], force_mode_limits_[i]);
+  for (size_t i = 0; i < task_frame.size(); ++i) {
+    commands_updated &= set_command_nonblocking(force_mode_task_frame_names_[i], NO_NEW_CMD_);
+    commands_updated &= set_command_nonblocking(force_mode_selection_vector_names_[i], NO_NEW_CMD_);
+    commands_updated &= set_command_nonblocking(force_mode_wrench_names_[i], NO_NEW_CMD_);
+    commands_updated &= set_command_nonblocking(force_mode_limits_names_[i], NO_NEW_CMD_);
   }
-  force_mode_type_ = NO_NEW_CMD_;
-  force_mode_damping_ = NO_NEW_CMD_;
-  force_mode_gain_scaling_ = NO_NEW_CMD_;
-  commands_updated &= set_command_nonblocking(force_mode_type_name_, force_mode_type_);
-  commands_updated &= set_command_nonblocking(force_mode_damping_name_, force_mode_damping_);
-  commands_updated &= set_command_nonblocking(force_mode_gain_scaling_name_, force_mode_gain_scaling_);
-  commands_updated &= set_command_nonblocking(force_mode_async_success_name_, force_mode_async_success_);
+  commands_updated &= set_command_nonblocking(force_mode_type_name_, NO_NEW_CMD_);
+  commands_updated &= set_command_nonblocking(force_mode_damping_name_, NO_NEW_CMD_);
+  commands_updated &= set_command_nonblocking(force_mode_gain_scaling_name_, NO_NEW_CMD_);
+  commands_updated &= set_command_nonblocking(force_mode_async_success_name_, async_success);
   if (!commands_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not update all force mode command interfaces without blocking.");
@@ -1855,10 +1816,9 @@ void URPositionHardwareInterface::start_force_mode()
 
 void URPositionHardwareInterface::stop_force_mode()
 {
-  force_mode_async_success_ = ur_driver_->endForceMode();
-  force_mode_disable_cmd_ = NO_NEW_CMD_;
-  const bool success_updated = set_command_nonblocking(force_mode_async_success_name_, force_mode_async_success_);
-  const bool disable_updated = set_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
+  const double async_success = ur_driver_->endForceMode();
+  const bool success_updated = set_command_nonblocking(force_mode_async_success_name_, async_success);
+  const bool disable_updated = set_command_nonblocking(force_mode_disable_cmd_name_, NO_NEW_CMD_);
   if (!success_updated || !disable_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not update force mode stop command interfaces without blocking.");
