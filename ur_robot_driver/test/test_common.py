@@ -26,6 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 import logging
+import subprocess
 import time
 
 import rclpy
@@ -44,6 +45,7 @@ from launch.actions import (
     DeclareLaunchArgument,
     ExecuteProcess,
     IncludeLaunchDescription,
+    OpaqueFunction,
     RegisterEventHandler,
 )
 from launch.event_handlers import OnProcessExit
@@ -565,11 +567,69 @@ def _ursim_action(
         cmd += ["-p", program_folder]
     if urcap_folder is not None:
         cmd += ["-u", urcap_folder]
-    return ExecuteProcess(
-        cmd=cmd,
-        name="start_ursim",
-        output="screen",
-    )
+
+    def cleanup_and_start(context):
+        name = container_name
+        if name is None:
+            name = subprocess.run(
+                [
+                    "bash",
+                    "-c",
+                    'source "$1" && get_container_name',
+                    "bash",
+                    cmd[0].perform(context),
+                ],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10.0,
+            ).stdout.strip()
+        deadline = time.monotonic() + 10.0
+
+        def docker_command(arguments, check=True):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError("Container cleanup deadline exceeded")
+            return subprocess.run(
+                ["docker", "container", *arguments],
+                capture_output=True,
+                text=True,
+                check=check,
+                timeout=remaining,
+            )
+
+        def container_exists():
+            result = docker_command(["ls", "--all", "--format", "{{.Names}}"])
+            return name in result.stdout.splitlines()
+
+        try:
+            if container_exists():
+                logging.info("Removing existing Docker container '%s' before starting URSim", name)
+                result = docker_command(["rm", "--force", name], check=False)
+                if result.returncode != 0:
+                    logging.warning("Docker container removal failed: %s", result.stderr.strip())
+                while container_exists():
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise TimeoutError("Container cleanup deadline exceeded")
+                    time.sleep(min(0.1, remaining))
+        except (TimeoutError, subprocess.TimeoutExpired) as error:
+            message = (
+                f"Docker container '{name}' was not removed within 10 seconds; "
+                "aborting the test suite"
+            )
+            logging.error(message)
+            raise RuntimeError(message) from error
+        except (OSError, subprocess.CalledProcessError) as error:
+            message = (
+                f"Could not clean up Docker container '{name}'; aborting the test suite: {error}"
+            )
+            logging.error(message)
+            raise RuntimeError(message) from error
+
+        return [ExecuteProcess(cmd=cmd, name="start_ursim", output="screen")]
+
+    return OpaqueFunction(function=cleanup_and_start)
 
 
 def generate_dashboard_test_description(ursim_version="latest", ur_type="ur5e", autoconnect="true"):
