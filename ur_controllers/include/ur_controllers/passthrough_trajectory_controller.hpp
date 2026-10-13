@@ -124,7 +124,7 @@ private:
   /* Start an action server with an action called: /passthrough_trajectory_controller/forward_joint_trajectory. */
   void start_action_server(void);
 
-  void end_goal();
+  void end_goal(bool reset_abort = true);
 
   bool check_goal_tolerance();
   bool write_transfer_request(uint8_t transfer_state);

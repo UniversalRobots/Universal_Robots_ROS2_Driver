@@ -161,6 +161,9 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   passthrough_trajectory_transfer_sequence_command_ = 0;
   passthrough_trajectory_abort_ = false;
   passthrough_trajectory_abort_command_ = false;
+  passthrough_terminal_result_pending_ = false;
+  passthrough_trajectory_execution_active_ = false;
+  passthrough_cancel_result_pending_ = false;
   passthrough_trajectory_size_ = 0;
   passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
   passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
@@ -1070,8 +1073,6 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
                          "Could not read the initial command snapshot without blocking. Deferring command processing.");
     return hardware_interface::return_type::OK;
   }
-  process_trajectory_result();
-
   // If there is no interpreting program running on the robot, we do not want to send anything.
   // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
   // this was done externally using the controller_stopper.
@@ -1101,7 +1102,12 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
         check_passthrough_trajectory_controller();
       }
     } else if (motion_primitives_forward_controller_running_) {
-      handleMoprimCommands();
+      if (passthrough_cancel_result_pending_) {
+        ready_for_new_moprim_ = false;
+        ur_driver_->writeKeepalive();
+      } else {
+        handleMoprimCommands();
+      }
     } else if (twist_controller_running_) {
       ur_driver_->writeJointCommand(urcl_twist_commands_, urcl::comm::ControlMode::MODE_SPEEDL, receive_timeout_);
     } else {
@@ -1122,6 +1128,9 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
     packet_read_ = false;
   }
+
+  // Apply asynchronous completion last so an in-flight transfer request cannot overwrite a terminal result.
+  process_trajectory_result();
 
   return hardware_interface::return_type::OK;
 }
@@ -1648,6 +1657,11 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;
     passthrough_trajectory_abort_ = true;
+    passthrough_cancel_result_pending_ = passthrough_trajectory_execution_active_;
+    passthrough_trajectory_execution_active_ = false;
+    if (ur_driver_) {
+      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+    }
     trajectory_joint_positions_.clear();
     trajectory_joint_accelerations_.clear();
     trajectory_joint_velocities_.clear();
@@ -1663,6 +1677,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                            StoppingInterface::STOP_MOTION_PRIMITIVES) != stop_modes_[0].end()) {
     motion_primitives_forward_controller_running_ = false;
     resetMoprimCmdInterfaces();
+    moprim_command_pending_ = false;
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
     ready_for_new_moprim_ = false;
   }
@@ -1717,6 +1732,8 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
     passthrough_trajectory_abort_ = false;
+    passthrough_terminal_result_pending_ = false;
+    passthrough_trajectory_execution_active_ = false;
     passthrough_trajectory_transfer_state_ = 0;
   }
   if (start_modes_[0].size() != 0 &&
@@ -1737,8 +1754,9 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     force_mode_controller_running_ = false;
 
     resetMoprimCmdInterfaces();
+    moprim_command_pending_ = false;
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
-    ready_for_new_moprim_ = true;
+    ready_for_new_moprim_ = !passthrough_cancel_result_pending_;
     motion_primitives_forward_controller_running_ = true;
 
     RCLCPP_INFO(get_logger(), "Motion primitives mode started.");
@@ -1849,6 +1867,26 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   const bool has_new_request =
       passthrough_trajectory_transfer_sequence_command_ != passthrough_trajectory_transfer_sequence_;
 
+  // Do not start a new session until the cancellation callback from the previous mode has been consumed.
+  if (passthrough_cancel_result_pending_) {
+    return;
+  }
+
+  // A terminal result remains authoritative until the controller acknowledges it with an IDLE request. A request
+  // already in flight is acknowledged so the controller can stop waiting, but it must not overwrite the result.
+  if (passthrough_terminal_result_pending_) {
+    if (has_new_request) {
+      passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+      if (passthrough_trajectory_transfer_state_command_ == 0) {
+        passthrough_terminal_result_pending_ = false;
+        passthrough_trajectory_execution_active_ = false;
+        passthrough_trajectory_abort_ = false;
+        passthrough_trajectory_transfer_state_ = 0;
+      }
+    }
+    return;
+  }
+
   // We should abort and are not in state IDLE
   if (passthrough_trajectory_abort_command_ && passthrough_trajectory_transfer_state_ != 0) {
     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
@@ -1873,7 +1911,9 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     if (point_index_received >= trajectory_joint_positions_.size()) {
       RCLCPP_ERROR(get_logger(), "Received more passthrough trajectory points than announced.");
       passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_execution_active_ = false;
       passthrough_trajectory_transfer_state_ = 5;
+      passthrough_terminal_result_pending_ = true;
       passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
       return;
     }
@@ -1897,6 +1937,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_START,
                                                 trajectory_joint_positions_.size());
       trajectory_started = true;
+      passthrough_trajectory_execution_active_ = true;
     }
   } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 3) {
     passthrough_trajectory_abort_ = false;
@@ -1910,7 +1951,9 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     RCLCPP_ERROR(get_logger(), "Received invalid passthrough trajectory transfer state: %u",
                  static_cast<unsigned int>(passthrough_trajectory_transfer_state_command_));
     passthrough_trajectory_abort_ = true;
+    passthrough_trajectory_execution_active_ = false;
     passthrough_trajectory_transfer_state_ = 5;
+    passthrough_terminal_result_pending_ = true;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
   } else if (passthrough_trajectory_transfer_state_ == 4) {
     if (point_index_sent == trajectory_joint_positions_.size()) {
@@ -1959,7 +2002,9 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     }
     if (error) {
       passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_execution_active_ = false;
       passthrough_trajectory_transfer_state_ = 5;
+      passthrough_terminal_result_pending_ = true;
       return;
     }
   }
@@ -1971,11 +2016,25 @@ void URPositionHardwareInterface::process_trajectory_result()
   if (result_sequence == consumed_trajectory_result_sequence_) {
     return;
   }
-
-  const auto result = static_cast<urcl::control::TrajectoryResult>(trajectory_result_.load(std::memory_order_acquire));
-  passthrough_trajectory_abort_ = result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE;
-  passthrough_trajectory_transfer_state_ = 5;
   consumed_trajectory_result_sequence_ = result_sequence;
+  const auto result = static_cast<urcl::control::TrajectoryResult>(trajectory_result_.load(std::memory_order_acquire));
+  if (passthrough_cancel_result_pending_) {
+    if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED) {
+      passthrough_cancel_result_pending_ = false;
+      if (motion_primitives_forward_controller_running_) {
+        ready_for_new_moprim_ = true;
+      }
+    }
+    return;
+  }
+  if (!passthrough_trajectory_execution_active_) {
+    return;
+  }
+
+  passthrough_trajectory_abort_ = result != urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS;
+  passthrough_trajectory_execution_active_ = false;
+  passthrough_trajectory_transfer_state_ = 5;
+  passthrough_terminal_result_pending_ = true;
 }
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
@@ -1998,8 +2057,21 @@ bool URPositionHardwareInterface::is_valid_joint_information(std::vector<std::ar
 
 void URPositionHardwareInterface::handleMoprimCommands()
 {
-  // Check if we have a new command
-  if (!std::isnan(hw_moprim_commands_[0])) {
+  const auto push_pending_command = [this]() {
+    if (moprim_cmd_queue_.push(pending_moprim_command_)) {
+      moprim_command_pending_ = false;
+      ready_for_new_moprim_ = true;
+    } else {
+      ready_for_new_moprim_ = false;
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Motion primitive command queue is full. Deferring the claimed command.");
+    }
+  };
+
+  // Retry a previously claimed command before accepting a new one.
+  if (moprim_command_pending_) {
+    push_pending_command();
+  } else if (!std::isnan(hw_moprim_commands_[0])) {
     const auto command = hw_moprim_commands_;
     ready_for_new_moprim_ = false;  // set to false to indicate that the driver is busy handling a command
     // set state interface immediately
@@ -2008,52 +2080,47 @@ void URPositionHardwareInterface::handleMoprimCommands()
     if (!set_state_nonblocking(moprim_state_names_[1], hw_moprim_states_[1])) {
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                            "Could not update motion primitive state without blocking.");
-      return;
-    }
+    } else {
+      // motion_type is the command's trigger. Clear it before producing any side effects so a failed clear can never
+      // cause this command to be consumed twice. While ready_for_new_moprim_ is false, the controller must not replace
+      // the pending command, so trying the claim again in a later cycle is safe.
+      const double no_new_command = std::numeric_limits<double>::quiet_NaN();
+      if (!set_command_nonblocking(moprim_command_names_[0], no_new_command)) {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                             "Could not claim motion primitive command without blocking.");
+      } else {
+        hw_moprim_commands_[0] = no_new_command;
+        // The trigger is already cleared. The remaining fields are payload and cannot cause a command replay.
+        resetMoprimCmdInterfaces(1);
 
-    // motion_type is the command's trigger. Clear it before producing any side effects so a failed clear can never
-    // cause this command to be consumed twice. While ready_for_new_moprim_ is false, the controller must not replace
-    // the pending command, so trying the claim again in a later cycle is safe.
-    const double no_new_command = std::numeric_limits<double>::quiet_NaN();
-    if (!set_command_nonblocking(moprim_command_names_[0], no_new_command)) {
-      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                           "Could not claim motion primitive command without blocking.");
-      return;
-    }
-    hw_moprim_commands_[0] = no_new_command;
-    // The trigger is already cleared. The remaining fields are payload and cannot cause a command replay.
-    resetMoprimCmdInterfaces(1);
-
-    switch (static_cast<uint8_t>(command[0])) {
-      case static_cast<uint8_t>(MoprimMotionHelperType::STOP_MOTION):
-      {
-        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received Motion Primitives STOP command");
-        build_moprim_sequence_ = false;
-        moprim_sequence_.clear();  // delete motion sequence
-        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1,
-                                                  urcl::RobotReceiveTimeout::millisec(2000));
-        current_moprim_execution_status_ = MoprimExecutionState::STOPPING;
-        ready_for_new_moprim_ = false;
-        break;
-      }
-      case static_cast<uint8_t>(MoprimMotionHelperType::RESET_STOP):
-      {
-        RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received RESET_STOP command");
-        current_moprim_execution_status_ = MoprimExecutionState::IDLE;
-        ready_for_new_moprim_ = true;  // set to true to allow sending new commands
-        break;
-      }
-      default:
-      {
-        RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "Received moprim command");
-        // Push command to thread-safe queue
-        if (!moprim_cmd_queue_.push(command)) {
-          RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to push command to "
-                                                                          "moprim_cmd_queue_");
-          return;
+        switch (static_cast<uint8_t>(command[0])) {
+          case static_cast<uint8_t>(MoprimMotionHelperType::STOP_MOTION):
+          {
+            RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received Motion Primitives STOP command");
+            build_moprim_sequence_ = false;
+            moprim_sequence_.clear();  // delete motion sequence
+            ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1,
+                                                      urcl::RobotReceiveTimeout::millisec(2000));
+            current_moprim_execution_status_ = MoprimExecutionState::STOPPING;
+            ready_for_new_moprim_ = false;
+            break;
+          }
+          case static_cast<uint8_t>(MoprimMotionHelperType::RESET_STOP):
+          {
+            RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received RESET_STOP command");
+            current_moprim_execution_status_ = MoprimExecutionState::IDLE;
+            ready_for_new_moprim_ = true;  // set to true to allow sending new commands
+            break;
+          }
+          default:
+          {
+            RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "Received moprim command");
+            pending_moprim_command_ = command;
+            moprim_command_pending_ = true;
+            push_pending_command();
+            break;
+          }
         }
-        ready_for_new_moprim_ = true;  // set to true to allow sending new commands
-        break;
       }
     }
   }
@@ -2081,7 +2148,7 @@ void URPositionHardwareInterface::asyncMoprimCmdThread()
 {
   while (!async_moprim_thread_shutdown_) {
     // Check for new commands
-    if (moprim_cmd_queue_.pop(current_moprim_command_)) {
+    if (!passthrough_cancel_result_pending_ && moprim_cmd_queue_.pop(current_moprim_command_)) {
       processMoprimMotionCmd(current_moprim_command_);
     }
     // Small sleep to prevent busy waiting

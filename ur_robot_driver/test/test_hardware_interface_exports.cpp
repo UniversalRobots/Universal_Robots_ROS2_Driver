@@ -40,6 +40,8 @@
 #include <gmock/gmock.h>
 
 #include <algorithm>
+#include <array>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -51,6 +53,106 @@
 
 constexpr size_t kJointCount = 6;
 constexpr const char* kTfPrefix = "";
+
+class TestableURPositionHardwareInterface : public ur_robot_driver::URPositionHardwareInterface
+{
+public:
+  void prepare_moprim_command(const double motion_type)
+  {
+    hw_moprim_commands_.fill(std::numeric_limits<double>::quiet_NaN());
+    hw_moprim_commands_[0] = motion_type;
+  }
+
+  bool fill_moprim_queue()
+  {
+    std::array<double, 25> command{};
+    for (size_t i = 0; i < 10000; ++i) {
+      if (!moprim_cmd_queue_.push(command)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool pop_moprim_command()
+  {
+    std::array<double, 25> command{};
+    return moprim_cmd_queue_.pop(command);
+  }
+
+  void handle_moprim_commands()
+  {
+    handleMoprimCommands();
+  }
+
+  bool moprim_command_pending() const
+  {
+    return moprim_command_pending_;
+  }
+
+  bool ready_for_new_moprim() const
+  {
+    return ready_for_new_moprim_;
+  }
+
+  void set_passthrough_sequence(const uint32_t acknowledged_sequence)
+  {
+    passthrough_trajectory_transfer_sequence_ = acknowledged_sequence;
+  }
+
+  void set_passthrough_request(const uint32_t sequence, const uint8_t state)
+  {
+    passthrough_trajectory_transfer_sequence_command_ = sequence;
+    passthrough_trajectory_transfer_state_command_ = state;
+  }
+
+  void process_passthrough_request()
+  {
+    check_passthrough_trajectory_controller();
+  }
+
+  void queue_passthrough_result(const urcl::control::TrajectoryResult result, const bool execution_active = true)
+  {
+    passthrough_trajectory_execution_active_ = execution_active;
+    trajectory_result_.store(static_cast<int>(result));
+    trajectory_result_sequence_.fetch_add(1);
+  }
+
+  void process_passthrough_result()
+  {
+    process_trajectory_result();
+  }
+
+  uint32_t acknowledged_passthrough_sequence() const
+  {
+    return passthrough_trajectory_transfer_sequence_;
+  }
+
+  uint8_t passthrough_state() const
+  {
+    return passthrough_trajectory_transfer_state_;
+  }
+
+  bool passthrough_aborted() const
+  {
+    return passthrough_trajectory_abort_;
+  }
+
+  bool passthrough_terminal_pending() const
+  {
+    return passthrough_terminal_result_pending_;
+  }
+
+  void set_passthrough_cancel_pending()
+  {
+    passthrough_cancel_result_pending_ = true;
+  }
+
+  bool passthrough_cancel_pending() const
+  {
+    return passthrough_cancel_result_pending_.load();
+  }
+};
 
 hardware_interface::HardwareInfo BuildTestHardwareInfo()
 {
@@ -299,9 +401,101 @@ protected:
   std::unique_ptr<hardware_interface::System> hw_;
 };
 
+class URHardwareInterfaceProtocolTest : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    hardware_interface::HardwareComponentParams params;
+    params.hardware_info = BuildTestHardwareInfo();
+    params.clock = std::make_shared<rclcpp::Clock>();
+    params.logger = rclcpp::get_logger("test_ur_hardware_interface_protocol");
+
+    hw_ = std::make_unique<TestableURPositionHardwareInterface>();
+    ASSERT_EQ(hw_->init(params), hardware_interface::CallbackReturn::SUCCESS);
+    hw_->on_export_state_interfaces();
+    hw_->on_export_command_interfaces();
+  }
+
+  std::unique_ptr<TestableURPositionHardwareInterface> hw_;
+};
+
 TEST_F(URHardwareInterfaceExportTest, DefersWritesUntilPositionCommandsAreSeeded)
 {
   EXPECT_EQ(hw_->write(rclcpp::Time(0), rclcpp::Duration(0, 0)), hardware_interface::return_type::OK);
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, KeepsTerminalPassthroughResultUntilIdleIsAcknowledged)
+{
+  hw_->set_passthrough_sequence(1);
+  hw_->set_passthrough_request(2, 3);
+  hw_->process_passthrough_request();
+  EXPECT_EQ(hw_->passthrough_state(), 4U);
+
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE);
+  hw_->process_passthrough_result();
+  EXPECT_EQ(hw_->passthrough_state(), 5U);
+
+  hw_->set_passthrough_request(3, 3);
+  hw_->process_passthrough_request();
+  EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 3U);
+  EXPECT_EQ(hw_->passthrough_state(), 5U);
+  EXPECT_TRUE(hw_->passthrough_aborted());
+  EXPECT_TRUE(hw_->passthrough_terminal_pending());
+
+  hw_->set_passthrough_request(4, 0);
+  hw_->process_passthrough_request();
+
+  EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 4U);
+  EXPECT_EQ(hw_->passthrough_state(), 0U);
+  EXPECT_FALSE(hw_->passthrough_aborted());
+  EXPECT_FALSE(hw_->passthrough_terminal_pending());
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, DefersClaimedMoprimCommandWhileQueueIsFull)
+{
+  ASSERT_TRUE(hw_->fill_moprim_queue());
+  hw_->prepare_moprim_command(42.0);
+  hw_->handle_moprim_commands();
+
+  EXPECT_TRUE(hw_->moprim_command_pending());
+  EXPECT_FALSE(hw_->ready_for_new_moprim());
+
+  ASSERT_TRUE(hw_->pop_moprim_command());
+  hw_->handle_moprim_commands();
+
+  EXPECT_FALSE(hw_->moprim_command_pending());
+  EXPECT_TRUE(hw_->ready_for_new_moprim());
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, ReportsCanceledPassthroughTrajectoryAsAborted)
+{
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED);
+  hw_->process_passthrough_result();
+
+  EXPECT_EQ(hw_->passthrough_state(), 5U);
+  EXPECT_TRUE(hw_->passthrough_aborted());
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, WaitsForPriorCancellationBeforeProcessingNewSession)
+{
+  hw_->set_passthrough_sequence(1);
+  hw_->set_passthrough_cancel_pending();
+  hw_->set_passthrough_request(2, 6);
+  hw_->process_passthrough_request();
+  EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 1U);
+
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS, false);
+  hw_->process_passthrough_result();
+  EXPECT_TRUE(hw_->passthrough_cancel_pending());
+
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED, false);
+  hw_->process_passthrough_result();
+  EXPECT_FALSE(hw_->passthrough_cancel_pending());
+
+  hw_->process_passthrough_request();
+  EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 2U);
+  EXPECT_EQ(hw_->passthrough_state(), 1U);
 }
 
 // Interfaces exported by the removed raw-pointer export_state_interfaces(), for comparison.

@@ -288,6 +288,9 @@ protected:
   uint32_t passthrough_trajectory_transfer_sequence_command_;
   bool passthrough_trajectory_abort_;
   bool passthrough_trajectory_abort_command_;
+  bool passthrough_terminal_result_pending_;
+  bool passthrough_trajectory_execution_active_;
+  std::atomic_bool passthrough_cancel_result_pending_{ false };
   uint32_t passthrough_trajectory_size_;
   bool passthrough_trajectory_controller_running_;
   urcl::vector6d_t passthrough_trajectory_positions_;
@@ -347,6 +350,8 @@ protected:
   // 25 Commands: motion_type + 6 joints + 2*7 positions (goal and via) + blend_radius + velocity + acceleration +
   // move_time
   std::array<double, 25> hw_moprim_commands_;
+  std::array<double, 25> pending_moprim_command_;
+  bool moprim_command_pending_ = false;
   // 2 States: execution_status, ready_for_new_primitive
   std::array<double, 2> hw_moprim_states_;
 

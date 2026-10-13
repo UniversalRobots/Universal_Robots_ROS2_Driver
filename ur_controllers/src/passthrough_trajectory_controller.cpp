@@ -366,7 +366,7 @@ controller_interface::CallbackReturn PassthroughTrajectoryController::on_deactiv
       RCLCPP_ERROR(get_node()->get_logger(), "Failed to set active goal, deactivation of controller failed.");
       return controller_interface::CallbackReturn::ERROR;
     }
-    end_goal();
+    end_goal(false);
   }
   return CallbackReturn::SUCCESS;
 }
@@ -896,10 +896,11 @@ bool PassthroughTrajectoryController::check_goal_tolerance()
   return true;
 }
 
-void PassthroughTrajectoryController::end_goal()
+void PassthroughTrajectoryController::end_goal(const bool reset_abort)
 {
   trajectory_active_ = false;
-  if (!write_transfer_request(TRANSFER_STATE_IDLE)) {
+  const bool abort_reset = !reset_abort || abort_command_interface_->get().set_value(false);
+  if (!abort_reset || !write_transfer_request(TRANSFER_STATE_IDLE)) {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not write trajectory transfer reset request.");
   }
 }
