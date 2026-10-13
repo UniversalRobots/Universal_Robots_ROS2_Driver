@@ -354,9 +354,19 @@
         <command_interface name="setpoint_accelerations_4"/>
         <command_interface name="setpoint_accelerations_5"/>
         <command_interface name="transfer_state"/>
+        <command_interface name="transfer_sequence"/>
         <command_interface name="time_from_start"/>
         <command_interface name="abort"/>
         <command_interface name="trajectory_size"/>
+        <state_interface name="transfer_state">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="transfer_sequence">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="abort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
       </gpio>
 
       <gpio name="${tf_prefix}twist">

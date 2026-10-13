@@ -73,20 +73,19 @@ namespace ur_controllers
  * 0.0: No trajectory to forward, the controller is idling and ready to receive a new trajectory.
  * 1.0: The controller has received and accepted a new trajectory. When the state is 1.0, the controller will write a
  * point to the hardware interface.
- * 2.0: The hardware interface will read the point written from the controller. The state will switch between 1.0
- * and 2.0 until all points have been read by the hardware interface.
+ * 2.0: The hardware interface will read the point written from the controller.
  * 3.0: The hardware interface has read all the points, and will now write all the points to the physical robot
  * controller.
  * 4.0: The robot is moving through the trajectory.
  * 5.0: The robot finished executing the trajectory.
  */
-const double TRANSFER_STATE_IDLE = 0.0;
-const double TRANSFER_STATE_NEW_TRAJECTORY = 6.0;
-const double TRANSFER_STATE_WAITING_FOR_POINT = 1.0;
-const double TRANSFER_STATE_TRANSFERRING = 2.0;
-const double TRANSFER_STATE_TRANSFER_DONE = 3.0;
-const double TRANSFER_STATE_IN_MOTION = 4.0;
-const double TRANSFER_STATE_DONE = 5.0;
+constexpr double TRANSFER_STATE_IDLE = 0.0;
+constexpr double TRANSFER_STATE_NEW_TRAJECTORY = 6.0;
+constexpr double TRANSFER_STATE_WAITING_FOR_POINT = 1.0;
+constexpr double TRANSFER_STATE_TRANSFERRING = 2.0;
+constexpr double TRANSFER_STATE_TRANSFER_DONE = 3.0;
+constexpr double TRANSFER_STATE_IN_MOTION = 4.0;
+constexpr double TRANSFER_STATE_DONE = 5.0;
 
 using namespace std::chrono_literals;  // NOLINT
 
@@ -128,6 +127,7 @@ private:
   void end_goal();
 
   bool check_goal_tolerance();
+  bool write_transfer_request(double transfer_state);
 
   // Get a mapping between the trajectory's joint order and the internal one
   std::unordered_map<std::string, size_t> create_joint_mapping(const std::vector<std::string>& joint_names) const;
@@ -169,6 +169,9 @@ private:
 
   std::atomic<size_t> current_index_;
   std::atomic<bool> trajectory_active_;
+  double next_transfer_sequence_ = 1.0;
+  double pending_transfer_sequence_ = 0.0;
+  bool transfer_pending_ = false;
   rclcpp::Duration active_trajectory_elapsed_time_ = rclcpp::Duration::from_nanoseconds(0);
   rclcpp::Duration max_trajectory_time_ = rclcpp::Duration::from_nanoseconds(0);
   double scaling_factor_;
@@ -176,9 +179,14 @@ private:
   static constexpr double NO_VAL = std::numeric_limits<double>::quiet_NaN();
 
   std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> scaling_state_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> abort_state_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> transfer_state_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedStateInterface>> transfer_sequence_state_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> abort_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> trajectory_size_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> transfer_command_interface_;
+  std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>>
+      transfer_sequence_command_interface_;
   std::optional<std::reference_wrapper<hardware_interface::LoanedCommandInterface>> time_from_start_command_interface_;
 
   rclcpp::Clock::SharedPtr clock_;

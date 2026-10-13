@@ -213,10 +213,11 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
     passthrough_cmds.push_back("setpoint_accelerations_" + std::to_string(i));
   }
   passthrough_cmds.push_back("transfer_state");
+  passthrough_cmds.push_back("transfer_sequence");
   passthrough_cmds.push_back("time_from_start");
   passthrough_cmds.push_back("abort");
   passthrough_cmds.push_back("trajectory_size");
-  make_gpio("trajectory_passthrough", passthrough_cmds, {});
+  make_gpio("trajectory_passthrough", passthrough_cmds, { "transfer_state", "transfer_sequence", "abort" });
 
   make_gpio("twist",
             { "linear_velocity_x", "linear_velocity_y", "linear_velocity_z", "angular_velocity_x", "angular_velocity_y",
@@ -331,6 +332,9 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedStateInterfaces)
   }
   expected_names.push_back(std::string(kTfPrefix) + "tool_contact/tool_contact_result");
   expected_names.push_back(std::string(kTfPrefix) + "tool_contact/tool_contact_state");
+  expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/transfer_state");
+  expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/transfer_sequence");
+  expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/abort");
   for (const char* name : { "mass", "cog.x", "cog.y", "cog.z", "inertia.ixx", "inertia.iyy", "inertia.izz",
                             "inertia.ixy", "inertia.ixz", "inertia.iyz" }) {
     expected_names.push_back(std::string(kTfPrefix) + "payload/" + name);
@@ -419,6 +423,7 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedCommandInterfaces)
   expected_names.push_back(std::string(kTfPrefix) + "freedrive_mode/enable");
   expected_names.push_back(std::string(kTfPrefix) + "freedrive_mode/abort");
   expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/transfer_state");
+  expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/transfer_sequence");
   expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/time_from_start");
   expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/abort");
   expected_names.push_back(std::string(kTfPrefix) + "trajectory_passthrough/trajectory_size");

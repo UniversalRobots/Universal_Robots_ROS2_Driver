@@ -282,7 +282,11 @@ protected:
 
   // Passthrough trajectory controller interface values
   double passthrough_trajectory_transfer_state_;
+  double passthrough_trajectory_transfer_state_command_;
+  double passthrough_trajectory_transfer_sequence_;
+  double passthrough_trajectory_transfer_sequence_command_;
   double passthrough_trajectory_abort_;
+  double passthrough_trajectory_abort_command_;
   double passthrough_trajectory_size_;
   bool passthrough_trajectory_controller_running_;
   urcl::vector6d_t passthrough_trajectory_positions_;
@@ -484,6 +488,7 @@ protected:
   std::string force_mode_gain_scaling_name_;
 
   std::string passthrough_transfer_state_name_;
+  std::string passthrough_transfer_sequence_name_;
   std::string passthrough_time_from_start_name_;
   std::string passthrough_abort_name_;
   std::string passthrough_size_name_;

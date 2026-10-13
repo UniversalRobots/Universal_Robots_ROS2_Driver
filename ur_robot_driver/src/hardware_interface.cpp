@@ -156,7 +156,11 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   system_interface_initialized_ = 0.0;
   freedrive_mode_abort_ = 0.0;
   passthrough_trajectory_transfer_state_ = 0.0;
+  passthrough_trajectory_transfer_state_command_ = 0.0;
+  passthrough_trajectory_transfer_sequence_ = 0.0;
+  passthrough_trajectory_transfer_sequence_command_ = 0.0;
   passthrough_trajectory_abort_ = 0.0;
+  passthrough_trajectory_abort_command_ = 0.0;
   passthrough_trajectory_size_ = 0.0;
   passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
   passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
@@ -461,6 +465,7 @@ void URPositionHardwareInterface::build_interface_names()
   force_mode_gain_scaling_name_ = tf_prefix + FORCE_MODE_GPIO + "/gain_scaling";
 
   passthrough_transfer_state_name_ = tf_prefix + PASSTHROUGH_GPIO + "/transfer_state";
+  passthrough_transfer_sequence_name_ = tf_prefix + PASSTHROUGH_GPIO + "/transfer_sequence";
   passthrough_time_from_start_name_ = tf_prefix + PASSTHROUGH_GPIO + "/time_from_start";
   passthrough_abort_name_ = tf_prefix + PASSTHROUGH_GPIO + "/abort";
   passthrough_size_name_ = tf_prefix + PASSTHROUGH_GPIO + "/trajectory_size";
@@ -954,7 +959,11 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       command_interfaces_initialized &= set_command_nonblocking(freedrive_abort_name_, freedrive_mode_abort_);
       command_interfaces_initialized &= set_command_nonblocking(freedrive_enable_name_, freedrive_mode_enable_);
       command_interfaces_initialized &=
-          set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
+          set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_command_);
+      command_interfaces_initialized &= set_command_nonblocking(passthrough_transfer_sequence_name_,
+                                                                passthrough_trajectory_transfer_sequence_command_);
+      command_interfaces_initialized &=
+          set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_command_);
       initialized_ = command_interfaces_initialized;
       if (!initialized_) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
@@ -981,6 +990,14 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     states_updated &= set_state_nonblocking(moprim_state_names_[1], hw_moprim_states_[1]);
 
     states_updated &= set_state_nonblocking(tool_contact_result_name_, tool_contact_result_.load());
+    const bool passthrough_state_updated =
+        set_state_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_) &&
+        set_state_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
+    // Publish the acknowledgement last. Observing it guarantees that the corresponding status was published.
+    const bool passthrough_sequence_updated =
+        passthrough_state_updated &&
+        set_state_nonblocking(passthrough_transfer_sequence_name_, passthrough_trajectory_transfer_sequence_);
+    states_updated &= passthrough_state_updated && passthrough_sequence_updated;
     if (!states_updated) {
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not update all state interfaces without blocking.");
     }
@@ -1003,6 +1020,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   }
 
   bool commands_read = true;
+  bool passthrough_commands_read = true;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
     commands_read &= get_command_nonblocking(joint_position_command_names_[i], urcl_position_commands_[i]);
     commands_read &= get_command_nonblocking(joint_velocity_command_names_[i], urcl_velocity_commands_[i]);
@@ -1016,9 +1034,11 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     commands_read &= get_command_nonblocking(force_mode_selection_vector_names_[i], force_mode_selection_vector_[i]);
     commands_read &= get_command_nonblocking(force_mode_wrench_names_[i], force_mode_wrench_[i]);
     commands_read &= get_command_nonblocking(force_mode_limits_names_[i], force_mode_limits_[i]);
-    commands_read &= get_command_nonblocking(passthrough_positions_names_[i], passthrough_trajectory_positions_[i]);
-    commands_read &= get_command_nonblocking(passthrough_velocities_names_[i], passthrough_trajectory_velocities_[i]);
-    commands_read &=
+    passthrough_commands_read &=
+        get_command_nonblocking(passthrough_positions_names_[i], passthrough_trajectory_positions_[i]);
+    passthrough_commands_read &=
+        get_command_nonblocking(passthrough_velocities_names_[i], passthrough_trajectory_velocities_[i]);
+    passthrough_commands_read &=
         get_command_nonblocking(passthrough_accelerations_names_[i], passthrough_trajectory_accelerations_[i]);
   }
   commands_read &= get_command_nonblocking(force_mode_type_name_, force_mode_type_);
@@ -1026,10 +1046,15 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   commands_read &= get_command_nonblocking(force_mode_gain_scaling_name_, force_mode_gain_scaling_);
   commands_read &= get_command_nonblocking(force_mode_async_success_name_, force_mode_async_success_);
   commands_read &= get_command_nonblocking(force_mode_disable_cmd_name_, force_mode_disable_cmd_);
-  commands_read &= get_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
-  commands_read &= get_command_nonblocking(passthrough_time_from_start_name_, passthrough_trajectory_time_from_start_);
-  commands_read &= get_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
-  commands_read &= get_command_nonblocking(passthrough_size_name_, passthrough_trajectory_size_);
+  passthrough_commands_read &=
+      get_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_command_);
+  passthrough_commands_read &=
+      get_command_nonblocking(passthrough_transfer_sequence_name_, passthrough_trajectory_transfer_sequence_command_);
+  passthrough_commands_read &=
+      get_command_nonblocking(passthrough_time_from_start_name_, passthrough_trajectory_time_from_start_);
+  passthrough_commands_read &= get_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_command_);
+  passthrough_commands_read &= get_command_nonblocking(passthrough_size_name_, passthrough_trajectory_size_);
+  commands_read &= passthrough_commands_read;
   commands_read &= get_command_nonblocking(tool_contact_set_state_name_, tool_contact_set_state_);
   for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
     commands_read &= get_command_nonblocking(moprim_command_names_[i], hw_moprim_commands_[i]);
@@ -1072,7 +1097,9 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       ur_driver_->writeTrajectoryControlMessage(
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
           urcl::RobotReceiveTimeout::millisec(1000 * 5.0 / static_cast<double>(info_.rw_rate)));
-      check_passthrough_trajectory_controller();
+      if (passthrough_commands_read) {
+        check_passthrough_trajectory_controller();
+      }
     } else if (motion_primitives_forward_controller_running_) {
       handleMoprimCommands();
     } else if (twist_controller_running_) {
@@ -1690,6 +1717,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
     passthrough_trajectory_abort_ = 0.0;
+    passthrough_trajectory_transfer_state_ = 0.0;
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), FREEDRIVE_MODE_GPIO) != start_modes_[0].end()) {
@@ -1742,7 +1770,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   for (size_t i = 0; i < 6; ++i) {
     interfaces_updated &= set_command_nonblocking(twist_command_names_[i], urcl_twist_commands_[i]);
   }
-  interfaces_updated &= set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
   interfaces_updated &= set_command_nonblocking(freedrive_abort_name_, freedrive_mode_abort_);
   if (!interfaces_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
@@ -1819,10 +1846,14 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   static bool trajectory_started = false;
   // See passthrough_trajectory_controller.hpp for an explanation of the passthrough_trajectory_transfer_state_ values.
 
+  const bool has_new_request =
+      passthrough_trajectory_transfer_sequence_command_ != passthrough_trajectory_transfer_sequence_;
+
   // We should abort and are not in state IDLE
-  if (passthrough_trajectory_abort_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
+  if (passthrough_trajectory_abort_command_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
     ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
-  } else if (passthrough_trajectory_transfer_state_ == 6.0) {
+    passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 6.0) {
     if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
       trajectory_joint_positions_.resize(passthrough_trajectory_size_);
       trajectory_joint_velocities_.resize(passthrough_trajectory_size_);
@@ -1836,7 +1867,16 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     trajectory_started = false;
     last_time = 0.0;
     passthrough_trajectory_transfer_state_ = 1.0;
-  } else if (passthrough_trajectory_transfer_state_ == 2.0) {
+    passthrough_trajectory_abort_ = 0.0;
+    passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 2.0) {
+    if (point_index_received >= trajectory_joint_positions_.size()) {
+      RCLCPP_ERROR(get_logger(), "Received more passthrough trajectory points than announced.");
+      passthrough_trajectory_abort_ = 1.0;
+      passthrough_trajectory_transfer_state_ = 5.0;
+      passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+      return;
+    }
     passthrough_trajectory_abort_ = 0.0;
     trajectory_joint_positions_[point_index_received] = passthrough_trajectory_positions_;
 
@@ -1848,6 +1888,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 
     point_index_received++;
     passthrough_trajectory_transfer_state_ = 1.0;
+    passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
 
     // Once we received enough points so we can move for at least 5 cycles, we start executing
     if ((passthrough_trajectory_time_from_start_ > 5.0 / static_cast<double>(info_.rw_rate) ||
@@ -1857,9 +1898,20 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
                                                 trajectory_joint_positions_.size());
       trajectory_started = true;
     }
-  } else if (passthrough_trajectory_transfer_state_ == 3.0) {
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 3.0) {
     passthrough_trajectory_abort_ = 0.0;
     passthrough_trajectory_transfer_state_ = 4.0;
+    passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+  } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 0.0) {
+    passthrough_trajectory_abort_ = 0.0;
+    passthrough_trajectory_transfer_state_ = 0.0;
+    passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+  } else if (has_new_request) {
+    RCLCPP_ERROR(get_logger(), "Received invalid passthrough trajectory transfer state: %f",
+                 passthrough_trajectory_transfer_state_command_);
+    passthrough_trajectory_abort_ = 1.0;
+    passthrough_trajectory_transfer_state_ = 5.0;
+    passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
   } else if (passthrough_trajectory_transfer_state_ == 4.0) {
     if (point_index_sent == trajectory_joint_positions_.size()) {
       trajectory_joint_positions_.clear();
@@ -1908,23 +1960,8 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     if (error) {
       passthrough_trajectory_abort_ = 1.0;
       passthrough_trajectory_transfer_state_ = 5.0;
-      const bool abort_updated = set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
-      const bool state_updated =
-          set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
-      if (!abort_updated || !state_updated) {
-        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                             "Could not update passthrough failure state without blocking.");
-      }
       return;
     }
-  }
-
-  const bool abort_updated = set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
-  const bool state_updated =
-      set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
-  if (!abort_updated || !state_updated) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                         "Could not update passthrough trajectory state without blocking.");
   }
 }
 
@@ -1938,16 +1975,7 @@ void URPositionHardwareInterface::process_trajectory_result()
   const auto result = static_cast<urcl::control::TrajectoryResult>(trajectory_result_.load(std::memory_order_acquire));
   passthrough_trajectory_abort_ = result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE ? 1.0 : 0.0;
   passthrough_trajectory_transfer_state_ = 5.0;
-
-  const bool abort_updated = set_command_nonblocking(passthrough_abort_name_, passthrough_trajectory_abort_);
-  const bool state_updated =
-      set_command_nonblocking(passthrough_transfer_state_name_, passthrough_trajectory_transfer_state_);
-  if (abort_updated && state_updated) {
-    consumed_trajectory_result_sequence_ = result_sequence;
-  } else {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                         "Could not publish passthrough trajectory result without blocking. Retrying.");
-  }
+  consumed_trajectory_result_sequence_ = result_sequence;
 }
 
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
