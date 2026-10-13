@@ -2000,6 +2000,7 @@ void URPositionHardwareInterface::handleMoprimCommands()
 {
   // Check if we have a new command
   if (!std::isnan(hw_moprim_commands_[0])) {
+    const auto command = hw_moprim_commands_;
     ready_for_new_moprim_ = false;  // set to false to indicate that the driver is busy handling a command
     // set state interface immediately
     // --> if waiting for next read() cycle it happens sometimes that a command is overwritten
@@ -2007,13 +2008,26 @@ void URPositionHardwareInterface::handleMoprimCommands()
     if (!set_state_nonblocking(moprim_state_names_[1], hw_moprim_states_[1])) {
       RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                            "Could not update motion primitive state without blocking.");
+      return;
     }
 
-    switch (static_cast<uint8_t>(hw_moprim_commands_[0])) {
+    // motion_type is the command's trigger. Clear it before producing any side effects so a failed clear can never
+    // cause this command to be consumed twice. While ready_for_new_moprim_ is false, the controller must not replace
+    // the pending command, so trying the claim again in a later cycle is safe.
+    const double no_new_command = std::numeric_limits<double>::quiet_NaN();
+    if (!set_command_nonblocking(moprim_command_names_[0], no_new_command)) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not claim motion primitive command without blocking.");
+      return;
+    }
+    hw_moprim_commands_[0] = no_new_command;
+    // The trigger is already cleared. The remaining fields are payload and cannot cause a command replay.
+    resetMoprimCmdInterfaces(1);
+
+    switch (static_cast<uint8_t>(command[0])) {
       case static_cast<uint8_t>(MoprimMotionHelperType::STOP_MOTION):
       {
         RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received Motion Primitives STOP command");
-        resetMoprimCmdInterfaces();
         build_moprim_sequence_ = false;
         moprim_sequence_.clear();  // delete motion sequence
         ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL, -1,
@@ -2025,7 +2039,6 @@ void URPositionHardwareInterface::handleMoprimCommands()
       case static_cast<uint8_t>(MoprimMotionHelperType::RESET_STOP):
       {
         RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Received RESET_STOP command");
-        resetMoprimCmdInterfaces();
         current_moprim_execution_status_ = MoprimExecutionState::IDLE;
         ready_for_new_moprim_ = true;  // set to true to allow sending new commands
         break;
@@ -2034,12 +2047,11 @@ void URPositionHardwareInterface::handleMoprimCommands()
       {
         RCLCPP_DEBUG(rclcpp::get_logger("URPositionHardwareInterface"), "Received moprim command");
         // Push command to thread-safe queue
-        if (!moprim_cmd_queue_.push(hw_moprim_commands_)) {
+        if (!moprim_cmd_queue_.push(command)) {
           RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Failed to push command to "
                                                                           "moprim_cmd_queue_");
           return;
         }
-        resetMoprimCmdInterfaces();
         ready_for_new_moprim_ = true;  // set to true to allow sending new commands
         break;
       }
@@ -2051,11 +2063,12 @@ void URPositionHardwareInterface::handleMoprimCommands()
   }
 }
 
-void URPositionHardwareInterface::resetMoprimCmdInterfaces()
+void URPositionHardwareInterface::resetMoprimCmdInterfaces(const size_t start_index)
 {
-  std::fill(hw_moprim_commands_.begin(), hw_moprim_commands_.end(), std::numeric_limits<double>::quiet_NaN());
+  std::fill(hw_moprim_commands_.begin() + start_index, hw_moprim_commands_.end(),
+            std::numeric_limits<double>::quiet_NaN());
   bool commands_updated = true;
-  for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
+  for (size_t i = start_index; i < hw_moprim_commands_.size(); ++i) {
     commands_updated &= set_command_nonblocking(moprim_command_names_[i], hw_moprim_commands_[i]);
   }
   if (!commands_updated) {

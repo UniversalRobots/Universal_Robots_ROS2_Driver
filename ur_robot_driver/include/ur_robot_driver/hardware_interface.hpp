@@ -355,7 +355,7 @@ protected:
   std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> moprim_sequence_;
 
   void handleMoprimCommands();
-  void resetMoprimCmdInterfaces();
+  void resetMoprimCmdInterfaces(size_t start_index = 0);
   void asyncMoprimCmdThread();
   void processMoprimMotionCmd(const std::array<double, 25>& command);
   bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
