@@ -114,8 +114,12 @@ public:
   void queue_passthrough_result(const urcl::control::TrajectoryResult result, const bool execution_active = true)
   {
     passthrough_trajectory_execution_active_ = execution_active;
-    trajectory_result_.store(static_cast<int>(result));
-    trajectory_result_sequence_.fetch_add(1);
+    ASSERT_TRUE(trajectory_result_queue_.push(static_cast<int>(result)));
+  }
+
+  void request_passthrough_abort()
+  {
+    passthrough_trajectory_abort_command_ = true;
   }
 
   void process_passthrough_result()
@@ -496,6 +500,49 @@ TEST_F(URHardwareInterfaceProtocolTest, WaitsForPriorCancellationBeforeProcessin
   hw_->process_passthrough_request();
   EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 2U);
   EXPECT_EQ(hw_->passthrough_state(), 1U);
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, PublishesDoneWhenUploadIsAbortedBeforeExecution)
+{
+  hw_->set_passthrough_request(1, 6);
+  hw_->process_passthrough_request();
+  EXPECT_EQ(hw_->passthrough_state(), 1U);
+
+  hw_->request_passthrough_abort();
+  hw_->set_passthrough_request(2, 2);
+  hw_->process_passthrough_request();
+
+  EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 2U);
+  EXPECT_EQ(hw_->passthrough_state(), 5U);
+  EXPECT_TRUE(hw_->passthrough_aborted());
+  EXPECT_TRUE(hw_->passthrough_terminal_pending());
+  EXPECT_FALSE(hw_->passthrough_cancel_pending());
+
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED, false);
+  hw_->process_passthrough_result();
+  EXPECT_EQ(hw_->passthrough_state(), 5U);
+  EXPECT_TRUE(hw_->passthrough_terminal_pending());
+
+  hw_->set_passthrough_request(3, 0);
+  hw_->process_passthrough_request();
+  EXPECT_EQ(hw_->passthrough_state(), 0U);
+  EXPECT_FALSE(hw_->passthrough_terminal_pending());
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, AppliesPassthroughResultsInArrivalOrder)
+{
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE);
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS);
+  hw_->process_passthrough_result();
+
+  EXPECT_EQ(hw_->passthrough_state(), 5U);
+  EXPECT_TRUE(hw_->passthrough_aborted());
+  EXPECT_TRUE(hw_->passthrough_terminal_pending());
+
+  hw_->process_passthrough_result();
+  EXPECT_EQ(hw_->passthrough_state(), 5U);
+  EXPECT_TRUE(hw_->passthrough_aborted());
+  EXPECT_TRUE(hw_->passthrough_terminal_pending());
 }
 
 // Interfaces exported by the removed raw-pointer export_state_interfaces(), for comparison.

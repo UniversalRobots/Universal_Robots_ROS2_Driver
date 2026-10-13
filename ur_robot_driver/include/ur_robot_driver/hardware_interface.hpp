@@ -354,9 +354,8 @@ protected:
   std::vector<std::array<double, 6>> trajectory_joint_velocities_;
   std::vector<std::array<double, 6>> trajectory_joint_accelerations_;
   std::vector<double> trajectory_times_;
-  std::atomic<int> trajectory_result_;
-  std::atomic<uint64_t> trajectory_result_sequence_{ 0 };
-  uint64_t consumed_trajectory_result_sequence_{ 0 };
+  // One slot per completion. The callback and write() exchange the result and its order together.
+  realtime_tools::LockFreeSPSCQueue<int, 16> trajectory_result_queue_;
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;

@@ -158,7 +158,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
   passthrough_trajectory_accelerations_.fill(NO_NEW_CMD_);
   passthrough_trajectory_time_from_start_ = NO_NEW_CMD_;
-  trajectory_result_ = static_cast<int>(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE);
   tool_contact_result_ = NO_NEW_CMD_;
   tool_contact_set_state_ = 0.0;
   tool_contact_state_ = 0.0;
@@ -1632,7 +1631,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;
     passthrough_trajectory_abort_ = true;
-    passthrough_cancel_result_pending_ = passthrough_trajectory_execution_active_;
+    // A cancel during point upload has not started execution, but the robot can still answer
+    // TRAJECTORY_CANCEL. Track that answer so it cannot terminate the next session.
+    passthrough_cancel_result_pending_ =
+        passthrough_trajectory_execution_active_ || passthrough_trajectory_transfer_state_ != 0;
     passthrough_trajectory_execution_active_ = false;
     if (ur_driver_) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
@@ -1836,13 +1838,10 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   const bool has_new_request =
       passthrough_trajectory_transfer_sequence_command_ != passthrough_trajectory_transfer_sequence_;
 
-  // Do not start a new session until the cancellation callback from the previous mode has been consumed.
-  if (passthrough_cancel_result_pending_) {
-    return;
-  }
-
   // A terminal result remains authoritative until the controller acknowledges it with an IDLE request. A request
   // already in flight is acknowledged so the controller can stop waiting, but it must not overwrite the result.
+  // This runs before the cancellation gate so that acknowledgement is not blocked while the matching CANCELED
+  // callback is still outstanding.
   if (passthrough_terminal_result_pending_) {
     if (has_new_request) {
       passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
@@ -1856,10 +1855,26 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     return;
   }
 
+  // Do not start a new session until the cancellation callback from the previous mode has been consumed.
+  if (passthrough_cancel_result_pending_) {
+    return;
+  }
+
   // We should abort and are not in state IDLE
   if (passthrough_trajectory_abort_command_ && passthrough_trajectory_transfer_state_ != 0) {
-    ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+    if (passthrough_trajectory_execution_active_) {
+      if (ur_driver_ != nullptr) {
+        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+      }
+    } else {
+      // Point upload has not started a trajectory, so TRAJECTORY_CANCEL has nothing to cancel and may never be
+      // answered. Publish DONE immediately so the controller can return to IDLE.
+      passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_transfer_state_ = 5;
+      passthrough_terminal_result_pending_ = true;
+      return;
+    }
   } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 6) {
     if (passthrough_trajectory_size_ != trajectory_joint_positions_.size()) {
       trajectory_joint_positions_.resize(passthrough_trajectory_size_);
@@ -1981,12 +1996,11 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 
 void URPositionHardwareInterface::process_trajectory_result()
 {
-  const uint64_t result_sequence = trajectory_result_sequence_.load(std::memory_order_acquire);
-  if (result_sequence == consumed_trajectory_result_sequence_) {
+  int result_value = 0;
+  if (!trajectory_result_queue_.pop(result_value)) {
     return;
   }
-  consumed_trajectory_result_sequence_ = result_sequence;
-  const auto result = static_cast<urcl::control::TrajectoryResult>(trajectory_result_.load(std::memory_order_acquire));
+  const auto result = static_cast<urcl::control::TrajectoryResult>(result_value);
   if (passthrough_cancel_result_pending_) {
     if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED) {
       passthrough_cancel_result_pending_ = false;
@@ -2009,8 +2023,9 @@ void URPositionHardwareInterface::process_trajectory_result()
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
 {
   RCLCPP_INFO(get_logger(), "Trajectory done callback called with result: %d", static_cast<int>(result));
-  trajectory_result_.store(static_cast<int>(result), std::memory_order_relaxed);
-  trajectory_result_sequence_.fetch_add(1, std::memory_order_release);
+  if (!trajectory_result_queue_.push(static_cast<int>(result))) {
+    RCLCPP_ERROR(get_logger(), "Trajectory result queue is full. Dropping result %d.", static_cast<int>(result));
+  }
 
   if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED) {
     RCLCPP_INFO(get_logger(), "Robot stopped, TRAJECTORY_RESULT_CANCELED");
