@@ -1038,7 +1038,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     command_snapshot_initialized_ = true;
   } else if (command_snapshot_initialized_) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                         "Could not read all command interfaces without blocking. Reusing their previous values.");
+                         "Could not read all command interfaces without blocking. Reusing previous values for those "
+                         "which failed reading.");
   } else {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not read the initial command snapshot without blocking. Deferring command processing.");
