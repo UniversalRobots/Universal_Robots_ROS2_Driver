@@ -187,8 +187,9 @@ protected:
   // stop function used by on_shutdown and on_cleanup
   hardware_interface::CallbackReturn stop();
 
-  // Interface names, built once in on_init()
-  void build_interface_names();
+  // Interface handles, resolved once in on_export_*_interfaces()
+  void resolve_state_interface_handles();
+  void resolve_command_interface_handles();
 
   void initializeCommandInterfaces();
   void initAsyncIO();
@@ -388,85 +389,106 @@ protected:
 
   bool use_currents_as_efforts_ = false;
 
-  // --- Interface names, built once in build_interface_names() (called from on_init()) ---
+  // --- Interface handles, resolved once when the interfaces are exported ---
+  // Resolving throws if the description lacks an interface, so every handle is valid afterwards. Only the joint effort
+  // command handles are optional and nullptr when the description does not declare them.
 
-  std::unordered_map<std::string, hardware_interface::StateInterface::SharedPtr> state_interface_handles_;
-  std::unordered_map<std::string, hardware_interface::CommandInterface::SharedPtr> command_interface_handles_;
+  using StateHandle = hardware_interface::StateInterface::SharedPtr;
+  using CommandHandle = hardware_interface::CommandInterface::SharedPtr;
 
   template <typename T>
-  bool set_state_nonblocking(const std::string& name, const T& value);
+  bool set_state_nonblocking(const StateHandle& handle, const T& value)
+  {
+    return set_state(handle, value, false);
+  }
   template <typename T>
-  bool get_command_nonblocking(const std::string& name, T& value);
+  bool get_command_nonblocking(const CommandHandle& handle, T& value)
+  {
+    return get_command(handle, value, false);
+  }
   template <typename T>
-  bool set_command_nonblocking(const std::string& name, const T& value);
+  bool set_command_nonblocking(const CommandHandle& handle, const T& value)
+  {
+    return set_command(handle, value, false);
+  }
+  // Not real-time safe. Throws if the value cannot be read.
+  double get_command_blocking(const CommandHandle& handle)
+  {
+    double value;
+    get_command(handle, value, true);
+    return value;
+  }
 
-  std::vector<std::string> joint_position_state_names_;
-  std::vector<std::string> joint_velocity_state_names_;
-  std::vector<std::string> joint_effort_state_names_;
-  std::vector<std::string> joint_position_command_names_;
-  std::vector<std::string> joint_velocity_command_names_;
-  std::vector<std::string> joint_effort_command_names_;
+  std::vector<StateHandle> joint_position_state_handles_;
+  std::vector<StateHandle> joint_velocity_state_handles_;
+  std::vector<StateHandle> joint_effort_state_handles_;
+  std::vector<CommandHandle> joint_position_command_handles_;
+  std::vector<CommandHandle> joint_velocity_command_handles_;
+  std::vector<CommandHandle> joint_effort_command_handles_;
 
   // Plain RTDE-read state values (gpio digital/analog IO, tool/robot/safety status, tcp pose, ft
-  // sensor, payload, get_robot_software_version, system_interface/gpio program_running): name
+  // sensor, payload, get_robot_software_version, system_interface/gpio program_running): handle
   // plus a pointer to the source value, pushed via set_state() in one loop per read() cycle.
-  std::vector<std::pair<std::string, double*>> state_push_list_;
+  std::vector<std::pair<StateHandle, double*>> state_push_list_;
 
-  std::array<std::string, 2> moprim_state_names_;
+  std::array<StateHandle, 2> moprim_state_handles_;
 
-  std::string io_async_success_name_;
-  std::array<std::string, 18> standard_dig_out_bits_cmd_names_;
-  std::array<std::string, 2> standard_analog_output_cmd_names_;
-  std::string analog_output_domain_cmd_name_;
-  std::string tool_voltage_cmd_name_;
-  std::string target_speed_fraction_cmd_name_;
-  std::string scaling_async_success_name_;
-  std::string resend_robot_program_cmd_name_;
-  std::string resend_robot_program_async_success_name_;
-  std::string hand_back_control_cmd_name_;
-  std::string hand_back_control_async_success_name_;
-  std::string payload_mass_name_;
-  std::array<std::string, 3> payload_cog_names_;
-  std::array<std::string, 6> payload_inertia_names_;
-  std::string payload_transition_time_name_;
-  std::string payload_async_success_name_;
-  std::array<std::string, 3> gravity_vector_names_;
-  std::string gravity_async_success_name_;
-  std::array<std::string, 6> friction_viscous_names_;
-  std::array<std::string, 6> friction_coulomb_names_;
-  std::string friction_async_success_name_;
-  std::string zero_ftsensor_cmd_name_;
-  std::string zero_ftsensor_async_success_name_;
-  std::string freedrive_enable_name_;
-  std::string freedrive_abort_name_;
-  std::string freedrive_async_success_name_;
+  CommandHandle io_async_success_handle_;
+  std::array<CommandHandle, 18> standard_dig_out_bits_cmd_handles_;
+  std::array<CommandHandle, 2> standard_analog_output_cmd_handles_;
+  CommandHandle analog_output_domain_cmd_handle_;
+  CommandHandle tool_voltage_cmd_handle_;
+  CommandHandle target_speed_fraction_cmd_handle_;
+  CommandHandle scaling_async_success_handle_;
+  CommandHandle resend_robot_program_cmd_handle_;
+  CommandHandle resend_robot_program_async_success_handle_;
+  CommandHandle hand_back_control_cmd_handle_;
+  CommandHandle hand_back_control_async_success_handle_;
+  CommandHandle payload_mass_handle_;
+  std::array<CommandHandle, 3> payload_cog_handles_;
+  std::array<CommandHandle, 6> payload_inertia_handles_;
+  CommandHandle payload_transition_time_handle_;
+  CommandHandle payload_async_success_handle_;
+  std::array<CommandHandle, 3> gravity_vector_handles_;
+  CommandHandle gravity_async_success_handle_;
+  std::array<CommandHandle, 6> friction_viscous_handles_;
+  std::array<CommandHandle, 6> friction_coulomb_handles_;
+  CommandHandle friction_async_success_handle_;
+  CommandHandle zero_ftsensor_cmd_handle_;
+  CommandHandle zero_ftsensor_async_success_handle_;
+  CommandHandle freedrive_enable_handle_;
+  CommandHandle freedrive_abort_handle_;
+  CommandHandle freedrive_async_success_handle_;
 
-  std::array<std::string, 6> force_mode_task_frame_names_;
-  std::array<std::string, 6> force_mode_selection_vector_names_;
-  std::array<std::string, 6> force_mode_wrench_names_;
-  std::string force_mode_type_name_;
-  std::array<std::string, 6> force_mode_limits_names_;
-  std::string force_mode_async_success_name_;
-  std::string force_mode_disable_cmd_name_;
-  std::string force_mode_damping_name_;
-  std::string force_mode_gain_scaling_name_;
+  std::array<CommandHandle, 6> force_mode_task_frame_handles_;
+  std::array<CommandHandle, 6> force_mode_selection_vector_handles_;
+  std::array<CommandHandle, 6> force_mode_wrench_handles_;
+  CommandHandle force_mode_type_handle_;
+  std::array<CommandHandle, 6> force_mode_limits_handles_;
+  CommandHandle force_mode_async_success_handle_;
+  CommandHandle force_mode_disable_cmd_handle_;
+  CommandHandle force_mode_damping_handle_;
+  CommandHandle force_mode_gain_scaling_handle_;
 
-  std::string passthrough_transfer_state_name_;
-  std::string passthrough_transfer_sequence_name_;
-  std::string passthrough_time_from_start_name_;
-  std::string passthrough_abort_name_;
-  std::string passthrough_size_name_;
-  std::array<std::string, 6> passthrough_positions_names_;
-  std::array<std::string, 6> passthrough_velocities_names_;
-  std::array<std::string, 6> passthrough_accelerations_names_;
+  CommandHandle passthrough_transfer_state_cmd_handle_;
+  CommandHandle passthrough_transfer_sequence_cmd_handle_;
+  CommandHandle passthrough_time_from_start_handle_;
+  CommandHandle passthrough_abort_cmd_handle_;
+  CommandHandle passthrough_size_handle_;
+  std::array<CommandHandle, 6> passthrough_positions_handles_;
+  std::array<CommandHandle, 6> passthrough_velocities_handles_;
+  std::array<CommandHandle, 6> passthrough_accelerations_handles_;
+  StateHandle passthrough_transfer_state_state_handle_;
+  StateHandle passthrough_transfer_sequence_state_handle_;
+  StateHandle passthrough_abort_state_handle_;
 
-  std::array<std::string, 6> twist_command_names_;
+  std::array<CommandHandle, 6> twist_command_handles_;
 
-  std::string tool_contact_set_state_name_;
-  std::string tool_contact_result_name_;
-  std::string tool_contact_state_name_;
+  CommandHandle tool_contact_set_state_handle_;
+  StateHandle tool_contact_result_handle_;
+  StateHandle tool_contact_state_handle_;
 
-  std::array<std::string, 25> moprim_command_names_;
+  std::array<CommandHandle, 25> moprim_command_handles_;
 };
 }  // namespace ur_robot_driver
 
