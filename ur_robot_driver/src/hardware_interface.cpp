@@ -735,6 +735,9 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // joint-state sample.
   initializeCommandInterfaces();
 
+  int throwaway;
+  std::ignore = trajectory_result_queue_.pop(throwaway);  // Clear any initial value in the queue
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
