@@ -132,6 +132,10 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   velocity_controller_running_ = false;
   torque_controller_running_ = false;
   freedrive_mode_controller_running_ = false;
+  freedrive_activated_ = false;
+  freedrive_stop_pending_ = false;
+  seeded_motion_commands_pending_ = false;
+  moprim_command_reset_pending_ = false;
   passthrough_trajectory_controller_running_ = false;
   tool_contact_controller_running_ = false;
   twist_controller_running_ = false;
@@ -970,15 +974,23 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
   bool commands_read = true;
   bool passthrough_commands_read = true;
-  for (size_t i = 0; i < info_.joints.size(); ++i) {
-    commands_read &= get_command_nonblocking(joint_position_command_handles_[i], urcl_position_commands_[i]);
-    commands_read &= get_command_nonblocking(joint_velocity_command_handles_[i], urcl_velocity_commands_[i]);
-    if (joint_effort_command_handles_[i]) {
-      commands_read &= get_command_nonblocking(joint_effort_command_handles_[i], urcl_torque_commands_[i]);
+  if (seeded_motion_commands_pending_) {
+    // A failed mode-switch publish must not be overwritten by the pre-switch interface values.
+    seeded_motion_commands_pending_ = !publish_seeded_motion_commands();
+  }
+  if (!seeded_motion_commands_pending_) {
+    for (size_t i = 0; i < info_.joints.size(); ++i) {
+      commands_read &= get_command_nonblocking(joint_position_command_handles_[i], urcl_position_commands_[i]);
+      commands_read &= get_command_nonblocking(joint_velocity_command_handles_[i], urcl_velocity_commands_[i]);
+      if (joint_effort_command_handles_[i]) {
+        commands_read &= get_command_nonblocking(joint_effort_command_handles_[i], urcl_torque_commands_[i]);
+      }
+    }
+    for (size_t i = 0; i < 6; ++i) {
+      commands_read &= get_command_nonblocking(twist_command_handles_[i], urcl_twist_commands_[i]);
     }
   }
   for (size_t i = 0; i < 6; ++i) {
-    commands_read &= get_command_nonblocking(twist_command_handles_[i], urcl_twist_commands_[i]);
     passthrough_commands_read &=
         get_command_nonblocking(passthrough_positions_handles_[i], passthrough_trajectory_positions_[i]);
     passthrough_commands_read &=
@@ -998,8 +1010,13 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   commands_read &= passthrough_commands_read;
   commands_read &= get_command_nonblocking(tool_contact_set_state_handle_, tool_contact_set_state_);
   bool moprim_commands_read = true;
-  for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
-    moprim_commands_read &= get_command_nonblocking(moprim_command_handles_[i], hw_moprim_commands_[i]);
+  if (moprim_command_reset_pending_) {
+    moprim_command_reset_pending_ = !resetMoprimCmdInterfaces();
+  }
+  if (!moprim_command_reset_pending_) {
+    for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
+      moprim_commands_read &= get_command_nonblocking(moprim_command_handles_[i], hw_moprim_commands_[i]);
+    }
   }
   commands_read &= moprim_commands_read;
   if (commands_read) {
@@ -1029,6 +1046,10 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       stop_requested_ = false;
       robot_program_running_ = false;  // We reset that here, as well to avoid a race condition
                                        // between the reverse interface callback and the next write.
+    } else if (freedrive_stop_pending_ && freedrive_activated_) {
+      // Stay in freedrive until checkAsyncIO() delivers FREEDRIVE_STOP. Another mode here would
+      // leave freedrive and a later stop would switch the robot back into it.
+      ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
     } else if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
 
@@ -1326,14 +1347,21 @@ void URPositionHardwareInterface::checkAsyncIO()
     freedrive_activated_ = true;
   }
 
-  if (!std::isnan(freedrive_mode_abort) && freedrive_mode_abort == 1.0 && freedrive_activated_ &&
-      ur_driver_ != nullptr) {
+  const bool abort_commanded = !std::isnan(freedrive_mode_abort) && freedrive_mode_abort == 1.0;
+  if ((freedrive_stop_pending_ || abort_commanded) && freedrive_activated_ && ur_driver_ != nullptr) {
+    if (freedrive_stop_pending_ && !abort_commanded) {
+      // The mode switch may have failed to publish the abort. Keep it visible while we retry.
+      set_command(freedrive_abort_handle_, 1.0, true);
+    }
     RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
-    const double freedrive_mode_async_success =
+    const bool stop_sent =
         ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
-    freedrive_activated_ = false;
-    set_command(freedrive_abort_handle_, NO_NEW_CMD_, true);
-    set_command(freedrive_async_success_handle_, freedrive_mode_async_success, true);
+    set_command(freedrive_async_success_handle_, stop_sent ? 1.0 : 0.0, true);
+    if (stop_sent) {
+      freedrive_activated_ = false;
+      freedrive_stop_pending_ = false;
+      set_command(freedrive_abort_handle_, NO_NEW_CMD_, true);
+    }
   }
 }
 
@@ -1650,14 +1678,18 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_FREEDRIVE) != stop_modes_[0].end()) {
     freedrive_mode_controller_running_ = false;
-    freedrive_activated_ = false;
-    freedrive_abort_updated = set_command_nonblocking(freedrive_abort_handle_, 1.0);
+    // Leave freedrive_activated_ set until FREEDRIVE_STOP is sent. Clearing it here makes
+    // checkAsyncIO() ignore the abort, and a failed interface write is never retried.
+    if (freedrive_activated_) {
+      freedrive_stop_pending_ = true;
+      freedrive_abort_updated = set_command_nonblocking(freedrive_abort_handle_, 1.0);
+    }
   }
 
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_MOTION_PRIMITIVES) != stop_modes_[0].end()) {
     motion_primitives_forward_controller_running_ = false;
-    resetMoprimCmdInterfaces();
+    moprim_command_reset_pending_ = !resetMoprimCmdInterfaces();
     moprim_command_pending_ = false;
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
     ready_for_new_moprim_ = false;
@@ -1724,7 +1756,9 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     motion_primitives_forward_controller_running_ = false;
     torque_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
-    freedrive_activated_ = false;
+    if (!freedrive_stop_pending_) {
+      freedrive_activated_ = false;
+    }
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), HW_IF_MOTION_PRIMITIVES) != start_modes_[0].end()) {
@@ -1734,7 +1768,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     passthrough_trajectory_controller_running_ = false;
     force_mode_controller_running_ = false;
 
-    resetMoprimCmdInterfaces();
+    moprim_command_reset_pending_ = !resetMoprimCmdInterfaces();
     moprim_command_pending_ = false;
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
     ready_for_new_moprim_ = !passthrough_cancel_result_pending_;
@@ -1755,22 +1789,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   start_modes_.clear();
   stop_modes_.clear();
 
-  // Push every command/state value this function may have just reset or changed directly (write()'s
-  // own per-cycle pull/push will overwrite the command values again on the next cycle regardless -
-  // this is for exposed-value fidelity in the brief window before that).
-  bool interfaces_updated = true;
-  for (size_t i = 0; i < info_.joints.size(); ++i) {
-    interfaces_updated &= set_command_nonblocking(joint_position_command_handles_[i], urcl_position_commands_[i]);
-    interfaces_updated &= set_command_nonblocking(joint_velocity_command_handles_[i], urcl_velocity_commands_[i]);
-    if (joint_effort_command_handles_[i]) {
-      interfaces_updated &= set_command_nonblocking(joint_effort_command_handles_[i], urcl_torque_commands_[i]);
-    }
-  }
-  for (size_t i = 0; i < 6; ++i) {
-    interfaces_updated &= set_command_nonblocking(twist_command_handles_[i], urcl_twist_commands_[i]);
-  }
-  interfaces_updated &= freedrive_abort_updated;
-  if (!interfaces_updated) {
+  // Push the joint and twist commands this function just stored. write() keeps those stored values
+  // and retries the publish until it lands, so a locked interface cannot restore the pre-switch command.
+  seeded_motion_commands_pending_ = !publish_seeded_motion_commands();
+  if (seeded_motion_commands_pending_ || !freedrive_abort_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not update all interfaces during command mode switch without blocking.");
   }
@@ -2132,7 +2154,23 @@ void URPositionHardwareInterface::handleMoprimCommands(const bool accept_new_com
   }
 }
 
-void URPositionHardwareInterface::resetMoprimCmdInterfaces(const size_t start_index)
+bool URPositionHardwareInterface::publish_seeded_motion_commands()
+{
+  bool interfaces_updated = true;
+  for (size_t i = 0; i < info_.joints.size(); ++i) {
+    interfaces_updated &= set_command_nonblocking(joint_position_command_handles_[i], urcl_position_commands_[i]);
+    interfaces_updated &= set_command_nonblocking(joint_velocity_command_handles_[i], urcl_velocity_commands_[i]);
+    if (joint_effort_command_handles_[i]) {
+      interfaces_updated &= set_command_nonblocking(joint_effort_command_handles_[i], urcl_torque_commands_[i]);
+    }
+  }
+  for (size_t i = 0; i < 6; ++i) {
+    interfaces_updated &= set_command_nonblocking(twist_command_handles_[i], urcl_twist_commands_[i]);
+  }
+  return interfaces_updated;
+}
+
+bool URPositionHardwareInterface::resetMoprimCmdInterfaces(const size_t start_index)
 {
   std::fill(hw_moprim_commands_.begin() + start_index, hw_moprim_commands_.end(),
             std::numeric_limits<double>::quiet_NaN());
@@ -2144,6 +2182,7 @@ void URPositionHardwareInterface::resetMoprimCmdInterfaces(const size_t start_in
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not reset all motion primitive commands without blocking.");
   }
+  return commands_updated;
 }
 
 void URPositionHardwareInterface::asyncMoprimCmdThread()

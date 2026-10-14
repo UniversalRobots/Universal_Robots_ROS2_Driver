@@ -204,6 +204,8 @@ protected:
   void check_passthrough_trajectory_controller();
   void process_trajectory_result();
   void end_passthrough_cancel_wait();
+  // Republish the joint and twist commands stored by perform_command_mode_switch().
+  bool publish_seeded_motion_commands();
   void trajectory_done_callback(urcl::control::TrajectoryResult result);
   bool is_valid_joint_information(std::vector<std::array<double, 6>> data);
   void tool_contact_callback(urcl::control::ToolContactResult);
@@ -267,6 +269,12 @@ protected:
   // Freedrive mode controller state. Enable and abort commands are read from their interfaces.
   bool freedrive_activated_;
   bool freedrive_mode_controller_running_;
+  // FREEDRIVE_STOP still has to be sent. checkAsyncIO() retries it until the robot accepts it.
+  bool freedrive_stop_pending_ = false;
+  // Joint and twist commands stored by the mode switch have not reached their command interfaces.
+  bool seeded_motion_commands_pending_ = false;
+  // Motion-primitive command interfaces still hold pre-reset values.
+  bool moprim_command_reset_pending_ = false;
 
   // Passthrough trajectory controller interface values
   uint8_t passthrough_trajectory_transfer_state_;
@@ -323,7 +331,7 @@ protected:
   std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> moprim_sequence_;
 
   void handleMoprimCommands(bool accept_new_command);
-  void resetMoprimCmdInterfaces(size_t start_index = 0);
+  bool resetMoprimCmdInterfaces(size_t start_index = 0);
   void asyncMoprimCmdThread();
   void processMoprimMotionCmd(const std::array<double, 25>& command);
   bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,
