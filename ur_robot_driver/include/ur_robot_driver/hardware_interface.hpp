@@ -318,7 +318,7 @@ protected:
   std::atomic_bool build_moprim_sequence_{ false };
   std::vector<std::shared_ptr<urcl::control::MotionPrimitive>> moprim_sequence_;
 
-  void handleMoprimCommands();
+  void handleMoprimCommands(bool accept_new_command);
   void resetMoprimCmdInterfaces(size_t start_index = 0);
   void asyncMoprimCmdThread();
   void processMoprimMotionCmd(const std::array<double, 25>& command);

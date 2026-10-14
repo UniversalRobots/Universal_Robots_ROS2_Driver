@@ -392,6 +392,14 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
   }
   if (transfer_pending_) {
     if (*acknowledged_sequence != pending_transfer_sequence_) {
+      // Do not act on the transfer state here. Until the acknowledgement arrives it may still describe a previous
+      // session, e.g. in the first cycle after activation.
+      transfer_pending_duration_ = transfer_pending_duration_ + period;
+      if (transfer_pending_duration_.seconds() > 1.0) {
+        RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *clock_, 1000,
+                             "Hardware interface has not acknowledged trajectory transfer request %u for %.1f s.",
+                             pending_transfer_sequence_, transfer_pending_duration_.seconds());
+      }
       return controller_interface::return_type::OK;
     }
     transfer_pending_ = false;
@@ -900,7 +908,8 @@ void PassthroughTrajectoryController::end_goal(const bool reset_abort)
 {
   trajectory_active_ = false;
   const bool abort_reset = !reset_abort || abort_command_interface_->get().set_value(false);
-  if (!abort_reset || !write_transfer_request(TRANSFER_STATE_IDLE)) {
+  // A request still in flight cannot be replaced. The hardware resets the transfer on abort in that case.
+  if (!abort_reset || (!transfer_pending_ && !write_transfer_request(TRANSFER_STATE_IDLE))) {
     RCLCPP_ERROR(get_node()->get_logger(), "Could not write trajectory transfer reset request.");
   }
 }
@@ -919,6 +928,7 @@ bool PassthroughTrajectoryController::write_transfer_request(const uint8_t trans
   pending_transfer_sequence_ = next_transfer_sequence_;
   next_transfer_sequence_ += 1;
   transfer_pending_ = true;
+  transfer_pending_duration_ = rclcpp::Duration::from_nanoseconds(0);
   return true;
 }
 

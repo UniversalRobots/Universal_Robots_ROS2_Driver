@@ -1003,9 +1003,11 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   passthrough_commands_read &= get_command_nonblocking(passthrough_size_name_, passthrough_trajectory_size_);
   commands_read &= passthrough_commands_read;
   commands_read &= get_command_nonblocking(tool_contact_set_state_name_, tool_contact_set_state_);
+  bool moprim_commands_read = true;
   for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
-    commands_read &= get_command_nonblocking(moprim_command_names_[i], hw_moprim_commands_[i]);
+    moprim_commands_read &= get_command_nonblocking(moprim_command_names_[i], hw_moprim_commands_[i]);
   }
+  commands_read &= moprim_commands_read;
   if (commands_read) {
     command_snapshot_initialized_ = true;
   } else if (command_snapshot_initialized_) {
@@ -1050,7 +1052,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
         ready_for_new_moprim_ = false;
         ur_driver_->writeKeepalive();
       } else {
-        handleMoprimCommands();
+        handleMoprimCommands(moprim_commands_read);
       }
     } else if (twist_controller_running_) {
       ur_driver_->writeJointCommand(urcl_twist_commands_, urcl::comm::ControlMode::MODE_SPEEDL, receive_timeout_);
@@ -1631,10 +1633,9 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;
     passthrough_trajectory_abort_ = true;
-    // A cancel during point upload has not started execution, but the robot can still answer
-    // TRAJECTORY_CANCEL. Track that answer so it cannot terminate the next session.
-    passthrough_cancel_result_pending_ =
-        passthrough_trajectory_execution_active_ || passthrough_trajectory_transfer_state_ != 0;
+    // Only a started trajectory is answered with a result. Track that answer so it cannot terminate the next
+    // session. Without a started trajectory there may never be an answer, so do not wait for one.
+    passthrough_cancel_result_pending_ = passthrough_trajectory_execution_active_;
     passthrough_trajectory_execution_active_ = false;
     if (ur_driver_) {
       ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
@@ -1864,9 +1865,14 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   if (passthrough_trajectory_abort_command_ && passthrough_trajectory_transfer_state_ != 0) {
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
     if (passthrough_trajectory_execution_active_) {
-      if (ur_driver_ != nullptr) {
-        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+      // trajectory_started is the streaming latch. It is cleared once TRAJECTORY_CANCEL has been sent, so the
+      // cancel is retried in later cycles until a write succeeds. Returning here keeps buffered spline points
+      // from being forwarded while the robot's result is still outstanding. That result publishes DONE.
+      if (trajectory_started && ur_driver_ != nullptr &&
+          ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL)) {
+        trajectory_started = false;
       }
+      return;
     } else {
       // Point upload has not started a trajectory, so TRAJECTORY_CANCEL has nothing to cancel and may never be
       // answered. Publish DONE immediately so the controller can return to IDLE.
@@ -2002,11 +2008,10 @@ void URPositionHardwareInterface::process_trajectory_result()
   }
   const auto result = static_cast<urcl::control::TrajectoryResult>(result_value);
   if (passthrough_cancel_result_pending_) {
-    if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED) {
-      passthrough_cancel_result_pending_ = false;
-      if (motion_primitives_forward_controller_running_) {
-        ready_for_new_moprim_ = true;
-      }
+    // Any result ends the canceled trajectory. It may have finished on its own before the cancel was processed.
+    passthrough_cancel_result_pending_ = false;
+    if (motion_primitives_forward_controller_running_) {
+      ready_for_new_moprim_ = true;
     }
     return;
   }
@@ -2039,7 +2044,7 @@ bool URPositionHardwareInterface::is_valid_joint_information(std::vector<std::ar
   return (data.size() > 0 && !std::isnan(data[0][0]));
 }
 
-void URPositionHardwareInterface::handleMoprimCommands()
+void URPositionHardwareInterface::handleMoprimCommands(const bool accept_new_command)
 {
   const auto push_pending_command = [this]() {
     if (moprim_cmd_queue_.push(pending_moprim_command_)) {
@@ -2055,7 +2060,8 @@ void URPositionHardwareInterface::handleMoprimCommands()
   // Retry a previously claimed command before accepting a new one.
   if (moprim_command_pending_) {
     push_pending_command();
-  } else if (!std::isnan(hw_moprim_commands_[0])) {
+  } else if (accept_new_command && !std::isnan(hw_moprim_commands_[0])) {
+    // Only claim a command from a complete snapshot, otherwise its payload could mix in stale fields.
     const auto command = hw_moprim_commands_;
     ready_for_new_moprim_ = false;  // set to false to indicate that the driver is busy handling a command
     // set state interface immediately

@@ -82,7 +82,7 @@ public:
 
   void handle_moprim_commands()
   {
-    handleMoprimCommands();
+    handleMoprimCommands(true);
   }
 
   bool moprim_command_pending() const
@@ -489,13 +489,14 @@ TEST_F(URHardwareInterfaceProtocolTest, WaitsForPriorCancellationBeforeProcessin
   hw_->process_passthrough_request();
   EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 1U);
 
+  hw_->process_passthrough_request();
+  EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 1U);
+
+  // The canceled trajectory may finish on its own before the cancel is processed. Any result ends the wait.
   hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS, false);
   hw_->process_passthrough_result();
-  EXPECT_TRUE(hw_->passthrough_cancel_pending());
-
-  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED, false);
-  hw_->process_passthrough_result();
   EXPECT_FALSE(hw_->passthrough_cancel_pending());
+  EXPECT_EQ(hw_->passthrough_state(), 0U);
 
   hw_->process_passthrough_request();
   EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 2U);

@@ -172,6 +172,7 @@ private:
   uint32_t next_transfer_sequence_ = 1;
   uint32_t pending_transfer_sequence_ = 0;
   bool transfer_pending_ = false;
+  rclcpp::Duration transfer_pending_duration_ = rclcpp::Duration::from_nanoseconds(0);
   rclcpp::Duration active_trajectory_elapsed_time_ = rclcpp::Duration::from_nanoseconds(0);
   rclcpp::Duration max_trajectory_time_ = rclcpp::Duration::from_nanoseconds(0);
   double scaling_factor_;
