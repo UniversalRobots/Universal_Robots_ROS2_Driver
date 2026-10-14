@@ -203,6 +203,7 @@ protected:
   void stop_force_mode();
   void check_passthrough_trajectory_controller();
   void process_trajectory_result();
+  void end_passthrough_cancel_wait();
   void trajectory_done_callback(urcl::control::TrajectoryResult result);
   bool is_valid_joint_information(std::vector<std::array<double, 6>> data);
   void tool_contact_callback(urcl::control::ToolContactResult);
@@ -277,6 +278,8 @@ protected:
   bool passthrough_terminal_result_pending_;
   bool passthrough_trajectory_execution_active_;
   std::atomic_bool passthrough_cancel_result_pending_{ false };
+  // The TRAJECTORY_CANCEL from stopping the passthrough controller still has to be sent.
+  bool passthrough_cancel_unsent_ = false;
   uint32_t passthrough_trajectory_size_;
   bool passthrough_trajectory_controller_running_;
   urcl::vector6d_t passthrough_trajectory_positions_;

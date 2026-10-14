@@ -156,6 +156,11 @@ public:
   {
     return passthrough_cancel_result_pending_.load();
   }
+
+  motion_primitives_controllers::ExecutionState moprim_execution_status() const
+  {
+    return current_moprim_execution_status_.load();
+  }
 };
 
 hardware_interface::HardwareInfo BuildTestHardwareInfo()
@@ -501,6 +506,24 @@ TEST_F(URHardwareInterfaceProtocolTest, WaitsForPriorCancellationBeforeProcessin
   hw_->process_passthrough_request();
   EXPECT_EQ(hw_->acknowledged_passthrough_sequence(), 2U);
   EXPECT_EQ(hw_->passthrough_state(), 1U);
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, PassthroughCancellationResultDoesNotStopMotionPrimitives)
+{
+  hw_->set_passthrough_cancel_pending();
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED, false);
+  hw_->process_passthrough_result();
+
+  EXPECT_FALSE(hw_->passthrough_cancel_pending());
+  EXPECT_EQ(hw_->moprim_execution_status(), motion_primitives_controllers::ExecutionState::IDLE);
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, UnrelatedCanceledResultStopsMotionPrimitives)
+{
+  hw_->queue_passthrough_result(urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED, false);
+  hw_->process_passthrough_result();
+
+  EXPECT_EQ(hw_->moprim_execution_status(), motion_primitives_controllers::ExecutionState::STOPPED);
 }
 
 TEST_F(URHardwareInterfaceProtocolTest, PublishesDoneWhenUploadIsAbortedBeforeExecution)
