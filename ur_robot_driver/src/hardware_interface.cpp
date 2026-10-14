@@ -1020,7 +1020,6 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
     if (passthrough_cancel_unsent_ &&
-        (passthrough_trajectory_controller_running_ || motion_primitives_forward_controller_running_) &&
         ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL)) {
       passthrough_cancel_unsent_ = false;
     }
