@@ -173,6 +173,9 @@ protected:
 
   void initAsyncIO();
   void checkAsyncIO();
+  // Decides whether connector T2 can be commanded and whether its RTDE fields survived negotiation.
+  // Called once from on_configure, after the driver exists and after any RTDE client reset.
+  void configureToolConnectorT2();
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
@@ -215,6 +218,12 @@ protected:
   int32_t tool_output_voltage_;
   double tool_output_current_;
   double tool_temperature_;
+  // Connector T2. tool_t2_supported_ is the version and flange check and gates commands.
+  // tool_t2_telemetry_ is whether the negotiated RTDE recipe still contains the T2 fields.
+  bool tool_t2_supported_{ false };
+  bool tool_t2_telemetry_{ false };
+  int32_t tool_output_voltage_2_{ 0 };
+  double tool_output_current_2_{ std::numeric_limits<double>::quiet_NaN() };
   double speed_scaling_;
   double target_speed_fraction_;
   double speed_scaling_combined_;
@@ -228,6 +237,7 @@ protected:
   std::array<double, 2> standard_analog_output_cmd_;
   double analog_output_domain_cmd_;
   double tool_voltage_cmd_;
+  double tool_voltage_t2_cmd_{ NO_NEW_CMD_ };
   double io_async_success_;
   double target_speed_fraction_cmd_;
   double scaling_async_success_;
@@ -310,6 +320,8 @@ protected:
   double tool_mode_copy_;
   std::array<double, 2> tool_analog_input_types_copy_;
   double tool_output_voltage_copy_;
+  double tool_t2_available_copy_{ 0.0 };
+  double tool_output_voltage_2_copy_{ std::numeric_limits<double>::quiet_NaN() };
   double robot_mode_copy_;
   double safety_mode_copy_;
   std::array<double, 4> robot_status_bits_copy_;

@@ -208,6 +208,13 @@ if(BUILD_TESTING)
   ament_add_gmock(test_load_twist_controller
     test/test_load_twist_controller.cpp
   )
+  ament_add_gmock(test_gpio_controller_tool_t2
+    test/test_gpio_controller_tool_t2.cpp
+  )
+  target_link_libraries(test_gpio_controller_tool_t2
+    ${PROJECT_NAME}
+    controller_manager::controller_manager
+  )
   target_link_libraries(test_load_twist_controller
     ${PROJECT_NAME}
     controller_manager::controller_manager

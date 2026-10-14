@@ -1,0 +1,3 @@
+test_gpio_controller:
+  ros__parameters:
+    tool_t2_interfaces: true
