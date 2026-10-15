@@ -1744,8 +1744,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     passthrough_trajectory_abort_ = true;
     // Only a started trajectory is answered with a result. Track that answer so it cannot terminate the next
     // session. Without a started trajectory there may never be an answer, so do not wait for one.
-    passthrough_cancel_result_pending_ =
-        passthrough_cancel_result_pending_ || passthrough_trajectory_execution_active_;
+    passthrough_cancel_result_pending_ = passthrough_cancel_result_pending_ || passthrough_trajectory_execution_active_;
     passthrough_trajectory_execution_active_ = false;
     const bool cancel_sent = ur_driver_ && ur_driver_->writeTrajectoryControlMessage(
                                                urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
