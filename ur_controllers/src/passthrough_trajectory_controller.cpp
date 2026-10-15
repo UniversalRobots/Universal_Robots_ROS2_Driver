@@ -382,8 +382,8 @@ controller_interface::return_type PassthroughTrajectoryController::update(const 
     return controller_interface::return_type::OK;
   }
 
-  const auto current_transfer_state = transfer_state_interface_->get().get_optional<uint8_t>();
   const auto acknowledged_sequence = transfer_sequence_state_interface_->get().get_optional<uint32_t>();
+  const auto current_transfer_state = transfer_state_interface_->get().get_optional<uint8_t>();
   const auto abort_state = abort_state_interface_->get().get_optional<bool>();
   if (!current_transfer_state || !acknowledged_sequence || !abort_state) {
     RCLCPP_WARN_THROTTLE(get_node()->get_logger(), *clock_, 1000,

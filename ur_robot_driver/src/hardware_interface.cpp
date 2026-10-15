@@ -740,7 +740,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   initializeCommandInterfaces();
 
   int throwaway;
-  std::ignore = trajectory_result_queue_.pop(throwaway);  // Clear any initial value in the queue
+  std::ignore = trajectory_result_queue_.get_latest(throwaway);  // Clear any initial value in the queue
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -990,6 +990,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       commands_read &= get_command_nonblocking(twist_command_handles_[i], urcl_twist_commands_[i]);
     }
   }
+  passthrough_commands_read &= get_command_nonblocking(passthrough_transfer_sequence_cmd_handle_,
+                                                       passthrough_trajectory_transfer_sequence_command_);
   for (size_t i = 0; i < 6; ++i) {
     passthrough_commands_read &=
         get_command_nonblocking(passthrough_positions_handles_[i], passthrough_trajectory_positions_[i]);
@@ -1000,8 +1002,6 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   }
   passthrough_commands_read &=
       get_command_nonblocking(passthrough_transfer_state_cmd_handle_, passthrough_trajectory_transfer_state_command_);
-  passthrough_commands_read &= get_command_nonblocking(passthrough_transfer_sequence_cmd_handle_,
-                                                       passthrough_trajectory_transfer_sequence_command_);
   passthrough_commands_read &=
       get_command_nonblocking(passthrough_time_from_start_handle_, passthrough_trajectory_time_from_start_);
   passthrough_commands_read &=

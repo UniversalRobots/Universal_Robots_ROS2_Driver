@@ -267,10 +267,10 @@ protected:
   bool tool_contact_controller_running_;
 
   // Freedrive mode controller state. Enable and abort commands are read from their interfaces.
-  bool freedrive_activated_;
-  bool freedrive_mode_controller_running_;
+  std::atomic<bool> freedrive_activated_;
+  std::atomic<bool> freedrive_mode_controller_running_;
   // FREEDRIVE_STOP still has to be sent. checkAsyncIO() retries it until the robot accepts it.
-  bool freedrive_stop_pending_ = false;
+  std::atomic<bool> freedrive_stop_pending_ = false;
   // Joint and twist commands stored by the mode switch have not reached their command interfaces.
   bool seeded_motion_commands_pending_ = false;
   // Motion-primitive command interfaces still hold pre-reset values.
