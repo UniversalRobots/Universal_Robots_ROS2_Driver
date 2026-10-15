@@ -943,8 +943,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 
     states_updated &= set_state_nonblocking(tool_contact_result_handle_, tool_contact_result_.load());
     const bool passthrough_state_updated =
-        set_state_nonblocking(passthrough_transfer_state_state_handle_, passthrough_trajectory_transfer_state_) &&
-        set_state_nonblocking(passthrough_abort_state_handle_, passthrough_trajectory_abort_);
+        set_state_nonblocking(passthrough_abort_state_handle_, passthrough_trajectory_abort_) &&
+        set_state_nonblocking(passthrough_transfer_state_state_handle_, passthrough_trajectory_transfer_state_);
     // Publish the acknowledgement last. Observing it guarantees that the corresponding status was published.
     const bool passthrough_sequence_updated =
         passthrough_state_updated &&
@@ -1744,7 +1744,8 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     passthrough_trajectory_abort_ = true;
     // Only a started trajectory is answered with a result. Track that answer so it cannot terminate the next
     // session. Without a started trajectory there may never be an answer, so do not wait for one.
-    passthrough_cancel_result_pending_ = passthrough_trajectory_execution_active_;
+    passthrough_cancel_result_pending_ =
+        passthrough_cancel_result_pending_ || passthrough_trajectory_execution_active_;
     passthrough_trajectory_execution_active_ = false;
     const bool cancel_sent = ur_driver_ && ur_driver_->writeTrajectoryControlMessage(
                                                urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
