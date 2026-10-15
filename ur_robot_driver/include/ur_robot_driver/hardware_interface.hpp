@@ -201,6 +201,9 @@ protected:
                         const urcl::vector6d_t& wrench, double type, const urcl::vector6d_t& limits, double damping,
                         double gain_scaling);
   void stop_force_mode();
+  // Reads the freedrive enable and abort commands and writes at most one freedrive control message.
+  // Returns true when that write consumed this cycle. The caller sends a keepalive otherwise.
+  bool commandFreedriveMode();
   void check_passthrough_trajectory_controller();
   void process_trajectory_result();
   void end_passthrough_cancel_wait();
@@ -266,11 +269,11 @@ protected:
   std::atomic<double> tool_contact_result_;
   bool tool_contact_controller_running_;
 
-  // Freedrive mode controller state. Enable and abort commands are read from their interfaces.
+  // Freedrive mode controller state. Enable and abort commands are read from their interfaces in write().
+  // perform_command_mode_switch() sends FREEDRIVE_STOP. If that write fails, activated stays true and
+  // write() retries the stop before any other control mode.
   std::atomic<bool> freedrive_activated_;
   std::atomic<bool> freedrive_mode_controller_running_;
-  // FREEDRIVE_STOP still has to be sent. checkAsyncIO() retries it until the robot accepts it.
-  std::atomic<bool> freedrive_stop_pending_ = false;
   // Joint and twist commands stored by the mode switch have not reached their command interfaces.
   bool seeded_motion_commands_pending_ = false;
   // Motion-primitive command interfaces still hold pre-reset values.

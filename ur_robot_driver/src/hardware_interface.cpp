@@ -133,7 +133,6 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   torque_controller_running_ = false;
   freedrive_mode_controller_running_ = false;
   freedrive_activated_ = false;
-  freedrive_stop_pending_ = false;
   seeded_motion_commands_pending_ = false;
   moprim_command_reset_pending_ = false;
   passthrough_trajectory_controller_running_ = false;
@@ -1046,10 +1045,20 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       stop_requested_ = false;
       robot_program_running_ = false;  // We reset that here, as well to avoid a race condition
                                        // between the reverse interface callback and the next write.
-    } else if (freedrive_stop_pending_ && freedrive_activated_) {
-      // Stay in freedrive until checkAsyncIO() delivers FREEDRIVE_STOP. Another mode here would
-      // leave freedrive and a later stop would switch the robot back into it.
-      ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
+    } else if (freedrive_activated_ && !freedrive_mode_controller_running_) {
+      // The mode switch could not deliver FREEDRIVE_STOP. Retry it before any other control mode: leaving
+      // freedrive here and stopping later would switch the robot back into it.
+      if (ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP)) {
+        RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
+        freedrive_activated_ = false;
+      } else {
+        RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                             "Could not send FREEDRIVE_STOP. Staying in freedrive until the robot accepts it.");
+      }
+    } else if (freedrive_mode_controller_running_) {
+      if (!commandFreedriveMode()) {
+        ur_driver_->writeKeepalive();
+      }
     } else if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
 
@@ -1057,9 +1066,6 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       ur_driver_->writeJointCommand(urcl_velocity_commands_, urcl::comm::ControlMode::MODE_SPEEDJ, receive_timeout_);
     } else if (torque_controller_running_) {
       ur_driver_->writeJointCommand(urcl_torque_commands_, urcl::comm::ControlMode::MODE_TORQUE, receive_timeout_);
-    } else if (freedrive_mode_controller_running_ && freedrive_activated_) {
-      ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP);
-
     } else if (passthrough_trajectory_controller_running_) {
       ur_driver_->writeTrajectoryControlMessage(
           urcl::control::TrajectoryControlMessage::TRAJECTORY_NOOP, 0,
@@ -1230,8 +1236,6 @@ void URPositionHardwareInterface::checkAsyncIO()
     gravity_vector[i] = get_command_blocking(gravity_vector_handles_[i]);
   }
   const double zero_ftsensor_cmd = get_command_blocking(zero_ftsensor_cmd_handle_);
-  const double freedrive_mode_enable = get_command_blocking(freedrive_enable_handle_);
-  const double freedrive_mode_abort = get_command_blocking(freedrive_abort_handle_);
 
   for (size_t i = 0; i < standard_dig_out_bits_cmd.size(); ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd[i]) && ur_driver_ != nullptr) {
@@ -1337,32 +1341,108 @@ void URPositionHardwareInterface::checkAsyncIO()
     set_command(zero_ftsensor_cmd_handle_, NO_NEW_CMD_, true);
     set_command(zero_ftsensor_async_success_handle_, zero_ftsensor_async_success, true);
   }
+}
 
-  if (!std::isnan(freedrive_mode_enable) && ur_driver_ != nullptr) {
-    RCLCPP_INFO(get_logger(), "Starting freedrive mode.");
-    const double freedrive_mode_async_success =
-        ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
-    set_command(freedrive_enable_handle_, NO_NEW_CMD_, true);
-    set_command(freedrive_async_success_handle_, freedrive_mode_async_success, true);
-    freedrive_activated_ = true;
+bool URPositionHardwareInterface::commandFreedriveMode()
+{
+  if (ur_driver_ == nullptr) {
+    return false;
   }
 
-  const bool abort_commanded = !std::isnan(freedrive_mode_abort) && freedrive_mode_abort == 1.0;
-  if ((freedrive_stop_pending_ || abort_commanded) && freedrive_activated_ && ur_driver_ != nullptr) {
-    if (freedrive_stop_pending_ && !abort_commanded) {
-      // The mode switch may have failed to publish the abort. Keep it visible while we retry.
-      set_command(freedrive_abort_handle_, 1.0, true);
-    }
-    RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
+  double freedrive_enable = NO_NEW_CMD_;
+  double freedrive_abort = NO_NEW_CMD_;
+  const bool commands_read = get_command_nonblocking(freedrive_enable_handle_, freedrive_enable) &&
+                             get_command_nonblocking(freedrive_abort_handle_, freedrive_abort);
+  if (!commands_read) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not read freedrive command interfaces without blocking. Skipping new freedrive "
+                         "commands for this cycle.");
+  }
+
+  const bool enable_requested = commands_read && !std::isnan(freedrive_enable);
+  const bool abort_commanded = commands_read && !std::isnan(freedrive_abort) && freedrive_abort == 1.0;
+
+  if (abort_commanded && freedrive_activated_) {
     const bool stop_sent =
         ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP);
-    set_command(freedrive_async_success_handle_, stop_sent ? 1.0 : 0.0, true);
-    if (stop_sent) {
-      freedrive_activated_ = false;
-      freedrive_stop_pending_ = false;
-      set_command(freedrive_abort_handle_, NO_NEW_CMD_, true);
+    if (!set_command_nonblocking(freedrive_async_success_handle_, stop_sent ? 1.0 : 0.0)) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not write freedrive async_success without blocking.");
     }
+    if (!stop_sent) {
+      // Claim the cycle. A failed write may already have put bytes on the socket, so do not keepalive as well.
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not send FREEDRIVE_STOP. Retrying until the robot accepts it.");
+      return true;
+    }
+
+    RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
+    freedrive_activated_ = false;
+    // Drop a start that was requested and then cancelled before the next cycle can send it. Leave the abort set
+    // when that clear fails so the next cycle still treats the enable as cancelled.
+    if (enable_requested && !set_command_nonblocking(freedrive_enable_handle_, NO_NEW_CMD_)) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not clear the freedrive enable command without blocking.");
+      return true;
+    }
+    if (!set_command_nonblocking(freedrive_abort_handle_, NO_NEW_CMD_)) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not clear the freedrive abort command without blocking.");
+    }
+    return true;
   }
+
+  if (abort_commanded) {
+    // Freedrive is not active. Acknowledge the stop without sending FREEDRIVE_START for a cancelled enable.
+    // The caller keepalives; this branch does not write the reverse interface.
+    if (enable_requested && !set_command_nonblocking(freedrive_enable_handle_, NO_NEW_CMD_)) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not clear the freedrive enable command without blocking.");
+      return false;
+    }
+    bool interfaces_updated = set_command_nonblocking(freedrive_abort_handle_, NO_NEW_CMD_);
+    interfaces_updated &= set_command_nonblocking(freedrive_async_success_handle_, 1.0);
+    if (!interfaces_updated) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not update freedrive command interfaces without blocking.");
+    }
+    return false;
+  }
+
+  if (enable_requested && !freedrive_activated_) {
+    const bool started =
+        ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_START);
+    if (!started) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not send FREEDRIVE_START. Retrying until the robot accepts it.");
+      return true;
+    }
+    RCLCPP_INFO(get_logger(), "Starting freedrive mode.");
+    bool interfaces_updated = set_command_nonblocking(freedrive_enable_handle_, NO_NEW_CMD_);
+    interfaces_updated &= set_command_nonblocking(freedrive_async_success_handle_, 1.0);
+    if (!interfaces_updated) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                           "Could not update freedrive command interfaces without blocking.");
+    }
+    freedrive_activated_ = true;
+    return true;
+  }
+
+  if (enable_requested && !set_command_nonblocking(freedrive_enable_handle_, NO_NEW_CMD_)) {
+    // Start was already sent. Keep clearing enable so a later stop cannot be followed by another start.
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not clear the freedrive enable command without blocking.");
+  }
+
+  if (freedrive_activated_) {
+    // Another control mode would leave freedrive, and a later stop would switch the robot back into it.
+    if (!ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_NOOP)) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not send freedrive keepalive.");
+    }
+    return true;
+  }
+
+  return false;
 }
 
 void URPositionHardwareInterface::check_tool_contact_controller()
@@ -1637,7 +1717,6 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces)
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
-  bool freedrive_abort_updated = true;
 
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_POSITION) != stop_modes_[0].end()) {
@@ -1678,11 +1757,15 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_FREEDRIVE) != stop_modes_[0].end()) {
     freedrive_mode_controller_running_ = false;
-    // Leave freedrive_activated_ set until FREEDRIVE_STOP is sent. Clearing it here makes
-    // checkAsyncIO() ignore the abort, and a failed interface write is never retried.
-    if (freedrive_activated_) {
-      freedrive_stop_pending_ = true;
-      freedrive_abort_updated = set_command_nonblocking(freedrive_abort_handle_, 1.0);
+    // Send the stop before write() chooses the next control mode. A later FREEDRIVE_STOP would switch the
+    // robot back into freedrive. A failed write leaves freedrive_activated_ set so write() retries it.
+    if (freedrive_activated_ && ur_driver_ != nullptr) {
+      if (ur_driver_->writeFreedriveControlMessage(urcl::control::FreedriveControlMessage::FREEDRIVE_STOP)) {
+        RCLCPP_INFO(get_logger(), "Stopping freedrive mode.");
+        freedrive_activated_ = false;
+      } else {
+        RCLCPP_WARN(get_logger(), "Could not send FREEDRIVE_STOP while stopping the freedrive controller.");
+      }
     }
   }
 
@@ -1756,9 +1839,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     motion_primitives_forward_controller_running_ = false;
     torque_controller_running_ = false;
     freedrive_mode_controller_running_ = true;
-    if (!freedrive_stop_pending_) {
-      freedrive_activated_ = false;
-    }
+    freedrive_activated_ = false;
   }
   if (start_modes_[0].size() != 0 &&
       std::find(start_modes_[0].begin(), start_modes_[0].end(), HW_IF_MOTION_PRIMITIVES) != start_modes_[0].end()) {
@@ -1792,7 +1873,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   // Push the joint and twist commands this function just stored. write() keeps those stored values
   // and retries the publish until it lands, so a locked interface cannot restore the pre-switch command.
   seeded_motion_commands_pending_ = !publish_seeded_motion_commands();
-  if (seeded_motion_commands_pending_ || !freedrive_abort_updated) {
+  if (seeded_motion_commands_pending_) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not update all interfaces during command mode switch without blocking.");
   }
