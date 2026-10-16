@@ -280,18 +280,18 @@ protected:
   bool moprim_command_reset_pending_ = false;
 
   // Passthrough trajectory controller interface values
-  uint8_t passthrough_trajectory_transfer_state_;
-  uint8_t passthrough_trajectory_transfer_state_command_;
-  uint32_t passthrough_trajectory_transfer_sequence_;
-  uint32_t passthrough_trajectory_transfer_sequence_command_;
-  bool passthrough_trajectory_abort_;
-  bool passthrough_trajectory_abort_command_;
+  double passthrough_trajectory_transfer_state_;
+  double passthrough_trajectory_transfer_state_command_;
+  double passthrough_trajectory_transfer_sequence_;
+  double passthrough_trajectory_transfer_sequence_command_;
+  double passthrough_trajectory_abort_;
+  double passthrough_trajectory_abort_command_;
   bool passthrough_terminal_result_pending_;
   bool passthrough_trajectory_execution_active_;
   std::atomic_bool passthrough_cancel_result_pending_{ false };
   // The TRAJECTORY_CANCEL from stopping the passthrough controller still has to be sent.
   bool passthrough_cancel_unsent_ = false;
-  uint32_t passthrough_trajectory_size_;
+  double passthrough_trajectory_size_;
   bool passthrough_trajectory_controller_running_;
   urcl::vector6d_t passthrough_trajectory_positions_;
   urcl::vector6d_t passthrough_trajectory_velocities_;

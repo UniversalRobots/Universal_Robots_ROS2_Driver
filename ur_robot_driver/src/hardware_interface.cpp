@@ -147,16 +147,16 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   command_snapshot_initialized_ = false;
   async_thread_shutdown_ = false;
   system_interface_initialized_ = 0.0;
-  passthrough_trajectory_transfer_state_ = 0;
-  passthrough_trajectory_transfer_state_command_ = 0;
-  passthrough_trajectory_transfer_sequence_ = 0;
-  passthrough_trajectory_transfer_sequence_command_ = 0;
-  passthrough_trajectory_abort_ = false;
-  passthrough_trajectory_abort_command_ = false;
+  passthrough_trajectory_transfer_state_ = 0.0;
+  passthrough_trajectory_transfer_state_command_ = 0.0;
+  passthrough_trajectory_transfer_sequence_ = 0.0;
+  passthrough_trajectory_transfer_sequence_command_ = 0.0;
+  passthrough_trajectory_abort_ = 0.0;
+  passthrough_trajectory_abort_command_ = 0.0;
   passthrough_terminal_result_pending_ = false;
   passthrough_trajectory_execution_active_ = false;
   passthrough_cancel_result_pending_ = false;
-  passthrough_trajectory_size_ = 0;
+  passthrough_trajectory_size_ = 0.0;
   passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
   passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
   passthrough_trajectory_accelerations_.fill(NO_NEW_CMD_);
@@ -1746,7 +1746,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                               StoppingInterface::STOP_PASSTHROUGH) != stop_modes_[0].end()) {
     passthrough_trajectory_controller_running_ = false;
-    passthrough_trajectory_abort_ = true;
+    passthrough_trajectory_abort_ = 1.0;
     // Only a started trajectory is answered with a result. Track that answer so it cannot terminate the next
     // session. Without a started trajectory there may never be an answer, so do not wait for one.
     passthrough_cancel_result_pending_ = passthrough_cancel_result_pending_ || passthrough_trajectory_execution_active_;
@@ -1829,7 +1829,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     motion_primitives_forward_controller_running_ = false;
     torque_controller_running_ = false;
     passthrough_trajectory_controller_running_ = true;
-    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_abort_ = 0.0;
     passthrough_terminal_result_pending_ = false;
     passthrough_trajectory_execution_active_ = false;
     passthrough_trajectory_transfer_state_ = 0;
@@ -1957,7 +1957,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       if (passthrough_trajectory_transfer_state_command_ == 0) {
         passthrough_terminal_result_pending_ = false;
         passthrough_trajectory_execution_active_ = false;
-        passthrough_trajectory_abort_ = false;
+        passthrough_trajectory_abort_ = 0.0;
         passthrough_trajectory_transfer_state_ = 0;
       }
     }
@@ -1970,7 +1970,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
   }
 
   // We should abort and are not in state IDLE
-  if (passthrough_trajectory_abort_command_ && passthrough_trajectory_transfer_state_ != 0) {
+  if (passthrough_trajectory_abort_command_ == 1.0 && passthrough_trajectory_transfer_state_ != 0.0) {
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
     if (passthrough_trajectory_execution_active_) {
       // trajectory_started is the streaming latch. It is cleared once TRAJECTORY_CANCEL has been sent, so the
@@ -1984,7 +1984,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     } else {
       // Point upload has not started a trajectory, so TRAJECTORY_CANCEL has nothing to cancel and may never be
       // answered. Publish DONE immediately so the controller can return to IDLE.
-      passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_abort_ = 1.0;
       passthrough_trajectory_transfer_state_ = 5;
       passthrough_terminal_result_pending_ = true;
       return;
@@ -2003,19 +2003,19 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
     trajectory_started = false;
     last_time = 0.0;
     passthrough_trajectory_transfer_state_ = 1;
-    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_abort_ = 0.0;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
   } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 2) {
     if (point_index_received >= trajectory_joint_positions_.size()) {
       RCLCPP_ERROR(get_logger(), "Received more passthrough trajectory points than announced.");
-      passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_abort_ = 1.0;
       passthrough_trajectory_execution_active_ = false;
       passthrough_trajectory_transfer_state_ = 5;
       passthrough_terminal_result_pending_ = true;
       passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
       return;
     }
-    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_abort_ = 0.0;
     trajectory_joint_positions_[point_index_received] = passthrough_trajectory_positions_;
 
     trajectory_times_[point_index_received] = passthrough_trajectory_time_from_start_ - last_time;
@@ -2038,17 +2038,17 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       passthrough_trajectory_execution_active_ = true;
     }
   } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 3) {
-    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_abort_ = 0.0;
     passthrough_trajectory_transfer_state_ = 4;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
   } else if (has_new_request && passthrough_trajectory_transfer_state_command_ == 0) {
-    passthrough_trajectory_abort_ = false;
+    passthrough_trajectory_abort_ = 0.0;
     passthrough_trajectory_transfer_state_ = 0;
     passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
   } else if (has_new_request) {
-    RCLCPP_ERROR(get_logger(), "Received invalid passthrough trajectory transfer state: %u",
-                 static_cast<unsigned int>(passthrough_trajectory_transfer_state_command_));
-    passthrough_trajectory_abort_ = true;
+    RCLCPP_ERROR(get_logger(), "Received invalid passthrough trajectory transfer state: %f",
+                 passthrough_trajectory_transfer_state_command_);
+    passthrough_trajectory_abort_ = 1.0;
     passthrough_trajectory_execution_active_ = false;
     passthrough_trajectory_transfer_state_ = 5;
     passthrough_terminal_result_pending_ = true;
@@ -2099,7 +2099,7 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       point_index_sent++;
     }
     if (error) {
-      passthrough_trajectory_abort_ = true;
+      passthrough_trajectory_abort_ = 1.0;
       passthrough_trajectory_execution_active_ = false;
       passthrough_trajectory_transfer_state_ = 5;
       passthrough_terminal_result_pending_ = true;
@@ -2128,7 +2128,7 @@ void URPositionHardwareInterface::process_trajectory_result()
     return;
   }
 
-  passthrough_trajectory_abort_ = result != urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS;
+  passthrough_trajectory_abort_ = result != urcl::control::TrajectoryResult::TRAJECTORY_RESULT_SUCCESS ? 1.0 : 0.0;
   passthrough_trajectory_execution_active_ = false;
   passthrough_trajectory_transfer_state_ = 5;
   passthrough_terminal_result_pending_ = true;

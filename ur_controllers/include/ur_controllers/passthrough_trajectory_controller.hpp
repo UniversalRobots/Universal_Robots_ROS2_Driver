@@ -79,13 +79,13 @@ namespace ur_controllers
  * 4: The robot is moving through the trajectory.
  * 5: The robot finished executing the trajectory.
  */
-constexpr uint8_t TRANSFER_STATE_IDLE = 0;
-constexpr uint8_t TRANSFER_STATE_NEW_TRAJECTORY = 6;
-constexpr uint8_t TRANSFER_STATE_WAITING_FOR_POINT = 1;
-constexpr uint8_t TRANSFER_STATE_TRANSFERRING = 2;
-constexpr uint8_t TRANSFER_STATE_TRANSFER_DONE = 3;
-constexpr uint8_t TRANSFER_STATE_IN_MOTION = 4;
-constexpr uint8_t TRANSFER_STATE_DONE = 5;
+constexpr double TRANSFER_STATE_IDLE = 0.0;
+constexpr double TRANSFER_STATE_NEW_TRAJECTORY = 6.0;
+constexpr double TRANSFER_STATE_WAITING_FOR_POINT = 1.0;
+constexpr double TRANSFER_STATE_TRANSFERRING = 2.0;
+constexpr double TRANSFER_STATE_TRANSFER_DONE = 3.0;
+constexpr double TRANSFER_STATE_IN_MOTION = 4.0;
+constexpr double TRANSFER_STATE_DONE = 5.0;
 
 using namespace std::chrono_literals;  // NOLINT
 
@@ -127,7 +127,7 @@ private:
   void end_goal(bool reset_abort = true);
 
   bool check_goal_tolerance();
-  bool write_transfer_request(uint8_t transfer_state);
+  bool write_transfer_request(double transfer_state);
 
   // Get a mapping between the trajectory's joint order and the internal one
   std::unordered_map<std::string, size_t> create_joint_mapping(const std::vector<std::string>& joint_names) const;
@@ -169,8 +169,8 @@ private:
 
   std::atomic<size_t> current_index_;
   std::atomic<bool> trajectory_active_;
-  uint32_t next_transfer_sequence_ = 1;
-  uint32_t pending_transfer_sequence_ = 0;
+  double next_transfer_sequence_ = 1.0;
+  double pending_transfer_sequence_ = 0.0;
   bool transfer_pending_ = false;
   rclcpp::Duration transfer_pending_duration_ = rclcpp::Duration::from_nanoseconds(0);
   rclcpp::Duration active_trajectory_elapsed_time_ = rclcpp::Duration::from_nanoseconds(0);

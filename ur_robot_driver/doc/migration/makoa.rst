@@ -82,20 +82,3 @@ Payload inertia is now also supported, as well as a transition time:
        sec: 1
        nanosec: 0
    "
-
-Trajectory passthrough interface data types
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The data types of the following ``trajectory_passthrough`` GPIO interfaces changed:
-
-* ``transfer_state`` command and state interfaces: ``double`` -> ``uint8``
-* ``transfer_sequence`` command and state interfaces: ``double`` -> ``uint32``
-* ``abort`` command and state interfaces: ``double`` -> ``bool``
-* ``trajectory_size`` command interface: ``double`` -> ``uint32``
-
-The trajectory setpoint and ``time_from_start`` interfaces remain ``double``.
-
-Users of the ``ur_robot_driver`` description files do not need to change their configuration.
-Custom ros2_control descriptions or hardware implementations that expose the
-``trajectory_passthrough`` GPIO must update these interface data types. Code accessing the
-interfaces directly must use the corresponding C++ types instead of ``double``.

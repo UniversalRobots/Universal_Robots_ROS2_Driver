@@ -129,17 +129,17 @@ public:
 
   uint32_t acknowledged_passthrough_sequence() const
   {
-    return passthrough_trajectory_transfer_sequence_;
+    return static_cast<uint32_t>(passthrough_trajectory_transfer_sequence_);
   }
 
   uint8_t passthrough_state() const
   {
-    return passthrough_trajectory_transfer_state_;
+    return static_cast<uint8_t>(passthrough_trajectory_transfer_state_);
   }
 
   bool passthrough_aborted() const
   {
-    return passthrough_trajectory_abort_;
+    return passthrough_trajectory_abort_ == 1.0;
   }
 
   bool passthrough_terminal_pending() const
@@ -329,25 +329,6 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
   passthrough_cmds.push_back("abort");
   passthrough_cmds.push_back("trajectory_size");
   make_gpio("trajectory_passthrough", passthrough_cmds, { "transfer_state", "transfer_sequence", "abort" });
-  auto& passthrough_gpio = info.gpios.back();
-  for (auto& interface : passthrough_gpio.command_interfaces) {
-    if (interface.name == "transfer_state") {
-      interface.data_type = "uint8";
-    } else if (interface.name == "transfer_sequence" || interface.name == "trajectory_size") {
-      interface.data_type = "uint32";
-    } else if (interface.name == "abort") {
-      interface.data_type = "bool";
-    }
-  }
-  for (auto& interface : passthrough_gpio.state_interfaces) {
-    if (interface.name == "transfer_state") {
-      interface.data_type = "uint8";
-    } else if (interface.name == "transfer_sequence") {
-      interface.data_type = "uint32";
-    } else if (interface.name == "abort") {
-      interface.data_type = "bool";
-    }
-  }
 
   make_gpio("twist",
             { "linear_velocity_x", "linear_velocity_y", "linear_velocity_z", "angular_velocity_x", "angular_velocity_y",
@@ -738,7 +719,7 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedCommandInterfaces)
   EXPECT_THAT(exported_names, ::testing::UnorderedElementsAreArray(expected_names));
 }
 
-TEST_F(URHardwareInterfaceExportTest, ExportsTypedPassthroughProtocolInterfaces)
+TEST_F(URHardwareInterfaceExportTest, ExportsPassthroughProtocolInterfacesAsDoubles)
 {
   const auto command_interfaces = hw_->export_command_interfaces();
   const auto state_interfaces = hw_->export_state_interfaces();
@@ -748,13 +729,13 @@ TEST_F(URHardwareInterfaceExportTest, ExportsTypedPassthroughProtocolInterfaces)
   };
 
   const std::string prefix = std::string(kTfPrefix) + "trajectory_passthrough/";
-  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "transfer_state"))->get_optional<uint8_t>());
-  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "transfer_sequence"))->get_optional<uint32_t>());
-  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "trajectory_size"))->get_optional<uint32_t>());
-  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "abort"))->get_optional<bool>());
-  EXPECT_TRUE((*find_interface(state_interfaces, prefix + "transfer_state"))->get_optional<uint8_t>());
-  EXPECT_TRUE((*find_interface(state_interfaces, prefix + "transfer_sequence"))->get_optional<uint32_t>());
-  EXPECT_TRUE((*find_interface(state_interfaces, prefix + "abort"))->get_optional<bool>());
+  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "transfer_state"))->get_optional<double>());
+  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "transfer_sequence"))->get_optional<double>());
+  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "trajectory_size"))->get_optional<double>());
+  EXPECT_TRUE((*find_interface(command_interfaces, prefix + "abort"))->get_optional<double>());
+  EXPECT_TRUE((*find_interface(state_interfaces, prefix + "transfer_state"))->get_optional<double>());
+  EXPECT_TRUE((*find_interface(state_interfaces, prefix + "transfer_sequence"))->get_optional<double>());
+  EXPECT_TRUE((*find_interface(state_interfaces, prefix + "abort"))->get_optional<double>());
 }
 
 TEST(URHardwareInterfaceExport, SupportsDescriptionsWithoutEffortCommands)
