@@ -1009,9 +1009,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   commands_read &= passthrough_commands_read;
   commands_read &= get_command_nonblocking(tool_contact_set_state_handle_, tool_contact_set_state_);
   bool moprim_commands_read = true;
-  if (moprim_command_reset_pending_) {
-    moprim_command_reset_pending_ = !resetMoprimCmdInterfaces();
-  }
+  retryMoprimCommandReset();
   if (!moprim_command_reset_pending_) {
     for (size_t i = 0; i < hw_moprim_commands_.size(); ++i) {
       moprim_commands_read &= get_command_nonblocking(moprim_command_handles_[i], hw_moprim_commands_[i]);
@@ -1069,7 +1067,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
         check_passthrough_trajectory_controller();
       }
     } else if (motion_primitives_forward_controller_running_) {
-      if (passthrough_cancel_result_pending_) {
+      if (passthrough_cancel_result_pending_ || moprim_command_reset_pending_) {
         ready_for_new_moprim_ = false;
         ur_driver_->writeKeepalive();
       } else {
@@ -1908,6 +1906,13 @@ void URPositionHardwareInterface::start_force_mode(const urcl::vector6d_t& task_
         ur_driver_->startForceMode(task_frame, selection_vector_copy, wrench, type, limits, damping, gain_scaling);
   }
 
+  // Publish the result before clearing the request. A failed publish must leave the request in
+  // place, or async_success stays at ASYNC_WAITING with nothing for write() to retry.
+  if (!set_command_nonblocking(force_mode_async_success_handle_, async_success)) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not publish the force mode result without blocking.");
+    return;
+  }
+
   bool commands_updated = true;
   for (size_t i = 0; i < task_frame.size(); ++i) {
     commands_updated &= set_command_nonblocking(force_mode_task_frame_handles_[i], NO_NEW_CMD_);
@@ -1918,7 +1923,6 @@ void URPositionHardwareInterface::start_force_mode(const urcl::vector6d_t& task_
   commands_updated &= set_command_nonblocking(force_mode_type_handle_, NO_NEW_CMD_);
   commands_updated &= set_command_nonblocking(force_mode_damping_handle_, NO_NEW_CMD_);
   commands_updated &= set_command_nonblocking(force_mode_gain_scaling_handle_, NO_NEW_CMD_);
-  commands_updated &= set_command_nonblocking(force_mode_async_success_handle_, async_success);
   if (!commands_updated) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Could not update all force mode command interfaces without blocking.");
@@ -1928,11 +1932,15 @@ void URPositionHardwareInterface::start_force_mode(const urcl::vector6d_t& task_
 void URPositionHardwareInterface::stop_force_mode()
 {
   const double async_success = ur_driver_->endForceMode();
-  const bool success_updated = set_command_nonblocking(force_mode_async_success_handle_, async_success);
-  const bool disable_updated = set_command_nonblocking(force_mode_disable_cmd_handle_, NO_NEW_CMD_);
-  if (!success_updated || !disable_updated) {
+  // Leave disable_cmd set when the result cannot be published, so the next write retries the stop.
+  if (!set_command_nonblocking(force_mode_async_success_handle_, async_success)) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                         "Could not update force mode stop command interfaces without blocking.");
+                         "Could not publish the force mode stop result without blocking.");
+    return;
+  }
+  if (!set_command_nonblocking(force_mode_disable_cmd_handle_, NO_NEW_CMD_)) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Could not clear the force mode disable command without blocking.");
   }
 }
 
@@ -2101,12 +2109,18 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       point_index_sent++;
     }
     if (error) {
+      // TRAJECTORY_START already happened, and the terminal result below returns before the abort
+      // branch can cancel. Hold the robot's result so it cannot complete the next session.
       passthrough_trajectory_abort_ = 1.0;
+      passthrough_cancel_result_pending_ =
+          passthrough_cancel_result_pending_ || passthrough_trajectory_execution_active_;
       passthrough_trajectory_execution_active_ = false;
       passthrough_trajectory_transfer_state_ = 5;
       passthrough_terminal_result_pending_ = true;
-      // Cancel any in-flight trajectory on the robot
-      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+      trajectory_started = false;
+      if (ur_driver_ != nullptr) {
+        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
+      }
       return;
     }
   }
@@ -2154,7 +2168,7 @@ void URPositionHardwareInterface::trajectory_done_callback(urcl::control::Trajec
 void URPositionHardwareInterface::end_passthrough_cancel_wait()
 {
   passthrough_cancel_result_pending_ = false;
-  if (motion_primitives_forward_controller_running_) {
+  if (motion_primitives_forward_controller_running_ && !moprim_command_reset_pending_) {
     ready_for_new_moprim_ = true;
   }
 }
@@ -2254,6 +2268,19 @@ bool URPositionHardwareInterface::publish_seeded_motion_commands()
     interfaces_updated &= set_command_nonblocking(twist_command_handles_[i], urcl_twist_commands_[i]);
   }
   return interfaces_updated;
+}
+
+void URPositionHardwareInterface::retryMoprimCommandReset()
+{
+  if (!moprim_command_reset_pending_) {
+    return;
+  }
+  moprim_command_reset_pending_ = !resetMoprimCmdInterfaces();
+  // The reset fills the trigger with NaN, so a later command read cannot restore readiness.
+  if (!moprim_command_reset_pending_ && motion_primitives_forward_controller_running_ &&
+      !passthrough_cancel_result_pending_) {
+    ready_for_new_moprim_ = true;
+  }
 }
 
 bool URPositionHardwareInterface::resetMoprimCmdInterfaces(const size_t start_index)

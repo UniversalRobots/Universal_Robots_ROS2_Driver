@@ -335,6 +335,7 @@ protected:
 
   void handleMoprimCommands(bool accept_new_command);
   bool resetMoprimCmdInterfaces(size_t start_index = 0);
+  void retryMoprimCommandReset();
   void asyncMoprimCmdThread();
   void processMoprimMotionCmd(const std::array<double, 25>& command);
   bool getMoprimTimeOrVelAndAcc(const std::array<double, 25>& command, double& velocity, double& acceleration,

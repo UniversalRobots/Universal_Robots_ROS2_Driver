@@ -95,6 +95,23 @@ public:
     return ready_for_new_moprim_;
   }
 
+  void mark_moprim_reset_pending()
+  {
+    motion_primitives_forward_controller_running_ = true;
+    ready_for_new_moprim_ = false;
+    moprim_command_reset_pending_ = true;
+  }
+
+  void retry_moprim_reset()
+  {
+    retryMoprimCommandReset();
+  }
+
+  bool moprim_reset_pending() const
+  {
+    return moprim_command_reset_pending_;
+  }
+
   void set_passthrough_sequence(const uint32_t acknowledged_sequence)
   {
     passthrough_trajectory_transfer_sequence_ = acknowledged_sequence;
@@ -440,6 +457,25 @@ TEST_F(URHardwareInterfaceProtocolTest, KeepsTerminalPassthroughResultUntilIdleI
   EXPECT_EQ(hw_->passthrough_state(), 0U);
   EXPECT_FALSE(hw_->passthrough_aborted());
   EXPECT_FALSE(hw_->passthrough_terminal_pending());
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, RestoresReadyForNewMoprimAfterRetriedCommandReset)
+{
+  hw_->mark_moprim_reset_pending();
+  hw_->retry_moprim_reset();
+
+  EXPECT_FALSE(hw_->moprim_reset_pending());
+  EXPECT_TRUE(hw_->ready_for_new_moprim());
+}
+
+TEST_F(URHardwareInterfaceProtocolTest, KeepsMoprimBlockedWhilePassthroughCancellationIsOutstanding)
+{
+  hw_->mark_moprim_reset_pending();
+  hw_->set_passthrough_cancel_pending();
+  hw_->retry_moprim_reset();
+
+  EXPECT_FALSE(hw_->moprim_reset_pending());
+  EXPECT_FALSE(hw_->ready_for_new_moprim());
 }
 
 TEST_F(URHardwareInterfaceProtocolTest, DefersClaimedMoprimCommandWhileQueueIsFull)
