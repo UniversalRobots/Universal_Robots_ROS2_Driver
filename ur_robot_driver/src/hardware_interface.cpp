@@ -1854,7 +1854,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     moprim_command_reset_pending_ = !resetMoprimCmdInterfaces();
     moprim_command_pending_ = false;
     current_moprim_execution_status_ = MoprimExecutionState::IDLE;
-    ready_for_new_moprim_ = !passthrough_cancel_result_pending_;
+    ready_for_new_moprim_ = !passthrough_cancel_result_pending_ && !moprim_command_reset_pending_;
     motion_primitives_forward_controller_running_ = true;
 
     RCLCPP_INFO(get_logger(), "Motion primitives mode started.");
@@ -2013,6 +2013,8 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       passthrough_trajectory_transfer_state_ = 5;
       passthrough_terminal_result_pending_ = true;
       passthrough_trajectory_transfer_sequence_ = passthrough_trajectory_transfer_sequence_command_;
+      // Cancel any in-flight trajectory on the robot
+      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
       return;
     }
     passthrough_trajectory_abort_ = 0.0;
@@ -2103,6 +2105,8 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
       passthrough_trajectory_execution_active_ = false;
       passthrough_trajectory_transfer_state_ = 5;
       passthrough_terminal_result_pending_ = true;
+      // Cancel any in-flight trajectory on the robot
+      ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
       return;
     }
   }
