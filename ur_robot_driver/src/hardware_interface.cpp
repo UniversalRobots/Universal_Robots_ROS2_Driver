@@ -1128,6 +1128,11 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
   // Apply asynchronous completion last so an in-flight transfer request cannot overwrite a terminal result.
   process_trajectory_result();
+  // Terminal acknowledgements must progress even when robot command transmission is disabled.
+  // This branch returns before any upload or motion processing.
+  if (passthrough_terminal_result_pending_ && passthrough_commands_read) {
+    check_passthrough_trajectory_controller();
+  }
 
   return hardware_interface::return_type::OK;
 }
