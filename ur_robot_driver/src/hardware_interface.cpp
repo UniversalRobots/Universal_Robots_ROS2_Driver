@@ -1035,11 +1035,6 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
   if ((runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PLAYING) ||
        runtime_state_ == static_cast<uint32_t>(rtde::RUNTIME_STATE::PAUSING)) &&
       robot_program_running_ && (!non_blocking_read_ || packet_read_)) {
-    if (passthrough_cancel_unsent_ && trajectory_result_queue_.empty() &&
-        ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL)) {
-      passthrough_cancel_unsent_ = false;
-    }
-
     if (stop_requested_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_STOPPED);
       stop_requested_ = false;
@@ -1751,10 +1746,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     // session. Without a started trajectory there may never be an answer, so do not wait for one.
     passthrough_cancel_result_pending_ = passthrough_cancel_result_pending_ || passthrough_trajectory_execution_active_;
     passthrough_trajectory_execution_active_ = false;
-    const bool cancel_sent = ur_driver_ && ur_driver_->writeTrajectoryControlMessage(
-                                               urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
-    // write() retries a failed cancel, otherwise the awaited result can never arrive.
-    passthrough_cancel_unsent_ = passthrough_cancel_result_pending_ && !cancel_sent;
+    ur_driver_->writeTrajectoryControlMessage(urcl::control::TrajectoryControlMessage::TRAJECTORY_CANCEL);
     trajectory_joint_positions_.clear();
     trajectory_joint_accelerations_.clear();
     trajectory_joint_velocities_.clear();
@@ -2153,7 +2145,6 @@ void URPositionHardwareInterface::trajectory_done_callback(urcl::control::Trajec
 void URPositionHardwareInterface::end_passthrough_cancel_wait()
 {
   passthrough_cancel_result_pending_ = false;
-  passthrough_cancel_unsent_ = false;
   if (motion_primitives_forward_controller_running_) {
     ready_for_new_moprim_ = true;
   }
