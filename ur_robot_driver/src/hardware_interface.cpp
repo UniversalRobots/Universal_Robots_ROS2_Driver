@@ -1153,6 +1153,11 @@ void URPositionHardwareInterface::initializeCommandInterfaces()
       set_command(joint_effort_command_handles_[i], 0.0, true);
     }
   }
+
+  for (const auto& handle : twist_command_handles_) {
+    set_command(handle, 0.0, true);
+  }
+
   set_command(target_speed_fraction_cmd_handle_, NO_NEW_CMD_, true);
   set_command(resend_robot_program_cmd_handle_, NO_NEW_CMD_, true);
   set_command(zero_ftsensor_cmd_handle_, NO_NEW_CMD_, true);
