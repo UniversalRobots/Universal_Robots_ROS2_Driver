@@ -194,7 +194,16 @@ protected:
   void pull_commands();
   void push_states_and_commands();
   std::vector<std::pair<hardware_interface::StateInterface::SharedPtr, double*>> state_links_;
-  std::vector<std::pair<hardware_interface::CommandInterface::SharedPtr, double*>> command_links_;
+  // a command interface, the member it mirrors, and the value both last agreed on: only the
+  // side that changed since is copied, so that neither the controllers' commands nor the
+  // driver's own writes (async thread, mode switches) overwrite each other
+  struct CommandLink
+  {
+    hardware_interface::CommandInterface::SharedPtr handle;
+    double* value;
+    double synced;
+  };
+  std::vector<CommandLink> command_links_;
 
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,

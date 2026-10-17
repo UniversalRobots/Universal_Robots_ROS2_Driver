@@ -39,6 +39,7 @@
  *
  */
 //----------------------------------------------------------------------
+#include <cstring>
 #include <tuple>
 #include <algorithm>
 #include <memory>
@@ -236,7 +237,6 @@ std::vector<hardware_interface::StateInterface::ConstSharedPtr> URPositionHardwa
     info.name = link.name;
     auto handle = std::make_shared<hardware_interface::StateInterface>(
         hardware_interface::InterfaceDescription(link.prefix, info));
-    std::ignore = handle->set_value(*link.value);
     state_links_.emplace_back(handle, link.value);
     state_interfaces.push_back(handle);
   }
@@ -250,33 +250,47 @@ std::vector<hardware_interface::CommandInterface::SharedPtr> URPositionHardwareI
   for (const auto& link : export_command_links()) {
     hardware_interface::InterfaceInfo info;
     info.name = link.name;
+    // starts as NaN, like the members are only set in on_activate() / read()
     auto handle = std::make_shared<hardware_interface::CommandInterface>(
         hardware_interface::InterfaceDescription(link.prefix, info));
-    std::ignore = handle->set_value(*link.value);
-    command_links_.emplace_back(handle, link.value);
+    command_links_.push_back({ handle, link.value, std::numeric_limits<double>::quiet_NaN() });
     command_interfaces.push_back(handle);
   }
   return command_interfaces;
 }
 
-// the controllers' commands into the members, and the driver's values back out
+namespace
+{
+// NO_NEW_CMD_ is NaN, which never compares equal to itself
+bool same(double a, double b)
+{
+  return std::memcmp(&a, &b, sizeof(double)) == 0;
+}
+}  // namespace
+
+// a command a controller wrote to its handle since the last sync goes to the member
 void URPositionHardwareInterface::pull_commands()
 {
-  for (auto& [handle, value] : command_links_) {
+  for (auto& link : command_links_) {
     double command;
-    if (handle->get_value(command, true)) {
-      *value = command;
+    if (link.handle->get_value(command, true) && !same(command, link.synced) && same(*link.value, link.synced)) {
+      *link.value = command;
+      link.synced = command;
     }
   }
 }
 
+// the states, and the commands the driver itself changed since the last sync, go to the handles
 void URPositionHardwareInterface::push_states_and_commands()
 {
   for (auto& [handle, value] : state_links_) {
     std::ignore = handle->set_value(*value);
   }
-  for (auto& [handle, value] : command_links_) {
-    std::ignore = handle->set_value(*value);
+  for (auto& link : command_links_) {
+    if (!same(*link.value, link.synced)) {
+      link.synced = *link.value;
+      std::ignore = link.handle->set_value(link.synced);
+    }
   }
 }
 
