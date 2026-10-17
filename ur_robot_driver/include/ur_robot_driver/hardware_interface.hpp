@@ -218,10 +218,13 @@ protected:
     bool pending;
   };
   std::vector<AsyncLink> async_links_;
+  // set_async() writes that found the handle locked, retried by the control loop (its thread only)
+  std::vector<std::pair<hardware_interface::CommandInterface::SharedPtr, double>> async_retries_;
   bool is_async_member(const double* value) const;
-  void pull_async();
+  bool pull_async();
   void push_async();
   void set_async(const double& member, double value);
+  void retry_set_async();
 
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,

@@ -313,6 +313,7 @@ std::vector<hardware_interface::CommandInterface::SharedPtr> URPositionHardwareI
   // the request resets are published before the success flags (push_async())
   std::stable_partition(async_links_.begin(), async_links_.end(),
                         [](const AsyncLink& link) { return !link.success_flag; });
+  async_retries_.reserve(async_links_.size());  // no allocation in the control loop
   return command_interfaces;
 }
 
@@ -382,20 +383,29 @@ bool URPositionHardwareInterface::is_async_member(const double* value) const
 // the requests as the controllers and services left them, into the async thread's members; the
 // success flags are marked, so that push_async() publishes every one checkAsyncIO() writes (also
 // when the result equals the previous one, as for a request that followed an earlier success)
-void URPositionHardwareInterface::pull_async()
+bool URPositionHardwareInterface::pull_async()
 {
-  for (auto& link : async_links_) {
+  // all requests or none: checkAsyncIO() must not act on a request of which only some values were read
+  std::vector<double> values(async_links_.size());
+  for (size_t i = 0; i < async_links_.size(); ++i) {
+    const auto& link = async_links_[i];
+    if (!link.pending && !link.success_flag && !link.handle->get_value(values[i], false)) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < async_links_.size(); ++i) {
+    auto& link = async_links_[i];
     if (link.pending) {
       continue;  // keeps the value it couldn't publish yet
     }
-    double value;
     if (link.success_flag) {
       *link.value = unwritten();
-    } else if (link.handle->get_value(value, false)) {
-      *link.value = value;
-      link.pulled = value;
+    } else {
+      *link.value = values[i];
+      link.pulled = values[i];
     }
   }
+  return true;
 }
 
 // what checkAsyncIO() did, back to the handles: the request resets first, the success flags only once
@@ -417,6 +427,7 @@ void URPositionHardwareInterface::push_async()
       double current;
       if (link.handle->get_value(current, false) && !same(current, link.pulled)) {
         link.pending = false;
+        link.pulled = value;  // so that a failed pull can't bring the dropped reset back
         continue;
       }
     } else if (same(value, link.pulled)) {
@@ -431,20 +442,31 @@ void URPositionHardwareInterface::push_async()
   }
 }
 
-// a reset from the control loop thread (initialisation, mode switch) straight to the handle
+// a reset from the control loop thread (initialisation, mode switch) straight to the handle,
+// without waiting for its lock: if it is taken, the control loop retries (retry_set_async())
 void URPositionHardwareInterface::set_async(const double& member, double value)
 {
   for (auto& link : async_links_) {
     if (link.value == &member) {
-      std::ignore = link.handle->set_value(value, true);
+      if (!link.handle->set_value(value)) {
+        async_retries_.emplace_back(link.handle, value);
+      }
       return;
     }
   }
 }
 
+void URPositionHardwareInterface::retry_set_async()
+{
+  async_retries_.erase(std::remove_if(async_retries_.begin(), async_retries_.end(),
+                                      [](const auto& retry) { return retry.first->set_value(retry.second); }),
+                       async_retries_.end());
+}
+
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
+  retry_set_async();
   pull_commands();
   const auto result = read_impl(time, period);
   push_states_and_commands();
@@ -454,6 +476,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
+  retry_set_async();
   pull_commands();
   const auto result = write_impl(time, period);
   push_states_and_commands();
@@ -1378,7 +1401,9 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!rtde_comm_has_been_started_) {
     return;
   }
-  pull_async();
+  if (!pull_async()) {
+    return;  // a handle was locked: try again next cycle
+  }
   for (size_t i = 0; i < 18; ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
