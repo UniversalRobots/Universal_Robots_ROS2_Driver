@@ -194,9 +194,9 @@ protected:
   void pull_commands();
   void push_states_and_commands();
   std::vector<std::pair<hardware_interface::StateInterface::SharedPtr, double*>> state_links_;
-  // a command interface, the member it mirrors, and the value both last agreed on: only the
-  // side that changed since is copied, so that neither the controllers' commands nor the
-  // driver's own writes (async thread, mode switches) overwrite each other
+  // A command interface, the member it mirrors, and the value both last agreed on. Interfaces
+  // only the control loop touches are mirrored around read()/write(), copying only the side that
+  // changed since (a value whose publication failed stays unsynced and is retried).
   struct CommandLink
   {
     hardware_interface::CommandInterface::SharedPtr handle;
@@ -204,6 +204,24 @@ protected:
     double synced;
   };
   std::vector<CommandLink> command_links_;
+  // Interfaces the async thread works on (checkAsyncIO(): IO, payload, gravity, friction model,
+  // freedrive, ... requests and their *_async_success flags), which service callbacks write too:
+  // never mirrored. checkAsyncIO() reads their handles first and publishes only its own changes
+  // afterwards, the request resets before the success flags, so that a service waiting for a flag
+  // can't have its next request overwritten. Other writers go to the handle (set_async()).
+  struct AsyncLink
+  {
+    hardware_interface::CommandInterface::SharedPtr handle;
+    double* value;
+    double pulled;
+    bool success_flag;
+    bool pending;
+  };
+  std::vector<AsyncLink> async_links_;
+  bool is_async_member(const double* value) const;
+  void pull_async();
+  void push_async();
+  void set_async(const double& member, double value);
 
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
