@@ -144,9 +144,11 @@ public:
 
   hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) final;
 
-  std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
+  // ros2_control 6.12 has no pointer-based interfaces anymore: the exported handles mirror
+  // the members the driver works on, copied around read() and write() (RoboStack patch)
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces() final;
 
-  std::vector<hardware_interface::CommandInterface> export_command_interfaces() final;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces() final;
 
   hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
@@ -175,6 +177,25 @@ public:
   void asyncThread();
 
 protected:
+  struct LinkedInterface
+  {
+    LinkedInterface(const std::string& prefix, const std::string& name, double* value)
+      : prefix(prefix), name(name), value(value)
+    {
+    }
+    std::string prefix;
+    std::string name;
+    double* value;
+  };
+  std::vector<LinkedInterface> export_state_links();
+  std::vector<LinkedInterface> export_command_links();
+  hardware_interface::return_type read_impl(const rclcpp::Time& time, const rclcpp::Duration& period);
+  hardware_interface::return_type write_impl(const rclcpp::Time& time, const rclcpp::Duration& period);
+  void pull_commands();
+  void push_states_and_commands();
+  std::vector<std::pair<hardware_interface::StateInterface::SharedPtr, double*>> state_links_;
+  std::vector<std::pair<hardware_interface::CommandInterface::SharedPtr, double*>> command_links_;
+
   template <typename T>
   void readData(const std::unique_ptr<urcl::rtde_interface::DataPackage>& data_pkg, const std::string& var_name,
                 T& data);

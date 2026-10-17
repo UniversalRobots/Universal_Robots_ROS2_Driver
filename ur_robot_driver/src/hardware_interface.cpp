@@ -39,6 +39,7 @@
  *
  */
 //----------------------------------------------------------------------
+#include <tuple>
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -226,17 +227,88 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
+std::vector<hardware_interface::StateInterface::ConstSharedPtr> URPositionHardwareInterface::on_export_state_interfaces()
 {
-  std::vector<hardware_interface::StateInterface> state_interfaces;
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
+  state_links_.clear();
+  for (const auto& link : export_state_links()) {
+    hardware_interface::InterfaceInfo info;
+    info.name = link.name;
+    auto handle = std::make_shared<hardware_interface::StateInterface>(
+        hardware_interface::InterfaceDescription(link.prefix, info));
+    std::ignore = handle->set_value(*link.value);
+    state_links_.emplace_back(handle, link.value);
+    state_interfaces.push_back(handle);
+  }
+  return state_interfaces;
+}
+
+std::vector<hardware_interface::CommandInterface::SharedPtr> URPositionHardwareInterface::on_export_command_interfaces()
+{
+  std::vector<hardware_interface::CommandInterface::SharedPtr> command_interfaces;
+  command_links_.clear();
+  for (const auto& link : export_command_links()) {
+    hardware_interface::InterfaceInfo info;
+    info.name = link.name;
+    auto handle = std::make_shared<hardware_interface::CommandInterface>(
+        hardware_interface::InterfaceDescription(link.prefix, info));
+    std::ignore = handle->set_value(*link.value);
+    command_links_.emplace_back(handle, link.value);
+    command_interfaces.push_back(handle);
+  }
+  return command_interfaces;
+}
+
+// the controllers' commands into the members, and the driver's values back out
+void URPositionHardwareInterface::pull_commands()
+{
+  for (auto& [handle, value] : command_links_) {
+    double command;
+    if (handle->get_value(command, true)) {
+      *value = command;
+    }
+  }
+}
+
+void URPositionHardwareInterface::push_states_and_commands()
+{
+  for (auto& [handle, value] : state_links_) {
+    std::ignore = handle->set_value(*value);
+  }
+  for (auto& [handle, value] : command_links_) {
+    std::ignore = handle->set_value(*value);
+  }
+}
+
+hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
+                                                                  const rclcpp::Duration& period)
+{
+  pull_commands();
+  const auto result = read_impl(time, period);
+  push_states_and_commands();
+  return result;
+}
+
+hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp::Time& time,
+                                                                   const rclcpp::Duration& period)
+{
+  pull_commands();
+  const auto result = write_impl(time, period);
+  push_states_and_commands();
+  return result;
+}
+
+std::vector<URPositionHardwareInterface::LinkedInterface> URPositionHardwareInterface::export_state_links()
+{
+  std::vector<LinkedInterface> state_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
   }
 
@@ -244,7 +316,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
   // state interface in info_ and match them accordingly
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
+  state_interfaces.emplace_back(LinkedInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
                                                                    &speed_scaling_combined_));
 
   for (auto& sensor : info_.sensors) {
@@ -254,129 +326,129 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
       };
       for (uint32_t j = 0; j < 6; ++j) {
         state_interfaces.emplace_back(
-            hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
+            LinkedInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
       }
     }
   }
 
   for (size_t i = 0; i < 18; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
   }
 
   for (size_t i = 0; i < 11; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]));
   }
 
   for (size_t i = 0; i < 4; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]));
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
+    state_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
   }
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
+      LinkedInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
+      LinkedInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
+      LinkedInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
-
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current_));
+  state_interfaces.emplace_back(LinkedInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
+      LinkedInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized",
+  state_interfaces.emplace_back(
+      LinkedInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
+
+  state_interfaces.emplace_back(LinkedInterface(tf_prefix + "system_interface", "initialized",
                                                                    &system_interface_initialized_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
+      LinkedInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
+      LinkedInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
+      LinkedInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
+      LinkedInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
+      LinkedInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
+      LinkedInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
+      LinkedInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
+      LinkedInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
+  state_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
+  state_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
+  state_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
+  state_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_result", &tool_contact_result_));
+      LinkedInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_result", &tool_contact_result_));
 
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
+      LinkedInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "payload", "mass", &rtde_payload_mass_));
+  state_interfaces.emplace_back(LinkedInterface(tf_prefix + "payload", "mass", &rtde_payload_mass_));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "cog.x", &rtde_payload_cog_[0]));
+      LinkedInterface(tf_prefix + "payload", "cog.x", &rtde_payload_cog_[0]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "cog.y", &rtde_payload_cog_[1]));
+      LinkedInterface(tf_prefix + "payload", "cog.y", &rtde_payload_cog_[1]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]));
+      LinkedInterface(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixx", &rtde_payload_inertia_[0]));
+      LinkedInterface(tf_prefix + "payload", "inertia.ixx", &rtde_payload_inertia_[0]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.iyy", &rtde_payload_inertia_[1]));
+      LinkedInterface(tf_prefix + "payload", "inertia.iyy", &rtde_payload_inertia_[1]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.izz", &rtde_payload_inertia_[2]));
+      LinkedInterface(tf_prefix + "payload", "inertia.izz", &rtde_payload_inertia_[2]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixy", &rtde_payload_inertia_[3]));
+      LinkedInterface(tf_prefix + "payload", "inertia.ixy", &rtde_payload_inertia_[3]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixz", &rtde_payload_inertia_[4]));
+      LinkedInterface(tf_prefix + "payload", "inertia.ixz", &rtde_payload_inertia_[4]));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.iyz", &rtde_payload_inertia_[5]));
+      LinkedInterface(tf_prefix + "payload", "inertia.iyz", &rtde_payload_inertia_[5]));
   // Motion primitives stuff
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+  state_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                    "execution_status", &hw_moprim_states_[0]));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+  state_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                    "ready_for_new_primitive", &hw_moprim_states_[1]));
 
   return state_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
+std::vector<URPositionHardwareInterface::LinkedInterface> URPositionHardwareInterface::export_command_links()
 {
   auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
     auto it =
@@ -384,16 +456,16 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
                 [&interface_name](const hardware_interface::InterfaceInfo& obj) { return obj.name == interface_name; });
     return it != joint.command_interfaces.end();
   };
-  std::vector<hardware_interface::CommandInterface> command_interfaces;
+  std::vector<LinkedInterface> command_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+    command_interfaces.emplace_back(LinkedInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_position_commands_[i]));
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+    command_interfaces.emplace_back(LinkedInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
 
     if (has_cmd_interface(info_.joints[i], hardware_interface::HW_IF_EFFORT)) {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+      command_interfaces.emplace_back(LinkedInterface(
           info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_torque_commands_[i]));
     }
   }
@@ -403,58 +475,58 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gpio", "io_async_success", &io_async_success_));
+      LinkedInterface(tf_prefix + "gpio", "io_async_success", &io_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "speed_scaling", "target_speed_fraction_cmd", &target_speed_fraction_cmd_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "resend_robot_program", "resend_robot_program_cmd", &resend_robot_program_cmd_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "hand_back_control", "hand_back_control_cmd", &hand_back_control_cmd_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "hand_back_control", "hand_back_control_async_success", &hand_back_control_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "payload", "mass", &payload_mass_));
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + "payload", "mass", &payload_mass_));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "cog.x", &payload_center_of_gravity_[0]));
+      LinkedInterface(tf_prefix + "payload", "cog.x", &payload_center_of_gravity_[0]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "cog.y", &payload_center_of_gravity_[1]));
+      LinkedInterface(tf_prefix + "payload", "cog.y", &payload_center_of_gravity_[1]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "cog.z", &payload_center_of_gravity_[2]));
+      LinkedInterface(tf_prefix + "payload", "cog.z", &payload_center_of_gravity_[2]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixx", &payload_inertia_[0]));
+      LinkedInterface(tf_prefix + "payload", "inertia.ixx", &payload_inertia_[0]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.iyy", &payload_inertia_[1]));
+      LinkedInterface(tf_prefix + "payload", "inertia.iyy", &payload_inertia_[1]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.izz", &payload_inertia_[2]));
+      LinkedInterface(tf_prefix + "payload", "inertia.izz", &payload_inertia_[2]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixy", &payload_inertia_[3]));
+      LinkedInterface(tf_prefix + "payload", "inertia.ixy", &payload_inertia_[3]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixz", &payload_inertia_[4]));
+      LinkedInterface(tf_prefix + "payload", "inertia.ixz", &payload_inertia_[4]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.iyz", &payload_inertia_[5]));
+      LinkedInterface(tf_prefix + "payload", "inertia.iyz", &payload_inertia_[5]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "transition_time", &payload_transition_time_));
+      LinkedInterface(tf_prefix + "payload", "transition_time", &payload_transition_time_));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
+      LinkedInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
 
   for (size_t i = 0; i < friction_model_viscous_.size(); ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+    command_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "friction_model", "viscous_" + std::to_string(i), &friction_model_viscous_[i]));
   }
   for (size_t i = 0; i < friction_model_coulomb_.size(); ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+    command_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "friction_model", "coulomb_" + std::to_string(i), &friction_model_coulomb_[i]));
   }
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "friction_model", "async_success",
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + "friction_model", "async_success",
                                                                        &friction_model_async_success_));
 
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_x", &force_mode_task_frame_[0]);
@@ -488,145 +560,145 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "gain_scaling", &force_mode_gain_scaling_);
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "x", &gravity_vector_[0]));
+      LinkedInterface(tf_prefix + "gravity", "x", &gravity_vector_[0]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "y", &gravity_vector_[1]));
+      LinkedInterface(tf_prefix + "gravity", "y", &gravity_vector_[1]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "z", &gravity_vector_[2]));
+      LinkedInterface(tf_prefix + "gravity", "z", &gravity_vector_[2]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "gravity_async_success", &gravity_async_success_));
+      LinkedInterface(tf_prefix + "gravity", "gravity_async_success", &gravity_async_success_));
 
   for (size_t i = 0; i < 18; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+    command_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+    command_interfaces.emplace_back(LinkedInterface(
         tf_prefix + "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
   }
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gpio", "analog_output_domain_cmd", &analog_output_domain_cmd_));
+      LinkedInterface(tf_prefix + "gpio", "analog_output_domain_cmd", &analog_output_domain_cmd_));
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
+      LinkedInterface(tf_prefix + "gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "zero_ftsensor", "zero_ftsensor_cmd", &zero_ftsensor_cmd_));
+      LinkedInterface(tf_prefix + "zero_ftsensor", "zero_ftsensor_cmd", &zero_ftsensor_cmd_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "async_success",
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "async_success",
                                                                        &freedrive_mode_async_success_));
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "enable", &freedrive_mode_enable_));
+      LinkedInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "enable", &freedrive_mode_enable_));
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "abort", &freedrive_mode_abort_));
+      LinkedInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "abort", &freedrive_mode_abort_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "transfer_state",
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + PASSTHROUGH_GPIO, "transfer_state",
                                                                        &passthrough_trajectory_transfer_state_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "time_from_start",
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + PASSTHROUGH_GPIO, "time_from_start",
                                                                        &passthrough_trajectory_time_from_start_));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "abort", &passthrough_trajectory_abort_));
+      LinkedInterface(tf_prefix + PASSTHROUGH_GPIO, "abort", &passthrough_trajectory_abort_));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "trajectory_size",
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + PASSTHROUGH_GPIO, "trajectory_size",
                                                                        &passthrough_trajectory_size_));
 
   for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO,
+    command_interfaces.emplace_back(LinkedInterface(tf_prefix + PASSTHROUGH_GPIO,
                                                                          "setpoint_positions_" + std::to_string(i),
                                                                          &passthrough_trajectory_positions_[i]));
   }
 
   for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO,
+    command_interfaces.emplace_back(LinkedInterface(tf_prefix + PASSTHROUGH_GPIO,
                                                                          "setpoint_velocities_" + std::to_string(i),
                                                                          &passthrough_trajectory_velocities_[i]));
   }
 
   for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO,
+    command_interfaces.emplace_back(LinkedInterface(tf_prefix + PASSTHROUGH_GPIO,
                                                                          "setpoint_accelerations_" + std::to_string(i),
                                                                          &passthrough_trajectory_accelerations_[i]));
   }
 
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "linear_velocity_x", &urcl_twist_commands_[0]));
+      LinkedInterface(tf_prefix + TWIST_GPIO, "linear_velocity_x", &urcl_twist_commands_[0]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "linear_velocity_y", &urcl_twist_commands_[1]));
+      LinkedInterface(tf_prefix + TWIST_GPIO, "linear_velocity_y", &urcl_twist_commands_[1]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "linear_velocity_z", &urcl_twist_commands_[2]));
+      LinkedInterface(tf_prefix + TWIST_GPIO, "linear_velocity_z", &urcl_twist_commands_[2]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "angular_velocity_x", &urcl_twist_commands_[3]));
+      LinkedInterface(tf_prefix + TWIST_GPIO, "angular_velocity_x", &urcl_twist_commands_[3]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "angular_velocity_y", &urcl_twist_commands_[4]));
+      LinkedInterface(tf_prefix + TWIST_GPIO, "angular_velocity_y", &urcl_twist_commands_[4]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "angular_velocity_z", &urcl_twist_commands_[5]));
+      LinkedInterface(tf_prefix + TWIST_GPIO, "angular_velocity_z", &urcl_twist_commands_[5]));
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  command_interfaces.emplace_back(LinkedInterface(
       tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_set_state", &tool_contact_set_state_));
 
   // Motion primitives stuff
   // Command for motion type (motion_type)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                        "motion_type", &hw_moprim_commands_[0]));
   // Joint position commands (q1, q2, ..., q6)
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q1", &hw_moprim_commands_[1]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q1", &hw_moprim_commands_[1]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q2", &hw_moprim_commands_[2]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q2", &hw_moprim_commands_[2]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q3", &hw_moprim_commands_[3]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q3", &hw_moprim_commands_[3]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q4", &hw_moprim_commands_[4]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q4", &hw_moprim_commands_[4]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q5", &hw_moprim_commands_[5]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q5", &hw_moprim_commands_[5]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q6", &hw_moprim_commands_[6]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q6", &hw_moprim_commands_[6]));
   // Position commands (pos_x, pos_y, pos_z, pos_qx, pos_qy, pos_qz, pos_qz)
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_x", &hw_moprim_commands_[7]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_x", &hw_moprim_commands_[7]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_y", &hw_moprim_commands_[8]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_y", &hw_moprim_commands_[8]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_z", &hw_moprim_commands_[9]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_z", &hw_moprim_commands_[9]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qx", &hw_moprim_commands_[10]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qx", &hw_moprim_commands_[10]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qy", &hw_moprim_commands_[11]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qy", &hw_moprim_commands_[11]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qz", &hw_moprim_commands_[12]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qz", &hw_moprim_commands_[12]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qw", &hw_moprim_commands_[13]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qw", &hw_moprim_commands_[13]));
   // Via Position commands for circula motion
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_x", &hw_moprim_commands_[14]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_x", &hw_moprim_commands_[14]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_y", &hw_moprim_commands_[15]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_y", &hw_moprim_commands_[15]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_z", &hw_moprim_commands_[16]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_z", &hw_moprim_commands_[16]));
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                        "pos_via_qx", &hw_moprim_commands_[17]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                        "pos_via_qy", &hw_moprim_commands_[18]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                        "pos_via_qz", &hw_moprim_commands_[19]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                        "pos_via_qw", &hw_moprim_commands_[20]));
   // Other command parameters (blend_radius, velocity, acceleration, move_time)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                        "blend_radius", &hw_moprim_commands_[21]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "velocity", &hw_moprim_commands_[22]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "velocity", &hw_moprim_commands_[22]));
+  command_interfaces.emplace_back(LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
                                                                        "acceleration", &hw_moprim_commands_[23]));
   command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "move_time", &hw_moprim_commands_[24]));
+      LinkedInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "move_time", &hw_moprim_commands_[24]));
 
   return command_interfaces;
 }
@@ -981,7 +1053,7 @@ void URPositionHardwareInterface::asyncThread()
   }
 }
 
-hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
+hardware_interface::return_type URPositionHardwareInterface::read_impl(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
   // We want to start the rtde comm the latest point possible due to the delay times arising from setting up the
@@ -1091,7 +1163,7 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp::Time& time,
+hardware_interface::return_type URPositionHardwareInterface::write_impl(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
   // If there is no interpreting program running on the robot, we do not want to send anything.
