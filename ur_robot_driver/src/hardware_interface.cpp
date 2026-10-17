@@ -39,6 +39,7 @@
  *
  */
 //----------------------------------------------------------------------
+#include <cstdint>
 #include <cstring>
 #include <tuple>
 #include <algorithm>
@@ -129,6 +130,22 @@ URPositionHardwareInterface::URPositionHardwareInterface()
     a->fill(NO_NEW_CMD_);
   }
   hw_moprim_commands_.fill(NO_NEW_CMD_);
+  // and the async thread's copies of the async interfaces (checkAsyncIO() acts on them)
+  for (double* v : { &analog_output_domain_cmd_, &tool_voltage_cmd_, &io_async_success_, &target_speed_fraction_cmd_,
+                     &scaling_async_success_, &resend_robot_program_cmd_, &resend_robot_program_async_success_,
+                     &hand_back_control_cmd_, &hand_back_control_async_success_, &payload_mass_,
+                     &payload_transition_time_, &payload_async_success_, &gravity_async_success_,
+                     &friction_model_async_success_, &zero_ftsensor_cmd_, &zero_ftsensor_async_success_,
+                     &freedrive_mode_enable_, &freedrive_mode_abort_, &freedrive_mode_async_success_ }) {
+    *v = NO_NEW_CMD_;
+  }
+  standard_dig_out_bits_cmd_.fill(NO_NEW_CMD_);
+  standard_analog_output_cmd_.fill(NO_NEW_CMD_);
+  payload_center_of_gravity_.fill(NO_NEW_CMD_);
+  payload_inertia_.fill(NO_NEW_CMD_);
+  gravity_vector_.fill(NO_NEW_CMD_);
+  friction_model_viscous_.fill(NO_NEW_CMD_);
+  friction_model_coulomb_.fill(NO_NEW_CMD_);
 }
 
 URPositionHardwareInterface::~URPositionHardwareInterface()
@@ -306,6 +323,16 @@ bool same(double a, double b)
 {
   return std::memcmp(&a, &b, sizeof(double)) == 0;
 }
+
+// marks a success flag checkAsyncIO() didn't write (it only ever assigns them): a NaN that is
+// neither NO_NEW_CMD_ nor anything it assigns
+double unwritten()
+{
+  const uint64_t bits = 0x7ff800000000beefULL;
+  double value;
+  std::memcpy(&value, &bits, sizeof(value));
+  return value;
+}
 }  // namespace
 
 // a command a controller wrote to its handle since the last sync goes to the member
@@ -327,8 +354,10 @@ void URPositionHardwareInterface::push_states_and_commands()
     std::ignore = handle->set_value(*value);
   }
   for (auto& link : command_links_) {
-    if (!same(*link.value, link.synced) && link.handle->set_value(*link.value)) {
-      link.synced = *link.value;
+    // one read: other threads (e.g. trajectory_done_callback()) may change the member meanwhile
+    const double value = *link.value;
+    if (!same(value, link.synced) && link.handle->set_value(value)) {
+      link.synced = value;
     }
   }
 }
@@ -350,32 +379,54 @@ bool URPositionHardwareInterface::is_async_member(const double* value) const
          in(freedrive_mode_abort_) || in(freedrive_mode_async_success_);
 }
 
-// the requests (and flags) as the controllers and services left them, into the async thread's members
+// the requests as the controllers and services left them, into the async thread's members; the
+// success flags are marked, so that push_async() publishes every one checkAsyncIO() writes (also
+// when the result equals the previous one, as for a request that followed an earlier success)
 void URPositionHardwareInterface::pull_async()
 {
   for (auto& link : async_links_) {
+    if (link.pending) {
+      continue;  // keeps the value it couldn't publish yet
+    }
     double value;
-    if (!link.pending && link.handle->get_value(value, false)) {
+    if (link.success_flag) {
+      *link.value = unwritten();
+    } else if (link.handle->get_value(value, false)) {
       *link.value = value;
       link.pulled = value;
     }
   }
 }
 
-// what checkAsyncIO() changed, back to the handles: the resets first, the success flags only once
+// what checkAsyncIO() did, back to the handles: the request resets first, the success flags only once
 // those are all published; anything that couldn't be published is retried next time
 void URPositionHardwareInterface::push_async()
 {
   bool resets_published = true;
   for (auto& link : async_links_) {
-    if (!link.pending && same(*link.value, link.pulled)) {
+    const double value = *link.value;
+    if (link.success_flag) {
+      if (!link.pending && same(value, unwritten())) {
+        continue;
+      }
+      link.pending = !(resets_published && link.handle->set_value(value));
       continue;
     }
-    link.pending = !((resets_published || !link.success_flag) && link.handle->set_value(*link.value));
-    if (!link.pending) {
-      link.pulled = *link.value;
-    } else if (!link.success_flag) {
+    if (link.pending) {
+      // a newer request arrived meanwhile: it wins over the reset of the old one
+      double current;
+      if (link.handle->get_value(current, false) && !same(current, link.pulled)) {
+        link.pending = false;
+        continue;
+      }
+    } else if (same(value, link.pulled)) {
+      continue;
+    }
+    link.pending = !link.handle->set_value(value);
+    if (link.pending) {
       resets_published = false;
+    } else {
+      link.pulled = value;
     }
   }
 }
