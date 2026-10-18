@@ -279,7 +279,7 @@ URPositionHardwareInterface::on_export_state_interfaces()
   std::vector<hardware_interface::StateInterface::ConstSharedPtr> state_interfaces;
   state_links_.clear();
   for (const auto& link : export_state_links()) {
-    hardware_interface::InterfaceInfo info;
+    hardware_interface::InterfaceInfo info{};
     info.name = link.name;
     auto handle = std::make_shared<hardware_interface::StateInterface>(
         hardware_interface::InterfaceDescription(link.prefix, info));
@@ -295,7 +295,7 @@ std::vector<hardware_interface::CommandInterface::SharedPtr> URPositionHardwareI
   command_links_.clear();
   async_links_.clear();
   for (const auto& link : export_command_links()) {
-    hardware_interface::InterfaceInfo info;
+    hardware_interface::InterfaceInfo info{};
     info.name = link.name;
     auto handle = std::make_shared<hardware_interface::CommandInterface>(
         hardware_interface::InterfaceDescription(link.prefix, info));
@@ -313,7 +313,6 @@ std::vector<hardware_interface::CommandInterface::SharedPtr> URPositionHardwareI
   // the request resets are published before the success flags (push_async())
   std::stable_partition(async_links_.begin(), async_links_.end(),
                         [](const AsyncLink& link) { return !link.success_flag; });
-  async_retries_.reserve(async_links_.size());  // no allocation in the control loop
   return command_interfaces;
 }
 
@@ -442,31 +441,27 @@ void URPositionHardwareInterface::push_async()
   }
 }
 
-// a reset from the control loop thread (initialisation, mode switch) straight to the handle,
-// without waiting for its lock: if it is taken, the control loop retries (retry_set_async())
+// a reset from the control loop thread (initialisation, mode switch) straight to the handle. Like
+// LoanedCommandInterface::set_value(), it doesn't wait for the lock but tries a few times (holders only
+// copy a value); nothing is deferred, so no older write can land after a newer one.
 void URPositionHardwareInterface::set_async(const double& member, double value)
 {
   for (auto& link : async_links_) {
     if (link.value == &member) {
-      if (!link.handle->set_value(value)) {
-        async_retries_.emplace_back(link.handle, value);
+      for (int attempt = 0; attempt < 10; ++attempt) {
+        if (link.handle->set_value(value)) {
+          return;
+        }
       }
+      RCLCPP_WARN(get_logger(), "Could not write %s: the interface is locked.", link.handle->get_name().c_str());
       return;
     }
   }
 }
 
-void URPositionHardwareInterface::retry_set_async()
-{
-  async_retries_.erase(std::remove_if(async_retries_.begin(), async_retries_.end(),
-                                      [](const auto& retry) { return retry.first->set_value(retry.second); }),
-                       async_retries_.end());
-}
-
 hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::Time& time,
                                                                   const rclcpp::Duration& period)
 {
-  retry_set_async();
   pull_commands();
   const auto result = read_impl(time, period);
   push_states_and_commands();
@@ -476,7 +471,6 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
-  retry_set_async();
   pull_commands();
   const auto result = write_impl(time, period);
   push_states_and_commands();
