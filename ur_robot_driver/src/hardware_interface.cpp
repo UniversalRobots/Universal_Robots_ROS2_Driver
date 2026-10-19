@@ -170,6 +170,66 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   }
   force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
 
+  // The exported interfaces are seeded from these members. Measured values and results start at 0 until read() and
+  // the commands' processing update them, commands start as "no command".
+  speed_scaling_combined_ = 0.0;
+  actual_dig_out_bits_copy_.fill(0.0);
+  actual_dig_in_bits_copy_.fill(0.0);
+  safety_status_bits_copy_.fill(0.0);
+  analog_io_types_copy_.fill(0.0);
+  robot_status_bits_copy_.fill(0.0);
+  tool_analog_input_types_copy_.fill(0.0);
+  tool_analog_input_.fill(0.0);
+  standard_analog_input_.fill(0.0);
+  standard_analog_output_.fill(0.0);
+  tool_output_voltage_copy_ = 0.0;
+  robot_mode_copy_ = 0.0;
+  safety_mode_copy_ = 0.0;
+  tool_mode_copy_ = 0.0;
+  tool_output_current_ = 0.0;
+  tool_temperature_ = 0.0;
+  robot_program_running_copy_ = 0.0;
+  get_robot_software_version_major_ = 0.0;
+  get_robot_software_version_minor_ = 0.0;
+  get_robot_software_version_bugfix_ = 0.0;
+  get_robot_software_version_build_ = 0.0;
+
+  urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  io_async_success_ = 0.0;
+  scaling_async_success_ = 0.0;
+  resend_robot_program_async_success_ = 0.0;
+  hand_back_control_async_success_ = 0.0;
+  payload_async_success_ = 0.0;
+  friction_model_async_success_ = 0.0;
+  gravity_async_success_ = 0.0;
+  zero_ftsensor_async_success_ = 0.0;
+  freedrive_mode_async_success_ = 0.0;
+  force_mode_async_success_ = 0.0;
+
+  standard_dig_out_bits_cmd_.fill(NO_NEW_CMD_);
+  standard_analog_output_cmd_.fill(NO_NEW_CMD_);
+  analog_output_domain_cmd_ = NO_NEW_CMD_;
+  tool_voltage_cmd_ = NO_NEW_CMD_;
+  target_speed_fraction_cmd_ = NO_NEW_CMD_;
+  resend_robot_program_cmd_ = NO_NEW_CMD_;
+  hand_back_control_cmd_ = NO_NEW_CMD_;
+  zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  freedrive_mode_enable_ = NO_NEW_CMD_;
+  payload_mass_ = NO_NEW_CMD_;
+  payload_center_of_gravity_.fill(NO_NEW_CMD_);
+  payload_inertia_.fill(NO_NEW_CMD_);
+  payload_transition_time_ = NO_NEW_CMD_;
+  gravity_vector_.fill(NO_NEW_CMD_);
+  friction_model_viscous_.fill(NO_NEW_CMD_);
+  friction_model_coulomb_.fill(NO_NEW_CMD_);
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
+  force_mode_damping_ = NO_NEW_CMD_;
+  force_mode_gain_scaling_ = NO_NEW_CMD_;
+  passthrough_trajectory_time_from_start_ = NO_NEW_CMD_;
+  passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_accelerations_.fill(NO_NEW_CMD_);
+
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
       auto it = find_if(
