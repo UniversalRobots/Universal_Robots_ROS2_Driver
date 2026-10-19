@@ -47,7 +47,6 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 #include <array>
 
@@ -145,6 +144,10 @@ public:
 
   hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareComponentInterfaceParams& params) final;
 
+  std::vector<hardware_interface::StateInterface::ConstSharedPtr> on_export_state_interfaces() final;
+
+  std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces() final;
+
   hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
@@ -182,11 +185,38 @@ protected:
   // stop function used by on_shutdown and on_cleanup
   hardware_interface::CallbackReturn stop();
 
-  // Interface names, built once in on_init() (matching kassow_kord_hardware_interface's
-  // convention) instead of concatenating "<prefix>/<interface>" fresh on every read()/write()
-  // cycle. set_state()/get_command()/set_command() still do a name lookup per call - only the
-  // string-building is cached, not the resolved handle.
-  void build_interface_names();
+  // The driver keeps working on its member variables. Each exported interface handle is paired with the member that
+  // holds its value, and both are synchronized at fixed points:
+  // - States are pushed to their handles in read().
+  // - Commands handled in the real-time loop are pulled from their handles at the start of write() and the values the
+  //   hardware changed itself are pushed back at the end of write() and perform_command_mode_switch().
+  // - Commands handled in checkAsyncIO() are pulled and pushed there, in the async thread.
+  struct StateMirror
+  {
+    hardware_interface::StateInterface::SharedPtr handle;
+    double* value;
+  };
+  struct CommandMirror
+  {
+    hardware_interface::CommandInterface::SharedPtr handle;
+    double* value;
+    // Value of the interface when it was last read or written
+    double synced;
+    // The hardware changed the value, but could not write it to the interface yet
+    bool dirty;
+  };
+  void add_state_mirror(const std::string& prefix, const std::string& name, double* value);
+  void add_command_mirror(const std::string& prefix, const std::string& name, double* value);
+  void add_async_command_mirror(const std::string& prefix, const std::string& name, double* value);
+  CommandMirror make_command_mirror(const std::string& prefix, const std::string& name, double* value);
+  void push_state_mirrors();
+  void pull_command_mirrors(std::vector<CommandMirror>& mirrors, bool blocking);
+  void push_command_mirrors(std::vector<CommandMirror>& mirrors, bool blocking);
+
+  std::vector<StateMirror> state_mirrors_;
+  std::vector<CommandMirror> command_mirrors_;
+  std::vector<CommandMirror> async_command_mirrors_;
+  hardware_interface::CommandInterface::SharedPtr freedrive_mode_abort_handle_;
 
   void initAsyncIO();
   void checkAsyncIO();
@@ -382,6 +412,9 @@ protected:
   std::vector<std::array<double, 6>> trajectory_joint_velocities_;
   std::vector<std::array<double, 6>> trajectory_joint_accelerations_;
   std::vector<double> trajectory_times_;
+  // Latest result from trajectory_done_callback(), applied in write()
+  static constexpr int NO_TRAJECTORY_RESULT = -1;
+  std::atomic<int> trajectory_result_{ NO_TRAJECTORY_RESULT };
 
   PausingState pausing_state_;
   double pausing_ramp_up_increment_;
@@ -413,75 +446,6 @@ protected:
   std::function<bool()> get_data_package;
 
   bool use_currents_as_efforts_ = false;
-
-  // --- Interface names, built once in build_interface_names() (called from on_init()) ---
-
-  std::vector<std::string> joint_position_state_names_;
-  std::vector<std::string> joint_velocity_state_names_;
-  std::vector<std::string> joint_effort_state_names_;
-  std::vector<std::string> joint_position_command_names_;
-  std::vector<std::string> joint_velocity_command_names_;
-  std::vector<std::string> joint_effort_command_names_;
-
-  // Plain RTDE-read state values (gpio digital/analog IO, tool/robot/safety status, tcp pose, ft
-  // sensor, payload, get_robot_software_version, system_interface/gpio program_running): name
-  // plus a pointer to the source value, pushed via set_state() in one loop per read() cycle.
-  std::vector<std::pair<std::string, double*>> state_push_list_;
-
-  std::array<std::string, 2> moprim_state_names_;
-
-  std::string io_async_success_name_;
-  std::array<std::string, 18> standard_dig_out_bits_cmd_names_;
-  std::array<std::string, 2> standard_analog_output_cmd_names_;
-  std::string analog_output_domain_cmd_name_;
-  std::string tool_voltage_cmd_name_;
-  std::string target_speed_fraction_cmd_name_;
-  std::string scaling_async_success_name_;
-  std::string resend_robot_program_cmd_name_;
-  std::string resend_robot_program_async_success_name_;
-  std::string hand_back_control_cmd_name_;
-  std::string hand_back_control_async_success_name_;
-  std::string payload_mass_name_;
-  std::array<std::string, 3> payload_cog_names_;
-  std::array<std::string, 6> payload_inertia_names_;
-  std::string payload_transition_time_name_;
-  std::string payload_async_success_name_;
-  std::array<std::string, 3> gravity_vector_names_;
-  std::string gravity_async_success_name_;
-  std::array<std::string, 6> friction_viscous_names_;
-  std::array<std::string, 6> friction_coulomb_names_;
-  std::string friction_async_success_name_;
-  std::string zero_ftsensor_cmd_name_;
-  std::string zero_ftsensor_async_success_name_;
-  std::string freedrive_enable_name_;
-  std::string freedrive_abort_name_;
-  std::string freedrive_async_success_name_;
-
-  std::array<std::string, 6> force_mode_task_frame_names_;
-  std::array<std::string, 6> force_mode_selection_vector_names_;
-  std::array<std::string, 6> force_mode_wrench_names_;
-  std::string force_mode_type_name_;
-  std::array<std::string, 6> force_mode_limits_names_;
-  std::string force_mode_async_success_name_;
-  std::string force_mode_disable_cmd_name_;
-  std::string force_mode_damping_name_;
-  std::string force_mode_gain_scaling_name_;
-
-  std::string passthrough_transfer_state_name_;
-  std::string passthrough_time_from_start_name_;
-  std::string passthrough_abort_name_;
-  std::string passthrough_size_name_;
-  std::array<std::string, 6> passthrough_positions_names_;
-  std::array<std::string, 6> passthrough_velocities_names_;
-  std::array<std::string, 6> passthrough_accelerations_names_;
-
-  std::array<std::string, 6> twist_command_names_;
-
-  std::string tool_contact_set_state_name_;
-  std::string tool_contact_result_name_;
-  std::string tool_contact_state_name_;
-
-  std::array<std::string, 25> moprim_command_names_;
 };
 }  // namespace ur_robot_driver
 
