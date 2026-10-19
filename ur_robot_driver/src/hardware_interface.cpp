@@ -170,6 +170,66 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   }
   force_mode_type_ = static_cast<unsigned int>(NO_NEW_CMD_);
 
+  // The exported interfaces are seeded from these members. Measured values and results start at 0 until read() and
+  // the commands' processing update them, commands start as "no command".
+  speed_scaling_combined_ = 0.0;
+  actual_dig_out_bits_copy_.fill(0.0);
+  actual_dig_in_bits_copy_.fill(0.0);
+  safety_status_bits_copy_.fill(0.0);
+  analog_io_types_copy_.fill(0.0);
+  robot_status_bits_copy_.fill(0.0);
+  tool_analog_input_types_copy_.fill(0.0);
+  tool_analog_input_.fill(0.0);
+  standard_analog_input_.fill(0.0);
+  standard_analog_output_.fill(0.0);
+  tool_output_voltage_copy_ = 0.0;
+  robot_mode_copy_ = 0.0;
+  safety_mode_copy_ = 0.0;
+  tool_mode_copy_ = 0.0;
+  tool_output_current_ = 0.0;
+  tool_temperature_ = 0.0;
+  robot_program_running_copy_ = 0.0;
+  get_robot_software_version_major_ = 0.0;
+  get_robot_software_version_minor_ = 0.0;
+  get_robot_software_version_bugfix_ = 0.0;
+  get_robot_software_version_build_ = 0.0;
+
+  urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  io_async_success_ = 0.0;
+  scaling_async_success_ = 0.0;
+  resend_robot_program_async_success_ = 0.0;
+  hand_back_control_async_success_ = 0.0;
+  payload_async_success_ = 0.0;
+  friction_model_async_success_ = 0.0;
+  gravity_async_success_ = 0.0;
+  zero_ftsensor_async_success_ = 0.0;
+  freedrive_mode_async_success_ = 0.0;
+  force_mode_async_success_ = 0.0;
+
+  standard_dig_out_bits_cmd_.fill(NO_NEW_CMD_);
+  standard_analog_output_cmd_.fill(NO_NEW_CMD_);
+  analog_output_domain_cmd_ = NO_NEW_CMD_;
+  tool_voltage_cmd_ = NO_NEW_CMD_;
+  target_speed_fraction_cmd_ = NO_NEW_CMD_;
+  resend_robot_program_cmd_ = NO_NEW_CMD_;
+  hand_back_control_cmd_ = NO_NEW_CMD_;
+  zero_ftsensor_cmd_ = NO_NEW_CMD_;
+  freedrive_mode_enable_ = NO_NEW_CMD_;
+  payload_mass_ = NO_NEW_CMD_;
+  payload_center_of_gravity_.fill(NO_NEW_CMD_);
+  payload_inertia_.fill(NO_NEW_CMD_);
+  payload_transition_time_ = NO_NEW_CMD_;
+  gravity_vector_.fill(NO_NEW_CMD_);
+  friction_model_viscous_.fill(NO_NEW_CMD_);
+  friction_model_coulomb_.fill(NO_NEW_CMD_);
+  force_mode_disable_cmd_ = NO_NEW_CMD_;
+  force_mode_damping_ = NO_NEW_CMD_;
+  force_mode_gain_scaling_ = NO_NEW_CMD_;
+  passthrough_trajectory_time_from_start_ = NO_NEW_CMD_;
+  passthrough_trajectory_positions_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_velocities_.fill(NO_NEW_CMD_);
+  passthrough_trajectory_accelerations_.fill(NO_NEW_CMD_);
+
   for (const hardware_interface::ComponentInfo& joint : info_.joints) {
     auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
       auto it = find_if(
@@ -226,26 +286,26 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::export_state_interfaces()
+std::vector<hardware_interface::StateInterface::ConstSharedPtr>
+URPositionHardwareInterface::on_export_state_interfaces()
 {
-  std::vector<hardware_interface::StateInterface> state_interfaces;
+  auto exported_interfaces = hardware_interface::SystemInterface::on_export_state_interfaces();
+  // The values still live in the member variables below. Each exported handle is paired with its member and
+  // updated from it in read().
+  state_mirrors_.clear();
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]));
+    add_state_mirror(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_joint_positions_[i]);
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]));
+    add_state_mirror(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_joint_velocities_[i]);
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]));
+    add_state_mirror(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_joint_efforts_[i]);
   }
 
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
   // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
   // state interface in info_ and match them accordingly
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor",
-                                                                   &speed_scaling_combined_));
+  add_state_mirror(tf_prefix + "speed_scaling", "speed_scaling_factor", &speed_scaling_combined_);
 
   for (auto& sensor : info_.sensors) {
     if (sensor.name == tf_prefix + "tcp_fts_sensor") {
@@ -253,148 +313,109 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
         "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"
       };
       for (uint32_t j = 0; j < 6; ++j) {
-        state_interfaces.emplace_back(
-            hardware_interface::StateInterface(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]));
+        add_state_mirror(sensor.name, fts_names[j], &urcl_ft_sensor_measurements_[j]);
       }
     }
   }
 
   for (size_t i = 0; i < 18; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
+    add_state_mirror(tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]);
+    add_state_mirror(tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]);
   }
 
   for (size_t i = 0; i < 11; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]));
+    add_state_mirror(tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]);
   }
 
   for (size_t i = 0; i < 4; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]));
+    add_state_mirror(tf_prefix + "gpio", "analog_io_type_" + std::to_string(i), &analog_io_types_copy_[i]);
+    add_state_mirror(tf_prefix + "gpio", "robot_status_bit_" + std::to_string(i), &robot_status_bits_copy_[i]);
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i), &tool_analog_input_types_copy_[i]));
+    add_state_mirror(tf_prefix + "gpio", "tool_analog_input_type_" + std::to_string(i),
+                     &tool_analog_input_types_copy_[i]);
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]));
+    add_state_mirror(tf_prefix + "gpio", "tool_analog_input_" + std::to_string(i), &tool_analog_input_[i]);
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
+    add_state_mirror(tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]);
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]));
+    add_state_mirror(tf_prefix + "gpio", "standard_analog_output_" + std::to_string(i), &standard_analog_output_[i]);
   }
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
+  add_state_mirror(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_));
+  add_state_mirror(tf_prefix + "gpio", "robot_mode", &robot_mode_copy_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_));
+  add_state_mirror(tf_prefix + "gpio", "safety_mode", &safety_mode_copy_);
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_));
+  add_state_mirror(tf_prefix + "gpio", "tool_mode", &tool_mode_copy_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_current", &tool_output_current_));
+  add_state_mirror(tf_prefix + "gpio", "tool_output_current", &tool_output_current_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_temperature", &tool_temperature_));
+  add_state_mirror(tf_prefix + "gpio", "tool_temperature", &tool_temperature_);
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "system_interface", "initialized",
-                                                                   &system_interface_initialized_));
+  add_state_mirror(tf_prefix + "system_interface", "initialized", &system_interface_initialized_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "program_running", &robot_program_running_copy_));
+  add_state_mirror(tf_prefix + "gpio", "program_running", &robot_program_running_copy_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w));
+  add_state_mirror(tf_prefix + "tcp_pose", "position.x", &urcl_tcp_pose_[0]);
+  add_state_mirror(tf_prefix + "tcp_pose", "position.y", &urcl_tcp_pose_[1]);
+  add_state_mirror(tf_prefix + "tcp_pose", "position.z", &urcl_tcp_pose_[2]);
+  add_state_mirror(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_buffer.x);
+  add_state_mirror(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_buffer.y);
+  add_state_mirror(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_buffer.z);
+  add_state_mirror(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_buffer.w);
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_));
+  add_state_mirror(tf_prefix + "get_robot_software_version", "get_version_major", &get_robot_software_version_major_);
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_));
+  add_state_mirror(tf_prefix + "get_robot_software_version", "get_version_minor", &get_robot_software_version_minor_);
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_));
+  add_state_mirror(tf_prefix + "get_robot_software_version", "get_version_bugfix", &get_robot_software_version_bugfix_);
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(
-      tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_));
+  add_state_mirror(tf_prefix + "get_robot_software_version", "get_version_build", &get_robot_software_version_build_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_result", &tool_contact_result_));
+  add_state_mirror(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_result", &tool_contact_result_);
 
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_));
+  add_state_mirror(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_state", &tool_contact_state_);
 
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "payload", "mass", &rtde_payload_mass_));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "cog.x", &rtde_payload_cog_[0]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "cog.y", &rtde_payload_cog_[1]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixx", &rtde_payload_inertia_[0]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.iyy", &rtde_payload_inertia_[1]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.izz", &rtde_payload_inertia_[2]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixy", &rtde_payload_inertia_[3]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.ixz", &rtde_payload_inertia_[4]));
-  state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "payload", "inertia.iyz", &rtde_payload_inertia_[5]));
+  add_state_mirror(tf_prefix + "payload", "mass", &rtde_payload_mass_);
+  add_state_mirror(tf_prefix + "payload", "cog.x", &rtde_payload_cog_[0]);
+  add_state_mirror(tf_prefix + "payload", "cog.y", &rtde_payload_cog_[1]);
+  add_state_mirror(tf_prefix + "payload", "cog.z", &rtde_payload_cog_[2]);
+  add_state_mirror(tf_prefix + "payload", "inertia.ixx", &rtde_payload_inertia_[0]);
+  add_state_mirror(tf_prefix + "payload", "inertia.iyy", &rtde_payload_inertia_[1]);
+  add_state_mirror(tf_prefix + "payload", "inertia.izz", &rtde_payload_inertia_[2]);
+  add_state_mirror(tf_prefix + "payload", "inertia.ixy", &rtde_payload_inertia_[3]);
+  add_state_mirror(tf_prefix + "payload", "inertia.ixz", &rtde_payload_inertia_[4]);
+  add_state_mirror(tf_prefix + "payload", "inertia.iyz", &rtde_payload_inertia_[5]);
   // Motion primitives stuff
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                   "execution_status", &hw_moprim_states_[0]));
-  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                   "ready_for_new_primitive", &hw_moprim_states_[1]));
+  add_state_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "execution_status", &hw_moprim_states_[0]);
+  add_state_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "ready_for_new_primitive", &hw_moprim_states_[1]);
 
-  return state_interfaces;
+  return exported_interfaces;
 }
 
-std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::export_command_interfaces()
+std::vector<hardware_interface::CommandInterface::SharedPtr> URPositionHardwareInterface::on_export_command_interfaces()
 {
+  auto exported_interfaces = hardware_interface::SystemInterface::on_export_command_interfaces();
+  // The values still live in the member variables below. Each exported handle is paired with its member. Commands
+  // handled in the real-time loop are synchronized in write(), the asynchronous ones in checkAsyncIO().
+  command_mirrors_.clear();
+  async_command_mirrors_.clear();
   auto has_cmd_interface = [](const hardware_interface::ComponentInfo& joint, const std::string& interface_name) {
     auto it =
         find_if(joint.command_interfaces.begin(), joint.command_interfaces.end(),
                 [&interface_name](const hardware_interface::InterfaceInfo& obj) { return obj.name == interface_name; });
     return it != joint.command_interfaces.end();
   };
-  std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (size_t i = 0; i < info_.joints.size(); ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_position_commands_[i]));
+    add_command_mirror(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &urcl_position_commands_[i]);
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]));
+    add_command_mirror(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &urcl_velocity_commands_[i]);
 
     if (has_cmd_interface(info_.joints[i], hardware_interface::HW_IF_EFFORT)) {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-          info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_torque_commands_[i]));
+      add_command_mirror(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &urcl_torque_commands_[i]);
     }
   }
   // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
@@ -402,233 +423,251 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   // command interface in info_ and match them accordingly
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gpio", "io_async_success", &io_async_success_));
+  add_async_command_mirror(tf_prefix + "gpio", "io_async_success", &io_async_success_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "speed_scaling", "target_speed_fraction_cmd", &target_speed_fraction_cmd_));
+  add_async_command_mirror(tf_prefix + "speed_scaling", "target_speed_fraction_cmd", &target_speed_fraction_cmd_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_));
+  add_async_command_mirror(tf_prefix + "speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "resend_robot_program", "resend_robot_program_cmd", &resend_robot_program_cmd_));
+  add_async_command_mirror(tf_prefix + "resend_robot_program", "resend_robot_program_cmd", &resend_robot_program_cmd_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "resend_robot_program", "resend_robot_program_async_success", &resend_robot_program_async_success_));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "hand_back_control", "hand_back_control_cmd", &hand_back_control_cmd_));
+  add_async_command_mirror(tf_prefix + "resend_robot_program", "resend_robot_program_async_success",
+                           &resend_robot_program_async_success_);
+  add_async_command_mirror(tf_prefix + "hand_back_control", "hand_back_control_cmd", &hand_back_control_cmd_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "hand_back_control", "hand_back_control_async_success", &hand_back_control_async_success_));
+  add_async_command_mirror(tf_prefix + "hand_back_control", "hand_back_control_async_success",
+                           &hand_back_control_async_success_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "payload", "mass", &payload_mass_));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "cog.x", &payload_center_of_gravity_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "cog.y", &payload_center_of_gravity_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "cog.z", &payload_center_of_gravity_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixx", &payload_inertia_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.iyy", &payload_inertia_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.izz", &payload_inertia_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixy", &payload_inertia_[3]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.ixz", &payload_inertia_[4]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "inertia.iyz", &payload_inertia_[5]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "transition_time", &payload_transition_time_));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "payload", "payload_async_success", &payload_async_success_));
+  add_async_command_mirror(tf_prefix + "payload", "mass", &payload_mass_);
+  add_async_command_mirror(tf_prefix + "payload", "cog.x", &payload_center_of_gravity_[0]);
+  add_async_command_mirror(tf_prefix + "payload", "cog.y", &payload_center_of_gravity_[1]);
+  add_async_command_mirror(tf_prefix + "payload", "cog.z", &payload_center_of_gravity_[2]);
+  add_async_command_mirror(tf_prefix + "payload", "inertia.ixx", &payload_inertia_[0]);
+  add_async_command_mirror(tf_prefix + "payload", "inertia.iyy", &payload_inertia_[1]);
+  add_async_command_mirror(tf_prefix + "payload", "inertia.izz", &payload_inertia_[2]);
+  add_async_command_mirror(tf_prefix + "payload", "inertia.ixy", &payload_inertia_[3]);
+  add_async_command_mirror(tf_prefix + "payload", "inertia.ixz", &payload_inertia_[4]);
+  add_async_command_mirror(tf_prefix + "payload", "inertia.iyz", &payload_inertia_[5]);
+  add_async_command_mirror(tf_prefix + "payload", "transition_time", &payload_transition_time_);
+  add_async_command_mirror(tf_prefix + "payload", "payload_async_success", &payload_async_success_);
 
   for (size_t i = 0; i < friction_model_viscous_.size(); ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        tf_prefix + "friction_model", "viscous_" + std::to_string(i), &friction_model_viscous_[i]));
+    add_async_command_mirror(tf_prefix + "friction_model", "viscous_" + std::to_string(i), &friction_model_viscous_[i]);
   }
   for (size_t i = 0; i < friction_model_coulomb_.size(); ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        tf_prefix + "friction_model", "coulomb_" + std::to_string(i), &friction_model_coulomb_[i]));
+    add_async_command_mirror(tf_prefix + "friction_model", "coulomb_" + std::to_string(i), &friction_model_coulomb_[i]);
   }
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "friction_model", "async_success",
-                                                                       &friction_model_async_success_));
+  add_async_command_mirror(tf_prefix + "friction_model", "async_success", &friction_model_async_success_);
 
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_x", &force_mode_task_frame_[0]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_y", &force_mode_task_frame_[1]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_z", &force_mode_task_frame_[2]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_rx", &force_mode_task_frame_[3]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_ry", &force_mode_task_frame_[4]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "task_frame_rz", &force_mode_task_frame_[5]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_x", &force_mode_selection_vector_[0]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_y", &force_mode_selection_vector_[1]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_z", &force_mode_selection_vector_[2]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_rx", &force_mode_selection_vector_[3]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_ry", &force_mode_selection_vector_[4]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "selection_vector_rz", &force_mode_selection_vector_[5]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_x", &force_mode_wrench_[0]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_y", &force_mode_wrench_[1]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_z", &force_mode_wrench_[2]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_rx", &force_mode_wrench_[3]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_ry", &force_mode_wrench_[4]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "wrench_rz", &force_mode_wrench_[5]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "type", &force_mode_type_);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_x", &force_mode_limits_[0]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_y", &force_mode_limits_[1]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_z", &force_mode_limits_[2]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_rx", &force_mode_limits_[3]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_ry", &force_mode_limits_[4]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "limits_rz", &force_mode_limits_[5]);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "force_mode_async_success", &force_mode_async_success_);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "disable_cmd", &force_mode_disable_cmd_);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "damping", &force_mode_damping_);
-  command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "gain_scaling", &force_mode_gain_scaling_);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "task_frame_x", &force_mode_task_frame_[0]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "task_frame_y", &force_mode_task_frame_[1]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "task_frame_z", &force_mode_task_frame_[2]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "task_frame_rx", &force_mode_task_frame_[3]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "task_frame_ry", &force_mode_task_frame_[4]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "task_frame_rz", &force_mode_task_frame_[5]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "selection_vector_x", &force_mode_selection_vector_[0]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "selection_vector_y", &force_mode_selection_vector_[1]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "selection_vector_z", &force_mode_selection_vector_[2]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "selection_vector_rx", &force_mode_selection_vector_[3]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "selection_vector_ry", &force_mode_selection_vector_[4]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "selection_vector_rz", &force_mode_selection_vector_[5]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "wrench_x", &force_mode_wrench_[0]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "wrench_y", &force_mode_wrench_[1]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "wrench_z", &force_mode_wrench_[2]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "wrench_rx", &force_mode_wrench_[3]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "wrench_ry", &force_mode_wrench_[4]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "wrench_rz", &force_mode_wrench_[5]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "type", &force_mode_type_);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "limits_x", &force_mode_limits_[0]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "limits_y", &force_mode_limits_[1]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "limits_z", &force_mode_limits_[2]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "limits_rx", &force_mode_limits_[3]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "limits_ry", &force_mode_limits_[4]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "limits_rz", &force_mode_limits_[5]);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "force_mode_async_success", &force_mode_async_success_);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "disable_cmd", &force_mode_disable_cmd_);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "damping", &force_mode_damping_);
+  add_command_mirror(tf_prefix + FORCE_MODE_GPIO, "gain_scaling", &force_mode_gain_scaling_);
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "x", &gravity_vector_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "y", &gravity_vector_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "z", &gravity_vector_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gravity", "gravity_async_success", &gravity_async_success_));
+  add_async_command_mirror(tf_prefix + "gravity", "x", &gravity_vector_[0]);
+  add_async_command_mirror(tf_prefix + "gravity", "y", &gravity_vector_[1]);
+  add_async_command_mirror(tf_prefix + "gravity", "z", &gravity_vector_[2]);
+  add_async_command_mirror(tf_prefix + "gravity", "gravity_async_success", &gravity_async_success_);
 
   for (size_t i = 0; i < 18; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
+    add_async_command_mirror(tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i),
+                             &standard_dig_out_bits_cmd_[i]);
   }
 
   for (size_t i = 0; i < 2; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        tf_prefix + "gpio", "standard_analog_output_cmd_" + std::to_string(i), &standard_analog_output_cmd_[i]));
+    add_async_command_mirror(tf_prefix + "gpio", "standard_analog_output_cmd_" + std::to_string(i),
+                             &standard_analog_output_cmd_[i]);
   }
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gpio", "analog_output_domain_cmd", &analog_output_domain_cmd_));
+  add_async_command_mirror(tf_prefix + "gpio", "analog_output_domain_cmd", &analog_output_domain_cmd_);
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "gpio", "tool_voltage_cmd", &tool_voltage_cmd_));
+  add_async_command_mirror(tf_prefix + "gpio", "tool_voltage_cmd", &tool_voltage_cmd_);
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + "zero_ftsensor", "zero_ftsensor_cmd", &zero_ftsensor_cmd_));
+  add_async_command_mirror(tf_prefix + "zero_ftsensor", "zero_ftsensor_cmd", &zero_ftsensor_cmd_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_));
+  add_async_command_mirror(tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success", &zero_ftsensor_async_success_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "async_success",
-                                                                       &freedrive_mode_async_success_));
+  add_async_command_mirror(tf_prefix + FREEDRIVE_MODE_GPIO, "async_success", &freedrive_mode_async_success_);
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "enable", &freedrive_mode_enable_));
+  add_async_command_mirror(tf_prefix + FREEDRIVE_MODE_GPIO, "enable", &freedrive_mode_enable_);
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + FREEDRIVE_MODE_GPIO, "abort", &freedrive_mode_abort_));
+  add_async_command_mirror(tf_prefix + FREEDRIVE_MODE_GPIO, "abort", &freedrive_mode_abort_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "transfer_state",
-                                                                       &passthrough_trajectory_transfer_state_));
+  add_command_mirror(tf_prefix + PASSTHROUGH_GPIO, "transfer_state", &passthrough_trajectory_transfer_state_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "time_from_start",
-                                                                       &passthrough_trajectory_time_from_start_));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "abort", &passthrough_trajectory_abort_));
+  add_command_mirror(tf_prefix + PASSTHROUGH_GPIO, "time_from_start", &passthrough_trajectory_time_from_start_);
+  add_command_mirror(tf_prefix + PASSTHROUGH_GPIO, "abort", &passthrough_trajectory_abort_);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO, "trajectory_size",
-                                                                       &passthrough_trajectory_size_));
+  add_command_mirror(tf_prefix + PASSTHROUGH_GPIO, "trajectory_size", &passthrough_trajectory_size_);
 
   for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO,
-                                                                         "setpoint_positions_" + std::to_string(i),
-                                                                         &passthrough_trajectory_positions_[i]));
+    add_command_mirror(tf_prefix + PASSTHROUGH_GPIO, "setpoint_positions_" + std::to_string(i),
+                       &passthrough_trajectory_positions_[i]);
   }
 
   for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO,
-                                                                         "setpoint_velocities_" + std::to_string(i),
-                                                                         &passthrough_trajectory_velocities_[i]));
+    add_command_mirror(tf_prefix + PASSTHROUGH_GPIO, "setpoint_velocities_" + std::to_string(i),
+                       &passthrough_trajectory_velocities_[i]);
   }
 
   for (size_t i = 0; i < 6; ++i) {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + PASSTHROUGH_GPIO,
-                                                                         "setpoint_accelerations_" + std::to_string(i),
-                                                                         &passthrough_trajectory_accelerations_[i]));
+    add_command_mirror(tf_prefix + PASSTHROUGH_GPIO, "setpoint_accelerations_" + std::to_string(i),
+                       &passthrough_trajectory_accelerations_[i]);
   }
 
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "linear_velocity_x", &urcl_twist_commands_[0]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "linear_velocity_y", &urcl_twist_commands_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "linear_velocity_z", &urcl_twist_commands_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "angular_velocity_x", &urcl_twist_commands_[3]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "angular_velocity_y", &urcl_twist_commands_[4]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + TWIST_GPIO, "angular_velocity_z", &urcl_twist_commands_[5]));
+  add_command_mirror(tf_prefix + TWIST_GPIO, "linear_velocity_x", &urcl_twist_commands_[0]);
+  add_command_mirror(tf_prefix + TWIST_GPIO, "linear_velocity_y", &urcl_twist_commands_[1]);
+  add_command_mirror(tf_prefix + TWIST_GPIO, "linear_velocity_z", &urcl_twist_commands_[2]);
+  add_command_mirror(tf_prefix + TWIST_GPIO, "angular_velocity_x", &urcl_twist_commands_[3]);
+  add_command_mirror(tf_prefix + TWIST_GPIO, "angular_velocity_y", &urcl_twist_commands_[4]);
+  add_command_mirror(tf_prefix + TWIST_GPIO, "angular_velocity_z", &urcl_twist_commands_[5]);
 
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_set_state", &tool_contact_set_state_));
+  add_command_mirror(tf_prefix + TOOL_CONTACT_GPIO, "tool_contact_set_state", &tool_contact_set_state_);
 
   // Motion primitives stuff
   // Command for motion type (motion_type)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                       "motion_type", &hw_moprim_commands_[0]));
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "motion_type", &hw_moprim_commands_[0]);
   // Joint position commands (q1, q2, ..., q6)
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q1", &hw_moprim_commands_[1]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q2", &hw_moprim_commands_[2]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q3", &hw_moprim_commands_[3]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q4", &hw_moprim_commands_[4]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q5", &hw_moprim_commands_[5]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q6", &hw_moprim_commands_[6]));
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q1", &hw_moprim_commands_[1]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q2", &hw_moprim_commands_[2]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q3", &hw_moprim_commands_[3]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q4", &hw_moprim_commands_[4]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q5", &hw_moprim_commands_[5]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "q6", &hw_moprim_commands_[6]);
   // Position commands (pos_x, pos_y, pos_z, pos_qx, pos_qy, pos_qz, pos_qz)
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_x", &hw_moprim_commands_[7]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_y", &hw_moprim_commands_[8]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_z", &hw_moprim_commands_[9]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qx", &hw_moprim_commands_[10]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qy", &hw_moprim_commands_[11]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qz", &hw_moprim_commands_[12]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qw", &hw_moprim_commands_[13]));
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_x", &hw_moprim_commands_[7]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_y", &hw_moprim_commands_[8]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_z", &hw_moprim_commands_[9]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qx", &hw_moprim_commands_[10]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qy", &hw_moprim_commands_[11]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qz", &hw_moprim_commands_[12]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_qw", &hw_moprim_commands_[13]);
   // Via Position commands for circula motion
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_x", &hw_moprim_commands_[14]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_y", &hw_moprim_commands_[15]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_z", &hw_moprim_commands_[16]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                       "pos_via_qx", &hw_moprim_commands_[17]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                       "pos_via_qy", &hw_moprim_commands_[18]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                       "pos_via_qz", &hw_moprim_commands_[19]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                       "pos_via_qw", &hw_moprim_commands_[20]));
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_x", &hw_moprim_commands_[14]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_y", &hw_moprim_commands_[15]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_z", &hw_moprim_commands_[16]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_qx", &hw_moprim_commands_[17]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_qy", &hw_moprim_commands_[18]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_qz", &hw_moprim_commands_[19]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "pos_via_qw", &hw_moprim_commands_[20]);
   // Other command parameters (blend_radius, velocity, acceleration, move_time)
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                       "blend_radius", &hw_moprim_commands_[21]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "velocity", &hw_moprim_commands_[22]));
-  command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES,
-                                                                       "acceleration", &hw_moprim_commands_[23]));
-  command_interfaces.emplace_back(
-      hardware_interface::CommandInterface(tf_prefix + HW_IF_MOTION_PRIMITIVES, "move_time", &hw_moprim_commands_[24]));
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "blend_radius", &hw_moprim_commands_[21]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "velocity", &hw_moprim_commands_[22]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "acceleration", &hw_moprim_commands_[23]);
+  add_command_mirror(tf_prefix + HW_IF_MOTION_PRIMITIVES, "move_time", &hw_moprim_commands_[24]);
 
-  return command_interfaces;
+  // Synchronize the async_success results after their commands. Controllers set the result to ASYNC_WAITING before
+  // writing a command, so reading the commands first guarantees that a new command comes with its ASYNC_WAITING, and
+  // the result written for it is published. Publishing the results last also clears a handled command before the
+  // controller can see the result and send the next one.
+  std::stable_partition(async_command_mirrors_.begin(), async_command_mirrors_.end(), [](const CommandMirror& mirror) {
+    return mirror.handle->get_interface_name().find("async_success") == std::string::npos;
+  });
+
+  freedrive_mode_abort_handle_ = get_command_interface_handle(tf_prefix + FREEDRIVE_MODE_GPIO + "/abort");
+
+  return exported_interfaces;
+}
+
+void URPositionHardwareInterface::add_state_mirror(const std::string& prefix, const std::string& name, double* value)
+{
+  // Throws if the description does not declare the interface.
+  const auto& handle = get_state_interface_handle(prefix + "/" + name);
+  // Exporting happens before the real-time loop starts, so blocking is fine here.
+  set_state(handle, *value, true);
+  state_mirrors_.push_back({ handle, value });
+}
+
+void URPositionHardwareInterface::add_command_mirror(const std::string& prefix, const std::string& name, double* value)
+{
+  command_mirrors_.push_back(make_command_mirror(prefix, name, value));
+}
+
+void URPositionHardwareInterface::add_async_command_mirror(const std::string& prefix, const std::string& name,
+                                                           double* value)
+{
+  async_command_mirrors_.push_back(make_command_mirror(prefix, name, value));
+}
+
+URPositionHardwareInterface::CommandMirror URPositionHardwareInterface::make_command_mirror(const std::string& prefix,
+                                                                                            const std::string& name,
+                                                                                            double* value)
+{
+  // Throws if the description does not declare the interface.
+  const auto& handle = get_command_interface_handle(prefix + "/" + name);
+  // Start from the member's initial value, as the raw-pointer export did.
+  set_command(handle, *value, true);
+  return { handle, value, *value, false };
+}
+
+void URPositionHardwareInterface::push_state_mirrors()
+{
+  for (const auto& mirror : state_mirrors_) {
+    // A failed update is repeated with the current value in the next cycle.
+    set_state(mirror.handle, *mirror.value, false);
+  }
+}
+
+void URPositionHardwareInterface::pull_command_mirrors(std::vector<CommandMirror>& mirrors, const bool blocking)
+{
+  for (auto& mirror : mirrors) {
+    if (mirror.dirty) {
+      // The hardware changed this command, but could not publish the change yet. Reading the interface now would
+      // undo that change, so retry publishing it instead.
+      if (set_command(mirror.handle, *mirror.value, blocking)) {
+        mirror.synced = *mirror.value;
+        mirror.dirty = false;
+      }
+      continue;
+    }
+    double value;
+    if (get_command(mirror.handle, value, blocking)) {
+      *mirror.value = value;
+      mirror.synced = value;
+    }
+  }
+}
+
+void URPositionHardwareInterface::push_command_mirrors(std::vector<CommandMirror>& mirrors, const bool blocking)
+{
+  for (auto& mirror : mirrors) {
+    // Only publish values the hardware changed itself. Everything else may have been written by a controller since it
+    // was read.
+    const bool changed = !(*mirror.value == mirror.synced || (std::isnan(*mirror.value) && std::isnan(mirror.synced)));
+    if (!changed && !mirror.dirty) {
+      continue;
+    }
+    if (set_command(mirror.handle, *mirror.value, blocking)) {
+      mirror.synced = *mirror.value;
+      mirror.dirty = false;
+    } else {
+      mirror.dirty = true;
+    }
+  }
 }
 
 hardware_interface::CallbackReturn
@@ -1074,6 +1113,10 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       force_mode_disable_cmd_ = NO_NEW_CMD_;
       freedrive_mode_abort_ = NO_NEW_CMD_;
       freedrive_mode_enable_ = NO_NEW_CMD_;
+      // Publish the initialized commands. The asynchronous ones have to be published before initialized_ lets
+      // checkAsyncIO() run, as from then on only the async thread synchronizes them.
+      push_command_mirrors(async_command_mirrors_, false);
+      push_command_mirrors(command_mirrors_, false);
       initialized_ = true;
     }
 
@@ -1083,10 +1126,13 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     hw_moprim_states_[0] = static_cast<uint8_t>(current_moprim_execution_status_.load());
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
 
+    push_state_mirrors();
     return hardware_interface::return_type::OK;
   }
   if (!non_blocking_read_)
     RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Unable to read from hardware...");
+  // States can also change outside of read(), e.g. in write() or in callbacks.
+  push_state_mirrors();
   // TODO(anyone): could not read from the driver --> return ERROR --> on error will be called
   return hardware_interface::return_type::OK;
 }
@@ -1094,6 +1140,19 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
 hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp::Time& time,
                                                                    const rclcpp::Duration& period)
 {
+  pull_command_mirrors(command_mirrors_, false);
+
+  const int trajectory_result = trajectory_result_.exchange(NO_TRAJECTORY_RESULT);
+  if (trajectory_result != NO_TRAJECTORY_RESULT) {
+    if (static_cast<urcl::control::TrajectoryResult>(trajectory_result) ==
+        urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE) {
+      passthrough_trajectory_abort_ = 1.0;
+    } else {
+      passthrough_trajectory_abort_ = 0.0;
+    }
+    passthrough_trajectory_transfer_state_ = 5.0;
+  }
+
   // If there is no interpreting program running on the robot, we do not want to send anything.
   // TODO(anyone): We would still like to disable the controllers requiring a writable interface. In ROS1
   // this was done externally using the controller_stopper.
@@ -1143,6 +1202,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     packet_read_ = false;
   }
 
+  push_command_mirrors(command_mirrors_, false);
+
   return hardware_interface::return_type::OK;
 }
 
@@ -1180,6 +1241,9 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!rtde_comm_has_been_started_) {
     return;
   }
+  // This thread is not real-time, so it can wait for the interface locks.
+  pull_command_mirrors(async_command_mirrors_, true);
+
   for (size_t i = 0; i < 18; ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
@@ -1280,6 +1344,8 @@ void URPositionHardwareInterface::checkAsyncIO()
     freedrive_activated_ = false;
     freedrive_mode_abort_ = NO_NEW_CMD_;
   }
+
+  push_command_mirrors(async_command_mirrors_, true);
 }
 
 void URPositionHardwareInterface::check_tool_contact_controller()
@@ -1405,7 +1471,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
 {
   hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-  start_modes_ = std::vector<std::vector<std::string>>(info_.joints.size());
+  start_modes_ = std::vector<std::set<std::string>>(info_.joints.size());
   stop_modes_ = std::vector<std::vector<uint32_t>>(info_.joints.size());
   std::vector<std::vector<std::string>> control_modes(info_.joints.size());
   const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
@@ -1441,7 +1507,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
     }
   }
 
-  auto is_mode_compatible = [this](const std::string& mode, const std::vector<std::string>& other_modes) {
+  auto is_mode_compatible = [this](const std::string& mode, const auto& other_modes) {
     for (auto& other : other_modes) {
       if (mode == other)
         continue;
@@ -1476,7 +1542,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
           if (!is_mode_compatible(item.second, start_modes_[i])) {
             return hardware_interface::return_type::ERROR;
           }
-          start_modes_[i].push_back(item.second);
+          start_modes_[i].insert(item.second);
           continue;
         }
       }
@@ -1484,7 +1550,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   }
 
   // effort control is only available from 5.23.0 / 10.10.0
-  if (std::any_of(start_modes_.begin(), start_modes_.end(), [&](const std::vector<std::string>& modes) {
+  if (std::any_of(start_modes_.begin(), start_modes_.end(), [&](const std::set<std::string>& modes) {
         return std::any_of(modes.begin(), modes.end(),
                            [&](const std::string& mode) { return mode == hardware_interface::HW_IF_EFFORT; });
       })) {
@@ -1497,7 +1563,7 @@ hardware_interface::return_type URPositionHardwareInterface::prepare_command_mod
   }
 
   if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
-                   [&](const std::vector<std::string>& other) { return other == start_modes_[0]; })) {
+                   [&](const std::set<std::string>& other) { return other == start_modes_[0]; })) {
     RCLCPP_ERROR(get_logger(), "Start modes of all joints have to be the same.");
     return hardware_interface::return_type::ERROR;
   }
@@ -1583,7 +1649,8 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                            StoppingInterface::STOP_FREEDRIVE) != stop_modes_[0].end()) {
     freedrive_mode_controller_running_ = false;
     freedrive_activated_ = false;
-    freedrive_mode_abort_ = 1.0;
+    // freedrive_mode_abort_ belongs to the async thread, which reads it from this interface.
+    set_command(freedrive_mode_abort_handle_, 1.0, false);
   }
 
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
@@ -1681,6 +1748,9 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   }
   start_modes_.clear();
   stop_modes_.clear();
+
+  // Publish the commands changed above before the controllers get activated.
+  push_command_mirrors(command_mirrors_, false);
 
   return ret_val;
 }
@@ -1830,12 +1900,9 @@ void URPositionHardwareInterface::check_passthrough_trajectory_controller()
 void URPositionHardwareInterface::trajectory_done_callback(urcl::control::TrajectoryResult result)
 {
   RCLCPP_INFO(get_logger(), "Trajectory done callback called with result: %d", static_cast<int>(result));
-  if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_FAILURE) {
-    passthrough_trajectory_abort_ = 1.0;
-  } else {
-    passthrough_trajectory_abort_ = 0.0;
-  }
-  passthrough_trajectory_transfer_state_ = 5.0;
+  // The passthrough members are synchronized with their command interfaces in write(). Writing them here would race
+  // with that, so write() applies the result.
+  trajectory_result_ = static_cast<int>(result);
 
   if (result == urcl::control::TrajectoryResult::TRAJECTORY_RESULT_CANCELED) {
     RCLCPP_INFO(get_logger(), "Robot stopped, TRAJECTORY_RESULT_CANCELED");
