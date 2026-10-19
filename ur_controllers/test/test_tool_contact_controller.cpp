@@ -70,8 +70,8 @@ protected:
     params.node_options = controller_.define_custom_node_options();
     ASSERT_EQ(controller_.init(params), controller_interface::return_type::OK);
 
-    command_interface_ = std::make_shared<hardware_interface::CommandInterface>("tool_contact", "tool_contact_set_"
-                                                                                                "state");
+    command_interface_ =
+        std::make_shared<hardware_interface::CommandInterface>("tool_contact", "tool_contact_set_state");
     state_interface_ = std::make_shared<hardware_interface::StateInterface>("tool_contact", "tool_contact_state");
     result_interface_ = std::make_shared<hardware_interface::StateInterface>("tool_contact", "tool_contact_result");
     ASSERT_TRUE(command_interface_->set_value(TOOL_CONTACT_STANDBY));
