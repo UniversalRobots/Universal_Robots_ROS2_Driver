@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.10.0 (2026-10-20)
+-------------------
 * [gravity_controller] Add missing include (backport `#2040 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2040>`_) (`#2043 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2043>`_)
 * Do not drop a tool contact goal handle before its terminal state is delivered (backport `#2005 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2005>`_) (`#2023 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2023>`_)
   Co-authored-by: Christian Rishøj <christian@rishoj.net>
