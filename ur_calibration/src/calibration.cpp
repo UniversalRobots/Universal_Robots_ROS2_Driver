@@ -227,10 +227,12 @@ YAML::Node Calibration::toYaml() const
     link["y"] = chain[i](1, 3);
     link["z"] = chain[i](2, 3);
     Eigen::Matrix3d rot = chain[i].topLeftCorner(3, 3);
-    Eigen::Vector3d rpy = rot.eulerAngles(0, 1, 2);
-    link["roll"] = rpy[0];
-    link["pitch"] = rpy[1];
-    link["yaw"] = rpy[2];
+    // URDF rpy is fixed-axis X-Y-Z, i.e. R = Rz(yaw) * Ry(pitch) * Rx(roll). Eigen's
+    // eulerAngles(2, 1, 0) returns (yaw, pitch, roll) for exactly that product.
+    Eigen::Vector3d ypr = rot.eulerAngles(2, 1, 0);
+    link["roll"] = ypr[2];
+    link["pitch"] = ypr[1];
+    link["yaw"] = ypr[0];
     node["kinematics"][link_names_[i]] = link;
   }
 
