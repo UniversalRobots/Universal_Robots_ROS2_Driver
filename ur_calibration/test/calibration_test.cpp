@@ -96,6 +96,11 @@ public:
                                                  { 0, 0, 0, 0, 0, 0 },                        // theta
                                                  { pi_2, 0, 0, pi_2, -pi_2, 0 }               // alpha
                                                  ) });
+    robot_models_.insert({ "ur20", model_from_dh({ 0.2363, 0, 0, 0.201, 0.1593, 0.1543 },  // d
+                                                 { 0, -0.862, -0.7287, 0, 0, 0 },          // a
+                                                 { 0, 0, 0, 0, 0, 0 },                     // theta
+                                                 { pi_2, 0, 0, pi_2, -pi_2, 0 }            // alpha
+                                                 ) });
     robot_models_.insert({ "ur10e", model_from_dh({ 0.1807, 0, 0, 0.17415, 0.11985, 0.11655 },  // d
                                                   { 0, -0.6127, -0.57155, 0, 0, 0 },            // a
                                                   { 0, 0, 0, 0, 0, 0 },                         // theta
@@ -205,6 +210,37 @@ TEST_P(CalibrationTest, calibration)
   }
 }
 
+// toYaml() feeds ur_description's <origin xyz rpy>, which composes
+// R = Rz(yaw) * Ry(pitch) * Rx(roll). Rebuild every link that way and the
+// chain must match the corrected D-H chain.
+TEST_P(CalibrationTest, yaml_rpy_is_urdf_convention)
+{
+  auto [robot_model, robot_calibration] = GetParam();
+  Calibration calibration(robot_models_.at(robot_model) + robot_calibration);
+  Eigen::Matrix<double, 6, 1> jointvalues = Eigen::Matrix<double, 6, 1>::Zero();
+  calibration.correctChain();
+  const YAML::Node yaml = calibration.toYaml()["kinematics"];
+  const char* names[] = { "shoulder", "upper_arm", "forearm", "wrist_1", "wrist_2", "wrist_3" };
+  for (size_t i = 0; i < 100; ++i) {
+    jointvalues = 2 * pi * Eigen::Matrix<double, 6, 1>::Random();
+    Eigen::Matrix4d urdf = Eigen::Matrix4d::Identity();
+    for (size_t j = 0; j < 6; ++j) {
+      const YAML::Node link = yaml[names[j]];
+      Eigen::Matrix4d origin = Eigen::Matrix4d::Identity();
+      origin.topLeftCorner(3, 3) = (Eigen::AngleAxisd(link["yaw"].as<double>(), Eigen::Vector3d::UnitZ()) *
+                                    Eigen::AngleAxisd(link["pitch"].as<double>(), Eigen::Vector3d::UnitY()) *
+                                    Eigen::AngleAxisd(link["roll"].as<double>(), Eigen::Vector3d::UnitX()))
+                                       .toRotationMatrix();
+      origin.topRightCorner(3, 1) << link["x"].as<double>(), link["y"].as<double>(), link["z"].as<double>();
+      Eigen::Matrix4d rotation = Eigen::Matrix4d::Identity();
+      rotation.topLeftCorner(3, 3) = Eigen::AngleAxisd(jointvalues(j), Eigen::Vector3d::UnitZ()).toRotationMatrix();
+      urdf *= origin * rotation;
+    }
+    const Eigen::Matrix4d dh = calibration.calcForwardKinematics(jointvalues);
+    EXPECT_LT((urdf - dh).cwiseAbs().maxCoeff(), 1e-9);
+  }
+}
+
 // Tests are parametrized by both, the robot model (e.g. "ur10e") and the DH diff as they are stored on the robot
 // controller's calibration file.
 // The test will then assemble the DH parameters using the ones from the base model and the calibration.
@@ -222,6 +258,12 @@ INSTANTIATE_TEST_SUITE_P(
                                         0.0013495820227329425, -0.001263136163679901, 0 }  // alpha
                                       )),
 
+        // Synthetic calibration with deltas of typical magnitude (~1 mm, ~1 mrad).
+        std::make_tuple("ur20", model_from_dh({ -0.0008, 0.0013, -0.0012, 0.0009, -0.0005, 0.0007 },  // d
+                                              { 0.0007, -0.0015, 0.0011, 0.0004, -0.0006, 0 },        // a
+                                              { 0.0012, -0.0021, 0.0017, -0.0009, 0.0014, -0.0011 },  // theta
+                                              { 0.0010, -0.0008, 0.0006, -0.0012, 0.0009, 0 }         // alpha
+                                              )),
         std::make_tuple("ur10e",
                         model_from_dh({ -0.000144894975118076141, 303.469135666158195, -309.88394307789747,
                                         6.41459904397394975, -4.48232900190081995e-05, -0.00087071402790364627 },  // d
