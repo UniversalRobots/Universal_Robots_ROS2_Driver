@@ -37,9 +37,10 @@
  */
 //----------------------------------------------------------------------
 
-#include "ur_controllers/gravity_update_controller.hpp"
-
 #include <string>
+#include <lifecycle_msgs/msg/state.hpp>
+
+#include "ur_controllers/gravity_update_controller.hpp"
 
 namespace ur_controllers
 {
