@@ -200,6 +200,7 @@ tool_contact_controller:
 motion_primitive_forward_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
+    hardware_solves_kinematics: true
 
 gravity_update_controller:
   ros__parameters:
