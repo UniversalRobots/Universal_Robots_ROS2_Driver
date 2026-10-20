@@ -1,5 +1,5 @@
-Forthcoming
------------
+4.10.0 (2026-10-20)
+-------------------
 * [move_until_node] Do not force an illegal terminal transition on an unrequested CANCELED child result (backport `#2003 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2003>`_) (`#2016 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2016>`_)
   Co-authored-by: Christian Rishøj <christian@rishoj.net>
 * Make urscript_interface and dashboard_client startup interruptible (backport `#2006 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2006>`_) (`#2010 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2010>`_)
