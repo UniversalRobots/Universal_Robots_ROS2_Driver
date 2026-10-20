@@ -103,6 +103,8 @@ public:
     INotifier notifier;
 
     Pipeline<PrimaryPackage> pipeline(prod, &consumer, "Pipeline", notifier);
+    // init() establishes the primary-interface connection; without it the stream is never connected.
+    pipeline.init();
     pipeline.run();
     while (!consumer.isCalibrated()) {
       rclcpp::sleep_for(rclcpp::Duration::from_seconds(0.1).to_chrono<std::chrono::nanoseconds>());

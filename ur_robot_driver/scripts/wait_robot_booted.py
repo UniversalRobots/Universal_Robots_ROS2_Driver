@@ -111,8 +111,8 @@ def parse_args(argv=None):
     parser.add_argument(
         "--timeout",
         type=float,
-        default=120.0,
-        help="Overall time to wait in seconds (default: 120)",
+        default=180.0,
+        help="Overall time to wait in seconds (default: 180)",
     )
     parser.add_argument(
         "--interval",

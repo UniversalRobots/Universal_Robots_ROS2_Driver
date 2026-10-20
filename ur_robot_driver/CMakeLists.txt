@@ -133,12 +133,15 @@ target_link_libraries(controller_stopper_node PRIVATE
 #
 # robot_state_helper
 #
-add_executable(robot_state_helper
+add_library(robot_state_helper_lib SHARED
   src/robot_state_helper.cpp
-  src/robot_state_helper_node.cpp
   src/urcl_log_handler.cpp
 )
-target_link_libraries(robot_state_helper PUBLIC
+target_include_directories(robot_state_helper_lib PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
+)
+target_link_libraries(robot_state_helper_lib PUBLIC
   ${std_msgs_TARGETS}
   ${std_srvs_TARGETS}
   ${ur_dashboard_msgs_TARGETS}
@@ -146,9 +149,16 @@ target_link_libraries(robot_state_helper PUBLIC
   rclcpp_action::rclcpp_action
   ur_client_library::urcl
 )
+add_executable(robot_state_helper
+  src/robot_state_helper_node.cpp
+)
+target_link_libraries(robot_state_helper
+  robot_state_helper_lib
+)
 
 add_executable(urscript_interface
   src/urscript_interface.cpp
+  src/urcl_log_handler.cpp
 )
 target_link_libraries(urscript_interface PUBLIC
   rclcpp::rclcpp
@@ -180,6 +190,12 @@ install(
     robot_state_helper
     trajectory_until_node
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  TARGETS robot_state_helper_lib
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION lib
 )
 
 # INSTALL
@@ -216,6 +232,7 @@ ament_export_dependencies(
   hardware_interface
   pluginlib
   rclcpp
+  rclcpp_action
   rclcpp_lifecycle
   controller_manager
   controller_manager_msgs
@@ -238,6 +255,7 @@ install(PROGRAMS
   scripts/wait_robot_booted.py
   scripts/example_move.py
   scripts/start_ursim.sh
+  scripts/wait_robot_booted.py
   examples/examples.py
   examples/force_mode.py
   examples/send_dummy_motion_primitives_ur10e.py
@@ -269,9 +287,41 @@ if(BUILD_TESTING)
     ur_robot_driver_plugin
   )
 
+  ament_add_gmock(test_hardware_interface_exports
+    test/test_hardware_interface_exports.cpp
+  )
+  target_link_libraries(test_hardware_interface_exports
+    ur_robot_driver_plugin
+    hardware_interface::hardware_interface
+  )
+  target_include_directories(test_hardware_interface_exports PRIVATE
+    include
+    ${motion_primitives_controllers_INCLUDE_DIRS}
+  )
+
+  ament_add_gmock(test_robot_state_helper
+    test/test_robot_state_helper.cpp
+  )
+  target_link_libraries(test_robot_state_helper
+    robot_state_helper_lib
+    rclcpp::rclcpp
+    rclcpp_action::rclcpp_action
+    ${std_srvs_TARGETS}
+  )
+
   add_launch_test(test/test_mock_hardware.py
     TIMEOUT
       800
+  )
+
+  add_launch_test(test/urscript_interface_interruptible_startup.py
+    TIMEOUT
+      30
+  )
+
+  add_launch_test(test/dashboard_client_interruptible_startup.py
+    TIMEOUT
+      30
   )
 
   if(${UR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS})
@@ -357,6 +407,13 @@ if(BUILD_TESTING)
         dashboard_g5
     )
     add_launch_test(test/integration_test_io_controller.py
+      TIMEOUT
+        800
+      LABELS
+        ursim
+        dashboard_g5
+    )
+    add_launch_test(test/integration_test_joint_efforts.py
       TIMEOUT
         800
       LABELS

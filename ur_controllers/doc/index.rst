@@ -128,6 +128,10 @@ filled with all joint names.
 A **goal time tolerance** of ``0.0`` means that no goal time tolerance is set and the action will
 not fail when execution takes too long.
 
+A goal tolerance of ``0.0`` disables the corresponding tolerance check. For example, a
+position tolerance of ``0.0`` means that the final joint position is not checked. The same
+applies to velocity and acceleration tolerances.
+
 Action interface / usage
 """"""""""""""""""""""""
 

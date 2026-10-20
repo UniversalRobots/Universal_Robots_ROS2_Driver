@@ -26,23 +26,30 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include <memory>
+
+#include <rclcpp/utilities.hpp>
+#include <rclcpp/executors/multi_threaded_executor.hpp>
+
+#include "ur_client_library/exceptions.h"
 #include "ur_robot_driver/robot_state_helper.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
 
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("robot_state_helper");
   ur_robot_driver::registerUrclLogHandler("");  // Set empty tf_prefix at the moment
+
   std::shared_ptr<ur_robot_driver::RobotStateHelper> robot_state_helper;
   try {
-    robot_state_helper = std::make_shared<ur_robot_driver::RobotStateHelper>(node);
+    robot_state_helper = std::make_shared<ur_robot_driver::RobotStateHelper>(rclcpp::NodeOptions());
   } catch (const urcl::UrException& e) {
     RCLCPP_ERROR(rclcpp::get_logger("robot_state_helper"), "%s", e.what());
+    return 1;
   }
 
   rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(node);
+  executor.add_node(robot_state_helper);
   executor.spin();
 
   return 0;

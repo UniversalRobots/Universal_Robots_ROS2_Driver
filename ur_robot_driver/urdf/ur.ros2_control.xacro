@@ -29,6 +29,7 @@
     robot_receive_timeout:=0.04
     rw_rate:=0
     verify_robot_model:=true
+    use_currents_as_efforts:=false
     ">
     <!-- rw_rate of 0 uses the rate of the controller_manager -->
 
@@ -77,6 +78,7 @@
           <param name="tool_tcp_port">${tool_tcp_port}</param>
           <param name="robot_receive_timeout">${robot_receive_timeout}</param>
           <param name="verify_robot_model">${verify_robot_model}</param>
+          <param name="use_currents_as_efforts">${use_currents_as_efforts}</param>
         </xacro:unless>
       </hardware>
 
@@ -186,13 +188,21 @@
         <state_interface name="tool_analog_input_type_0"/>
         <state_interface name="tool_analog_input_type_1"/>
 
-        <state_interface name="robot_mode"/>
+        <state_interface name="robot_mode">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">7</param>
+          </xacro:if>
+        </state_interface>
         <state_interface name="robot_status_bit_0"/>
         <state_interface name="robot_status_bit_1"/>
         <state_interface name="robot_status_bit_2"/>
         <state_interface name="robot_status_bit_3"/>
 
-        <state_interface name="safety_mode"/>
+        <state_interface name="safety_mode">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">1</param>
+          </xacro:if>
+        </state_interface>
         <state_interface name="safety_status_bit_0"/>
         <state_interface name="safety_status_bit_1"/>
         <state_interface name="safety_status_bit_2"/>
@@ -205,7 +215,11 @@
         <state_interface name="safety_status_bit_9"/>
         <state_interface name="safety_status_bit_10"/>
 
-        <state_interface name="program_running"/>
+        <state_interface name="program_running">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">1</param>
+          </xacro:if>
+        </state_interface>
       </gpio>
 
       <gpio name="${tf_prefix}payload">

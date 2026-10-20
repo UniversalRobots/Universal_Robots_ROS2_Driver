@@ -58,6 +58,7 @@ jobs:
       ROS_DISTRO: ${{ inputs.ros_distro }}
       UR_CI_ROBOT_IP: 192.168.56.101
       UR_CI_UR_TYPE: ${{ matrix.ursim_type }}
+      UR_CI_URSIM_VERSION: ${{ matrix.ursim_version }}
       CI_IMAGE: ${{ inputs.ci_image }}
       EXCLUDE_DASHBOARD_G5: ${{ matrix.exclude_dashboard_g5 }}
     steps:
@@ -104,6 +105,7 @@ jobs:
             -e ROS_DISTRO \
             -e UR_CI_ROBOT_IP \
             -e UR_CI_UR_TYPE \
+            -e UR_CI_URSIM_VERSION \
             -e EXCLUDE_DASHBOARD_G5 \
             -e UR_TEST_ARTIFACTS_DIR=/tmp/ur_test_artifacts \
             "${CI_IMAGE}" \

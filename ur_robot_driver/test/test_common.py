@@ -57,6 +57,7 @@ from std_srvs.srv import Trigger
 from ur_dashboard_msgs.msg import RobotMode
 from ur_dashboard_msgs.srv import (
     DownloadProgram,
+    DownloadSupportFile,
     GetLoadedProgram,
     GetProgramState,
     GetPrograms,
@@ -75,6 +76,8 @@ from ur_dashboard_msgs.srv import (
     GetSafetyStatus,
     SetOperationalMode,
     SetUserRole,
+    AddToLog,
+    Popup,
 )
 from ur_msgs.srv import (
     SetIO,
@@ -317,6 +320,7 @@ class DashboardInterface(
         "upload_program": UploadProgram,
         "update_program": UploadProgram,
         "download_program": DownloadProgram,
+        "download_support_file": DownloadSupportFile,
         "clear_operational_mode": Trigger,
         "generate_flight_report": GenerateFlightReport,
         "generate_support_file": GenerateSupportFile,
@@ -328,6 +332,9 @@ class DashboardInterface(
         "get_user_role": GetUserRole,
         "set_operational_mode": SetOperationalMode,
         "set_user_role": SetUserRole,
+        "add_to_log": AddToLog,
+        "popup": Popup,
+        "shutdown": Trigger,
     },
 ):
     def start_robot(self):
@@ -379,8 +386,8 @@ class DashboardInterface(
         """
         Detect CB3 / PolyScope 5 / PolyScope X via the dashboard.
 
-        ``get_polyscope_version`` is supported on CB3 and PolyScope 5. On PolyScope X
-        the call fails, which we treat as PolyScope X.
+        ``get_polyscope_version`` is supported on CB3, PolyScope 5, and PolyScope X >= 10.14.
+        Older PolyScope X builds fail the call, which we also treat as PolyScope X.
         """
         resp = self.get_polyscope_version()
         if not resp.success:
@@ -389,6 +396,8 @@ class DashboardInterface(
             return CB3
         if resp.version.major == 5:
             return POLYSCOPE_5
+        if resp.version.major >= 10:
+            return POLYSCOPE_X
         logging.warning(
             "Unexpected PolyScope major version %s; treating as PolyScope 5",
             resp.version.major,
@@ -669,7 +678,6 @@ def generate_dashboard_test_description(autoconnect="true"):
             "autoconnect": autoconnect,
         }.items(),
     )
-
     return LaunchDescription(_declare_launch_arguments() + [ReadyToTest(), dashboard_client])
 
 
@@ -714,6 +722,7 @@ def generate_driver_test_description(
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
     headless_mode=True,
     ur_type=None,
+    use_currents_as_efforts=None,
 ):
     """Launch the driver against an externally started robot/URSim."""
     if ur_type is None:
@@ -729,6 +738,8 @@ def generate_driver_test_description(
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
+    if use_currents_as_efforts is not None:
+        launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
 
@@ -757,6 +768,7 @@ def generate_driver_test_description_for_model(
     controller_spawner_timeout=TIMEOUT_WAIT_SERVICE_INITIAL,
     ursim_version="latest",
     ursim_type=None,
+    use_currents_as_efforts=None,
 ):
     """
     Bring up URSim and the driver for an explicit ``ur_type``.
@@ -780,6 +792,8 @@ def generate_driver_test_description_for_model(
         "launch_dashboard_client": "true",
         "start_joint_controller": "false",
     }
+    if use_currents_as_efforts is not None:
+        launch_arguments["use_currents_as_efforts"] = use_currents_as_efforts
     if tf_prefix:
         launch_arguments["tf_prefix"] = tf_prefix
 

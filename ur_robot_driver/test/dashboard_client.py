@@ -31,8 +31,8 @@ import sys
 import time
 import unittest
 
-import pytest
 import launch_testing
+import pytest
 import rclpy
 from rclpy.node import Node
 from ur_dashboard_msgs.msg import RobotMode, UserRole, OperationalMode, SafetyStatus
@@ -48,9 +48,55 @@ from test_common import (  # noqa: E402
 )
 
 
+def _version_tuple(version_str):
+    return tuple(int(part) for part in version_str.split(".")[:3])
+
+
+def _is_polyscope_x_at_least(ursim_version, min_version):
+    """
+    Return True if ursim_version is PolyScope X >= min_version.
+
+    ``latest`` is treated as the newest PolyScope 5 image therefore the result will be False. Numbered 10.x tags are compared
+    numerically. CB3 / PolyScope 5 tags return False.
+    """
+    if not ursim_version.startswith("10."):
+        return False
+    return _version_tuple(ursim_version) >= _version_tuple(min_version)
+
+
+def _is_older_polyscope_x(ursim_version, min_version):
+    """Return True for numbered PolyScope X tags older than min_version."""
+    return ursim_version.startswith("10.") and not _is_polyscope_x_at_least(
+        ursim_version, min_version
+    )
+
+
+def _ci_ursim_version():
+    """Return the URSim image tag from CI (``latest``, ``10.12.0``, ...). Empty when unset."""
+    return os.environ.get("UR_CI_URSIM_VERSION", "")
+
+
+def _skip_unless_polyscope_x_10_14(test_case, polyscope_family, feature):
+    """
+    Skip ``feature`` on PolyScope X older than 10.14.0.
+
+    CI passes the image tag in ``UR_CI_URSIM_VERSION``. Without that tag, a detected
+    PolyScope X robot is treated as pre-10.14, because those builds do not report a
+    version through the dashboard.
+    """
+    version = _ci_ursim_version()
+    if version:
+        if _is_older_polyscope_x(version, "10.14.0"):
+            test_case.skipTest(f"{feature} requires PolyScope X >= 10.14.0")
+        return
+    if polyscope_family == POLYSCOPE_X:
+        test_case.skipTest(f"{feature} requires PolyScope X >= 10.14.0")
+
+
 @pytest.mark.launch_test
 @launch_testing.parametrize("autoconnect", [("true"), ("false")])
 def generate_test_description(autoconnect):
+    # URSim is started by CI. This test only launches the dashboard client.
     return generate_dashboard_test_description(autoconnect=autoconnect)
 
 
@@ -166,15 +212,19 @@ class DashboardClientTest(unittest.TestCase):
         self.assertTrue(result.success)
 
     def test_get_polyscope_version(self):
-        if self.polyscope_family == POLYSCOPE_X:
-            self.skipTest("Getting polyscope version is not supported on PolyScope X")
+        _skip_unless_polyscope_x_10_14(self, self.polyscope_family, "Getting polyscope version")
         resp = self._dashboard_interface.get_polyscope_version()
         self.assertTrue(resp.success)
-        self.assertNotEqual(resp.version.major, 0)
+        ursim_version = _ci_ursim_version()
+        if ursim_version and ursim_version != "latest":
+            self.assertEqual(resp.version.major, _version_tuple(ursim_version)[0])
+            self.assertEqual(resp.version.minor, _version_tuple(ursim_version)[1])
+            self.assertEqual(resp.version.bugfix, _version_tuple(ursim_version)[2])
+        else:
+            self.assertNotEqual(resp.version.major, 0)
 
     def test_get_serial_number(self):
-        if self.polyscope_family == POLYSCOPE_X:
-            self.skipTest("Getting serial number is not supported on PolyScope X")
+        _skip_unless_polyscope_x_10_14(self, self.polyscope_family, "Getting serial number")
         resp = self._dashboard_interface.get_serial_number()
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.serial_number, 0)
@@ -222,8 +272,7 @@ class DashboardClientTest(unittest.TestCase):
         self.assertIn(resp.operational_mode.mode, ["MANUAL", "AUTOMATIC"])
 
     def test_get_robot_model(self):
-        if self.polyscope_family == POLYSCOPE_X:
-            self.skipTest("Getting robot model not supported on PolyScope X, skipping tests")
+        _skip_unless_polyscope_x_10_14(self, self.polyscope_family, "Getting robot model")
         resp = self._dashboard_interface.get_robot_model()
         self.assertTrue(resp.success)
         self.assertTrue("UR" in resp.robot_model)
@@ -236,15 +285,51 @@ class DashboardClientTest(unittest.TestCase):
         self.assertEqual(resp.safety_status.status, SafetyStatus.NORMAL)
 
     def test_generate_flight_report(self):
-        if self.polyscope_family == POLYSCOPE_X:
-            self.skipTest("Generating flight report not supported on PolyScope X, skipping tests")
+        _skip_unless_polyscope_x_10_14(self, self.polyscope_family, "Generating flight report")
         resp = self._dashboard_interface.generate_flight_report()
+        # PolyScope X requires remote control for this endpoint.
+        if not resp.success and "Forbidden" in resp.answer:
+            self.skipTest("Generating flight report requires remote control on PolyScope X")
         self.assertTrue(resp.success)
-        self.assertNotEqual(resp.report_id, "")
+        # PolyScope 5 / CB3 return a report id; PolyScope X currently does not.
+        if self.polyscope_family != POLYSCOPE_X:
+            self.assertNotEqual(resp.report_id, "")
 
     def test_generate_support_file(self):
         if self.polyscope_family == POLYSCOPE_X:
-            self.skipTest("Generating support file not supported on PolyScope X, skipping tests")
+            self.skipTest("Generating support file is not supported on PolyScope X")
         resp = self._dashboard_interface.generate_support_file()
         self.assertTrue(resp.success)
         self.assertNotEqual(resp.generated_file_name, "")
+
+    def test_download_support_file(self):
+        target_path = "/tmp/ur_dashboard_support_files.zip"
+        if os.path.exists(target_path):
+            os.remove(target_path)
+        resp = self._dashboard_interface.download_support_file(target_path=target_path)
+        ursim_version = _ci_ursim_version()
+        if ursim_version and _is_polyscope_x_at_least(ursim_version, "10.14.0"):
+            # On a simulator that results in a 404 error.
+            if not resp.success:
+                self.assertIn("404", resp.answer)
+            elif resp.support_files_present:
+                self.assertTrue(os.path.isfile(target_path))
+                if resp.support_files_present:
+                    self.assertGreater(os.path.getsize(target_path), 0)
+        else:
+            self.assertFalse(resp.success)
+            self.assertFalse(os.path.isfile(target_path))
+
+    def test_popup_and_add_to_log(self):
+        _skip_unless_polyscope_x_10_14(self, self.polyscope_family, "Popup / add_to_log")
+        popup_resp = self._dashboard_interface.popup(message="ROS2 dashboard test", title="Test")
+        # PolyScope X requires remote control for popup / log endpoints.
+        if not popup_resp.success and "Forbidden" in popup_resp.answer:
+            self.skipTest("Popup / add_to_log require remote control on PolyScope X")
+        self.assertTrue(popup_resp.success)
+        self.assertTrue(self._dashboard_interface.close_popup().success)
+
+        log_resp = self._dashboard_interface.add_to_log(message="ROS2 dashboard test log")
+        if not log_resp.success and "Forbidden" in log_resp.answer:
+            self.skipTest("add_to_log requires remote control on PolyScope X")
+        self.assertTrue(log_resp.success)
