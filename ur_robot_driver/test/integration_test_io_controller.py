@@ -297,6 +297,30 @@ class IOControllerTest(unittest.TestCase):
         )
         self.assertFalse(result.success)
 
+    def test_tool_voltage_t2_rejects_other_values(self):
+        """Connector T2 accepts only exactly 0, 24 and 48 V.
+
+        48.5 must not be truncated into a 48 V command, and a non-finite value must not be
+        reported as success.
+        """
+        energized = False
+        try:
+            for state in (12.0, 48.5, float("nan"), float("inf")):
+                result = self._io_status_controller_interface.set_io(
+                    fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                    pin=0,
+                    state=state,
+                )
+                energized = energized or bool(result.success)
+                self.assertFalse(result.success, f"T2 accepted {state}")
+        finally:
+            if energized:
+                self._io_status_controller_interface.set_io(
+                    fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                    pin=0,
+                    state=float(SetIO.Request.STATE_TOOL_VOLTAGE_0V),
+                )
+
     def test_tool_voltage_t2(self):
         """T2 accepts the command only when the robot reports connector T2.
 

@@ -683,7 +683,13 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
       // Tool voltage on connector T2 (0, 24 or 48). The UrDriver constructor throws unless the
       // robot reports Tool Flange V2. The 10.15 check gates runtime commands, not this startup path.
       if (!tool_voltage_t2_parameter.empty()) {
-        const ToolVoltageT tool_voltage_t2 = std::stoi(tool_voltage_t2_parameter);
+        // std::stoi("48.5") and std::stoi("48invalid") both return 48. Require the whole string.
+        std::size_t parsed_chars = 0;
+        const int tool_voltage_t2 = std::stoi(tool_voltage_t2_parameter, &parsed_chars);
+        if (parsed_chars != tool_voltage_t2_parameter.size()) {
+          throw std::invalid_argument("tool_voltage_t2 must be exactly 0, 24 or 48, got '" + tool_voltage_t2_parameter +
+                                      "'");
+        }
         tool_comm_setup->setToolVoltageT2(static_cast<urcl::ToolVoltage>(tool_voltage_t2));
       }
 

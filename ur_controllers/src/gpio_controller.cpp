@@ -566,6 +566,14 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
       resp->success = false;
       return false;
     }
+    // Exactly 0, 24 or 48. A cast of 48.5 would otherwise become an accepted 48 V command, and NaN
+    // would leave the async flag waiting, which the service reports as success.
+    if (req->state != req->STATE_TOOL_VOLTAGE_0V && req->state != req->STATE_TOOL_VOLTAGE_24V &&
+        req->state != req->STATE_TOOL_VOLTAGE_48V) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 accepts 0, 24 or 48 V. Requested '%f'.", req->state);
+      resp->success = false;
+      return false;
+    }
     std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     std::ignore = command_interfaces_[tool_voltage_t2_cmd_idx].set_value(static_cast<double>(req->state));
 
