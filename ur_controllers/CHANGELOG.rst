@@ -2,6 +2,14 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [gravity_controller] Add missing include (`#2040 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2040>`_)
+* Do not drop a tool contact goal handle before its terminal state is delivered (backport `#2005 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2005>`_) (`#2024 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2024>`_)
+  Co-authored-by: Christian Rishøj <christian@rishoj.net>
+  Co-authored-by: Claude Fable 5 <noreply@anthropic.com>
+* Contributors: Felix Exner, mergify[bot]
+
 4.9.0 (2026-09-11)
 ------------------
 * Fix tolerance parsing in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1966 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1966>`_)
