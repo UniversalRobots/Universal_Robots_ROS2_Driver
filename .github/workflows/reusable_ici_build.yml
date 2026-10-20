@@ -87,12 +87,12 @@ jobs:
             ccache-${{ env.CACHE_PREFIX }}
       - name: Set workspace cache key
         id: workspace_cache_key
-        run: echo "key=ici-ws-${{ env.CACHE_PREFIX }}-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+        run: echo "key=ici-ws-${{ env.CACHE_PREFIX }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_OUTPUT"
       - name: Set CI image names
         id: ci_image
         run: |
           image="ur-robot-driver-ci:${{ inputs.ros_distro }}-${{ inputs.ros_repo }}-${{ github.sha }}"
-          artifact="ci-image-${{ inputs.ros_distro }}-${{ inputs.ros_repo }}-${{ github.run_id }}"
+          artifact="ci-image-${{ inputs.ros_distro }}-${{ inputs.ros_repo }}-${{ github.run_id }}-${{ github.run_attempt }}"
           echo "image=${image}" >> "$GITHUB_OUTPUT"
           echo "artifact=${artifact}" >> "$GITHUB_OUTPUT"
       - name: Detect robot models test changes

@@ -727,6 +727,8 @@ def generate_driver_test_description(
     """Launch the driver against an externally started robot/URSim."""
     if ur_type is None:
         ur_type = _ci_ur_type()
+    if use_currents_as_efforts is None and ur_type in ("ur3", "ur5", "ur10"):
+        use_currents_as_efforts = "true"
 
     launch_arguments = {
         "robot_ip": _robot_ip(),
