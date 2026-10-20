@@ -306,28 +306,31 @@ class IOControllerTest(unittest.TestCase):
         subscription, t2_state = self._open_tool_data_t2()
         try:
             available = self._wait_for_tool_data_t2(t2_state) is not None
-            result = self._io_status_controller_interface.set_io(
-                fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
-                pin=0,
-                state=float(SetIO.Request.STATE_TOOL_VOLTAGE_24V),
-            )
-            if not available:
-                self.assertFalse(result.success)
-                return
-
-            self.assertTrue(result.success)
             measure = os.environ.get("UR_TOOL_T2_MEASURE_VOLTAGE") == "1"
             try:
-                if measure:
-                    self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_24V)
+                result = self._io_status_controller_interface.set_io(
+                    fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                    pin=0,
+                    state=float(SetIO.Request.STATE_TOOL_VOLTAGE_24V),
+                )
+                if available:
+                    self.assertTrue(result.success)
+                    if measure:
+                        self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_24V)
+                else:
+                    self.assertFalse(result.success)
             finally:
+                # Best-effort. An assertion failure, or discovery timing out, must still
+                # request 0 V so a real connector is not left at 24 V. The request is only
+                # required to succeed when the robot reported connector T2.
                 off = self._io_status_controller_interface.set_io(
                     fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
                     pin=0,
                     state=float(SetIO.Request.STATE_TOOL_VOLTAGE_0V),
                 )
-            self.assertTrue(off.success)
-            if measure:
-                self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_0V)
+            if available:
+                self.assertTrue(off.success)
+                if measure:
+                    self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_0V)
         finally:
             self.node.destroy_subscription(subscription)

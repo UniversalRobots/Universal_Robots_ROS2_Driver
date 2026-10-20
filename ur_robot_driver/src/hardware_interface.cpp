@@ -624,16 +624,17 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   const bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
                                       (info_.hardware_parameters["use_tool_communication"] == "True");
-  // Empty means "do not set a startup voltage". Connector T2 is only energized at startup when tool
-  // communication is enabled, because that is the only path URCL has for a startup tool voltage.
+  // Empty means "do not set a startup voltage". URCL applies tool_voltage_t2 only with the tool
+  // communication setup. With use_tool_communication false the connector is left as the robot
+  // already has it, including a voltage stored on the teach pendant.
   const auto tool_voltage_t2_it = info_.hardware_parameters.find("tool_voltage_t2");
   const std::string tool_voltage_t2_parameter =
       tool_voltage_t2_it == info_.hardware_parameters.end() ? "" : tool_voltage_t2_it->second;
   if (!tool_voltage_t2_parameter.empty() && !use_tool_communication) {
     RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"),
-                "tool_voltage_t2 is set to '%s' but use_tool_communication is false, so connector T2 is not energized "
-                "at startup. Enable use_tool_communication, or set the voltage at runtime with "
-                "~/set_io function FUN_SET_TOOL_VOLTAGE_T2.",
+                "tool_voltage_t2 is set to '%s' but use_tool_communication is false, so the startup value is not "
+                "applied and connector T2 keeps its current voltage. Enable use_tool_communication to apply it at "
+                "startup, or set the voltage at runtime with ~/set_io function FUN_SET_TOOL_VOLTAGE_T2.",
                 tool_voltage_t2_parameter.c_str());
   }
 
