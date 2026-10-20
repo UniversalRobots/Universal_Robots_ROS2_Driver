@@ -124,7 +124,7 @@ This can also be configured using the robot teach pendant. Remember to save the 
 tool_voltage_t2
 ---------------
 
-Startup voltage for connector T2 on Tool Flange V2. Valid values are 0, 24 and 48. Leave it empty to leave connector T2 unchanged.
+Startup voltage for connector T2 on Tool Flange V2. Valid values are exactly ``0``, ``24`` and ``48``. A prefix such as ``48.5`` is rejected and does not energize the connector. Leave it empty to leave connector T2 unchanged.
 
 The value is only applied when ``use_tool_communication`` is ``true``, because that is when the driver builds the tool setup URCL applies at startup. URCL refuses that startup when the robot does not report Tool Flange V2. The PolyScope X 10.15 check applies to runtime commands and telemetry, not to this startup path. A V2 flange is not reported before 10.15.
 
