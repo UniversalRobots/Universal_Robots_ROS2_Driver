@@ -2,6 +2,14 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [gravity_controller] Add missing include (backport `#2040 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2040>`_) (`#2043 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2043>`_)
+* Do not drop a tool contact goal handle before its terminal state is delivered (backport `#2005 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2005>`_) (`#2023 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2023>`_)
+  Co-authored-by: Christian Rishøj <christian@rishoj.net>
+  Co-authored-by: Claude Fable 5 <noreply@anthropic.com>
+* Contributors: mergify[bot]
+
 3.9.0 (2026-09-11)
 ------------------
 * Fix flaky quintic spline test in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1965 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1965>`_)
