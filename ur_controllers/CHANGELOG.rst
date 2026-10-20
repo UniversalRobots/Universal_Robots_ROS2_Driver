@@ -2,6 +2,16 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Migrate ur_robot_driver off deprecated Handle raw-pointer API (backport `#2033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2033>`_) (`#2035 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2035>`_)
+  Co-authored-by: Dr. Denis <denis.stogl@b-robotized.com>
+  Co-authored-by: Claude Sonnet 5 <noreply@anthropic.com>
+* Do not drop a tool contact goal handle before its terminal state is delivered (backport `#2005 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2005>`_) (`#2025 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2025>`_)
+  Co-authored-by: Christian Rishøj <christian@rishoj.net>
+  Co-authored-by: Claude Fable 5 <noreply@anthropic.com>
+* Contributors: mergify[bot]
+
 6.1.0 (2026-09-10)
 ------------------
 * Fix tolerance parsing in passthrough controller (backport `#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_) (`#1967 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1967>`_)
