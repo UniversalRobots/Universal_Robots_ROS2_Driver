@@ -38,6 +38,7 @@ from rclpy.node import Node as ROSNode
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
     generate_driver_test_description,
     DashboardInterface,
     IoStatusInterface,
@@ -55,6 +56,7 @@ class ExampleMoveTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = ROSNode("example_move_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 

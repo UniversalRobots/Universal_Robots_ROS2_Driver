@@ -43,6 +43,8 @@ from builtin_interfaces.msg import Duration as DurationMsg
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
+    ConfigurationInterface,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
@@ -75,6 +77,7 @@ class IOControllerTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("io_controller_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 
@@ -88,6 +91,7 @@ class IOControllerTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
 
     def setUp(self):
         self._dashboard_interface.start_robot()
@@ -177,6 +181,11 @@ class IOControllerTest(unittest.TestCase):
 
     def test_set_payload_with_inertia(self):
         """Setting mass, COG and full inertia matrix should succeed."""
+        version = self._configuration_controller_interface.get_robot_software_version()
+        if version.major < 5 or (version.major == 5 and version.minor < 10):
+            self.skipTest(
+                "Setting payload with full inertia matrix is only supported on UR software >= 5.10"
+            )
         result = self._io_status_controller_interface.set_payload(
             payload=_make_inertia(
                 m=1.0,
@@ -202,6 +211,11 @@ class IOControllerTest(unittest.TestCase):
 
         The service should wait for the transition to complete before verifying.
         """
+        version = self._configuration_controller_interface.get_robot_software_version()
+        if version.major < 5 or (version.major == 5 and version.minor < 10):
+            self.skipTest(
+                "set_payload with transition_time is only supported in driver version >= 5.10"
+            )
         res = self._io_status_controller_interface.set_payload(
             payload=_make_inertia(
                 m=1.0,
@@ -226,6 +240,15 @@ class IOControllerTest(unittest.TestCase):
             _make_inertia(m=2.0, com=Vector3(x=0.05, y=0.05, z=0.15), ixx=0.02, iyy=0.02, izz=0.04),
             _make_inertia(m=0.0, com=Vector3(x=0.0, y=0.0, z=0.0), ixx=0.0, iyy=0.0, izz=0.0),
         ]
+        version = self._configuration_controller_interface.get_robot_software_version()
+        if version.major < 5 or (version.major == 5 and version.minor < 10):
+            payloads = [
+                _make_inertia(m=0.5, com=Vector3(x=0.0, y=0.0, z=0.1)),
+                _make_inertia(m=1.0, com=Vector3(x=0.1, y=0.0, z=0.2)),
+                _make_inertia(m=2.0, com=Vector3(x=0.05, y=0.05, z=0.15)),
+                _make_inertia(m=0.0, com=Vector3(x=0.0, y=0.0, z=0.0)),
+            ]
+
         for payload in payloads:
             res = self._io_status_controller_interface.set_payload(
                 payload=payload, transition_time=DurationMsg()

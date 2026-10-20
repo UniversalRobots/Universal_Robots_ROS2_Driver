@@ -45,6 +45,8 @@ from action_msgs.msg import GoalStatus
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
+    ConfigurationInterface,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
@@ -68,6 +70,7 @@ class ToolContactTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("tool_contact_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 
@@ -81,6 +84,7 @@ class ToolContactTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
         self._tool_contact_interface = ActionInterface(
             self.node, "/tool_contact_controller/detect_tool_contact", ToolContact
         )
@@ -89,6 +93,12 @@ class ToolContactTest(unittest.TestCase):
         self._dashboard_interface.start_robot()
         time.sleep(1)
         self.assertTrue(self._io_status_controller_interface.resend_robot_program().success)
+        version = self._configuration_controller_interface.get_robot_software_version()
+        self.assertIsNotNone(version, "Failed to get robot software version")
+        if version.major < 5:
+            self.skipTest(
+                "Tool contact controller is only available in UR software version 5 and above"
+            )
 
     #
     # Tests

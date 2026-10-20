@@ -42,10 +42,13 @@ from controller_manager_msgs.srv import SwitchController
 
 sys.path.append(os.path.dirname(__file__))
 from test_common import (  # noqa: E402
+    reset_ursim_state,
+    ConfigurationInterface,
     ControllerManagerInterface,
     DashboardInterface,
     IoStatusInterface,
     generate_driver_test_description,
+    CB3,
     wait_for_robot_program_state,
 )
 
@@ -74,6 +77,7 @@ class ControllerSwitchTest(unittest.TestCase):
         # Initialize the ROS context
         rclpy.init()
         cls.node = Node("controller_switching_test")
+        assert reset_ursim_state(cls.node), "Failed to reset URSim state"
         time.sleep(1)
         cls.init_robot(cls)
 
@@ -87,8 +91,10 @@ class ControllerSwitchTest(unittest.TestCase):
         self._dashboard_interface = DashboardInterface(self.node)
         self._controller_manager_interface = ControllerManagerInterface(self.node)
         self._io_status_controller_interface = IoStatusInterface(self.node)
+        self._configuration_controller_interface = ConfigurationInterface(self.node)
         for controller in ALL_CONTROLLERS:
             self._controller_manager_interface.wait_for_controller(controller)
+        self.robot_family = self._dashboard_interface.detect_polyscope_family()
 
     def setUp(self):
         self._dashboard_interface.start_robot()
@@ -431,6 +437,12 @@ class ControllerSwitchTest(unittest.TestCase):
         )
 
     def test_tool_contact_compatibility(self):
+        version = self._configuration_controller_interface.get_robot_software_version()
+        self.assertIsNotNone(version, "Failed to get robot software version")
+        if version.major < 5:
+            self.skipTest(
+                "Tool contact controller is only available in UR software version 5 and above"
+            )
         # Deactivate all writing controllers
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -626,6 +638,8 @@ class ControllerSwitchTest(unittest.TestCase):
             ).ok
         )
 
+        self._controller_manager_interface.list_controllers()
+
         # MoPrim controller and force_mode should be possible to combine
         self.assertTrue(
             self._controller_manager_interface.switch_controller(
@@ -648,6 +662,9 @@ class ControllerSwitchTest(unittest.TestCase):
 
     def test_friction_model_compatibility(self):
         """Test that friction_model_controller is compatible with all motion controllers."""
+        if self.robot_family == CB3:
+            self.skipTest("Friction model controller is not available on CB3")
+
         # Deactivate all writing controllers
         self.assertTrue(
             self._controller_manager_interface.switch_controller(

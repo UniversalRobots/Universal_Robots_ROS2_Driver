@@ -5,6 +5,10 @@ on:
     # Run every morning to detect flakiness and broken dependencies
     - cron: '03 5 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   humble_binary_main:
     uses: ./.github/workflows/reusable_ici.yml
