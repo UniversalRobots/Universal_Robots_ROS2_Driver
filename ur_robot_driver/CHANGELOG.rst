@@ -1,5 +1,5 @@
-Forthcoming
------------
+7.2.0 (2026-10-20)
+------------------
 * Migrate ur_robot_driver off deprecated Handle raw-pointer API (`#2033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2033>`_)
   Co-authored-by: Dr. Denis <denis.stogl@b-robotized.com>
   Co-authored-by: Claude Sonnet 5 <noreply@anthropic.com>

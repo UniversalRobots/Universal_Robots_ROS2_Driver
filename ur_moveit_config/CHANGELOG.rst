@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.2.0 (2026-10-20)
+------------------
 * [ur_moveit_config] Update license tag (`#1993 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1993>`_)
 * Contributors: Felix Exner
 

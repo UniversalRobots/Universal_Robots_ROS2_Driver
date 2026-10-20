@@ -2,8 +2,8 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.2.0 (2026-10-20)
+------------------
 * [ur_calibration] Write calibration rpy in the URDF convention (`#2030 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2030>`_)
 * [ur_calibration] Added call Pipeline::init() so the primary stream connects before Pipeline::run() is called. (`#1981 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1981>`_)
 * Contributors: Rick Shanor, Tony Baltovski
