@@ -447,6 +447,8 @@ protected:
   std::function<bool()> get_data_package;
 
   bool use_currents_as_efforts_ = false;
+
+  urcl::ControlBoxType control_box_type_ = urcl::ControlBoxType::UNKNOWN;
 };
 }  // namespace ur_robot_driver
 
