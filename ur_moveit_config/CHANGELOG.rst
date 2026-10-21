@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.16.0 (2026-10-21)
+-------------------
 * [ur_moveit_config] Update license tag (backport `#1993 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1993>`_) (`#1994 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1994>`_)
 * Contributors: mergify[bot]
 

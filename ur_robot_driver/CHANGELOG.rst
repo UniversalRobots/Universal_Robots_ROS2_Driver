@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.16.0 (2026-10-21)
+-------------------
 * [move_until_node] Do not force an illegal terminal transition on an unrequested CANCELED child result (backport `#2003 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2003>`_) (`#2014 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2014>`_)
 * Make urscript_interface and dashboard_client startup interruptible (backport `#2006 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2006>`_) (`#2008 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2008>`_)
 * Specify minimum required PolyScopeX version in robot_state_helper output (backport `#1992 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1992>`_) (`#1998 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1998>`_)

@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.16.0 (2026-10-21)
+-------------------
 * Do not drop a tool contact goal handle before its terminal state is delivered (backport `#2005 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2005>`_) (`#2022 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2022>`_)
   Co-authored-by: Claude Fable 5 <noreply@anthropic.com>
   Co-authored-by: Christian Rishøj <christian@rishoj.net>
