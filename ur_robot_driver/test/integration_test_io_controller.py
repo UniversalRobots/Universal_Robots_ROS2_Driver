@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import logging
+import math
 import os
 import sys
 import time
@@ -37,7 +38,8 @@ import pytest
 import rclpy
 from geometry_msgs.msg import Vector3
 from rclpy.node import Node
-from ur_msgs.msg import IOStates
+from ur_msgs.msg import IOStates, ToolDataMsg, ToolDataT2Msg
+from ur_msgs.srv import SetIO
 
 from builtin_interfaces.msg import Duration as DurationMsg
 
@@ -217,3 +219,142 @@ class IOControllerTest(unittest.TestCase):
                 transition_time=DurationMsg(),
             )
             self.assertTrue(res.success, f"set_payload failed for m={p['mass']}")
+
+    def _wait_for_tool_data(self, timeout=5.0):
+        """Return the next ~/tool_data message."""
+        tool_msg = None
+
+        def tool_cb(msg):
+            nonlocal tool_msg
+            tool_msg = msg
+
+        subscription = self.node.create_subscription(
+            ToolDataMsg,
+            "/io_and_status_controller/tool_data",
+            tool_cb,
+            rclpy.qos.qos_profile_system_default,
+        )
+        end_time = time.time() + timeout
+        while tool_msg is None and time.time() < end_time:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        self.node.destroy_subscription(subscription)
+        self.assertIsNotNone(tool_msg, "No tool_data received")
+        return tool_msg
+
+    def _open_tool_data_t2(self):
+        """Subscribe to ~/tool_data_t2 before any wait, so discovery is not the timeout."""
+        state = {"msg": None}
+
+        def tool_cb(msg):
+            state["msg"] = msg
+
+        subscription = self.node.create_subscription(
+            ToolDataT2Msg,
+            "/io_and_status_controller/tool_data_t2",
+            tool_cb,
+            rclpy.qos.qos_profile_system_default,
+        )
+        return subscription, state
+
+    def _wait_for_tool_data_t2(self, state, timeout=1.0):
+        """Return the latest ~/tool_data_t2 sample, or None if connector T2 is absent.
+
+        The subscription must already exist. ~/tool_data is received first so the wait
+        starts only after this node is receiving controller traffic.
+        """
+        self._wait_for_tool_data()
+        end_time = time.time() + timeout
+        while state["msg"] is None and time.time() < end_time:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+        return state["msg"]
+
+    def _wait_for_t2_voltage(self, state, expected, tolerance=5.0, timeout=5.0):
+        """Wait until the measured T2 voltage is within tolerance of expected.
+
+        tool_output_voltage is a measured value: a 24 V setpoint can read 23 V, and
+        switching off takes about a second to decay. ``state`` is the dict filled by
+        the subscription opened for this test.
+        """
+        end_time = time.time() + timeout
+        last = None
+        while time.time() < end_time:
+            rclpy.spin_once(self.node, timeout_sec=0.1)
+            sample = state["msg"]
+            if sample is None:
+                continue
+            last = sample.tool_output_voltage
+            if not math.isnan(last) and abs(last - expected) <= tolerance:
+                return last
+            state["msg"] = None
+        self.fail(f"T2 voltage {last} did not reach {expected} +/- {tolerance} within {timeout}s")
+
+    def test_tool_voltage_t0_rejects_48v(self):
+        """Connector T0 accepts 0, 12 and 24 V. 48 V belongs to connector T2."""
+        result = self._io_status_controller_interface.set_io(
+            fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE,
+            pin=0,
+            state=float(SetIO.Request.STATE_TOOL_VOLTAGE_48V),
+        )
+        self.assertFalse(result.success)
+
+    def test_tool_voltage_t2_rejects_other_values(self):
+        """Connector T2 accepts only exactly 0, 24 and 48 V.
+
+        48.5 must not be truncated into a 48 V command, and a non-finite value must not be
+        reported as success.
+        """
+        energized = False
+        try:
+            for state in (12.0, 48.5, float("nan"), float("inf")):
+                result = self._io_status_controller_interface.set_io(
+                    fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                    pin=0,
+                    state=state,
+                )
+                energized = energized or bool(result.success)
+                self.assertFalse(result.success, f"T2 accepted {state}")
+        finally:
+            if energized:
+                self._io_status_controller_interface.set_io(
+                    fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                    pin=0,
+                    state=float(SetIO.Request.STATE_TOOL_VOLTAGE_0V),
+                )
+
+    def test_tool_voltage_t2(self):
+        """T2 accepts the command only when the robot reports connector T2.
+
+        URSim 10.15 reports 0 V for every T2 setpoint, so a measured-voltage check is
+        opt-in via UR_TOOL_T2_MEASURE_VOLTAGE=1 and is meant for a real robot.
+        """
+        subscription, t2_state = self._open_tool_data_t2()
+        try:
+            available = self._wait_for_tool_data_t2(t2_state) is not None
+            measure = os.environ.get("UR_TOOL_T2_MEASURE_VOLTAGE") == "1"
+            try:
+                result = self._io_status_controller_interface.set_io(
+                    fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                    pin=0,
+                    state=float(SetIO.Request.STATE_TOOL_VOLTAGE_24V),
+                )
+                if available:
+                    self.assertTrue(result.success)
+                    if measure:
+                        self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_24V)
+                else:
+                    self.assertFalse(result.success)
+            finally:
+                # Best-effort. An assertion failure, or discovery timing out, must still
+                # request 0 V so a real connector is not left at 24 V. The request is only
+                # required to succeed when the robot reported connector T2.
+                off = self._io_status_controller_interface.set_io(
+                    fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                    pin=0,
+                    state=float(SetIO.Request.STATE_TOOL_VOLTAGE_0V),
+                )
+            if available:
+                self.assertTrue(off.success)
+                if measure:
+                    self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_0V)
+        finally:
+            self.node.destroy_subscription(subscription)

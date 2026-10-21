@@ -1,4 +1,6 @@
 repositories:
+  # Connector T2 is on Universal_Robots_Client_Library master (PR 592, 0b688fe, milestone 2.16.0).
+  # That tree still reports 2.15.2 until the 2.16.0 release.
   Universal_Robots_Client_Library:
     type: git
     url: https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
