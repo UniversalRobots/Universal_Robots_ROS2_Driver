@@ -2,6 +2,15 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Do not drop a tool contact goal handle before its terminal state is delivered (backport `#2005 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2005>`_) (`#2022 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2022>`_)
+  Co-authored-by: Claude Fable 5 <noreply@anthropic.com>
+  Co-authored-by: Christian Rishøj <christian@rishoj.net>
+  Co-authored-by: Felix Exner <feex@universal-robots.com>
+  Co-authored-by: Cursor <cursoragent@cursor.com>
+* Contributors: mergify[bot]
+
 2.15.0 (2026-09-11)
 -------------------
 * Set command interface in tool contact controller (backport `#1939 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1939>`_) (`#1946 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1946>`_)
