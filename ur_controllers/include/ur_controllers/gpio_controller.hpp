@@ -48,6 +48,7 @@
 #include "controller_interface/controller_interface.hpp"
 #include "ur_msgs/msg/io_states.hpp"
 #include "ur_msgs/msg/tool_data_msg.hpp"
+#include "ur_msgs/msg/tool_data_t1_msg.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_msgs/srv/set_io.hpp"
@@ -62,64 +63,76 @@
 
 namespace ur_controllers
 {
+// Flat digital-output index used by SetIO and standard_digital_output_cmd_*.
+// 0-7 standard, 8-15 configurable, 16-17 T0_DO, 18-21 T1_DO0-T1_DO3.
+// T1 outputs are tool digital pins 2-5 (RTDEWriter::sendToolDigitalOutput).
+inline constexpr std::size_t kStandardDigitalIoCount = 18;
+inline constexpr std::size_t kT1DigitalOutputCount = 4;
+inline constexpr std::size_t kDigitalOutputCount = kStandardDigitalIoCount + kT1DigitalOutputCount;
+inline constexpr std::size_t kT1ConfigurableDigitalInputCount = 2;
+inline constexpr std::size_t kT1SmartPanelDigitalInputCount = 3;
+
 enum CommandInterfaces
 {
   DIGITAL_OUTPUTS_CMD = 0u,
-  ANALOG_OUTPUTS_CMD = 18,
-  TOOL_VOLTAGE_CMD = 20,
-  IO_ASYNC_SUCCESS = 21,
-  TARGET_SPEED_FRACTION_CMD = 22,
-  TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 23,
-  RESEND_ROBOT_PROGRAM_CMD = 24,
-  RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS = 25,
-  PAYLOAD_MASS = 26,
-  PAYLOAD_COG_X = 27,
-  PAYLOAD_COG_Y = 28,
-  PAYLOAD_COG_Z = 29,
-  PAYLOAD_ASYNC_SUCCESS = 30,
-  ZERO_FTSENSOR_CMD = 31,
-  ZERO_FTSENSOR_ASYNC_SUCCESS = 32,
-  HAND_BACK_CONTROL_CMD = 33,
-  HAND_BACK_CONTROL_ASYNC_SUCCESS = 34,
-  ANALOG_OUTPUTS_DOMAIN = 35,
-  PAYLOAD_INERTIA_IXX = 36,
-  PAYLOAD_INERTIA_IYY = 37,
-  PAYLOAD_INERTIA_IZZ = 38,
-  PAYLOAD_INERTIA_IXY = 39,
-  PAYLOAD_INERTIA_IXZ = 40,
-  PAYLOAD_INERTIA_IYZ = 41,
-  PAYLOAD_TRANSITION_TIME = 42,
+  ANALOG_OUTPUTS_CMD = 22,
+  TOOL_VOLTAGE_CMD = 24,
+  IO_ASYNC_SUCCESS = 25,
+  TARGET_SPEED_FRACTION_CMD = 26,
+  TARGET_SPEED_FRACTION_ASYNC_SUCCESS = 27,
+  RESEND_ROBOT_PROGRAM_CMD = 28,
+  RESEND_ROBOT_PROGRAM_ASYNC_SUCCESS = 29,
+  PAYLOAD_MASS = 30,
+  PAYLOAD_COG_X = 31,
+  PAYLOAD_COG_Y = 32,
+  PAYLOAD_COG_Z = 33,
+  PAYLOAD_ASYNC_SUCCESS = 34,
+  ZERO_FTSENSOR_CMD = 35,
+  ZERO_FTSENSOR_ASYNC_SUCCESS = 36,
+  HAND_BACK_CONTROL_CMD = 37,
+  HAND_BACK_CONTROL_ASYNC_SUCCESS = 38,
+  ANALOG_OUTPUTS_DOMAIN = 39,
+  PAYLOAD_INERTIA_IXX = 40,
+  PAYLOAD_INERTIA_IYY = 41,
+  PAYLOAD_INERTIA_IZZ = 42,
+  PAYLOAD_INERTIA_IXY = 43,
+  PAYLOAD_INERTIA_IXZ = 44,
+  PAYLOAD_INERTIA_IYZ = 45,
+  PAYLOAD_TRANSITION_TIME = 46,
 };
 
 enum StateInterfaces
 {
   DIGITAL_OUTPUTS = 0u,
-  DIGITAL_INPUTS = 18,
-  ANALOG_OUTPUTS = 36,
-  ANALOG_INPUTS = 38,
-  ANALOG_IO_TYPES = 40,
-  TOOL_MODE = 44,
-  TOOL_OUTPUT_VOLTAGE = 45,
-  TOOL_OUTPUT_CURRENT = 46,
-  TOOL_TEMPERATURE = 47,
-  TOOL_ANALOG_INPUTS = 48,
-  TOOL_ANALOG_IO_TYPES = 50,
-  ROBOT_MODE = 52,
-  ROBOT_STATUS_BITS = 53,
-  SAFETY_MODE = 57,
-  SAFETY_STATUS_BITS = 58,
-  INITIALIZED_FLAG = 69,
-  PROGRAM_RUNNING = 70,
-  PAYLOAD_STATE_MASS = 71,
-  PAYLOAD_STATE_COG_X = 72,
-  PAYLOAD_STATE_COG_Y = 73,
-  PAYLOAD_STATE_COG_Z = 74,
-  PAYLOAD_STATE_INERTIA_IXX = 75,
-  PAYLOAD_STATE_INERTIA_IYY = 76,
-  PAYLOAD_STATE_INERTIA_IZZ = 77,
-  PAYLOAD_STATE_INERTIA_IXY = 78,
-  PAYLOAD_STATE_INERTIA_IXZ = 79,
-  PAYLOAD_STATE_INERTIA_IYZ = 80,
+  DIGITAL_INPUTS = 22,
+  ANALOG_OUTPUTS = 40,
+  ANALOG_INPUTS = 42,
+  ANALOG_IO_TYPES = 44,
+  TOOL_MODE = 48,
+  TOOL_OUTPUT_VOLTAGE = 49,
+  TOOL_OUTPUT_CURRENT = 50,
+  TOOL_TEMPERATURE = 51,
+  TOOL_ANALOG_INPUTS = 52,
+  TOOL_ANALOG_IO_TYPES = 54,
+  ROBOT_MODE = 56,
+  ROBOT_STATUS_BITS = 57,
+  SAFETY_MODE = 61,
+  SAFETY_STATUS_BITS = 62,
+  INITIALIZED_FLAG = 73,
+  PROGRAM_RUNNING = 74,
+  PAYLOAD_STATE_MASS = 75,
+  PAYLOAD_STATE_COG_X = 76,
+  PAYLOAD_STATE_COG_Y = 77,
+  PAYLOAD_STATE_COG_Z = 78,
+  PAYLOAD_STATE_INERTIA_IXX = 79,
+  PAYLOAD_STATE_INERTIA_IYY = 80,
+  PAYLOAD_STATE_INERTIA_IZZ = 81,
+  PAYLOAD_STATE_INERTIA_IXY = 82,
+  PAYLOAD_STATE_INERTIA_IXZ = 83,
+  PAYLOAD_STATE_INERTIA_IYZ = 84,
+  TOOL_T1_CONFIGURABLE_DIGITAL_INPUTS = 85,
+  TOOL_T1_SMART_PANEL_DIGITAL_INPUTS = 87,
+  TOOL_T1_CONNECTED = 90,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -170,6 +183,8 @@ private:
 
   void publishToolData();
 
+  void publishToolDataT1();
+
   void publishRobotMode();
 
   void publishSafetyMode();
@@ -182,8 +197,6 @@ protected:
   bool first_pass_;
 
   // internal commands
-  std::array<double, 18> standard_digital_output_cmd_;
-  std::array<double, 18> standard_analog_output_cmd_;
   double target_speed_fraction_cmd_;
 
   // services
@@ -198,12 +211,14 @@ protected:
   // Publishing in realtime ros2_control loop, so these are wrapped in non-blocking tries to prevent controller overrun
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT1Msg>> tool_data_t1_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>> program_state_pub_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;
+  ur_msgs::msg::ToolDataT1Msg tool_data_t1_msg_;
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
   std_msgs::msg::Bool program_running_msg_;
