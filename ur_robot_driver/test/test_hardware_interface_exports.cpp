@@ -122,11 +122,11 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
   for (size_t i = 0; i < 18; ++i) {
     gpio_states.push_back("digital_input_" + std::to_string(i));
   }
-  for (size_t i = 0; i < 2; ++i) {
-    gpio_states.push_back("tool_t1_configurable_digital_input_" + std::to_string(i));
-  }
   for (size_t i = 0; i < 3; ++i) {
     gpio_states.push_back("tool_t1_digital_input_" + std::to_string(i));
+  }
+  for (size_t i = 0; i < 2; ++i) {
+    gpio_states.push_back("tool_t1_configurable_digital_input_" + std::to_string(i));
   }
   gpio_states.push_back("tool_t1_connected");
   gpio_states.push_back("standard_analog_output_0");
@@ -309,11 +309,11 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedStateInterfaces)
   for (size_t i = 0; i < 18; ++i) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/digital_input_" + std::to_string(i));
   }
-  for (size_t i = 0; i < 2; ++i) {
-    expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_t1_configurable_digital_input_" + std::to_string(i));
-  }
   for (size_t i = 0; i < 3; ++i) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_t1_digital_input_" + std::to_string(i));
+  }
+  for (size_t i = 0; i < 2; ++i) {
+    expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_t1_configurable_digital_input_" + std::to_string(i));
   }
   expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_t1_connected");
   for (size_t i = 0; i < 11; ++i) {

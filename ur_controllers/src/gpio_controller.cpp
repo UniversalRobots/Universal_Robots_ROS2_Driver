@@ -38,8 +38,9 @@
 #include "ur_controllers/gpio_controller.hpp"
 
 #include <cmath>
-#include <lifecycle_msgs/msg/state.hpp>
 #include <string>
+
+#include <lifecycle_msgs/msg/state.hpp>
 
 namespace ur_controllers
 {
@@ -153,7 +154,7 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
 
   const std::string tf_prefix = params_.tf_prefix;
 
-  // digital io. Outputs 18-21 are T1_DO0-T1_DO3 on a V2 tool flange.
+  // digital io. Outputs 18-21 are T1_DO0-T1_DO3 on a V2 tool flange. T1_DO0 is the Smart Panel LED.
   for (size_t i = 0; i < kDigitalOutputCount; ++i) {
     config.names.emplace_back(tf_prefix + "gpio/digital_output_" + std::to_string(i));
   }
@@ -215,8 +216,11 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   config.names.emplace_back(tf_prefix + "payload/inertia.ixz");
   config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
 
-  // T1 connector (Smart Panel) on Tool Flange V2. Bits follow the documented tool inputs
-  // (actual_digital_input_bits 16-17 are T0_CI) : 18-19 T1_CI, 20-22 T1_DI, 23 T1_CONNECTED.
+  // T1 Smart Panel on tool flange V2. actual_digital_input_bits 16-17 are T0_CI.
+  // Bits 18-23 are B0 B1 B2 SB3 SB4 SD:
+  // 18 B0 T1_DI0 Left, 19 B1 T1_DI1 Center, 20 B2 T1_DI2 Right,
+  // 21 SB3 T1_CI0 and 22 SB4 T1_CI1 are a configurable safety-rated 2PE and can be used as the Freedrive pair,
+  // 23 SD T1_CONNECTED Smart Panel detect.
   for (size_t i = 0; i < kT1ConfigurableDigitalInputCount; ++i) {
     config.names.emplace_back(tf_prefix + "gpio/tool_t1_configurable_digital_input_" + std::to_string(i));
   }

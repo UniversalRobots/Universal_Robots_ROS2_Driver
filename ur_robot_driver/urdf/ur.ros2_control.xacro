@@ -119,7 +119,7 @@
         <command_interface name="standard_digital_output_cmd_15"/>
         <command_interface name="standard_digital_output_cmd_16"/>
         <command_interface name="standard_digital_output_cmd_17"/>
-        <!-- T1_DO0-T1_DO3, tool digital pins 2-5. V2 tool flange only. -->
+        <!-- T1_DO0-T1_DO3, tool digital pins 2-5. T1_DO0 is the Smart Panel LED. V2 tool flange only. -->
         <command_interface name="standard_digital_output_cmd_18"/>
         <command_interface name="standard_digital_output_cmd_19"/>
         <command_interface name="standard_digital_output_cmd_20"/>
@@ -175,13 +175,12 @@
         <state_interface name="digital_input_16"/>
         <state_interface name="digital_input_17"/>
 
-        <!-- T1 connector: T1_CI0/T1_CI1, T1_DI0-T1_DI2, T1_CONNECTED. -->
-        <state_interface name="tool_t1_configurable_digital_input_0"/>
-        <state_interface name="tool_t1_configurable_digital_input_1"/>
-        <state_interface name="tool_t1_digital_input_0"/>
-        <state_interface name="tool_t1_digital_input_1"/>
-        <state_interface name="tool_t1_digital_input_2"/>
-        <state_interface name="tool_t1_connected"/>
+        <state_interface name="tool_t1_digital_input_0"/> <!-- Smart Panel T1's left button, T1_DI0. -->
+        <state_interface name="tool_t1_digital_input_1"/> <!-- Smart Panel T1's center button, T1_DI1. -->
+        <state_interface name="tool_t1_digital_input_2"/> <!-- Smart Panel T1's right button, T1_DI2. -->
+        <state_interface name="tool_t1_configurable_digital_input_0"/> <!-- Smart Panel T1, T1_CI0. Configurable safety-rated 2PE that can be used as the Freedrive pair. -->
+        <state_interface name="tool_t1_configurable_digital_input_1"/> <!-- Smart Panel T1, T1_CI1. Configurable safety-rated 2PE that can be used as the Freedrive pair. -->
+        <state_interface name="tool_t1_connected"/> <!-- Smart Panel T1 detect, T1_CONNECTED. -->
 
         <state_interface name="standard_analog_output_0"/>
         <state_interface name="standard_analog_output_1"/>

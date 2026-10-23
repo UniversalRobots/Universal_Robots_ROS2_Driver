@@ -326,6 +326,9 @@ URPositionHardwareInterface::on_export_state_interfaces()
     add_state_mirror(tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]);
   }
 
+  // Bits 18-20 are B0 B1 B2 (T1_DI0 Left, T1_DI1 Center, T1_DI2 Right).
+  // Bits 21-22 are SB3 SB4 (T1_CI0, T1_CI1): a configurable safety-rated 2PE that can be used as the Freedrive pair.
+  // Bit 23 is SD, T1_CONNECTED, Smart Panel detect.
   for (size_t i = 0; i < T1_CONFIGURABLE_DIGITAL_INPUT_COUNT; ++i) {
     add_state_mirror(tf_prefix + "gpio", "tool_t1_configurable_digital_input_" + std::to_string(i),
                      &actual_dig_in_bits_copy_[T1_CONFIGURABLE_DIGITAL_INPUT_BIT + i]);
@@ -1267,6 +1270,7 @@ void URPositionHardwareInterface::checkAsyncIO()
             static_cast<uint8_t>(i - 8), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
       } else {
         // 16-17 are T0_DO0/T0_DO1 (tool pins 0-1). 18-21 are T1_DO0-T1_DO3 (tool pins 2-5).
+        // T1_DO0 is the Smart Panel LED.
         io_async_success_ = ur_driver_->getRTDEWriter().sendToolDigitalOutput(
             static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
       }

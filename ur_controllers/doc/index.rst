@@ -66,6 +66,21 @@ Published topics
 * ``~/safety_mode [ur_dashboard_msgs/msg/SafetyMode]``: The robot's current safety mode (e.g.
   ``PROTECTIVE_STOP``, ``ROBOT_EMERGENCY_STOP``, ``NORMAL``)
 * ``~/tool_data [ur_msgs/msg/ToolDataMsg]``: Information about the robot's tool configuration
+* ``~/tool_data_t1 [ur_msgs/msg/ToolDataT1Msg]``: Smart Panel (T1) inputs and outputs on a V2 tool flange
+
+Smart Panel (T1)
+""""""""""""""""
+
+``~/tool_data_t1`` publishes the Smart Panel signals on a V2 tool flange:
+
+* Left button, ``T1_DI0`` (``smart_panel_digital_in_states[0]``)
+* Center button, ``T1_DI1`` (``smart_panel_digital_in_states[1]``)
+* Right button, ``T1_DI2`` (``smart_panel_digital_in_states[2]``)
+* ``T1_CI0`` and ``T1_CI1`` (``configurable_digital_in_states``). This pair is a configurable
+  safety-rated 2PE and can be used as the Freedrive pair.
+* Smart Panel detect, ``T1_CONNECTED`` (``smart_panel_connected``)
+* Smart Panel LED, ``T1_DO0`` (``digital_out_states[0]``). ``digital_out_states`` is
+  ``T1_DO0``–``T1_DO3``.
 
 Advertised services
 """""""""""""""""""

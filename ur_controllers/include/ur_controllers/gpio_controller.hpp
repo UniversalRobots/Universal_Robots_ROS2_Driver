@@ -65,7 +65,11 @@ namespace ur_controllers
 {
 // Flat digital-output index used by SetIO and standard_digital_output_cmd_*.
 // 0-7 standard, 8-15 configurable, 16-17 T0_DO, 18-21 T1_DO0-T1_DO3.
-// T1 outputs are tool digital pins 2-5 (RTDEWriter::sendToolDigitalOutput).
+// T1 outputs are tool digital pins 2-5 (RTDEWriter::sendToolDigitalOutput). T1_DO0 is the Smart Panel LED.
+// T1 Smart Panel inputs, actual_digital_input_bits 18-23: B0 B1 B2 SB3 SB4 SD.
+// B0 B1 B2 are T1_DI0 Left, T1_DI1 Center, T1_DI2 Right.
+// SB3 and SB4 are T1_CI0 and T1_CI1, a configurable safety-rated 2PE that can be used as the Freedrive pair.
+// SD is T1_CONNECTED, Smart Panel detect.
 inline constexpr std::size_t kStandardDigitalIoCount = 18;
 inline constexpr std::size_t kT1DigitalOutputCount = 4;
 inline constexpr std::size_t kDigitalOutputCount = kStandardDigitalIoCount + kT1DigitalOutputCount;
