@@ -252,8 +252,24 @@ protected:
   uint32_t runtime_state_;
   bool controllers_initialized_;
 
-  std::bitset<18> actual_dig_out_bits_;
-  std::bitset<18> actual_dig_in_bits_;
+  // actual_digital_output_bits: 0-7 standard, 8-15 configurable, 16-17 T0_DO, 18-21 T1_DO0-T1_DO3.
+  // T1_DO0 is the Smart Panel LED. Command index i >= 16 is tool digital pin (i - 16), so 18-21 are tool pins 2-5.
+  static constexpr size_t DIGITAL_OUTPUT_COUNT = 22;
+  // actual_digital_input_bits: 0-7 standard, 8-15 configurable, 16-17 T0_CI.
+  // CB7 tool flange V2 bits 18-23 are the T1 Smart Panel inputs B0 B1 B2 SB3 SB4 SD:
+  // 18 B0 T1_DI0 Left, 19 B1 T1_DI1 Center, 20 B2 T1_DI2 Right,
+  // 21 SB3 T1_CI0 and 22 SB4 T1_CI1 are a configurable safety-rated 2PE and can be used as the Freedrive pair,
+  // 23 SD T1_CONNECTED Smart Panel detect.
+  static constexpr size_t STANDARD_DIGITAL_INPUT_COUNT = 18;
+  static constexpr size_t T1_SMART_PANEL_DIGITAL_INPUT_BIT = 18;
+  static constexpr size_t T1_SMART_PANEL_DIGITAL_INPUT_COUNT = 3;
+  static constexpr size_t T1_CONFIGURABLE_DIGITAL_INPUT_BIT = 21;
+  static constexpr size_t T1_CONFIGURABLE_DIGITAL_INPUT_COUNT = 2;
+  static constexpr size_t T1_CONNECTED_BIT = 23;
+  static constexpr size_t DIGITAL_INPUT_COUNT = 24;
+
+  std::bitset<DIGITAL_OUTPUT_COUNT> actual_dig_out_bits_;
+  std::bitset<DIGITAL_INPUT_COUNT> actual_dig_in_bits_;
   std::array<double, 2> standard_analog_input_;
   std::array<double, 2> standard_analog_output_;
   std::bitset<4> analog_io_types_;
@@ -272,7 +288,7 @@ protected:
   std::bitset<11> safety_status_bits_;
 
   // asynchronous commands
-  std::array<double, 18> standard_dig_out_bits_cmd_;
+  std::array<double, DIGITAL_OUTPUT_COUNT> standard_dig_out_bits_cmd_;
   std::array<double, 2> standard_analog_output_cmd_;
   double analog_output_domain_cmd_;
   double tool_voltage_cmd_;
@@ -391,8 +407,8 @@ protected:
   //*************** End Motion primitives stuff ***************
 
   // copy of non double values
-  std::array<double, 18> actual_dig_out_bits_copy_;
-  std::array<double, 18> actual_dig_in_bits_copy_;
+  std::array<double, DIGITAL_OUTPUT_COUNT> actual_dig_out_bits_copy_;
+  std::array<double, DIGITAL_INPUT_COUNT> actual_dig_in_bits_copy_;
   std::array<double, 4> analog_io_types_copy_;
   double tool_mode_copy_;
   std::array<double, 2> tool_analog_input_types_copy_;
