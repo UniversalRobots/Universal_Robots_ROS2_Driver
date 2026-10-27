@@ -131,6 +131,37 @@ URPositionHardwareInterface::on_init(const hardware_interface::HardwareComponent
   urcl_position_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   urcl_position_commands_old_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
   resetHardwareInterfaceState();
+
+  speed_scaling_combined_ = 0.0;
+  actual_dig_out_bits_copy_.fill(0.0);
+  actual_dig_in_bits_copy_.fill(0.0);
+  safety_status_bits_copy_.fill(0.0);
+  analog_io_types_copy_.fill(0.0);
+  robot_status_bits_copy_.fill(0.0);
+  tool_analog_input_types_copy_.fill(0.0);
+  tool_analog_input_.fill(0.0);
+  standard_analog_input_.fill(0.0);
+  standard_analog_output_.fill(0.0);
+  tool_output_voltage_copy_ = 0.0;
+  robot_mode_copy_ = 0.0;
+  safety_mode_copy_ = 0.0;
+  tool_mode_copy_ = 0.0;
+  tool_output_current_ = 0.0;
+  tool_temperature_ = 0.0;
+  robot_program_running_copy_ = 0.0;
+  get_robot_software_version_major_ = 0.0;
+  get_robot_software_version_minor_ = 0.0;
+  get_robot_software_version_bugfix_ = 0.0;
+  get_robot_software_version_build_ = 0.0;
+
+  io_async_success_ = 0.0;
+  scaling_async_success_ = 0.0;
+  resend_robot_program_async_success_ = 0.0;
+  hand_back_control_async_success_ = 0.0;
+  payload_async_success_ = 0.0;
+  friction_model_async_success_ = 0.0;
+  gravity_async_success_ = 0.0;
+  zero_ftsensor_async_success_ = 0.0;
   pausing_ramp_up_increment_ = 0.01;
   trajectory_joint_positions_.reserve(32768);
   trajectory_joint_velocities_.reserve(32768);
@@ -1022,6 +1053,12 @@ void URPositionHardwareInterface::resetHardwareInterfaceState()
   // Any command that was still pending when the previous activation failed must not be executed
   // after the reconfigure.
   resetAsyncIO();
+  for (auto* mirrors : { &command_mirrors_, &async_command_mirrors_ }) {
+    for (auto& mirror : *mirrors) {
+      mirror.dirty = true;
+    }
+    push_command_mirrors(*mirrors, true);
+  }
 
   robot_program_running_ = false;
   time_since_successful_read_ = rclcpp::Duration(0, 0);
