@@ -39,8 +39,9 @@
 
 #include <cmath>
 #include <limits>
-#include <lifecycle_msgs/msg/state.hpp>
 #include <string>
+
+#include <lifecycle_msgs/msg/state.hpp>
 
 namespace ur_controllers
 {
@@ -359,31 +360,27 @@ void GPIOController::publishToolData()
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS].get_optional().value_or(0.0));
   tool_data_msg_.analog_input3 =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS + 1].get_optional().value_or(0.0));
-  const auto tool_output_voltage =
-      state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_optional().value_or(0.0);
+  const auto tool_output_voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_optional().value_or(0.0);
   // tool_output_voltage is uint8. A NaN reading must not be cast.
-  tool_data_msg_.tool_output_voltage =
-      std::isnan(tool_output_voltage) ? 0 : static_cast<uint8_t>(tool_output_voltage);
+  tool_data_msg_.tool_output_voltage = std::isnan(tool_output_voltage) ? 0 : static_cast<uint8_t>(tool_output_voltage);
   tool_data_msg_.tool_current =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_optional().value_or(0.0));
   tool_data_msg_.tool_temperature =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_optional().value_or(0.0));
   tool_data_pub_->try_publish(tool_data_msg_);
 
-  if (!has_tool_t2_interfaces_.load() || !tool_data_t2_pub_) {
-    return;
+  if (has_tool_t2_interfaces_.load() && tool_data_t2_pub_) {
+    const double raw_available = state_interfaces_[*tool_t2_available_idx_].get_optional().value_or(0.0);
+    if (!std::isnan(raw_available) && raw_available > 0.5) {
+      const double voltage = state_interfaces_[*tool_output_voltage_2_idx_].get_optional().value_or(
+          std::numeric_limits<double>::quiet_NaN());
+      const double current = state_interfaces_[*tool_output_current_2_idx_].get_optional().value_or(
+          std::numeric_limits<double>::quiet_NaN());
+      tool_data_t2_msg_.tool_output_voltage = static_cast<float>(voltage);
+      tool_data_t2_msg_.tool_current = static_cast<float>(current);
+      tool_data_t2_pub_->try_publish(tool_data_t2_msg_);
+    }
   }
-  const double raw_available = state_interfaces_[*tool_t2_available_idx_].get_optional().value_or(0.0);
-  if (std::isnan(raw_available) || raw_available <= 0.5) {
-    return;
-  }
-  const double voltage = state_interfaces_[*tool_output_voltage_2_idx_].get_optional().value_or(
-      std::numeric_limits<double>::quiet_NaN());
-  const double current = state_interfaces_[*tool_output_current_2_idx_].get_optional().value_or(
-      std::numeric_limits<double>::quiet_NaN());
-  tool_data_t2_msg_.tool_output_voltage = static_cast<float>(voltage);
-  tool_data_t2_msg_.tool_current = static_cast<float>(current);
-  tool_data_t2_pub_->try_publish(tool_data_t2_msg_);
 }
 
 void GPIOController::publishRobotMode()
@@ -438,10 +435,11 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     tool_output_current_2_idx_ = findInterfaceIndex(state_interfaces_, prefix + "gpio/tool_output_current_2");
     if (!tool_voltage_t2_cmd_idx || !tool_t2_available_idx_ || !tool_output_voltage_2_idx_ ||
         !tool_output_current_2_idx_) {
-      RCLCPP_ERROR(get_node()->get_logger(),
-                   "tool_t2_interfaces is true but the connector T2 interfaces are not in the ros2_control "
-                   "description. Declare gpio/tool_voltage_t2_cmd, gpio/tool_t2_available, "
-                   "gpio/tool_output_voltage_2 and gpio/tool_output_current_2, or set tool_t2_interfaces to false.");
+      RCLCPP_ERROR(get_node()->get_logger(), "tool_t2_interfaces is true but the connector T2 interfaces are not in "
+                                             "the ros2_control "
+                                             "description. Declare gpio/tool_voltage_t2_cmd, gpio/tool_t2_available, "
+                                             "gpio/tool_output_voltage_2 and gpio/tool_output_current_2, or set "
+                                             "tool_t2_interfaces to false.");
       return LifecycleNodeInterface::CallbackReturn::ERROR;
     }
     // Publish the index before the flag so a service thread that observes the flag also observes the index.
@@ -552,17 +550,17 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     return resp->success;
   } else if (req->fun == req->FUN_SET_TOOL_VOLTAGE_T2) {
     if (!has_tool_t2_interfaces_.load()) {
-      RCLCPP_ERROR(get_node()->get_logger(),
-                   "FUN_SET_TOOL_VOLTAGE_T2 requires the controller parameter tool_t2_interfaces to be true and the "
-                   "connector T2 interfaces to be available.");
+      RCLCPP_ERROR(get_node()->get_logger(), "FUN_SET_TOOL_VOLTAGE_T2 requires the controller parameter "
+                                             "tool_t2_interfaces to be true and the "
+                                             "connector T2 interfaces to be available.");
       resp->success = false;
       return false;
     }
     const size_t tool_voltage_t2_cmd_idx = tool_voltage_t2_cmd_idx_.load();
     if (tool_voltage_t2_cmd_idx == kNoInterfaceIndex) {
-      RCLCPP_ERROR(get_node()->get_logger(),
-                   "FUN_SET_TOOL_VOLTAGE_T2 requires the controller parameter tool_t2_interfaces to be true and the "
-                   "connector T2 interfaces to be available.");
+      RCLCPP_ERROR(get_node()->get_logger(), "FUN_SET_TOOL_VOLTAGE_T2 requires the controller parameter "
+                                             "tool_t2_interfaces to be true and the "
+                                             "connector T2 interfaces to be available.");
       resp->success = false;
       return false;
     }

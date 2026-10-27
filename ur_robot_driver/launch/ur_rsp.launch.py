@@ -437,8 +437,8 @@ def generate_launch_description():
             "tool_voltage_t2",
             default_value="",
             description="Startup voltage for connector T2 (0, 24 or 48). Empty leaves T2 unchanged. "
-            "Only applied when use_tool_communication is true. Requires Tool Flange V2 and "
-            "PolyScope X 10.15 or later.",
+            "Applied when the robot program starts, whether or not use_tool_communication is "
+            "true. Requires Tool Flange V2 on PolyScope X 10.15 or later.",
         )
     )
     declared_arguments.append(

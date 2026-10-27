@@ -624,19 +624,14 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
 
   const bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
                                       (info_.hardware_parameters["use_tool_communication"] == "True");
-  // Empty means "do not set a startup voltage". URCL applies tool_voltage_t2 only with the tool
-  // communication setup. With use_tool_communication false the connector is left as the robot
-  // already has it, including a voltage stored on the teach pendant.
+  // Empty means "do not set a startup voltage". A value is applied whether or not tool communication
+  // is enabled: with it, the control script sets the voltage; without it, the driver sends the
+  // voltage once the control program has connected.
+  startup_tool_voltage_t2_.reset();
+  startup_tool_voltage_t2_sent_ = false;
   const auto tool_voltage_t2_it = info_.hardware_parameters.find("tool_voltage_t2");
   const std::string tool_voltage_t2_parameter =
       tool_voltage_t2_it == info_.hardware_parameters.end() ? "" : tool_voltage_t2_it->second;
-  if (!tool_voltage_t2_parameter.empty() && !use_tool_communication) {
-    RCLCPP_WARN(rclcpp::get_logger("URPositionHardwareInterface"),
-                "tool_voltage_t2 is set to '%s' but use_tool_communication is false, so the startup value is not "
-                "applied and connector T2 keeps its current voltage. Enable use_tool_communication to apply it at "
-                "startup, or set the voltage at runtime with ~/set_io function FUN_SET_TOOL_VOLTAGE_T2.",
-                tool_voltage_t2_parameter.c_str());
-  }
 
   // Hash of the calibration reported by the robot. This is used for validating the robot
   // description is using the correct calibration. If the robot's calibration doesn't match this
@@ -676,22 +671,16 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
       using ToolVoltageT = std::underlying_type<urcl::ToolVoltage>::type;
 
       // Tool voltage on connector T0, applied when the UR program starts. Only evaluated when
-      // use_tool_communication is true. Valid values are 0, 12 and 24.
-      const ToolVoltageT tool_voltage = std::stoi(info_.hardware_parameters["tool_voltage"]);
-      tool_comm_setup->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage));
-
-      // Tool voltage on connector T2 (0, 24 or 48). The UrDriver constructor throws unless the
-      // robot reports Tool Flange V2. The 10.15 check gates runtime commands, not this startup path.
-      if (!tool_voltage_t2_parameter.empty()) {
-        // std::stoi("48.5") and std::stoi("48invalid") both return 48. Require the whole string.
-        std::size_t parsed_chars = 0;
-        const int tool_voltage_t2 = std::stoi(tool_voltage_t2_parameter, &parsed_chars);
-        if (parsed_chars != tool_voltage_t2_parameter.size()) {
-          throw std::invalid_argument("tool_voltage_t2 must be exactly 0, 24 or 48, got '" + tool_voltage_t2_parameter +
-                                      "'");
-        }
-        tool_comm_setup->setToolVoltageT2(static_cast<urcl::ToolVoltage>(tool_voltage_t2));
+      // use_tool_communication is true. std::stoi("12.5") returns 12, so the whole string has to
+      // be consumed and the value has to be exactly 0, 12 or 24.
+      const std::string& tool_voltage_parameter = info_.hardware_parameters["tool_voltage"];
+      std::size_t parsed_chars = 0;
+      const ToolVoltageT tool_voltage = std::stoi(tool_voltage_parameter, &parsed_chars);
+      if (parsed_chars != tool_voltage_parameter.size() ||
+          (tool_voltage != 0 && tool_voltage != 12 && tool_voltage != 24)) {
+        throw std::invalid_argument("tool_voltage must be exactly 0, 12 or 24, got '" + tool_voltage_parameter + "'");
       }
+      tool_comm_setup->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage));
 
       using ParityT = std::underlying_type<urcl::Parity>::type;
       const ParityT parity = std::stoi(info_.hardware_parameters["tool_parity"]);
@@ -704,6 +693,25 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
       tool_comm_setup->setRxIdleChars(rx_idle_chars);
       const int tx_idle_chars = std::stoi(info_.hardware_parameters["tool_tx_idle_chars"]);
       tool_comm_setup->setTxIdleChars(tx_idle_chars);
+    }
+
+    // Connector T2 is independent of tool communication. std::stoi("48.5") returns 48, so the whole
+    // string has to be consumed. With tool communication the control script sets the voltage and the
+    // UrDriver constructor throws unless the robot reports Tool Flange V2. Without it, the value is
+    // sent when the control program connects, which also requires PolyScope X 10.15.
+    if (!tool_voltage_t2_parameter.empty()) {
+      std::size_t parsed_chars = 0;
+      const int tool_voltage_t2 = std::stoi(tool_voltage_t2_parameter, &parsed_chars);
+      if (parsed_chars != tool_voltage_t2_parameter.size() ||
+          (tool_voltage_t2 != 0 && tool_voltage_t2 != 24 && tool_voltage_t2 != 48)) {
+        throw std::invalid_argument("tool_voltage_t2 must be exactly 0, 24 or 48, got '" + tool_voltage_t2_parameter +
+                                    "'");
+      }
+      if (use_tool_communication) {
+        tool_comm_setup->setToolVoltageT2(static_cast<urcl::ToolVoltage>(tool_voltage_t2));
+      } else {
+        startup_tool_voltage_t2_ = tool_voltage_t2;
+      }
     }
 
     rtde_comm_has_been_started_ = false;
@@ -726,6 +734,11 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
     ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
     configureToolConnectorT2();
+    if (startup_tool_voltage_t2_.has_value() && !tool_t2_supported_) {
+      throw std::runtime_error("tool_voltage_t2 is set, but connector T2 is not available on this robot. It requires "
+                               "PolyScope X 10.15 or "
+                               "later and Tool Flange V2.");
+    }
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
@@ -748,7 +761,7 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   } catch (urcl::UrException& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
     return hardware_interface::CallbackReturn::ERROR;
-  // URCL throws std::runtime_error for a T0 voltage other than 0/12/24 or a T2 voltage other than 0/24/48.
+    // URCL throws std::runtime_error for a T0 voltage other than 0/12/24 or a T2 voltage other than 0/24/48.
   } catch (const std::exception& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), e.what());
     return hardware_interface::CallbackReturn::ERROR;
@@ -1003,6 +1016,19 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
       initialized_ = true;
     }
 
+    // The control script connects the script-command socket before the reverse interface, so the
+    // program-running flag means setToolVoltageT2 will not fall back to replacing the program.
+    // Re-apply after each reconnect. A value written into the control script is not stored here.
+    if (startup_tool_voltage_t2_.has_value()) {
+      const bool program_running = robot_program_running_.load();
+      if (program_running && !startup_tool_voltage_t2_sent_) {
+        tool_voltage_t2_cmd_ = static_cast<double>(*startup_tool_voltage_t2_);
+        startup_tool_voltage_t2_sent_ = true;
+      } else if (!program_running) {
+        startup_tool_voltage_t2_sent_ = false;
+      }
+    }
+
     updateNonDoubleValues();
 
     return hardware_interface::return_type::OK;
@@ -1199,9 +1225,9 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!std::isnan(tool_voltage_t2_cmd_) && ur_driver_ != nullptr) {
     // Reject the command here so a robot without T2 reports failure instead of throwing from URCL.
     if (!tool_t2_supported_) {
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"),
-                   "Connector T2 is not available on this robot. It requires PolyScope X 10.15 or later and Tool "
-                   "Flange V2.");
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Connector T2 is not available on this robot. It "
+                                                                      "requires PolyScope X 10.15 or later and Tool "
+                                                                      "Flange V2.");
       io_async_success_ = false;
     } else {
       io_async_success_ = ur_driver_->setToolVoltageT2(static_cast<urcl::ToolVoltage>(tool_voltage_t2_cmd_));

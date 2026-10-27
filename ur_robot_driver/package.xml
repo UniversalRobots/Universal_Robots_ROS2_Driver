@@ -52,7 +52,7 @@
   <depend>ur_controllers</depend>
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_description</depend>
-  <depend version_gte="3.1.0">ur_msgs</depend>
+  <depend version_gte="2.7.0">ur_msgs</depend>
 
   <exec_depend>effort_controllers</exec_depend>
   <exec_depend>force_torque_sensor_broadcaster</exec_depend>

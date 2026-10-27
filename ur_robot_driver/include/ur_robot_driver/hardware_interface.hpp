@@ -42,6 +42,7 @@
 // System
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -238,6 +239,10 @@ protected:
   double analog_output_domain_cmd_;
   double tool_voltage_cmd_;
   double tool_voltage_t2_cmd_{ NO_NEW_CMD_ };
+  // tool_voltage_t2 requested without tool communication. Applied when the control program connects.
+  // Unset when the value is written into the control script instead, or when the parameter is empty.
+  std::optional<int> startup_tool_voltage_t2_;
+  bool startup_tool_voltage_t2_sent_{ false };
   double io_async_success_;
   double target_speed_fraction_cmd_;
   double scaling_async_success_;
