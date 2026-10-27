@@ -171,3 +171,10 @@ class ToolContactTest(unittest.TestCase):
 
         goal_handle = self._tool_contact_interface.send_goal()
         self.assertFalse(goal_handle.accepted)
+
+        self.assertTrue(
+            self._controller_manager_interface.switch_controller(
+                strictness=SwitchController.Request.BEST_EFFORT,
+                deactivate_controllers=["tool_contact_controller"],
+            ).ok
+        )
