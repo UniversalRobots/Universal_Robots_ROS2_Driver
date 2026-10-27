@@ -239,10 +239,13 @@ protected:
   double analog_output_domain_cmd_;
   double tool_voltage_cmd_;
   double tool_voltage_t2_cmd_{ NO_NEW_CMD_ };
-  // tool_voltage_t2 requested without tool communication. Applied when the control program connects.
+  // tool_voltage_t2 requested without tool communication. Applied by checkAsyncIO when the control
+  // program connects, through its own state rather than tool_voltage_t2_cmd_ / io_async_success_.
   // Unset when the value is written into the control script instead, or when the parameter is empty.
   std::optional<int> startup_tool_voltage_t2_;
+  // Only read and written from checkAsyncIO, which runs on the async thread.
   bool startup_tool_voltage_t2_sent_{ false };
+  bool startup_tool_voltage_t2_error_reported_{ false };
   double io_async_success_;
   double target_speed_fraction_cmd_;
   double scaling_async_success_;
