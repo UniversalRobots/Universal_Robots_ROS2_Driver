@@ -29,7 +29,6 @@
 #include <gmock/gmock.h>
 #include <chrono>
 #include <cmath>
-#include <limits>
 #include <thread>
 #include <tuple>
 #include <vector>
@@ -72,12 +71,11 @@ protected:
     ASSERT_EQ(controller_.configure().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
     const auto names = controller_.command_interface_configuration().names;
-    values_.resize(names.size(), std::numeric_limits<double>::quiet_NaN());
     std::vector<hardware_interface::LoanedCommandInterface> loaned_interfaces;
     for (size_t index = 0; index < names.size(); ++index) {
       const auto separator = names[index].find('/');
-      auto interface = std::make_shared<hardware_interface::CommandInterface>(
-          names[index].substr(0, separator), names[index].substr(separator + 1), &values_[index]);
+      auto interface = std::make_shared<hardware_interface::CommandInterface>(names[index].substr(0, separator),
+                                                                              names[index].substr(separator + 1));
       loaned_interfaces.emplace_back(interface);
       interfaces_.push_back(std::move(interface));
     }
@@ -126,12 +124,12 @@ protected:
   {
     if (std::get<1>(GetParam())) {
       const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
-      while (values_[ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS] != 2.0 &&
+      while (commandValue(ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS) != 2.0 &&
              std::chrono::steady_clock::now() < deadline) {
         update();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
-      ASSERT_DOUBLE_EQ(values_[ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS], 2.0);
+      ASSERT_DOUBLE_EQ(commandValue(ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS), 2.0);
     }
 
     auto result = client_executor_.spin_until_future_complete(pending, std::chrono::seconds(1));
@@ -153,11 +151,11 @@ protected:
     EXPECT_FALSE(rejected_stop.get()->success);
 
     update();
-    for (size_t index = 0; index < values_.size(); ++index) {
+    for (size_t index = 0; index < interfaces_.size(); ++index) {
       if (index == ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS) {
-        EXPECT_DOUBLE_EQ(values_[index], 0.0);
+        EXPECT_DOUBLE_EQ(commandValue(index), 0.0);
       } else {
-        EXPECT_TRUE(std::isnan(values_[index]));
+        EXPECT_TRUE(std::isnan(commandValue(index)));
       }
     }
 
@@ -167,8 +165,8 @@ protected:
                rclcpp::FutureReturnCode::SUCCESS &&
            std::chrono::steady_clock::now() < deadline) {
       update();
-      if (values_[ur_controllers::CommandInterfaces::FORCE_MODE_DISABLE_CMD] == 1.0) {
-        values_[ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS] = 1.0;
+      if (commandValue(ur_controllers::CommandInterfaces::FORCE_MODE_DISABLE_CMD) == 1.0) {
+        setCommandValue(ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS, 1.0);
       }
     }
     ASSERT_EQ(client_executor_.spin_until_future_complete(accepted_stop, std::chrono::milliseconds(1)),
@@ -176,7 +174,18 @@ protected:
     EXPECT_TRUE(accepted_stop.get()->success);
   }
 
-  std::vector<double> values_;
+  double commandValue(size_t index) const
+  {
+    double value = 0.0;
+    EXPECT_TRUE(interfaces_[index]->get_value(value, true));
+    return value;
+  }
+
+  void setCommandValue(size_t index, double value)
+  {
+    EXPECT_TRUE(interfaces_[index]->set_value(value, true));
+  }
+
   std::vector<std::shared_ptr<hardware_interface::CommandInterface>> interfaces_;
   ur_controllers::ForceModeController controller_;
   rclcpp::Node::SharedPtr client_node_;
@@ -201,25 +210,25 @@ TEST_P(ForceModeCancellationTest, StalledUpdatesBoundCancellationAndBlockRequest
 TEST_P(ForceModeCancellationTest, DeactivationWithdrawsOldCommandAndStagesHardwareDisable)
 {
   if (std::get<0>(GetParam())) {
-    for (size_t index = 0; index < values_.size(); ++index) {
+    for (size_t index = 0; index < interfaces_.size(); ++index) {
       if (index != ur_controllers::CommandInterfaces::FORCE_MODE_DISABLE_CMD) {
-        values_[index] = 1.0;
+        setCommandValue(index, 1.0);
       }
     }
   } else {
-    values_[ur_controllers::CommandInterfaces::FORCE_MODE_DISABLE_CMD] = 1.0;
+    setCommandValue(ur_controllers::CommandInterfaces::FORCE_MODE_DISABLE_CMD, 1.0);
   }
-  values_[ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS] = std::get<1>(GetParam()) ? 2.0 : 1.0;
+  setCommandValue(ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS, std::get<1>(GetParam()) ? 2.0 : 1.0);
 
   ASSERT_EQ(controller_.get_node()->deactivate().id(), lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE);
 
-  for (size_t index = 0; index < values_.size(); ++index) {
+  for (size_t index = 0; index < interfaces_.size(); ++index) {
     if (index == ur_controllers::CommandInterfaces::FORCE_MODE_DISABLE_CMD) {
-      EXPECT_DOUBLE_EQ(values_[index], 1.0);
+      EXPECT_DOUBLE_EQ(commandValue(index), 1.0);
     } else if (index == ur_controllers::CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS) {
-      EXPECT_DOUBLE_EQ(values_[index], 2.0);
+      EXPECT_DOUBLE_EQ(commandValue(index), 2.0);
     } else {
-      EXPECT_TRUE(std::isnan(values_[index]));
+      EXPECT_TRUE(std::isnan(commandValue(index)));
     }
   }
 }
