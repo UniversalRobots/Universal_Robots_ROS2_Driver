@@ -1279,13 +1279,13 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
       }
     }
 
+    push_command_mirrors(command_mirrors_, false);
+
     packet_read_ = false;
     if (!write_success) {
       RCLCPP_ERROR(get_logger(), "Failed to write to hardware, stopping hardware interface");
       return hardware_interface::return_type::ERROR;
     }
-
-    push_command_mirrors(command_mirrors_, false);
   }
   return hardware_interface::return_type::OK;
 }
