@@ -9,6 +9,12 @@ gpio_controller:
       default_value: 10,
       description: "Amount of retries for checking if the selected gpio was set successfully"
    }
+   tool_t2_interfaces: {
+      type: bool,
+      default_value: false,
+      read_only: true,
+      description: "Claim the connector T2 command and state interfaces (tool_voltage_t2_cmd, tool_t2_available, tool_output_voltage_2, tool_output_current_2). The ros2_control description must declare them. Leave this false for a description that does not."
+   }
    verify_payload_on_set: {
       type: bool,
       default_value: true,

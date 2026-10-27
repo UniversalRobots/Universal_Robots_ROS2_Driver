@@ -48,11 +48,11 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>ur_client_library</depend>
+  <depend version_gte="2.16.0">ur_client_library</depend>
   <depend>ur_controllers</depend>
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_description</depend>
-  <depend>ur_msgs</depend>
+  <depend version_gte="2.7.0">ur_msgs</depend>
 
   <exec_depend>effort_controllers</exec_depend>
   <exec_depend>force_torque_sensor_broadcaster</exec_depend>
