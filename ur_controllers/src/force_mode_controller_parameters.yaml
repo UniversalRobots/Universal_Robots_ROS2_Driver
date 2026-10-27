@@ -8,5 +8,5 @@ force_mode_controller:
   check_io_successful_retries: {
     type: int,
     default_value: 10,
-    description: "Amount of retries for checking if setting force_mode was successful"
+    description: "Amount of retries (50 ms apart) for checking if starting or stopping force_mode was successful"
   }

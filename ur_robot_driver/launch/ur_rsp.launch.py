@@ -76,6 +76,7 @@ def generate_launch_description():
     trajectory_port = LaunchConfiguration("trajectory_port")
     use_currents_as_efforts = LaunchConfiguration("use_currents_as_efforts")
     blocking_read = LaunchConfiguration("blocking_read")
+    non_blocking_read_timeout = LaunchConfiguration("non_blocking_read_timeout")
 
     script_filename = PathJoinSubstitution(
         [
@@ -198,6 +199,9 @@ def generate_launch_description():
             " ",
             "blocking_read:=",
             blocking_read,
+            " ",
+            "non_blocking_read_timeout:=",
+            non_blocking_read_timeout,
         ]
     )
     robot_description = {
@@ -476,6 +480,13 @@ def generate_launch_description():
             "blocking_read",
             default_value="false",
             description="Block in read() effectively synchronizing the driver with the robot controller.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "non_blocking_read_timeout",
+            default_value="0.04",
+            description="Timeout in seconds before stopping the driver after a failed non-blocking read.",
         )
     )
 
