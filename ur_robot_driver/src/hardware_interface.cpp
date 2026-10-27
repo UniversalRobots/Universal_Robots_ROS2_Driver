@@ -1737,35 +1737,26 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   hardware_return ret_val = hardware_return::OK;
 
   // Check controllers that can fail first
-  hardware_return tool_contact_stop_success = hardware_return::OK;
-  bool tool_contact_stop_requested = false;
+  bool tool_contact_stop_success = true;
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
-    if (!endToolContactOnDriver()) {
-      tool_contact_stop_success = hardware_return::ERROR;
-    }
-    tool_contact_stop_requested = true;
-  }
-
-  hardware_return force_mode_stop_success = hardware_return::OK;
-  bool force_mode_stop_requested = false;
-  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
-                                              StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
-    if (!stop_force_mode()) {
-      force_mode_stop_success = hardware_return::ERROR;
-    }
-    force_mode_stop_requested = true;
-  }
-  // If both are successful, report them as stopped
-  if (force_mode_stop_success == hardware_return::OK && tool_contact_stop_success == hardware_return::OK) {
-    if (tool_contact_stop_requested) {
+    tool_contact_stop_success = endToolContactOnDriver();
+    if (tool_contact_stop_success) {
       tool_contact_controller_running_ = false;
       tool_contact_result_ = 3.0;
     }
-    if (force_mode_stop_requested) {
+  }
+
+  bool force_mode_stop_success = true;
+  if (stop_modes_[0].size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
+                                              StoppingInterface::STOP_FORCE_MODE) != stop_modes_[0].end()) {
+    force_mode_stop_success = stop_force_mode();
+    if (force_mode_stop_success) {
       force_mode_controller_running_ = false;
     }
-  } else {  // Otherwise return error, before changing state of any other controllers
+  }
+
+  if (!force_mode_stop_success || !tool_contact_stop_success) {
     return hardware_return::ERROR;
   }
 
