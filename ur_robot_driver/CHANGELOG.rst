@@ -1,3 +1,15 @@
+7.2.0 (2026-10-20)
+------------------
+* Migrate ur_robot_driver off deprecated Handle raw-pointer API (`#2033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2033>`_)
+  Co-authored-by: Dr. Denis <denis.stogl@b-robotized.com>
+  Co-authored-by: Claude Sonnet 5 <noreply@anthropic.com>
+* [move_until_node] Do not force an illegal terminal transition on an unrequested CANCELED child result (`#2003 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2003>`_)
+  Co-authored-by: Claude Fable 5 <noreply@anthropic.com>
+* Make urscript_interface and dashboard_client startup interruptible (`#2006 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2006>`_)
+* Specify minimum required PolyScopeX version in robot_state_helper output (`#1992 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1992>`_)
+* Allow using the actual torques as joint efforts (`#1551 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1551>`_)
+* Contributors: Christian Rishøj, Dr. Denis, Felix Exner
+
 7.1.0 (2026-09-10)
 ------------------
 * Update dashboard client for 10.14.0 (`#1945 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1945>`_)

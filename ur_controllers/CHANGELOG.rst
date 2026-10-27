@@ -2,6 +2,15 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.2.0 (2026-10-20)
+------------------
+* Migrate ur_robot_driver off deprecated Handle raw-pointer API (`#2033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2033>`_)
+  Co-authored-by: Dr. Denis <denis.stogl@b-robotized.com>
+  Co-authored-by: Claude Sonnet 5 <noreply@anthropic.com>
+* Do not drop a tool contact goal handle before its terminal state is delivered (`#2005 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2005>`_)
+  Co-authored-by: Claude Fable 5 <noreply@anthropic.com>
+* Contributors: Christian Rishøj, Dr. Denis, Felix Exner
+
 7.1.0 (2026-09-10)
 ------------------
 * Fix flaky quintic spline test in passthrough controller (`#1941 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1941>`_)
