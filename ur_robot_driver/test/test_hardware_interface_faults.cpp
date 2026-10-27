@@ -970,7 +970,7 @@ TEST(HardwareInterfaceModeSwitchFaults, ToolContactStopFailureReturnsError)
   EXPECT_TRUE(hw.toolContactControllerRunning());
 }
 
-TEST(HardwareInterfaceModeSwitchFaults, ForceModeStopFailureLeavesOtherControllersUnchanged)
+TEST(HardwareInterfaceModeSwitchFaults, ForceModeStopFailureStillStopsToolContact)
 {
   URPositionHardwareInterfaceTestWrapper hw;
   hw.setStopForceModeAndToolContactRequested();
@@ -981,14 +981,14 @@ TEST(HardwareInterfaceModeSwitchFaults, ForceModeStopFailureLeavesOtherControlle
 
   EXPECT_EQ(hw.perform_command_mode_switch({}, {}), return_type::ERROR);
   EXPECT_TRUE(hw.forceModeControllerRunning());
-  EXPECT_TRUE(hw.toolContactControllerRunning());
+  EXPECT_FALSE(hw.toolContactControllerRunning());
   EXPECT_TRUE(hw.positionControllerRunning());
 
   EXPECT_EQ(hw.write(rclcpp::Time(0), rclcpp::Duration::from_seconds(0.01)), return_type::OK);
   EXPECT_EQ(hw.writeJointCommandCallCount(), 1);
 }
 
-TEST(HardwareInterfaceModeSwitchFaults, ToolContactStopFailureLeavesOtherControllersUnchanged)
+TEST(HardwareInterfaceModeSwitchFaults, ToolContactStopFailureStillStopsForceMode)
 {
   URPositionHardwareInterfaceTestWrapper hw;
   hw.setStopForceModeAndToolContactRequested();
@@ -998,7 +998,7 @@ TEST(HardwareInterfaceModeSwitchFaults, ToolContactStopFailureLeavesOtherControl
   hw.setEndToolContactResult(false);
 
   EXPECT_EQ(hw.perform_command_mode_switch({}, {}), return_type::ERROR);
-  EXPECT_TRUE(hw.forceModeControllerRunning());
+  EXPECT_FALSE(hw.forceModeControllerRunning());
   EXPECT_TRUE(hw.toolContactControllerRunning());
   EXPECT_TRUE(hw.positionControllerRunning());
 
