@@ -257,7 +257,8 @@ class IOControllerTest(unittest.TestCase):
         return subscription, state
 
     def _wait_for_tool_data_t2(self, state, timeout=1.0):
-        """Return the latest ~/tool_data_t2 sample, or None if connector T2 is absent.
+        """
+        Return the latest ~/tool_data_t2 sample, or None if connector T2 is absent.
 
         The subscription must already exist. ~/tool_data is received first so the wait
         starts only after this node is receiving controller traffic.
@@ -269,7 +270,8 @@ class IOControllerTest(unittest.TestCase):
         return state["msg"]
 
     def _wait_for_t2_voltage(self, state, expected, tolerance=5.0, timeout=5.0):
-        """Wait until the measured T2 voltage is within tolerance of expected.
+        """
+        Wait until the measured T2 voltage is within tolerance of expected.
 
         tool_output_voltage is a measured value: a 24 V setpoint can read 23 V, and
         switching off takes about a second to decay. ``state`` is the dict filled by
@@ -298,7 +300,8 @@ class IOControllerTest(unittest.TestCase):
         self.assertFalse(result.success)
 
     def test_tool_voltage_t2_rejects_other_values(self):
-        """Connector T2 accepts only exactly 0, 24 and 48 V.
+        """
+        Connector T2 rejects unsupported values.
 
         48.5 must not be truncated into a 48 V command, and a non-finite value must not be
         reported as success.
@@ -322,10 +325,12 @@ class IOControllerTest(unittest.TestCase):
                 )
 
     def test_tool_voltage_t2(self):
-        """T2 accepts the command only when the robot reports connector T2.
+        """
+        T2 accepts the command only when the robot reports connector T2.
 
         URSim 10.15 reports 0 V for every T2 setpoint, so a measured-voltage check is
-        opt-in via UR_TOOL_T2_MEASURE_VOLTAGE=1 and is meant for a real robot.
+        opt-in via UR_TOOL_T2_MEASURE_VOLTAGE=1 and is meant for a real robot. That
+        opt-in is also the only place this test requests 48 V.
         """
         subscription, t2_state = self._open_tool_data_t2()
         try:
@@ -341,11 +346,18 @@ class IOControllerTest(unittest.TestCase):
                     self.assertTrue(result.success)
                     if measure:
                         self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_24V)
+                        result_48 = self._io_status_controller_interface.set_io(
+                            fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,
+                            pin=0,
+                            state=float(SetIO.Request.STATE_TOOL_VOLTAGE_48V),
+                        )
+                        self.assertTrue(result_48.success)
+                        self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_48V)
                 else:
                     self.assertFalse(result.success)
             finally:
                 # Best-effort. An assertion failure, or discovery timing out, must still
-                # request 0 V so a real connector is not left at 24 V. The request is only
+                # request 0 V so a real connector is not left energized. The request is only
                 # required to succeed when the robot reported connector T2.
                 off = self._io_status_controller_interface.set_io(
                     fun=SetIO.Request.FUN_SET_TOOL_VOLTAGE_T2,

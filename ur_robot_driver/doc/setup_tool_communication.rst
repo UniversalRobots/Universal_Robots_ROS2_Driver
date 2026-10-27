@@ -98,7 +98,7 @@ Connector T2 (48 V)
 
 Tool Flange V2, on PolyScope X 10.15 and later, has a second power connector, T2, with 0, 24 and 48 V. Connector T0 is unchanged and still accepts only 0, 12 and 24 V.
 
-``tool_voltage_t2`` sets the T2 voltage when the robot program starts. It is applied together with the RS485 tool communication setup, so ``use_tool_communication`` has to be true. A robot that does not report Tool Flange V2 refuses to start rather than ignoring the request.
+``tool_voltage_t2`` sets the T2 voltage when the robot program starts, whether or not ``use_tool_communication`` is true. A robot that does not report Tool Flange V2 refuses to start rather than ignoring the request.
 
 At runtime, call ``/io_and_status_controller/set_io`` with ``fun`` set to ``FUN_SET_TOOL_VOLTAGE_T2`` and ``state`` set to 0, 24 or 48. This does not require tool communication. ``/io_and_status_controller/tool_data_t2`` publishes the measured ``tool_output_voltage`` and ``tool_current`` only while the robot reports that connector T2 is present. No message means the connector is not present.
 
