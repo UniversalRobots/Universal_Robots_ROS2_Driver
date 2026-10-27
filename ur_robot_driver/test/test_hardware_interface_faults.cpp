@@ -110,38 +110,54 @@ public:
   }
   void setValidDataPackage(const urcl::vector6d_t& joint_positions)
   {
-    const std::vector<std::string> recipe = { "actual_q",
-                                              "actual_qd",
-                                              "actual_current_as_torque",
-                                              "target_speed_fraction",
-                                              "speed_scaling",
-                                              "runtime_state",
-                                              "actual_TCP_force",
-                                              "actual_TCP_pose",
-                                              "target_TCP_pose",
-                                              "standard_analog_input0",
-                                              "standard_analog_input1",
-                                              "standard_analog_output0",
-                                              "standard_analog_output1",
-                                              "tool_mode",
-                                              "tool_analog_input0",
-                                              "tool_analog_input1",
-                                              "tool_output_voltage",
-                                              "tool_output_current",
-                                              "tool_temperature",
-                                              "robot_mode",
-                                              "safety_mode",
-                                              "robot_status_bits",
-                                              "safety_status_bits",
-                                              "actual_digital_input_bits",
-                                              "actual_digital_output_bits",
-                                              "analog_io_types",
-                                              "tool_analog_input_types",
-                                              "tcp_offset",
-                                              "payload",
-                                              "payload_cog",
-                                              "payload_inertia" };
+    using urcl::rtde_interface::DataType;
+    const std::vector<std::pair<std::string, DataType>> fields = {
+      { "actual_q", DataType::VECTOR6D },
+      { "actual_qd", DataType::VECTOR6D },
+      { "actual_current_as_torque", DataType::VECTOR6D },
+      { "actual_TCP_pose", DataType::VECTOR6D },
+      { "actual_TCP_force", DataType::VECTOR6D },
+      { "target_TCP_pose", DataType::VECTOR6D },
+      { "tcp_offset", DataType::VECTOR6D },
+      { "actual_digital_input_bits", DataType::UINT64 },
+      { "robot_mode", DataType::INT32 },
+      { "safety_mode", DataType::INT32 },
+      { "speed_scaling", DataType::DOUBLE },
+      { "target_speed_fraction", DataType::DOUBLE },
+      { "actual_digital_output_bits", DataType::UINT64 },
+      { "runtime_state", DataType::UINT32 },
+      { "robot_status_bits", DataType::UINT32 },
+      { "safety_status_bits", DataType::UINT32 },
+      { "analog_io_types", DataType::UINT32 },
+      { "standard_analog_input0", DataType::DOUBLE },
+      { "standard_analog_input1", DataType::DOUBLE },
+      { "standard_analog_output0", DataType::DOUBLE },
+      { "standard_analog_output1", DataType::DOUBLE },
+
+      { "tool_mode", DataType::UINT32 },
+      { "tool_analog_input_types", DataType::UINT32 },
+      { "tool_analog_input0", DataType::DOUBLE },
+      { "tool_analog_input1", DataType::DOUBLE },
+      { "tool_output_voltage", DataType::INT32 },
+      { "tool_output_current", DataType::DOUBLE },
+      { "tool_temperature", DataType::DOUBLE },
+      { "payload", DataType::DOUBLE },
+      { "payload_cog", DataType::VECTOR3D },
+      { "payload_inertia", DataType::VECTOR6D },
+    };
+
+    std::vector<std::string> recipe;
+    std::vector<DataType> types;
+    recipe.reserve(fields.size());
+    types.reserve(fields.size());
+
+    for (const auto& [name, type] : fields) {
+      recipe.push_back(name);
+      types.push_back(type);
+    }
+
     data_package_buffer_ = std::make_unique<urcl::rtde_interface::DataPackage>(recipe);
+    data_package_buffer_->setTypes(types);
     ASSERT_TRUE(data_package_buffer_->setData("actual_q", joint_positions));
     ASSERT_TRUE(data_package_buffer_->setData("runtime_state",
                                               static_cast<uint32_t>(urcl::rtde_interface::RUNTIME_STATE::STOPPED)));
