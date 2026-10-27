@@ -955,9 +955,9 @@ void URPositionHardwareInterface::resetControllerState()
   tool_contact_controller_running_ = false;
   twist_controller_running_ = false;
   motion_primitives_forward_controller_running_ = false;
-  urcl_twist_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
-  urcl_torque_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  urcl_twist_commands_.fill(0.0);
+  urcl_velocity_commands_.fill(0.0);
+  urcl_torque_commands_.fill(0.0);
 
   freedrive_mode_enable_ = NO_NEW_CMD_;
   freedrive_mode_abort_ = NO_NEW_CMD_;
@@ -1162,7 +1162,8 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
     hw_moprim_states_[1] = static_cast<double>(ready_for_new_moprim_);
 
     time_since_successful_read_ = rclcpp::Duration(0, 0);
-
+    // States can also change outside of read(), e.g. in write() or in callbacks.
+    push_state_mirrors();
     return hardware_interface::return_type::OK;
   }
 
@@ -1177,11 +1178,12 @@ hardware_interface::return_type URPositionHardwareInterface::read(const rclcpp::
          << "The non blocking read time out is: " << non_blocking_read_timeout_.seconds() * 1000 << " milliseconds";
       const std::string error_message = ss.str();
       RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "%s", error_message.c_str());
-      // States can also change outside of read(), e.g. in write() or in callbacks.
-      push_state_mirrors();
+
       // For very small values of non_blocking_read_timeout_ (< 10 ms) this might error on startup
       return hardware_interface::return_type::ERROR;
     }
+    // States can also change outside of read(), e.g. in write() or in callbacks.
+    push_state_mirrors();
     return hardware_interface::return_type::OK;
   }
 
@@ -1308,11 +1310,11 @@ void URPositionHardwareInterface::resetAsyncIO()
   tool_voltage_cmd_ = NO_NEW_CMD_;
 
   payload_mass_ = NO_NEW_CMD_;
-  payload_center_of_gravity_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
-  payload_inertia_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  payload_center_of_gravity_.fill(NO_NEW_CMD_);
+  payload_inertia_.fill(NO_NEW_CMD_);
   payload_transition_time_ = NO_NEW_CMD_;
 
-  gravity_vector_ = { NO_NEW_CMD_, NO_NEW_CMD_, NO_NEW_CMD_ };
+  gravity_vector_.fill(NO_NEW_CMD_);
   friction_model_viscous_.fill(NO_NEW_CMD_);
   friction_model_coulomb_.fill(NO_NEW_CMD_);
 
