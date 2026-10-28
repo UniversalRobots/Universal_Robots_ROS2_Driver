@@ -114,6 +114,7 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
   gpio_cmds.push_back("standard_analog_output_cmd_1");
   gpio_cmds.push_back("analog_output_domain_cmd");
   gpio_cmds.push_back("tool_voltage_cmd");
+  gpio_cmds.push_back("tool_voltage_t2_cmd");
   gpio_cmds.push_back("io_async_success");
   std::vector<std::string> gpio_states;
   for (size_t i = 0; i < 18; ++i) {
@@ -131,6 +132,9 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
   }
   gpio_states.push_back("tool_mode");
   gpio_states.push_back("tool_output_voltage");
+  gpio_states.push_back("tool_t2_available");
+  gpio_states.push_back("tool_output_voltage_2");
+  gpio_states.push_back("tool_output_current_2");
   gpio_states.push_back("tool_output_current");
   gpio_states.push_back("tool_temperature");
   gpio_states.push_back("tool_analog_input_0");
@@ -313,8 +317,9 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedStateInterfaces)
     expected_names.push_back(std::string(kTfPrefix) + "gpio/standard_analog_input_" + std::to_string(i));
     expected_names.push_back(std::string(kTfPrefix) + "gpio/standard_analog_output_" + std::to_string(i));
   }
-  for (const char* name : { "tool_output_voltage", "robot_mode", "safety_mode", "tool_mode", "tool_output_current",
-                            "tool_temperature", "program_running" }) {
+  for (const char* name :
+       { "tool_output_voltage", "tool_t2_available", "tool_output_voltage_2", "tool_output_current_2", "robot_mode",
+         "safety_mode", "tool_mode", "tool_output_current", "tool_temperature", "program_running" }) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/" + name);
   }
   expected_names.push_back(std::string(kTfPrefix) + "system_interface/initialized");
@@ -409,6 +414,7 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedCommandInterfaces)
   }
   expected_names.push_back(std::string(kTfPrefix) + "gpio/analog_output_domain_cmd");
   expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_voltage_cmd");
+  expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_voltage_t2_cmd");
   expected_names.push_back(std::string(kTfPrefix) + "zero_ftsensor/zero_ftsensor_cmd");
   expected_names.push_back(std::string(kTfPrefix) + "zero_ftsensor/zero_ftsensor_async_success");
   expected_names.push_back(std::string(kTfPrefix) + "freedrive_mode/async_success");

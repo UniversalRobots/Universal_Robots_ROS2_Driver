@@ -40,7 +40,7 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>ur_dashboard_msgs</depend>
-  <depend>ur_msgs</depend>
+  <depend version_gte="3.1.0">ur_msgs</depend>
   <depend>control_msgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>action_msgs</depend>
