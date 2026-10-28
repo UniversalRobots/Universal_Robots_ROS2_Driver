@@ -38,7 +38,10 @@
 #ifndef UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 #define UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 
+#include <atomic>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -48,6 +51,7 @@
 #include "controller_interface/controller_interface.hpp"
 #include "ur_msgs/msg/io_states.hpp"
 #include "ur_msgs/msg/tool_data_msg.hpp"
+#include "ur_msgs/msg/tool_data_t2_msg.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_msgs/srv/set_io.hpp"
@@ -198,12 +202,14 @@ protected:
   // Publishing in realtime ros2_control loop, so these are wrapped in non-blocking tries to prevent controller overrun
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT2Msg>> tool_data_t2_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>> program_state_pub_;
 
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;
+  ur_msgs::msg::ToolDataT2Msg tool_data_t2_msg_;
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
   std_msgs::msg::Bool program_running_msg_;
@@ -211,6 +217,15 @@ protected:
   // Parameters from ROS for gpio_controller
   std::shared_ptr<gpio_controller::ParamListener> param_listener_;
   gpio_controller::Params params_;
+
+  // State indices are update-thread only. The command index is atomic because set_io reads it,
+  // and it is not cleared on deactivate so that read never sees an empty value.
+  static constexpr size_t kNoInterfaceIndex = std::numeric_limits<size_t>::max();
+  std::atomic<bool> has_tool_t2_interfaces_{ false };
+  std::atomic<size_t> tool_voltage_t2_cmd_idx_{ kNoInterfaceIndex };
+  std::optional<size_t> tool_t2_available_idx_;
+  std::optional<size_t> tool_output_voltage_2_idx_;
+  std::optional<size_t> tool_output_current_2_idx_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   // TODO(anyone) publishers to add: tcp_pose_pub_

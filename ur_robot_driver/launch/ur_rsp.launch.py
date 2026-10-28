@@ -69,6 +69,7 @@ def generate_launch_description():
     tool_device_name = LaunchConfiguration("tool_device_name")
     tool_tcp_port = LaunchConfiguration("tool_tcp_port")
     tool_voltage = LaunchConfiguration("tool_voltage")
+    tool_voltage_t2 = LaunchConfiguration("tool_voltage_t2")
     reverse_ip = LaunchConfiguration("reverse_ip")
     script_command_port = LaunchConfiguration("script_command_port")
     reverse_port = LaunchConfiguration("reverse_port")
@@ -177,6 +178,9 @@ def generate_launch_description():
             " ",
             "tool_voltage:=",
             tool_voltage,
+            " ",
+            "tool_voltage_t2:=",
+            tool_voltage_t2,
             " ",
             "reverse_ip:=",
             reverse_ip,
@@ -427,6 +431,15 @@ def generate_launch_description():
             "tool_voltage",
             default_value="0",  # 0 being a conservative value that won't destroy anything
             description="Tool voltage that will be setup.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_voltage_t2",
+            default_value="",
+            description="Startup voltage for connector T2 (0, 24 or 48). Empty leaves T2 unchanged. "
+            "Applied when the robot program starts, whether or not use_tool_communication is "
+            "true. Requires Tool Flange V2 on PolyScope X 10.15 or later.",
         )
     )
     declared_arguments.append(
