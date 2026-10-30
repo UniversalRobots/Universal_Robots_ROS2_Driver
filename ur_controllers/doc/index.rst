@@ -66,6 +66,9 @@ Published topics
 * ``~/safety_mode [ur_dashboard_msgs/msg/SafetyMode]``: The robot's current safety mode (e.g.
   ``PROTECTIVE_STOP``, ``ROBOT_EMERGENCY_STOP``, ``NORMAL``)
 * ``~/tool_data [ur_msgs/msg/ToolDataMsg]``: Information about the robot's tool configuration
+* ``~/tool_data_t2 [ur_msgs/msg/ToolDataT2Msg]``: Measured voltage and current of connector T2.
+  Advertised when ``tool_t2_interfaces`` is true. A message is published only while the robot
+  reports that connector T2 is present.
 
 Advertised services
 """""""""""""""""""

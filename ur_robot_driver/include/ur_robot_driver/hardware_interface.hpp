@@ -45,6 +45,7 @@
 // System
 #include <limits>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -149,6 +150,12 @@ public:
 
   std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces() final;
 
+  // Connector T2 is optional in a description. Export any of these the description omits, so real
+  // hardware still provides them. Mock hardware has no unlisted export, so it only has what is declared.
+  std::vector<hardware_interface::InterfaceDescription> export_unlisted_state_interface_descriptions() override;
+
+  std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interface_descriptions() override;
+
   hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
@@ -221,6 +228,9 @@ protected:
 
   void initAsyncIO();
   void checkAsyncIO();
+  // Decides whether connector T2 can be commanded and whether its RTDE fields survived negotiation.
+  // Called once from on_configure, after the driver exists and after any RTDE client reset.
+  void configureToolConnectorT2();
   void updateNonDoubleValues();
   void extractToolPose();
   void transformForceTorque();
@@ -263,6 +273,12 @@ protected:
   int32_t tool_output_voltage_;
   double tool_output_current_;
   double tool_temperature_;
+  // Connector T2. tool_t2_supported_ is the version and flange check and gates commands.
+  // tool_t2_telemetry_ is whether the negotiated RTDE recipe still contains the T2 fields.
+  bool tool_t2_supported_{ false };
+  bool tool_t2_telemetry_{ false };
+  int32_t tool_output_voltage_2_{ 0 };
+  double tool_output_current_2_{ std::numeric_limits<double>::quiet_NaN() };
   double speed_scaling_;
   double target_speed_fraction_;
   double speed_scaling_combined_;
@@ -276,6 +292,19 @@ protected:
   std::array<double, 2> standard_analog_output_cmd_;
   double analog_output_domain_cmd_;
   double tool_voltage_cmd_;
+  double tool_voltage_t2_cmd_{ NO_NEW_CMD_ };
+  // tool_voltage_t2 requested without tool communication. Applied by checkAsyncIO when the control
+  // program connects, through its own state rather than tool_voltage_t2_cmd_ / io_async_success_.
+  // Unset when the value is written into the control script instead, or when the parameter is empty.
+  std::optional<int> startup_tool_voltage_t2_;
+  // Only read and written from checkAsyncIO, which runs on the async thread, except the seen count
+  // which on_configure snapshots before that thread starts.
+  bool startup_tool_voltage_t2_sent_{ false };
+  bool startup_tool_voltage_t2_error_reported_{ false };
+  // Incremented in handleRobotProgramState on every transition to not running. Polling
+  // robot_program_running_ misses a stop and restart that both happen between two async checks.
+  std::atomic<uint32_t> robot_program_stop_count_{ 0 };
+  uint32_t startup_tool_voltage_t2_stop_count_seen_{ 0 };
   double io_async_success_;
   double target_speed_fraction_cmd_;
   double scaling_async_success_;
@@ -397,6 +426,8 @@ protected:
   double tool_mode_copy_;
   std::array<double, 2> tool_analog_input_types_copy_;
   double tool_output_voltage_copy_;
+  double tool_t2_available_copy_{ 0.0 };
+  double tool_output_voltage_2_copy_{ std::numeric_limits<double>::quiet_NaN() };
   double robot_mode_copy_;
   double safety_mode_copy_;
   std::array<double, 4> robot_status_bits_copy_;

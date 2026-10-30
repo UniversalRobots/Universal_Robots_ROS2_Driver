@@ -112,12 +112,23 @@ Number of idle chars for the TX unit used for tool communication. Will be set as
 
 This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
 
-tool_voltage (Required)
------------------------
+tool_voltage (default: "0")
+---------------------------
 
-Tool voltage that will be set as soon as the UR-Program on the robot is started. Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``. Then, this parameter is required.
+Tool voltage on connector T0 (exactly ``0``, ``12`` or ``24``) that will be set as soon as the UR-Program on the robot is started. Any other value, including a prefix such as ``12.5``, fails configuration and does not energize the connector. Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``.
+
+48 V is not valid on connector T0. Use ``tool_voltage_t2`` for the 48 V connector.
 
 This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
+
+tool_voltage_t2
+---------------
+
+Voltage on connector T2 on Tool Flange V2 that will be set as soon as the UR-Program on the robot is started. Valid values are exactly ``0``, ``24`` and ``48``. Leave it empty to leave connector T2 unchanged.
+
+This does not depend on ``use_tool_communication``. When tool communication is enabled, the voltage is written into the control program. When it is not, the driver sends it once that program has connected. Either way the robot must report Tool Flange V2 on PolyScope X 10.15 or later. A robot that does not fails to configure instead of ignoring the value.
+
+The voltage can also be changed at runtime with the ``~/set_io`` service, function ``FUN_SET_TOOL_VOLTAGE_T2``, whether or not tool communication is enabled. That requires the ``io_and_status_controller`` parameter ``tool_t2_interfaces`` (true in the shipped configuration). The real driver exports the T2 interfaces even when a description omits them. Mock and simulation hardware only export what the description lists. ``~/tool_data_t2`` publishes the measured ``tool_output_voltage`` and ``tool_current`` only while the robot reports that connector T2 is present. Those are measured values, not the setpoint. On the real driver they are NaN when the controller did not accept the T2 RTDE fields. The shipped mock initializes ``tool_t2_available`` to 0, so it publishes no ``~/tool_data_t2`` sample. No message on that topic means the connector is not present.
 
 use_currents_as_efforts (default: "false")
 ------------------------------------------

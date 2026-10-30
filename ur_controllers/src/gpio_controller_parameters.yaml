@@ -9,6 +9,12 @@ gpio_controller:
       default_value: 10,
       description: "Amount of retries for checking if the selected gpio was set successfully"
    }
+   tool_t2_interfaces: {
+      type: bool,
+      default_value: false,
+      read_only: true,
+      description: "Claim the connector T2 command and state interfaces (tool_voltage_t2_cmd, tool_t2_available, tool_output_voltage_2, tool_output_current_2). The real driver exports these even when the description omits them. Mock and simulation hardware only export what the description lists, so leave this false for a description that does not declare them."
+   }
    verify_payload_on_set: {
       type: bool,
       default_value: true,

@@ -18,7 +18,7 @@
     headless_mode:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
     use_tool_communication:=false
-    tool_voltage:=0 tool_parity:=0 tool_baud_rate:=115200 tool_stop_bits:=1
+    tool_voltage:=0 tool_voltage_t2:='' tool_parity:=0 tool_baud_rate:=115200 tool_stop_bits:=1
     tool_rx_idle_chars:=1.5 tool_tx_idle_chars:=3.5 tool_device_name:=/tmp/ttyUR tool_tcp_port:=54321
     reverse_port:=50001
     script_sender_port:=50002
@@ -31,6 +31,7 @@
     verify_robot_model:=true
     use_currents_as_efforts:=false
     ">
+    <!-- tool_voltage_t2 uses single quotes because this params attribute is double-quoted. An empty value means do not set a startup voltage. -->
     <!-- rw_rate of 0 uses the rate of the controller_manager -->
 
     <xacro:property name="config_kinematics_parameters" value="${xacro.load_yaml(kinematics_parameters_file)}"/>
@@ -69,6 +70,7 @@
           <param name="use_tool_communication">${use_tool_communication}</param>
           <param name="kinematics/hash">${kinematics_hash}</param>
           <param name="tool_voltage">${tool_voltage}</param>
+          <param name="tool_voltage_t2">${tool_voltage_t2}</param>
           <param name="tool_parity">${tool_parity}</param>
           <param name="tool_baud_rate">${tool_baud_rate}</param>
           <param name="tool_stop_bits">${tool_stop_bits}</param>
@@ -125,6 +127,11 @@
         <command_interface name="analog_output_domain_cmd"/>
 
         <command_interface name="tool_voltage_cmd"/>
+        <command_interface name="tool_voltage_t2_cmd">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">0</param>
+          </xacro:if>
+        </command_interface>
 
         <command_interface name="io_async_success"/>
 
@@ -181,6 +188,22 @@
         <state_interface name="tool_output_voltage"/>
         <state_interface name="tool_output_current"/>
         <state_interface name="tool_temperature"/>
+
+        <state_interface name="tool_t2_available">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">0</param>
+          </xacro:if>
+        </state_interface>
+        <state_interface name="tool_output_voltage_2">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">0</param>
+          </xacro:if>
+        </state_interface>
+        <state_interface name="tool_output_current_2">
+          <xacro:if value="${use_mock_hardware}">
+            <param name="initial_value">0</param>
+          </xacro:if>
+        </state_interface>
 
         <state_interface name="tool_analog_input_0"/>
         <state_interface name="tool_analog_input_1"/>
