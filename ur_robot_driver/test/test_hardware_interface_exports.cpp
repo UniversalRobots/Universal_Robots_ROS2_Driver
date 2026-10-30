@@ -33,9 +33,10 @@
 // old-export-empty -> on_export_state_interfaces() fallback the real resource_manager uses).
 //
 // The HardwareInfo below transcribes every joint/sensor/gpio declared in
-// ur.ros2_control.xacro (plus ur_description's ur_joint_control.xacro/ur_sensors.xacro), since
-// every interface this driver exports turned out to already be URDF-declared - there is no
-// export_unlisted_*_interface_descriptions() override to test separately.
+// ur.ros2_control.xacro (plus ur_description's ur_joint_control.xacro/ur_sensors.xacro).
+// Connector T2 is the exception: a description may omit those interfaces, and the driver then
+// exports them from export_unlisted_*_interface_descriptions(). The test below covers that path.
+// Every other interface this driver exports is URDF-declared.
 
 #include <gmock/gmock.h>
 
@@ -449,6 +450,46 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedCommandInterfaces)
   }
 
   EXPECT_THAT(exported_names, ::testing::UnorderedElementsAreArray(expected_names));
+}
+
+TEST(URHardwareInterfaceExport, ExportsToolT2InterfacesWhenTheDescriptionOmitsThem)
+{
+  auto info = BuildTestHardwareInfo();
+  const std::string gpio_name = std::string(kTfPrefix) + "gpio";
+  auto drop = [](std::vector<hardware_interface::InterfaceInfo>& interfaces, const std::string& name) {
+    interfaces.erase(std::remove_if(interfaces.begin(), interfaces.end(),
+                                    [&](const hardware_interface::InterfaceInfo& iface) { return iface.name == name; }),
+                     interfaces.end());
+  };
+  bool found_gpio = false;
+  for (auto& gpio : info.gpios) {
+    if (gpio.name != gpio_name) {
+      continue;
+    }
+    found_gpio = true;
+    drop(gpio.command_interfaces, "tool_voltage_t2_cmd");
+    drop(gpio.state_interfaces, "tool_t2_available");
+    drop(gpio.state_interfaces, "tool_output_voltage_2");
+    drop(gpio.state_interfaces, "tool_output_current_2");
+  }
+  ASSERT_TRUE(found_gpio);
+
+  hardware_interface::HardwareComponentParams params;
+  params.hardware_info = info;
+  params.clock = std::make_shared<rclcpp::Clock>();
+  params.logger = rclcpp::get_logger("test_ur_hardware_interface_without_tool_t2");
+
+  hardware_interface::System hardware(std::make_unique<ur_robot_driver::URPositionHardwareInterface>());
+  const auto state = hardware.initialize(params);
+  ASSERT_EQ(state.id(), lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED);
+
+  const auto state_names = GetNames(hardware.export_state_interfaces());
+  for (const char* name : { "tool_t2_available", "tool_output_voltage_2", "tool_output_current_2" }) {
+    EXPECT_EQ(std::count(state_names.begin(), state_names.end(), gpio_name + "/" + name), 1);
+  }
+
+  const auto command_names = GetNames(hardware.export_command_interfaces());
+  EXPECT_EQ(std::count(command_names.begin(), command_names.end(), gpio_name + "/tool_voltage_t2_cmd"), 1);
 }
 
 TEST(URHardwareInterfaceExport, SupportsDescriptionsWithoutEffortCommands)

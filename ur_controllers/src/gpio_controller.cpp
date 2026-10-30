@@ -564,8 +564,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
       resp->success = false;
       return false;
     }
-    // Exactly 0, 24 or 48. A cast of 48.5 would otherwise become an accepted 48 V command, and NaN
-    // would leave the async flag waiting, which the service reports as success.
+    // Exactly 0, 24 or 48. A cast of 48.5 would otherwise become an accepted 48 V command.
     if (req->state != req->STATE_TOOL_VOLTAGE_0V && req->state != req->STATE_TOOL_VOLTAGE_24V &&
         req->state != req->STATE_TOOL_VOLTAGE_48V) {
       RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 accepts 0, 24 or 48 V. Requested '%f'.", req->state);
@@ -580,12 +579,15 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     if (!waitForAsyncCommand([&]() {
           return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
         })) {
-      RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
-                                            "mocked interface)");
+      // ASYNC_WAITING is 2.0, so treating the pending value as a bool would report success, including
+      // for an OFF request that the hardware never acknowledged.
+      RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 voltage command was not acknowledged.");
+      resp->success = false;
+      return false;
     }
 
-    resp->success = static_cast<bool>(
-        command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
+    const auto acknowledged = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional();
+    resp->success = acknowledged.has_value() && *acknowledged == 1.0;
     return resp->success;
   } else {
     resp->success = false;
