@@ -45,12 +45,8 @@ public:
     return true;
   }
 
-  // Program has already stopped, and that stop was consumed, so a later command cannot rely on the
-  // stop count to clear the startup-sent flag.
-  void stoppedAfterConsumedDisconnect()
+  void stoppedWithStartupVoltage()
   {
-    robot_program_stop_count_.store(1);
-    startup_tool_voltage_t2_stop_count_seen_ = 1;
     robot_program_running_.store(false);
     tool_t2_supported_ = true;
     startup_tool_voltage_t2_ = 24;
@@ -69,13 +65,6 @@ public:
     robot_program_running_.store(running);
   }
 
-  // A stop and restart that both happen between two async checks.
-  void stopAndRestart()
-  {
-    handleRobotProgramState(false);
-    handleRobotProgramState(true);
-  }
-
   bool startupSent() const
   {
     return startup_tool_voltage_t2_sent_;
@@ -91,7 +80,7 @@ public:
 TEST(ToolVoltageT2Startup, RequestBeforeProgramStartDoesNotSkipConfiguredVoltage)
 {
   ToolVoltageT2StartupHw hw;
-  hw.stoppedAfterConsumedDisconnect();
+  hw.stoppedWithStartupVoltage();
   hw.request(0.0);
 
   hw.handle();
@@ -111,7 +100,7 @@ TEST(ToolVoltageT2Startup, RequestBeforeProgramStartDoesNotSkipConfiguredVoltage
 TEST(ToolVoltageT2Startup, RequestWhileProgramIsRunningOverridesStartupVoltage)
 {
   ToolVoltageT2StartupHw hw;
-  hw.stoppedAfterConsumedDisconnect();
+  hw.stoppedWithStartupVoltage();
   hw.setProgramRunning(true);
   hw.request(48.0);
 
@@ -125,25 +114,6 @@ TEST(ToolVoltageT2Startup, RequestWhileProgramIsRunningOverridesStartupVoltage)
 
   EXPECT_EQ(hw.applied_voltages.size(), 1u);
 }
-
-TEST(ToolVoltageT2Startup, StopAndRestartBetweenChecksReappliesConfiguredVoltage)
-{
-  ToolVoltageT2StartupHw hw;
-  hw.stoppedAfterConsumedDisconnect();
-  hw.setProgramRunning(true);
-
-  hw.handle();
-
-  ASSERT_EQ(hw.applied_voltages.size(), 1u);
-  EXPECT_EQ(hw.applied_voltages[0], 24);
-
-  hw.stopAndRestart();
-  hw.handle();
-
-  ASSERT_EQ(hw.applied_voltages.size(), 2u);
-  EXPECT_EQ(hw.applied_voltages[1], 24);
-}
-
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);

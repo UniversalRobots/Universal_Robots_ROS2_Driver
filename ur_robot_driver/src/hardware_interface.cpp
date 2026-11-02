@@ -655,8 +655,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   startup_tool_voltage_t2_.reset();
   startup_tool_voltage_t2_sent_ = false;
   startup_tool_voltage_t2_error_reported_ = false;
-  // Stops that already happened are not a new disconnect. The async thread is not running yet.
-  startup_tool_voltage_t2_stop_count_seen_ = robot_program_stop_count_.load(std::memory_order_acquire);
   const auto tool_voltage_t2_it = info_.hardware_parameters.find("tool_voltage_t2");
   const std::string tool_voltage_t2_parameter =
       tool_voltage_t2_it == info_.hardware_parameters.end() ? "" : tool_voltage_t2_it->second;
@@ -1068,8 +1066,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     if (stop_requested_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_STOPPED);
       stop_requested_ = false;
-      setRobotProgramRunning(false);  // We reset that here, as well to avoid a race condition
-                                      // between the reverse interface callback and the next write.
+      robot_program_running_ = false;  // We reset that here, as well to avoid a race condition
+                                       // between the reverse interface callback and the next write.
     } else if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
 
@@ -1111,16 +1109,7 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
-  setRobotProgramRunning(program_running);
-}
-
-void URPositionHardwareInterface::setRobotProgramRunning(const bool program_running)
-{
-  // Store the level first. The release on the stop count then publishes that store to checkAsyncIO.
-  robot_program_running_.store(program_running, std::memory_order_relaxed);
-  if (!program_running) {
-    robot_program_stop_count_.fetch_add(1, std::memory_order_release);
-  }
+  robot_program_running_ = program_running;
 }
 
 void URPositionHardwareInterface::configureToolConnectorT2()
@@ -1219,18 +1208,12 @@ bool URPositionHardwareInterface::sendToolVoltageT2(const int voltage)
 
 void URPositionHardwareInterface::handleConnectorT2Voltage()
 {
-  if (startup_tool_voltage_t2_.has_value()) {
-    // A stop and a restart can both land between two checks. The running flag is then true the whole
-    // time this thread looks at it, and the new program would never get the startup voltage.
-    const uint32_t stops = robot_program_stop_count_.load(std::memory_order_acquire);
-    if (stops != startup_tool_voltage_t2_stop_count_seen_) {
-      startup_tool_voltage_t2_stop_count_seen_ = stops;
-      // Re-apply after the next program start. The control script connects the script-command socket
-      // before the reverse interface, so the program-running flag means setToolVoltageT2 will not fall
-      // back to replacing the program.
-      startup_tool_voltage_t2_sent_ = false;
-      startup_tool_voltage_t2_error_reported_ = false;
-    }
+  if (startup_tool_voltage_t2_.has_value() && !robot_program_running_.load()) {
+    // Re-apply after the next program start. The control script connects the script-command socket
+    // before the reverse interface, so the program-running flag means setToolVoltageT2 will not fall
+    // back to replacing the program.
+    startup_tool_voltage_t2_sent_ = false;
+    startup_tool_voltage_t2_error_reported_ = false;
   }
 
   if (!std::isnan(tool_voltage_t2_cmd_)) {
@@ -1238,8 +1221,8 @@ void URPositionHardwareInterface::handleConnectorT2Voltage()
     // while setToolVoltageT2 is running is not overwritten. Its result is what the service waits on.
     const double requested = tool_voltage_t2_cmd_;
     // Only a command handled while a program is connected replaces the configured startup voltage.
-    // A request processed while stopped must not leave the flag set: that stop was already consumed,
-    // so the next program start would otherwise skip tool_voltage_t2.
+    // A request processed while stopped must not set the flag, or a program that starts before the
+    // next check would skip tool_voltage_t2.
     if (robot_program_running_.load()) {
       startup_tool_voltage_t2_sent_ = true;
     }
