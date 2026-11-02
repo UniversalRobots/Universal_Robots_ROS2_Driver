@@ -655,6 +655,8 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   startup_tool_voltage_t2_.reset();
   startup_tool_voltage_t2_sent_ = false;
   startup_tool_voltage_t2_error_reported_ = false;
+  // Stops that already happened are not a new disconnect. The async thread is not running yet.
+  startup_tool_voltage_t2_stop_count_seen_ = robot_program_stop_count_.load(std::memory_order_acquire);
   const auto tool_voltage_t2_it = info_.hardware_parameters.find("tool_voltage_t2");
   const std::string tool_voltage_t2_parameter =
       tool_voltage_t2_it == info_.hardware_parameters.end() ? "" : tool_voltage_t2_it->second;
@@ -1066,8 +1068,8 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
     if (stop_requested_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_STOPPED);
       stop_requested_ = false;
-      robot_program_running_ = false;  // We reset that here, as well to avoid a race condition
-                                       // between the reverse interface callback and the next write.
+      setRobotProgramRunning(false);  // We reset that here, as well to avoid a race condition
+                                      // between the reverse interface callback and the next write.
     } else if (position_controller_running_) {
       ur_driver_->writeJointCommand(urcl_position_commands_, urcl::comm::ControlMode::MODE_SERVOJ, receive_timeout_);
 
@@ -1109,7 +1111,16 @@ hardware_interface::return_type URPositionHardwareInterface::write(const rclcpp:
 
 void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 {
-  robot_program_running_ = program_running;
+  setRobotProgramRunning(program_running);
+}
+
+void URPositionHardwareInterface::setRobotProgramRunning(const bool program_running)
+{
+  // Store the level first. The release on the stop count then publishes that store to checkAsyncIO.
+  robot_program_running_.store(program_running, std::memory_order_relaxed);
+  if (!program_running) {
+    robot_program_stop_count_.fetch_add(1, std::memory_order_release);
+  }
 }
 
 void URPositionHardwareInterface::configureToolConnectorT2()
@@ -1198,6 +1209,77 @@ void URPositionHardwareInterface::initAsyncIO()
   friction_model_coulomb_.fill(NO_NEW_CMD_);
 }
 
+bool URPositionHardwareInterface::sendToolVoltageT2(const int voltage)
+{
+  if (ur_driver_ == nullptr) {
+    return false;
+  }
+  return ur_driver_->setToolVoltageT2(static_cast<urcl::ToolVoltage>(voltage));
+}
+
+void URPositionHardwareInterface::handleConnectorT2Voltage()
+{
+  if (startup_tool_voltage_t2_.has_value()) {
+    // A stop and a restart can both land between two checks. The running flag is then true the whole
+    // time this thread looks at it, and the new program would never get the startup voltage.
+    const uint32_t stops = robot_program_stop_count_.load(std::memory_order_acquire);
+    if (stops != startup_tool_voltage_t2_stop_count_seen_) {
+      startup_tool_voltage_t2_stop_count_seen_ = stops;
+      // Re-apply after the next program start. The control script connects the script-command socket
+      // before the reverse interface, so the program-running flag means setToolVoltageT2 will not fall
+      // back to replacing the program.
+      startup_tool_voltage_t2_sent_ = false;
+      startup_tool_voltage_t2_error_reported_ = false;
+    }
+  }
+
+  if (!std::isnan(tool_voltage_t2_cmd_)) {
+    // Copy first and clear only if the slot still holds this request, so a service call that arrives
+    // while setToolVoltageT2 is running is not overwritten. Its result is what the service waits on.
+    const double requested = tool_voltage_t2_cmd_;
+    // Only a command handled while a program is connected replaces the configured startup voltage.
+    // A request processed while stopped must not leave the flag set: that stop was already consumed,
+    // so the next program start would otherwise skip tool_voltage_t2.
+    if (robot_program_running_.load()) {
+      startup_tool_voltage_t2_sent_ = true;
+    }
+    // Reject the command here so a robot without T2 reports failure instead of throwing from URCL.
+    bool success = false;
+    bool handled = true;
+    if (!tool_t2_supported_) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Connector T2 is not available on this robot. It "
+                                                                      "requires PolyScope X 10.15 or later and Tool "
+                                                                      "Flange V2.");
+    } else {
+      success = sendToolVoltageT2(static_cast<int>(requested));
+      // A driver that is not up yet has not accepted the command, so leave it pending.
+      handled = ur_driver_ != nullptr || success;
+    }
+    if (handled && tool_voltage_t2_cmd_ == requested) {
+      tool_voltage_t2_cmd_ = NO_NEW_CMD_;
+      io_async_success_ = success;
+    }
+  } else if (startup_tool_voltage_t2_.has_value() && !startup_tool_voltage_t2_sent_ && robot_program_running_.load()) {
+    // Kept off the service command slot and its acknowledgement, so a runtime OFF request cannot be
+    // discarded or reported successful because of this write.
+    if (!tool_t2_supported_) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Connector T2 is not available on this robot. It "
+                                                                      "requires PolyScope X 10.15 or later and Tool "
+                                                                      "Flange V2.");
+      startup_tool_voltage_t2_sent_ = true;
+    } else if (sendToolVoltageT2(*startup_tool_voltage_t2_)) {
+      startup_tool_voltage_t2_sent_ = true;
+      startup_tool_voltage_t2_error_reported_ = false;
+    } else if (ur_driver_ != nullptr && !startup_tool_voltage_t2_error_reported_) {
+      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"),
+                   "Setting the connector T2 startup voltage to %d failed. The driver will retry while the program is "
+                   "running.",
+                   *startup_tool_voltage_t2_);
+      startup_tool_voltage_t2_error_reported_ = true;
+    }
+  }
+}
+
 void URPositionHardwareInterface::checkAsyncIO()
 {
   if (!rtde_comm_has_been_started_) {
@@ -1244,53 +1326,7 @@ void URPositionHardwareInterface::checkAsyncIO()
     tool_voltage_cmd_ = NO_NEW_CMD_;
   }
 
-  if (startup_tool_voltage_t2_.has_value() && !robot_program_running_.load()) {
-    // Re-apply after the next program start. The control script connects the script-command socket
-    // before the reverse interface, so the program-running flag means setToolVoltageT2 will not fall
-    // back to replacing the program.
-    startup_tool_voltage_t2_sent_ = false;
-    startup_tool_voltage_t2_error_reported_ = false;
-  }
-
-  if (!std::isnan(tool_voltage_t2_cmd_) && ur_driver_ != nullptr) {
-    // Copy first and clear only if the slot still holds this request, so a service call that arrives
-    // while setToolVoltageT2 is running is not overwritten. Its result is what the service waits on.
-    const double requested = tool_voltage_t2_cmd_;
-    // An explicit runtime request supersedes the startup voltage for this program connection.
-    startup_tool_voltage_t2_sent_ = true;
-    // Reject the command here so a robot without T2 reports failure instead of throwing from URCL.
-    bool success = false;
-    if (!tool_t2_supported_) {
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Connector T2 is not available on this robot. It "
-                                                                      "requires PolyScope X 10.15 or later and Tool "
-                                                                      "Flange V2.");
-    } else {
-      success = ur_driver_->setToolVoltageT2(static_cast<urcl::ToolVoltage>(requested));
-    }
-    if (tool_voltage_t2_cmd_ == requested) {
-      tool_voltage_t2_cmd_ = NO_NEW_CMD_;
-      io_async_success_ = success;
-    }
-  } else if (startup_tool_voltage_t2_.has_value() && !startup_tool_voltage_t2_sent_ && robot_program_running_.load() &&
-             ur_driver_ != nullptr) {
-    // Kept off the service command slot and its acknowledgement, so a runtime OFF request cannot be
-    // discarded or reported successful because of this write.
-    if (!tool_t2_supported_) {
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"), "Connector T2 is not available on this robot. It "
-                                                                      "requires PolyScope X 10.15 or later and Tool "
-                                                                      "Flange V2.");
-      startup_tool_voltage_t2_sent_ = true;
-    } else if (ur_driver_->setToolVoltageT2(static_cast<urcl::ToolVoltage>(*startup_tool_voltage_t2_))) {
-      startup_tool_voltage_t2_sent_ = true;
-      startup_tool_voltage_t2_error_reported_ = false;
-    } else if (!startup_tool_voltage_t2_error_reported_) {
-      RCLCPP_ERROR(rclcpp::get_logger("URPositionHardwareInterface"),
-                   "Setting the connector T2 startup voltage to %d failed. The driver will retry while the program is "
-                   "running.",
-                   *startup_tool_voltage_t2_);
-      startup_tool_voltage_t2_error_reported_ = true;
-    }
-  }
+  handleConnectorT2Voltage();
 
   if (!std::isnan(target_speed_fraction_cmd_) && ur_driver_ != nullptr) {
     scaling_async_success_ = ur_driver_->getRTDEWriter().sendSpeedSlider(target_speed_fraction_cmd_);
