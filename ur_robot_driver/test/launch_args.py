@@ -78,6 +78,8 @@ def generate_test_description(launch_dashboard_client):
         "launch_dashboard_client": launch_dashboard_client,
         "start_joint_controller": "false",
     }
+    if ur_type in ("ur3", "ur5", "ur10"):
+        launch_arguments["use_currents_as_efforts"] = "true"
 
     robot_driver = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
