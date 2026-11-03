@@ -58,7 +58,7 @@ status information about the robot.
 Published topics
 """"""""""""""""
 
-* ``~/io_states [ur_msgs/msg/IOStates]``: Status of all I/O ports
+* ``~/io_states [ur_msgs/msg/IOStates]``: Status of all I/O ports (except T1 and T2)
 * ``~/robot_mode [ur_dashboard_msgs/msg/RobotMode]``: The current robot mode (e.g. ``POWER_OFF``,
   ``IDLE``, ``RUNNING``)
 * ``~/robot_program_running [std_msgs/msg/Bool]``: Publishes whether **the External Control
