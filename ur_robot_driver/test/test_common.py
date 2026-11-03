@@ -609,14 +609,14 @@ def _declare_launch_arguments():
 
 
 def _wait_robot_booted_action():
-    """Wait until dashboard or Robot API is reachable. Not a ROS node."""
+    """Run ur_client_library's wait_robot_booted.py. Not a ROS node."""
     return ExecuteProcess(
         cmd=[
             PathJoinSubstitution(
                 [
-                    FindPackagePrefix("ur_robot_driver"),
+                    FindPackagePrefix("ur_client_library"),
                     "lib",
-                    "ur_robot_driver",
+                    "ur_client_library",
                     "wait_robot_booted.py",
                 ]
             ),
