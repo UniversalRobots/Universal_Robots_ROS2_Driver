@@ -39,7 +39,9 @@ from rclpy.node import Node
 
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.action import Action
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, Shutdown
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
@@ -52,10 +54,46 @@ from test_common import (  # noqa: E402
     ControllerManagerInterface,
     _ci_ur_type,
     _declare_launch_arguments,
-    _register_driver_on_ready,
     _robot_ip,
     _wait_robot_booted_action,
 )
+
+# ur_client_library's wait_robot_booted.py polls for 120s. launch_testing stops
+# waiting for ReadyToTest before that unless this is longer, which would fail a
+# slow-but-successful boot.
+_READY_AFTER_BOOT_TIMEOUT = 200
+
+
+class _StartDriverWhenReady(Action):
+    """
+    Start the driver and the test only when the readiness check exits 0.
+
+    launch_testing only discovers ``ReadyToTest`` actions that are part of the
+    description, so this action advertises it without executing it. The node
+    checks in this file treat a missing dashboard client as success, so they
+    must not run after a failed boot.
+    """
+
+    def __init__(self, robot_driver, ready):
+        super().__init__()
+        self.__robot_driver = robot_driver
+        self.__ready = ready
+
+    def get_sub_entities(self):
+        return [self.__ready]
+
+    def execute(self, context):
+        returncode = context.locals.event.returncode
+        if returncode != 0:
+            return [
+                Shutdown(
+                    reason=(
+                        "wait_robot_booted failed with exit code "
+                        f"{returncode}; not starting the driver"
+                    )
+                )
+            ]
+        return [self.__robot_driver, self.__ready]
 
 
 @pytest.mark.launch_test
@@ -63,6 +101,7 @@ from test_common import (  # noqa: E402
     "launch_dashboard_client",
     [("true"), ("false")],
 )
+@launch_testing.ready_to_test_action_timeout(_READY_AFTER_BOOT_TIMEOUT)
 def generate_test_description(launch_dashboard_client):
     ur_type = _ci_ur_type()
     launch_arguments = {
@@ -87,11 +126,16 @@ def generate_test_description(launch_dashboard_client):
         launch_arguments=launch_arguments.items(),
     )
     wait_robot_booted = _wait_robot_booted_action()
-    driver_starter = _register_driver_on_ready(wait_robot_booted, robot_driver)
-
-    return LaunchDescription(
-        _declare_launch_arguments() + [ReadyToTest(), wait_robot_booted, driver_starter]
+    # Hold the test until the waiter exits. Releasing it up front lets the
+    # "dashboard client absent" assertion pass when the driver never starts.
+    driver_starter = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_robot_booted,
+            on_exit=_StartDriverWhenReady(robot_driver, ReadyToTest()),
+        )
     )
+
+    return LaunchDescription(_declare_launch_arguments() + [wait_robot_booted, driver_starter])
 
 
 class DashboardClientTest(unittest.TestCase):
