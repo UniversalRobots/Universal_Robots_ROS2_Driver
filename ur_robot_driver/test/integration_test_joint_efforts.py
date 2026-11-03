@@ -71,9 +71,17 @@ MIN_CURRENT_EFFORT_A = 2.0
 
 
 def _effort_cases():
-    """Torque mode is unavailable on CB3, so those cases are omitted there."""
+    """
+    Return effort-mode parameters, omitting torque mode on CB3.
+
+    Torque mode needs ``actual_current_as_torque``, which CB3 does not
+    provide. Detect that from a 3.x image tag or from the configured robot
+    model (``UR_CI_UR_TYPE``). An explicit ``false`` case would override the
+    current-based fallback in ``generate_driver_test_description`` and fail
+    hardware configuration before the runtime version skip can run.
+    """
     version = os.environ.get("UR_CI_URSIM_VERSION", "latest")
-    if version.startswith("3."):
+    if version.startswith("3.") or _ci_ur_type() in ("ur3", "ur5", "ur10"):
         return [("true",)]
     # None: omit the launch argument and assert the default is torque mode.
     return [(None,), ("false",), ("true",)]
