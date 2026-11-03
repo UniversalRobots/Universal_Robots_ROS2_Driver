@@ -82,9 +82,9 @@ def _effort_cases():
     """
     version = os.environ.get("UR_CI_URSIM_VERSION", "latest")
     if version.startswith("3.") or _ci_ur_type() in ("ur3", "ur5", "ur10"):
-        return [("true",)]
-    # None: omit the launch argument and assert the default is torque mode.
-    return [(None,), ("false",), ("true",)]
+        return ["true"]
+    # None omits the launch argument and asserts the default torque mode.
+    return [None, "false", "true"]
 
 
 @pytest.mark.launch_test
