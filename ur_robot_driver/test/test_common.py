@@ -46,6 +46,7 @@ from launch.actions import (
     ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
+    Shutdown,
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -626,6 +627,28 @@ def _wait_robot_booted_action():
     )
 
 
+def _register_driver_on_ready(wait_robot_booted, robot_driver):
+    """Start the driver only when the readiness check exits with code 0.
+
+    ``wait_robot_booted.py`` returns nonzero on timeout. ``OnProcessExit`` runs
+    for every exit code, so a failed check must not start the driver.
+    """
+
+    def _on_exit(event, _context):
+        if event.returncode != 0:
+            return [
+                Shutdown(
+                    reason=(
+                        "wait_robot_booted failed with exit code "
+                        f"{event.returncode}; not starting the driver"
+                    )
+                )
+            ]
+        return [robot_driver]
+
+    return RegisterEventHandler(OnProcessExit(target_action=wait_robot_booted, on_exit=_on_exit))
+
+
 def _ursim_action(
     ursim_version="latest",
     ur_type="ur5e",
@@ -754,9 +777,7 @@ def generate_driver_test_description(
         launch_arguments=launch_arguments.items(),
     )
     wait_robot_booted = _wait_robot_booted_action()
-    driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
-    )
+    driver_starter = _register_driver_on_ready(wait_robot_booted, robot_driver)
 
     return LaunchDescription(
         _declare_launch_arguments() + [ReadyToTest(), wait_robot_booted, driver_starter]
@@ -808,9 +829,7 @@ def generate_driver_test_description_for_model(
         launch_arguments=launch_arguments.items(),
     )
     wait_robot_booted = _wait_robot_booted_action()
-    driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
-    )
+    driver_starter = _register_driver_on_ready(wait_robot_booted, robot_driver)
 
     # Per-model container name so leftover containers from a previous
     # parametrization are never confused with the current one.

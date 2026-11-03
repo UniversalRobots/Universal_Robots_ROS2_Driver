@@ -39,11 +39,7 @@ from rclpy.node import Node
 
 
 from launch import LaunchDescription
-from launch.actions import (
-    IncludeLaunchDescription,
-    RegisterEventHandler,
-)
-from launch.event_handlers import OnProcessExit
+from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
@@ -56,6 +52,7 @@ from test_common import (  # noqa: E402
     ControllerManagerInterface,
     _ci_ur_type,
     _declare_launch_arguments,
+    _register_driver_on_ready,
     _robot_ip,
     _wait_robot_booted_action,
 )
@@ -90,9 +87,7 @@ def generate_test_description(launch_dashboard_client):
         launch_arguments=launch_arguments.items(),
     )
     wait_robot_booted = _wait_robot_booted_action()
-    driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_robot_booted, on_exit=robot_driver)
-    )
+    driver_starter = _register_driver_on_ready(wait_robot_booted, robot_driver)
 
     return LaunchDescription(
         _declare_launch_arguments() + [ReadyToTest(), wait_robot_booted, driver_starter]
