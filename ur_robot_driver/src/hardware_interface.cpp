@@ -289,34 +289,31 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
     }
   }
 
-<<<<<<< HEAD
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < actual_dig_out_bits_copy_.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
-=======
-  for (size_t i = 0; i < actual_dig_out_bits_copy_.size(); ++i) {
-    add_state_mirror(tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]);
   }
 
   for (size_t i = 0; i < STANDARD_DIGITAL_INPUT_COUNT; ++i) {
-    add_state_mirror(tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]);
->>>>>>> a37bf57 (Add T1 connector I/Os (#2048))
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
   }
 
   // Bits 18-20 are B0 B1 B2 (T1_DI0 Left, T1_DI1 Center, T1_DI2 Right).
   // Bits 21-22 are SB3 SB4 (T1_CI0, T1_CI1): a configurable safety-rated 2PE that can be used as the Freedrive pair.
   // Bit 23 is SD, T1_CONNECTED, Smart Panel detect.
   for (size_t i = 0; i < T1_CONFIGURABLE_DIGITAL_INPUT_COUNT; ++i) {
-    add_state_mirror(tf_prefix + "gpio", "tool_t1_configurable_digital_input_" + std::to_string(i),
-                     &actual_dig_in_bits_copy_[T1_CONFIGURABLE_DIGITAL_INPUT_BIT + i]);
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        tf_prefix + "gpio", "tool_t1_configurable_digital_input_" + std::to_string(i),
+        &actual_dig_in_bits_copy_[T1_CONFIGURABLE_DIGITAL_INPUT_BIT + i]));
   }
   for (size_t i = 0; i < T1_SMART_PANEL_DIGITAL_INPUT_COUNT; ++i) {
-    add_state_mirror(tf_prefix + "gpio", "tool_t1_digital_input_" + std::to_string(i),
-                     &actual_dig_in_bits_copy_[T1_SMART_PANEL_DIGITAL_INPUT_BIT + i]);
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "gpio", "tool_t1_digital_input_" + std::to_string(i),
+                                           &actual_dig_in_bits_copy_[T1_SMART_PANEL_DIGITAL_INPUT_BIT + i]));
   }
-  add_state_mirror(tf_prefix + "gpio", "tool_t1_connected", &actual_dig_in_bits_copy_[T1_CONNECTED_BIT]);
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_t1_connected",
+                                                                   &actual_dig_in_bits_copy_[T1_CONNECTED_BIT]));
 
   for (size_t i = 0; i < 11; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -534,15 +531,9 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "damping", &force_mode_damping_);
   command_interfaces.emplace_back(tf_prefix + FORCE_MODE_GPIO, "gain_scaling", &force_mode_gain_scaling_);
 
-<<<<<<< HEAD
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < standard_dig_out_bits_cmd_.size(); ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
-=======
-  for (size_t i = 0; i < standard_dig_out_bits_cmd_.size(); ++i) {
-    add_async_command_mirror(tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i),
-                             &standard_dig_out_bits_cmd_[i]);
->>>>>>> a37bf57 (Add T1 connector I/Os (#2048))
   }
 
   for (size_t i = 0; i < 2; ++i) {
@@ -1130,14 +1121,7 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!rtde_comm_has_been_started_) {
     return;
   }
-<<<<<<< HEAD
-  for (size_t i = 0; i < 18; ++i) {
-=======
-  // This thread is not real-time, so it can wait for the interface locks.
-  pull_command_mirrors(async_command_mirrors_, true);
-
   for (size_t i = 0; i < standard_dig_out_bits_cmd_.size(); ++i) {
->>>>>>> a37bf57 (Add T1 connector I/Os (#2048))
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
         io_async_success_ =

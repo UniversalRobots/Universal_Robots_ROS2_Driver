@@ -39,10 +39,7 @@
 #include <string>
 
 #include <lifecycle_msgs/msg/state.hpp>
-<<<<<<< HEAD
 #include "ur_controllers/gpio_controller.hpp"
-=======
->>>>>>> a37bf57 (Add T1 connector I/Os (#2048))
 
 namespace ur_controllers
 {
@@ -369,22 +366,22 @@ void GPIOController::publishToolDataT1()
 {
   for (size_t i = 0; i < kT1ConfigurableDigitalInputCount; ++i) {
     tool_data_t1_msg_.configurable_digital_in_states[i].pin = i;
-    tool_data_t1_msg_.configurable_digital_in_states[i].state = static_cast<bool>(
-        state_interfaces_[StateInterfaces::TOOL_T1_CONFIGURABLE_DIGITAL_INPUTS + i].get_optional().value_or(0.0));
+    tool_data_t1_msg_.configurable_digital_in_states[i].state =
+        static_cast<bool>(state_interfaces_[StateInterfaces::TOOL_T1_CONFIGURABLE_DIGITAL_INPUTS + i].get_value());
   }
   for (size_t i = 0; i < kT1SmartPanelDigitalInputCount; ++i) {
     tool_data_t1_msg_.smart_panel_digital_in_states[i].pin = i;
-    tool_data_t1_msg_.smart_panel_digital_in_states[i].state = static_cast<bool>(
-        state_interfaces_[StateInterfaces::TOOL_T1_SMART_PANEL_DIGITAL_INPUTS + i].get_optional().value_or(0.0));
+    tool_data_t1_msg_.smart_panel_digital_in_states[i].state =
+        static_cast<bool>(state_interfaces_[StateInterfaces::TOOL_T1_SMART_PANEL_DIGITAL_INPUTS + i].get_value());
   }
   for (size_t i = 0; i < kT1DigitalOutputCount; ++i) {
     tool_data_t1_msg_.digital_out_states[i].pin = i;
     tool_data_t1_msg_.digital_out_states[i].state =
-        static_cast<bool>(state_interfaces_[kStandardDigitalIoCount + i].get_optional().value_or(0.0));
+        static_cast<bool>(state_interfaces_[kStandardDigitalIoCount + i].get_value());
   }
   tool_data_t1_msg_.smart_panel_connected =
-      static_cast<bool>(state_interfaces_[StateInterfaces::TOOL_T1_CONNECTED].get_optional().value_or(0.0));
-  tool_data_t1_pub_->try_publish(tool_data_t1_msg_);
+      static_cast<bool>(state_interfaces_[StateInterfaces::TOOL_T1_CONNECTED].get_value());
+  tool_data_t1_pub_->tryPublish(tool_data_t1_msg_);
 }
 
 void GPIOController::publishRobotMode()
