@@ -124,6 +124,7 @@ jobs:
                 -m "${UR_CI_UR_TYPE}" \
                 -v "${{ matrix.ursim_version }}" \
                 -p "${BASEDIR}/target_ws/src/Universal_Robots_ROS2_Driver/.github/dockerursim/ursim_storage/${{ matrix.ursim_version }}/${UR_CI_UR_TYPE}/programs" \
+                -f DISABLED \
                 -n ursim \
                 -u /tmp/ursim_urcaps \
                 -d
