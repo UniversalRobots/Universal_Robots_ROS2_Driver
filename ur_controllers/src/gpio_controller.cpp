@@ -38,8 +38,9 @@
 #include "ur_controllers/gpio_controller.hpp"
 
 #include <cmath>
-#include <lifecycle_msgs/msg/state.hpp>
 #include <string>
+
+#include <lifecycle_msgs/msg/state.hpp>
 
 namespace ur_controllers
 {
@@ -99,7 +100,7 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
 
   const std::string tf_prefix = params_.tf_prefix;
 
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < kDigitalOutputCount; ++i) {
     config.names.emplace_back(tf_prefix + "gpio/standard_digital_output_cmd_" + std::to_string(i));
   }
 
@@ -153,12 +154,12 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
 
   const std::string tf_prefix = params_.tf_prefix;
 
-  // digital io
-  for (size_t i = 0; i < 18; ++i) {
+  // digital io. Outputs 18-21 are T1_DO0-T1_DO3 on a V2 tool flange. T1_DO0 is the Smart Panel LED.
+  for (size_t i = 0; i < kDigitalOutputCount; ++i) {
     config.names.emplace_back(tf_prefix + "gpio/digital_output_" + std::to_string(i));
   }
 
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < kStandardDigitalIoCount; ++i) {
     config.names.emplace_back(tf_prefix + "gpio/digital_input_" + std::to_string(i));
   }
 
@@ -215,6 +216,19 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   config.names.emplace_back(tf_prefix + "payload/inertia.ixz");
   config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
 
+  // T1 Smart Panel on tool flange V2. actual_digital_input_bits 16-17 are T0_CI.
+  // Bits 18-23 are B0 B1 B2 SB3 SB4 SD:
+  // 18 B0 T1_DI0 Left, 19 B1 T1_DI1 Center, 20 B2 T1_DI2 Right,
+  // 21 SB3 T1_CI0 and 22 SB4 T1_CI1 are a configurable safety-rated 2PE and can be used as the Freedrive pair,
+  // 23 SD T1_CONNECTED Smart Panel detect.
+  for (size_t i = 0; i < kT1ConfigurableDigitalInputCount; ++i) {
+    config.names.emplace_back(tf_prefix + "gpio/tool_t1_configurable_digital_input_" + std::to_string(i));
+  }
+  for (size_t i = 0; i < kT1SmartPanelDigitalInputCount; ++i) {
+    config.names.emplace_back(tf_prefix + "gpio/tool_t1_digital_input_" + std::to_string(i));
+  }
+  config.names.emplace_back(tf_prefix + "gpio/tool_t1_connected");
+
   return config;
 }
 
@@ -223,6 +237,7 @@ controller_interface::return_type ur_controllers::GPIOController::update(const r
 {
   publishIO();
   publishToolData();
+  publishToolDataT1();
   publishRobotMode();
   publishSafetyMode();
   publishProgramRunning();
@@ -255,6 +270,9 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 
     tool_data_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>>(
         get_node()->create_publisher<ur_msgs::msg::ToolDataMsg>("~/tool_data", rclcpp::SystemDefaultsQoS()));
+
+    tool_data_t1_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT1Msg>>(
+        get_node()->create_publisher<ur_msgs::msg::ToolDataT1Msg>("~/tool_data_t1", rclcpp::SystemDefaultsQoS()));
 
     robot_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>>(
         get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched));
@@ -299,7 +317,7 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 
 void GPIOController::publishIO()
 {
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < kStandardDigitalIoCount; ++i) {
     io_msg_.digital_out_states[i].pin = i;
     io_msg_.digital_out_states[i].state = static_cast<bool>(state_interfaces_[i].get_optional().value_or(0.0));
 
@@ -348,6 +366,28 @@ void GPIOController::publishToolData()
   tool_data_pub_->try_publish(tool_data_msg_);
 }
 
+void GPIOController::publishToolDataT1()
+{
+  for (size_t i = 0; i < kT1ConfigurableDigitalInputCount; ++i) {
+    tool_data_t1_msg_.configurable_digital_in_states[i].pin = i;
+    tool_data_t1_msg_.configurable_digital_in_states[i].state = static_cast<bool>(
+        state_interfaces_[StateInterfaces::TOOL_T1_CONFIGURABLE_DIGITAL_INPUTS + i].get_optional().value_or(0.0));
+  }
+  for (size_t i = 0; i < kT1SmartPanelDigitalInputCount; ++i) {
+    tool_data_t1_msg_.smart_panel_digital_in_states[i].pin = i;
+    tool_data_t1_msg_.smart_panel_digital_in_states[i].state = static_cast<bool>(
+        state_interfaces_[StateInterfaces::TOOL_T1_SMART_PANEL_DIGITAL_INPUTS + i].get_optional().value_or(0.0));
+  }
+  for (size_t i = 0; i < kT1DigitalOutputCount; ++i) {
+    tool_data_t1_msg_.digital_out_states[i].pin = i;
+    tool_data_t1_msg_.digital_out_states[i].state =
+        static_cast<bool>(state_interfaces_[kStandardDigitalIoCount + i].get_optional().value_or(0.0));
+  }
+  tool_data_t1_msg_.smart_panel_connected =
+      static_cast<bool>(state_interfaces_[StateInterfaces::TOOL_T1_CONNECTED].get_optional().value_or(0.0));
+  tool_data_t1_pub_->try_publish(tool_data_t1_msg_);
+}
+
 void GPIOController::publishRobotMode()
 {
   auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_optional().value_or(0.0));
@@ -394,6 +434,7 @@ ur_controllers::GPIOController::on_cleanup(const rclcpp_lifecycle::State& /*prev
   try {
     io_pub_.reset();
     tool_data_pub_.reset();
+    tool_data_t1_pub_.reset();
     robot_mode_pub_.reset();
     safety_mode_pub_.reset();
     program_state_pub_.reset();
@@ -416,7 +457,9 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     return false;
   }
 
-  if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= 17) {
+  // Pins 0-17 are the existing standard, configurable and T0 outputs. Pins 18-21 are
+  // T1_DO0-T1_DO3, which the hardware sends as tool digital output pins 2-5.
+  if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= req->PIN_TOOL_T1_DOUT3) {
     // io async success
     std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     std::ignore = command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
@@ -711,10 +754,13 @@ bool GPIOController::zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr /*r
 
 void GPIOController::initMsgs()
 {
-  io_msg_.digital_in_states.resize(standard_digital_output_cmd_.size());
-  io_msg_.digital_out_states.resize(standard_digital_output_cmd_.size());
+  io_msg_.digital_in_states.resize(kStandardDigitalIoCount);
+  io_msg_.digital_out_states.resize(kStandardDigitalIoCount);
   io_msg_.analog_in_states.resize(2);
   io_msg_.analog_out_states.resize(2);
+  tool_data_t1_msg_.configurable_digital_in_states.resize(kT1ConfigurableDigitalInputCount);
+  tool_data_t1_msg_.smart_panel_digital_in_states.resize(kT1SmartPanelDigitalInputCount);
+  tool_data_t1_msg_.digital_out_states.resize(kT1DigitalOutputCount);
 }
 
 bool GPIOController::waitForAsyncCommand(std::function<double(void)> get_value)
