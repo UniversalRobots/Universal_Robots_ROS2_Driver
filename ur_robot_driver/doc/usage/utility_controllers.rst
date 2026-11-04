@@ -63,6 +63,24 @@ Key services include:
 See the :ref:`io_and_status_controller <io_and_status_controller>` documentation for the full list
 of topics and services.
 
+.. note::
+
+   On **CB7** robots, the (non-configurable) digital outputs have been transformed to configurable
+   outputs. The driver uses a concatenated list for both, unconfigurable and configurable outputs,
+   where indices 8-15 refer to the configurable outputs CO0-CO7. This mapping has been kept for CB7
+   robots. Hence, CO8-CO15 are mapped to indices 0-7. This affects both, the ``~/set_io`` service
+   and the ``~/io_states`` topic.
+
+   The following table shows the mapping for both configurations:
+
+   +----------------------------+-----------------------+----------------------------+-----------------------------+
+   | index mapping in io states | digital_outputs (0-7) | configurable_outputs (0-7) | configurable_outputs (8-15) |
+   +============================+=======================+============================+=============================+
+   | CB3, CB5                   | 0-7                   | 8-15                       | n/a                         |
+   +----------------------------+-----------------------+----------------------------+-----------------------------+
+   | CB7                        | n/a                   | 8-15                       | 0-7                         |
+   +----------------------------+-----------------------+----------------------------+-----------------------------+
+
 tool_contact_controller
 -----------------------
 

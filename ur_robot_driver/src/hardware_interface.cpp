@@ -888,6 +888,8 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     }
   }
 
+  control_box_type_ = ur_driver_->getPrimaryClient()->getControlBoxType();
+
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Calibration checksum: '%s'.",
               calibration_checksum.c_str());
   // check calibration
@@ -1247,8 +1249,13 @@ void URPositionHardwareInterface::checkAsyncIO()
   for (size_t i = 0; i < 18; ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
-        io_async_success_ =
-            ur_driver_->getRTDEWriter().sendStandardDigitalOutput(i, static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+        if (control_box_type_ == urcl::ControlBoxType::CB7) {
+          io_async_success_ = ur_driver_->getRTDEWriter().sendConfigurableDigitalOutput(
+              static_cast<uint8_t>(i + 8), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+        } else {
+          io_async_success_ = ur_driver_->getRTDEWriter().sendStandardDigitalOutput(
+              i, static_cast<bool>(standard_dig_out_bits_cmd_[i]));
+        }
       } else if (i <= 15) {
         io_async_success_ = ur_driver_->getRTDEWriter().sendConfigurableDigitalOutput(
             static_cast<uint8_t>(i - 8), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
