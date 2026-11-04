@@ -356,7 +356,13 @@ protected:
   std::unique_ptr<urcl::rtde_interface::DataPackage> data_package_buffer_;
   std::function<bool()> get_data_package;
 
+<<<<<<< HEAD
   bool use_currents_as_efforts_ = true;
+=======
+  bool use_currents_as_efforts_ = false;
+
+  urcl::ControlBoxType control_box_type_ = urcl::ControlBoxType::UNKNOWN;
+>>>>>>> 1fb9f96 (Write DOUT 0-7 to CO8-CO15 on a CB7 (#2047))
 };
 }  // namespace ur_robot_driver
 
