@@ -6,6 +6,10 @@ on:
     - cron: '03 5 * * *'
 
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   humble_semi_main:
     uses: ./.github/workflows/reusable_ici.yml

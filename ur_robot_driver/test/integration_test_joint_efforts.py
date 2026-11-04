@@ -34,7 +34,12 @@ Verifies that the driver can publish joint efforts from either RTDE field:
 * ``actual_current_as_torque`` (default, ``use_currents_as_efforts:=false``)
 * ``actual_current`` (legacy, ``use_currents_as_efforts:=true``)
 
-Requires a UR5e URSim image with PolyScope >= 5.23.0 / 10.11.0 for the default torque mode.
+Requires PolyScope >= 5.23.0 / 10.11.0 for the default torque mode. CB3 images only exercise
+current-based efforts, because they have no ``actual_current_as_torque`` field.
+
+Magnitude checks that distinguish Nm from A are calibrated for a UR5e and run only when
+``UR_CI_UR_TYPE`` is ``ur5e`` (the local default). Other models only check that six finite
+efforts are published.
 """
 
 import math
@@ -54,6 +59,7 @@ from test_common import (  # noqa: E402
     ConfigurationInterface,
     DashboardInterface,
     IoStatusInterface,
+    _ci_ur_type,
     generate_driver_test_description,
 )
 
@@ -62,18 +68,29 @@ from test_common import (  # noqa: E402
 # valid for a UR5e.
 MIN_TORQUE_EFFORT_NM = 20.0
 MIN_CURRENT_EFFORT_A = 2.0
-UR_TYPE = "ur5e"
+
+
+def _effort_cases():
+    """
+    Return effort-mode parameters, omitting torque mode on CB3.
+
+    Torque mode needs ``actual_current_as_torque``, which CB3 does not
+    provide. Detect that from a 3.x image tag or from the configured robot
+    model (``UR_CI_UR_TYPE``). An explicit ``false`` case would override the
+    current-based fallback in ``generate_driver_test_description`` and fail
+    hardware configuration before the runtime version skip can run.
+    """
+    version = os.environ.get("UR_CI_URSIM_VERSION", "latest")
+    if version.startswith("3.") or _ci_ur_type() in ("ur3", "ur5", "ur10"):
+        return ["true"]
+    # None omits the launch argument and asserts the default torque mode.
+    return [None, "false", "true"]
 
 
 @pytest.mark.launch_test
-@launch_testing.parametrize(
-    "use_currents_as_efforts",
-    # None: omit the launch argument and assert the default is torque mode.
-    [(None), ("false"), ("true")],
-)
+@launch_testing.parametrize("use_currents_as_efforts", _effort_cases())
 def generate_test_description(use_currents_as_efforts):
     return generate_driver_test_description(
-        ur_type=UR_TYPE,
         use_currents_as_efforts=use_currents_as_efforts,
     )
 
@@ -129,11 +146,11 @@ class JointEffortsTest(unittest.TestCase):
                 or (version.major == 10 and version.minor < 11)
                 or version.major < 5
             )
-            self.assertFalse(
-                unsupported,
-                f"URSim software {version.major}.{version.minor} does not support "
-                "actual_current_as_torque; need >= 5.23.0 / 10.11.0 for the default effort mode.",
-            )
+            if unsupported:
+                self.skipTest(
+                    f"URSim software {version.major}.{version.minor} does not support "
+                    "actual_current_as_torque; need >= 5.23.0 / 10.11.0."
+                )
 
         joint_state = self._wait_for_joint_state()
 
@@ -149,9 +166,12 @@ class JointEffortsTest(unittest.TestCase):
                 f"Effort for joint '{name}' is not finite: {effort}",
             )
 
-        # At the default URSim pose, gravity-related joint torques (Nm) are much
-        # larger than idle motor currents (A). Use that to verify the correct RTDE
-        # source is selected.
+        # At the default UR5e pose, gravity-related joint torques (Nm) are much
+        # larger than idle motor currents (A). Other models still publish efforts,
+        # but the thresholds below are not calibrated for them.
+        if _ci_ur_type() != "ur5e":
+            return
+
         max_abs_effort = max(abs(e) for e in joint_state.effort)
         if expect_torques:
             self.assertGreater(
