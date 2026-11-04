@@ -94,6 +94,7 @@ CB3_MODELS = {"ur3", "ur5", "ur10"}
 
 @pytest.mark.launch_test
 @launch_testing.parametrize("ursim_type, driver_type, ursim_version", ROBOT_MODEL_CASES)
+@launch_testing.ready_to_test_action_timeout(190)
 def generate_test_description(ursim_type, driver_type, ursim_version):
     use_currents_as_efforts = "true" if driver_type in CB3_MODELS else None
     return generate_driver_test_description_for_model(
