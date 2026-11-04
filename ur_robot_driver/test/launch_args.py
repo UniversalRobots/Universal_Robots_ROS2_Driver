@@ -58,10 +58,10 @@ from test_common import (  # noqa: E402
     _wait_robot_booted_action,
 )
 
-# ur_client_library's wait_robot_booted.py polls for 120s. launch_testing stops
-# waiting for ReadyToTest before that unless this is longer, which would fail a
+# wait_robot_booted.py polls for 180s. launch_testing stops waiting for
+# ReadyToTest before that unless this is longer, which would fail a
 # slow-but-successful boot.
-_READY_AFTER_BOOT_TIMEOUT = 200
+_READY_AFTER_BOOT_TIMEOUT = 260
 
 
 class _StartDriverWhenReady(Action):

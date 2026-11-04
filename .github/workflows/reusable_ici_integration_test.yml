@@ -129,7 +129,7 @@ jobs:
                 -u /tmp/ursim_urcaps \
                 -d
 
-              ros2 run ur_client_library wait_robot_booted.py --timeout 300 "${UR_CI_ROBOT_IP}"
+              ros2 run ur_robot_driver wait_robot_booted.py --timeout 300 "${UR_CI_ROBOT_IP}"
 
               ctest_label_args=(-L ursim)
               if [ "${EXCLUDE_DASHBOARD_G5}" = "true" ]; then
