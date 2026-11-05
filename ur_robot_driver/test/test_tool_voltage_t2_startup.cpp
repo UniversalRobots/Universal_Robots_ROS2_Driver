@@ -45,13 +45,10 @@ public:
     return true;
   }
 
-  // Program has already stopped, and that stop was consumed, so a later command cannot rely on the
-  // stop count to clear the startup-sent flag.
-  void stoppedAfterConsumedDisconnect()
+  // Program is stopped. A command handled now must not count as the startup voltage.
+  void stoppedProgram()
   {
-    robot_program_stop_count_.store(1);
-    startup_tool_voltage_t2_stop_count_seen_ = 1;
-    robot_program_running_.store(false);
+    robot_program_running_.store(false, std::memory_order_relaxed);
     tool_t2_supported_ = true;
     startup_tool_voltage_t2_ = 24;
     startup_tool_voltage_t2_sent_ = false;
@@ -66,7 +63,7 @@ public:
 
   void setProgramRunning(const bool running)
   {
-    robot_program_running_.store(running);
+    robot_program_running_.store(running, std::memory_order_relaxed);
   }
 
   bool startupSent() const
@@ -84,7 +81,7 @@ public:
 TEST(ToolVoltageT2Startup, RequestBeforeProgramStartDoesNotSkipConfiguredVoltage)
 {
   ToolVoltageT2StartupHw hw;
-  hw.stoppedAfterConsumedDisconnect();
+  hw.stoppedProgram();
   hw.request(0.0);
 
   hw.handle();
@@ -104,7 +101,7 @@ TEST(ToolVoltageT2Startup, RequestBeforeProgramStartDoesNotSkipConfiguredVoltage
 TEST(ToolVoltageT2Startup, RequestWhileProgramIsRunningOverridesStartupVoltage)
 {
   ToolVoltageT2StartupHw hw;
-  hw.stoppedAfterConsumedDisconnect();
+  hw.stoppedProgram();
   hw.setProgramRunning(true);
   hw.request(48.0);
 

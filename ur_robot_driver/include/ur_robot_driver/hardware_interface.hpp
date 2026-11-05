@@ -317,14 +317,10 @@ protected:
   // program connects, through its own state rather than tool_voltage_t2_cmd_ / io_async_success_.
   // Unset when the value is written into the control script instead, or when the parameter is empty.
   std::optional<int> startup_tool_voltage_t2_;
-  // Only read and written from checkAsyncIO, which runs on the async thread, except the seen count
-  // which on_configure snapshots before that thread starts.
+  // checkAsyncIO clears these while robot_program_running_ is false, and sets sent once the
+  // configured voltage has been applied to the current connection.
   bool startup_tool_voltage_t2_sent_{ false };
   bool startup_tool_voltage_t2_error_reported_{ false };
-  // Incremented in handleRobotProgramState on every transition to not running. Polling
-  // robot_program_running_ misses a stop and restart that both happen between two async checks.
-  std::atomic<uint32_t> robot_program_stop_count_{ 0 };
-  uint32_t startup_tool_voltage_t2_stop_count_seen_{ 0 };
   double io_async_success_;
   double target_speed_fraction_cmd_;
   double scaling_async_success_;
