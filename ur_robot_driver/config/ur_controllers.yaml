@@ -70,6 +70,8 @@ speed_scaling_state_broadcaster:
 io_and_status_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
+    # The shipped description declares the T2 interfaces. A custom description that does not must set this to false.
+    tool_t2_interfaces: true
 
 ur_configuration_controller:
   ros__parameters:
