@@ -65,13 +65,6 @@ def launch_setup(context):
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
     use_tool_communication = LaunchConfiguration("use_tool_communication")
-    tool_parity = LaunchConfiguration("tool_parity")
-    tool_baud_rate = LaunchConfiguration("tool_baud_rate")
-    tool_stop_bits = LaunchConfiguration("tool_stop_bits")
-    tool_rx_idle_chars = LaunchConfiguration("tool_rx_idle_chars")
-    tool_tx_idle_chars = LaunchConfiguration("tool_tx_idle_chars")
-    tool_voltage = LaunchConfiguration("tool_voltage")
-    tool_voltage_t2 = LaunchConfiguration("tool_voltage_t2")
     tool_device_name = LaunchConfiguration("tool_device_name")
     tool_tcp_port = LaunchConfiguration("tool_tcp_port")
 
@@ -255,16 +248,6 @@ def launch_setup(context):
         launch_arguments={
             "robot_ip": robot_ip,
             "ur_type": ur_type,
-            "use_tool_communication": use_tool_communication,
-            "tool_parity": tool_parity,
-            "tool_baud_rate": tool_baud_rate,
-            "tool_stop_bits": tool_stop_bits,
-            "tool_rx_idle_chars": tool_rx_idle_chars,
-            "tool_tx_idle_chars": tool_tx_idle_chars,
-            "tool_voltage": tool_voltage,
-            "tool_voltage_t2": tool_voltage_t2,
-            "tool_device_name": tool_device_name,
-            "tool_tcp_port": tool_tcp_port,
         }.items(),
     )
 
