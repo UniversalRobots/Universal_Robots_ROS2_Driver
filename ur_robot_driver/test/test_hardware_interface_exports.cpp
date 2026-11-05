@@ -107,7 +107,7 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
             { "speed_scaling_factor" });
 
   std::vector<std::string> gpio_cmds;
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < 22; ++i) {
     gpio_cmds.push_back("standard_digital_output_cmd_" + std::to_string(i));
   }
   gpio_cmds.push_back("standard_analog_output_cmd_0");
@@ -116,12 +116,19 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
   gpio_cmds.push_back("tool_voltage_cmd");
   gpio_cmds.push_back("io_async_success");
   std::vector<std::string> gpio_states;
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < 22; ++i) {
     gpio_states.push_back("digital_output_" + std::to_string(i));
   }
   for (size_t i = 0; i < 18; ++i) {
     gpio_states.push_back("digital_input_" + std::to_string(i));
   }
+  for (size_t i = 0; i < 3; ++i) {
+    gpio_states.push_back("tool_t1_digital_input_" + std::to_string(i));
+  }
+  for (size_t i = 0; i < 2; ++i) {
+    gpio_states.push_back("tool_t1_configurable_digital_input_" + std::to_string(i));
+  }
+  gpio_states.push_back("tool_t1_connected");
   gpio_states.push_back("standard_analog_output_0");
   gpio_states.push_back("standard_analog_output_1");
   gpio_states.push_back("standard_analog_input_0");
@@ -296,10 +303,19 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedStateInterfaces)
   for (const char* name : { "force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z" }) {
     expected_names.push_back(std::string(kTfPrefix) + "tcp_fts_sensor/" + name);
   }
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < 22; ++i) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/digital_output_" + std::to_string(i));
+  }
+  for (size_t i = 0; i < 18; ++i) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/digital_input_" + std::to_string(i));
   }
+  for (size_t i = 0; i < 3; ++i) {
+    expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_t1_digital_input_" + std::to_string(i));
+  }
+  for (size_t i = 0; i < 2; ++i) {
+    expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_t1_configurable_digital_input_" + std::to_string(i));
+  }
+  expected_names.push_back(std::string(kTfPrefix) + "gpio/tool_t1_connected");
   for (size_t i = 0; i < 11; ++i) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/safety_status_bit_" + std::to_string(i));
   }
@@ -401,7 +417,7 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedCommandInterfaces)
   for (const char* name : { "x", "y", "z", "gravity_async_success" }) {
     expected_names.push_back(std::string(kTfPrefix) + "gravity/" + name);
   }
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < 22; ++i) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/standard_digital_output_cmd_" + std::to_string(i));
   }
   for (size_t i = 0; i < 2; ++i) {
