@@ -739,6 +739,7 @@ def generate_driver_test_description_for_model(
         PythonLaunchDescriptionSource(description_launchfile),
         launch_arguments=launch_arguments.items(),
     )
+<<<<<<< HEAD
 
     control_node = Node(
         package="controller_manager",
@@ -761,6 +762,12 @@ def generate_driver_test_description_for_model(
     )
     driver_starter = RegisterEventHandler(
         OnProcessExit(target_action=wait_dashboard_server, on_exit=control_node)
+=======
+    wait_robot_booted = _wait_robot_booted_action()
+
+    driver_starter = RegisterEventHandler(
+        OnProcessExit(target_action=wait_robot_booted, on_exit=[ReadyToTest(), robot_driver])
+>>>>>>> e55b899 (Add launch support for g-series robots (#2052))
     )
 
     # Use a per-model container name so leftover containers from a previous
@@ -768,10 +775,16 @@ def generate_driver_test_description_for_model(
     container_name = f"ursim_{ursim_type}"
 
     return LaunchDescription(
+<<<<<<< HEAD
         [
             ReadyToTest(),
             wait_dashboard_server,
             rsp,
+=======
+        _declare_launch_arguments()
+        + [
+            wait_robot_booted,
+>>>>>>> e55b899 (Add launch support for g-series robots (#2052))
             _ursim_action(
                 ursim_version=ursim_version, ur_type=ursim_type, container_name=container_name
             ),
