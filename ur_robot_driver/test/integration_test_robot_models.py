@@ -76,9 +76,10 @@ ROBOT_MODEL_CASES = [
     ("ur18", "ur18", "latest"),
     ("ur20", "ur20", "latest"),
     ("ur30", "ur30", "latest"),
-    ("ur10g-1750", "ur10g-1750", "10.15.0-preview-1"),
-    ("ur17g-1300", "ur17g-1300", "10.15.0-preview-1"),
-    ("ur18g-950", "ur18g-950", "10.15.0-preview-1"),
+    # Enable g-series model tests once ursim 10.15 is released.
+    # ("ur10g-1750", "ur10g-1750", "10.15.0"),
+    # ("ur17g-1300", "ur17g-1300", "10.15.0"),
+    # ("ur18g-950", "ur18g-950", "10.15.0"),
     # Negative case: URSim runs a UR5e but the driver is configured for a UR20.
     # ``verify_robot_model`` is enabled by default in ``ur.urdf.xacro``, so the
     # hardware interface should reject the configuration.
