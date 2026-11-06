@@ -38,6 +38,8 @@ Feature list and roadmap
      - yes (:ref:`io_and_status_controller`)
    * - use `tool communication forwarder <https://github.com/UniversalRobots/Universal_Robots_ToolComm_Forwarder_URCap>`_ on e-series
      - yes (:ref:`setup-tool-communication`)
+   * - connector T2 tool voltage (0/24/48 V, Tool Flange V2, PolyScope X 10.15+)
+     - yes (:ref:`setup-tool-communication`)
    * - use the driver without a teach pendant necessary
      - yes
    * - support of CB1 and CB2 robots
