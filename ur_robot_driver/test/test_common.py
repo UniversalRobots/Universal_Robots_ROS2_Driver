@@ -763,17 +763,9 @@ def generate_driver_test_description_for_model(
         output="screen",
     )
 
-    wait_dashboard_server = ExecuteProcess(
-        cmd=[
-            PathJoinSubstitution(
-                [FindPackagePrefix("ur_robot_driver"), "bin", "wait_dashboard_server.sh"]
-            )
-        ],
-        name="wait_dashboard_server",
-        output="screen",
-    )
+    wait_robot_booted = _wait_robot_booted_action()
     driver_starter = RegisterEventHandler(
-        OnProcessExit(target_action=wait_dashboard_server, on_exit=control_node)
+        OnProcessExit(target_action=wait_robot_booted, on_exit=control_node)
     )
 
     # Use a per-model container name so leftover containers from a previous
@@ -783,7 +775,7 @@ def generate_driver_test_description_for_model(
     return LaunchDescription(
         [
             ReadyToTest(),
-            wait_dashboard_server,
+            wait_robot_booted,
             _ursim_action(
                 ursim_version=ursim_version, ur_type=ursim_type, container_name=container_name
             ),
