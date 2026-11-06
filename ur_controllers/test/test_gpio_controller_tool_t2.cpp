@@ -40,6 +40,7 @@
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
+#include "ur_controllers/gpio_controller.hpp"
 
 namespace
 {
@@ -49,7 +50,7 @@ const std::map<std::string, std::vector<std::string>> kCommandInterfaces = {
   { "gpio",
     [] {
       std::vector<std::string> names;
-      for (int i = 0; i < 18; ++i) {
+      for (size_t i = 0; i < ur_controllers::kDigitalOutputCount; ++i) {
         names.push_back("standard_digital_output_cmd_" + std::to_string(i));
       }
       names.push_back("standard_analog_output_cmd_0");
@@ -72,10 +73,10 @@ const std::map<std::string, std::vector<std::string>> kStateInterfaces = {
   { "gpio",
     [] {
       std::vector<std::string> names;
-      for (int i = 0; i < 18; ++i) {
+      for (size_t i = 0; i < ur_controllers::kDigitalOutputCount; ++i) {
         names.push_back("digital_output_" + std::to_string(i));
       }
-      for (int i = 0; i < 18; ++i) {
+      for (size_t i = 0; i < ur_controllers::kStandardDigitalIoCount; ++i) {
         names.push_back("digital_input_" + std::to_string(i));
       }
       names.insert(names.end(), { "standard_analog_output_0", "standard_analog_output_1", "standard_analog_input_0",
@@ -94,6 +95,13 @@ const std::map<std::string, std::vector<std::string>> kStateInterfaces = {
         names.push_back("safety_status_bit_" + std::to_string(i));
       }
       names.push_back("program_running");
+      for (size_t i = 0; i < ur_controllers::kT1ConfigurableDigitalInputCount; ++i) {
+        names.push_back("tool_t1_configurable_digital_input_" + std::to_string(i));
+      }
+      for (size_t i = 0; i < ur_controllers::kT1SmartPanelDigitalInputCount; ++i) {
+        names.push_back("tool_t1_digital_input_" + std::to_string(i));
+      }
+      names.push_back("tool_t1_connected");
       return names;
     }() },
   { "system_interface", { "initialized" } },
