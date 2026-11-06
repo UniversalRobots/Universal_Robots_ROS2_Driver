@@ -245,12 +245,31 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
     }
   }
 
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < actual_dig_out_bits_copy_.size(); ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         tf_prefix + "gpio", "digital_output_" + std::to_string(i), &actual_dig_out_bits_copy_[i]));
+  }
+
+  for (size_t i = 0; i < STANDARD_DIGITAL_INPUT_COUNT; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         tf_prefix + "gpio", "digital_input_" + std::to_string(i), &actual_dig_in_bits_copy_[i]));
   }
+
+  // Bits 18-20 are B0 B1 B2 (T1_DI0 Left, T1_DI1 Center, T1_DI2 Right).
+  // Bits 21-22 are SB3 SB4 (T1_CI0, T1_CI1): a configurable safety-rated 2PE that can be used as the Freedrive pair.
+  // Bit 23 is SD, T1_CONNECTED, Smart Panel detect.
+  for (size_t i = 0; i < T1_CONFIGURABLE_DIGITAL_INPUT_COUNT; ++i) {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        tf_prefix + "gpio", "tool_t1_configurable_digital_input_" + std::to_string(i),
+        &actual_dig_in_bits_copy_[T1_CONFIGURABLE_DIGITAL_INPUT_BIT + i]));
+  }
+  for (size_t i = 0; i < T1_SMART_PANEL_DIGITAL_INPUT_COUNT; ++i) {
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "gpio", "tool_t1_digital_input_" + std::to_string(i),
+                                           &actual_dig_in_bits_copy_[T1_SMART_PANEL_DIGITAL_INPUT_BIT + i]));
+  }
+  state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_t1_connected",
+                                                                   &actual_dig_in_bits_copy_[T1_CONNECTED_BIT]));
 
   for (size_t i = 0; i < 11; ++i) {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -478,7 +497,7 @@ std::vector<hardware_interface::CommandInterface> URPositionHardwareInterface::e
   command_interfaces.emplace_back(
       hardware_interface::CommandInterface(tf_prefix + "gravity", "gravity_async_success", &gravity_async_success_));
 
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < standard_dig_out_bits_cmd_.size(); ++i) {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "gpio", "standard_digital_output_cmd_" + std::to_string(i), &standard_dig_out_bits_cmd_[i]));
   }
@@ -1061,7 +1080,7 @@ void URPositionHardwareInterface::handleRobotProgramState(bool program_running)
 
 void URPositionHardwareInterface::initAsyncIO()
 {
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < standard_dig_out_bits_cmd_.size(); ++i) {
     standard_dig_out_bits_cmd_[i] = NO_NEW_CMD_;
   }
 
@@ -1088,7 +1107,7 @@ void URPositionHardwareInterface::checkAsyncIO()
   if (!rtde_comm_has_been_started_) {
     return;
   }
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < standard_dig_out_bits_cmd_.size(); ++i) {
     if (!std::isnan(standard_dig_out_bits_cmd_[i]) && ur_driver_ != nullptr) {
       if (i <= 7) {
         io_async_success_ =
@@ -1097,6 +1116,8 @@ void URPositionHardwareInterface::checkAsyncIO()
         io_async_success_ = ur_driver_->getRTDEWriter().sendConfigurableDigitalOutput(
             static_cast<uint8_t>(i - 8), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
       } else {
+        // 16-17 are T0_DO0/T0_DO1 (tool pins 0-1). 18-21 are T1_DO0-T1_DO3 (tool pins 2-5).
+        // T1_DO0 is the Smart Panel LED.
         io_async_success_ = ur_driver_->getRTDEWriter().sendToolDigitalOutput(
             static_cast<uint8_t>(i - 16), static_cast<bool>(standard_dig_out_bits_cmd_[i]));
       }
@@ -1230,8 +1251,10 @@ void URPositionHardwareInterface::tool_contact_callback(urcl::control::ToolConta
 
 void URPositionHardwareInterface::updateNonDoubleValues()
 {
-  for (size_t i = 0; i < 18; ++i) {
+  for (size_t i = 0; i < actual_dig_out_bits_copy_.size(); ++i) {
     actual_dig_out_bits_copy_[i] = static_cast<double>(actual_dig_out_bits_[i]);
+  }
+  for (size_t i = 0; i < actual_dig_in_bits_copy_.size(); ++i) {
     actual_dig_in_bits_copy_[i] = static_cast<double>(actual_dig_in_bits_[i]);
   }
 
