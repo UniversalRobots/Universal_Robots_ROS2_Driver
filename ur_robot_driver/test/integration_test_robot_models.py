@@ -58,38 +58,54 @@ from test_common import (  # noqa: E402
     generate_driver_test_description_for_model,
 )
 
-# (ursim_type, driver_type) tuples. When the two values are equal, the driver is
+# (ursim_type, driver_type, ursim_version) tuples. When the two values are equal, the driver is
 # expected to come up cleanly. When they differ, the hardware interface should
 # detect the mismatch in ``on_configure`` and stay in ``unconfigured``.
 ROBOT_MODEL_CASES = [
-    ("ur3", "ur3"),
-    ("ur3e", "ur3e"),
-    ("ur5", "ur5"),
-    ("ur5e", "ur5e"),
-    ("ur7e", "ur7e"),
-    ("ur8long", "ur8long"),
-    ("ur10", "ur10"),
-    ("ur10e", "ur10e"),
-    ("ur12e", "ur12e"),
-    ("ur15", "ur15"),
-    ("ur16e", "ur16e"),
-    ("ur18", "ur18"),
-    ("ur20", "ur20"),
-    ("ur30", "ur30"),
+    ("ur3", "ur3", "latest"),
+    ("ur3e", "ur3e", "latest"),
+    ("ur5", "ur5", "latest"),
+    ("ur5e", "ur5e", "latest"),
+    ("ur7e", "ur7e", "latest"),
+    ("ur8long", "ur8long", "latest"),
+    ("ur10", "ur10", "latest"),
+    ("ur10e", "ur10e", "latest"),
+    ("ur12e", "ur12e", "latest"),
+    ("ur15", "ur15", "latest"),
+    ("ur16e", "ur16e", "latest"),
+    ("ur18", "ur18", "latest"),
+    ("ur20", "ur20", "latest"),
+    ("ur30", "ur30", "latest"),
+    # Enable g-series model tests once ursim 10.15 is released.
+    # ("ur10g-1750", "ur10g-1750", "10.15.0"),
+    # ("ur17g-1300", "ur17g-1300", "10.15.0"),
+    # ("ur18g-950", "ur18g-950", "10.15.0"),
     # Negative case: URSim runs a UR5e but the driver is configured for a UR20.
     # ``verify_robot_model`` is enabled by default in ``ur.urdf.xacro``, so the
     # hardware interface should reject the configuration.
-    ("ur5e", "ur20"),
+    ("ur5e", "ur20", "latest"),
 ]
 
 HW_NAME = "ur"
 
 
 @pytest.mark.launch_test
+<<<<<<< HEAD
 @launch_testing.parametrize("ursim_type, driver_type", ROBOT_MODEL_CASES)
 def generate_test_description(ursim_type, driver_type):
     return generate_driver_test_description_for_model(
         ur_type=driver_type, ursim_type=ursim_type, hw_name=HW_NAME
+=======
+@launch_testing.parametrize("ursim_type, driver_type, ursim_version", ROBOT_MODEL_CASES)
+@launch_testing.ready_to_test_action_timeout(190)
+def generate_test_description(ursim_type, driver_type, ursim_version):
+    use_currents_as_efforts = "true" if driver_type in CB3_MODELS else None
+    return generate_driver_test_description_for_model(
+        ur_type=driver_type,
+        ursim_type=ursim_type,
+        ursim_version=ursim_version,
+        use_currents_as_efforts=use_currents_as_efforts,
+>>>>>>> e55b899 (Add launch support for g-series robots (#2052))
     )
 
 

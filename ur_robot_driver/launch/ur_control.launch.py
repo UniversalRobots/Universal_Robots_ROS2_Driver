@@ -468,6 +468,9 @@ def generate_launch_description():
                 "ur18",
                 "ur20",
                 "ur30",
+                "ur10g-1750",
+                "ur17g-1300",
+                "ur18g-950",
             ],
         )
     )

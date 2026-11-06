@@ -133,7 +133,11 @@ For getting started, you'll basically need three steps:
    details.
 
    ```bash
+<<<<<<< HEAD
    # Replace ur5e with one of ur3, ur5, ur10, ur3e, ur5e, ur7e, ur10e, ur12e, ur16e, ur8long, ur15, ur18, ur20, ur30
+=======
+   # Replace ur5e with one of ur3, ur3e, ur5, ur5e, ur7e, ur10, ur10e, ur12e, ur16e, ur8long, ur15, ur18, ur20, ur30, ur10g-1750, ur17g-1300, ur18g-950
+>>>>>>> e55b899 (Add launch support for g-series robots (#2052))
    # Replace the IP address with the IP address of your actual robot / URSim
    ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur5e robot_ip:=192.168.56.101
    ```
