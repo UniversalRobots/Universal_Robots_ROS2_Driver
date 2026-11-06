@@ -86,13 +86,14 @@ ROBOT_MODEL_CASES = [
     ("ur5e", "ur20", "latest"),
 ]
 
+# CB3 robots (PolyScope 3.x / URSim CB3) do not provide the ``actual_current_as_torque``
+# RTDE field, so the default torque-based effort reporting would make the hardware
+# interface fail during ``on_configure``. For these models we fall back to reporting
+# motor currents as efforts. e-Series / UR-Series models keep the default torque mode.
+CB3_MODELS = {"ur3", "ur5", "ur10"}
+
 
 @pytest.mark.launch_test
-<<<<<<< HEAD
-@launch_testing.parametrize("ursim_type, driver_type", ROBOT_MODEL_CASES)
-def generate_test_description(ursim_type, driver_type):
-    return generate_driver_test_description_for_model(ur_type=driver_type, ursim_type=ursim_type)
-=======
 @launch_testing.parametrize("ursim_type, driver_type, ursim_version", ROBOT_MODEL_CASES)
 @launch_testing.ready_to_test_action_timeout(190)
 def generate_test_description(ursim_type, driver_type, ursim_version):
@@ -103,7 +104,6 @@ def generate_test_description(ursim_type, driver_type, ursim_version):
         ursim_version=ursim_version,
         use_currents_as_efforts=use_currents_as_efforts,
     )
->>>>>>> e55b899 (Add launch support for g-series robots (#2052))
 
 
 class RobotModelStartupTest(unittest.TestCase):
