@@ -139,7 +139,7 @@ enum StateInterfaces
   TOOL_T1_CONFIGURABLE_DIGITAL_INPUTS = 85,
   TOOL_T1_SMART_PANEL_DIGITAL_INPUTS = 87,
   TOOL_T1_CONNECTED = 90,
-  TOOL_T2_AVAILABLE = 91,
+  TOOL_FLANGE_TYPE = 91,
   TOOL_OUTPUT_VOLTAGE_2 = 92,
   TOOL_OUTPUT_CURRENT_2 = 93,
 };
@@ -193,6 +193,7 @@ private:
   void publishToolData();
 
   void publishToolDataT1();
+  void publishToolDataT2();
 
   void publishRobotMode();
 
@@ -233,6 +234,7 @@ protected:
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
   std_msgs::msg::Bool program_running_msg_;
+  uint32_t tool_flange_type_{ 0u };
 
   // Parameters from ROS for gpio_controller
   std::shared_ptr<gpio_controller::ParamListener> param_listener_;

@@ -204,7 +204,7 @@
         <state_interface name="tool_output_current"/>
         <state_interface name="tool_temperature"/>
 
-        <state_interface name="tool_t2_available"/>
+        <state_interface name="tool_flange_type"/>
         <state_interface name="tool_output_voltage_2"/>
         <state_interface name="tool_output_current_2"/>
 

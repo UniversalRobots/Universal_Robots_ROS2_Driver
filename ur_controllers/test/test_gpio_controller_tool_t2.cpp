@@ -30,6 +30,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <map>
 #include <memory>
 #include <string>
@@ -37,10 +38,15 @@
 #include <vector>
 
 #include "controller_interface/controller_interface_base.hpp"
+#include "controller_interface/controller_interface_params.hpp"
 #include "controller_manager/controller_manager.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
+#include "hardware_interface/loaned_command_interface.hpp"
+#include "hardware_interface/loaned_state_interface.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp_lifecycle/state.hpp"
 #include "ur_controllers/gpio_controller.hpp"
+#include "ur_msgs/srv/set_io.hpp"
 
 namespace
 {
@@ -137,7 +143,7 @@ std::string makeUrdf(bool with_tool_t2)
     if (with_tool_t2 && name == "gpio") {
       extra_commands = interfaces("command_interface", { "tool_voltage_t2_cmd" }, "0");
       extra_states =
-          interfaces("state_interface", { "tool_t2_available", "tool_output_voltage_2", "tool_output_current_2" }, "0");
+          interfaces("state_interface", { "tool_flange_type", "tool_output_voltage_2", "tool_output_current_2" }, "0");
     }
     const std::string initial = name == "system_interface" ? "1" : "0";
     gpios += "<gpio name=\"" + name + "\">" + interfaces("command_interface", commands, "") + extra_commands +
@@ -201,6 +207,195 @@ TEST(TestGPIOControllerToolT2, refuses_activation_without_t2_interfaces)
 {
   EXPECT_EQ(activate(makeUrdf(false)), controller_interface::return_type::ERROR);
 }
+
+// Tool flange type is the wire value latched from gpio/tool_flange_type at activation.
+// 2 is a V2 flange, which is the only flange with connectors T1 and T2.
+class GPIOControllerFlangeServiceTest : public ::testing::TestWithParam<double>
+{
+protected:
+  void SetUp() override
+  {
+    controller_interface::ControllerInterfaceParams params;
+    params.controller_name = "gpio_flange_test";
+    params.robot_description = "";
+    params.update_rate = 500;
+    params.controller_manager_update_rate = 500;
+    params.node_namespace = "";
+    params.node_options = controller_.define_custom_node_options();
+    ASSERT_EQ(controller_.init(params), controller_interface::return_type::OK);
+
+    const auto command_names = controller_.command_interface_configuration().names;
+    const auto state_names = controller_.state_interface_configuration().names;
+    commands_.reserve(command_names.size());
+    states_.reserve(state_names.size());
+    for (const auto& full_name : command_names) {
+      const auto slash = full_name.find('/');
+      commands_.push_back(std::make_shared<hardware_interface::CommandInterface>(full_name.substr(0, slash),
+                                                                                 full_name.substr(slash + 1)));
+    }
+    for (const auto& full_name : state_names) {
+      const auto slash = full_name.find('/');
+      auto state = std::make_shared<hardware_interface::StateInterface>(full_name.substr(0, slash),
+                                                                        full_name.substr(slash + 1), "double", "0");
+      if (full_name == "system_interface/initialized") {
+        ASSERT_TRUE(state->set_value(1.0));
+      }
+      if (full_name == "gpio/tool_flange_type") {
+        ASSERT_TRUE(state->set_value(GetParam()));
+      }
+      states_.push_back(state);
+    }
+
+    std::vector<hardware_interface::LoanedCommandInterface> loaned_commands;
+    std::vector<hardware_interface::LoanedStateInterface> loaned_states;
+    loaned_commands.reserve(commands_.size());
+    loaned_states.reserve(states_.size());
+    for (const auto& command : commands_) {
+      loaned_commands.emplace_back(command);
+    }
+    for (const auto& state : states_) {
+      loaned_states.emplace_back(state);
+    }
+    controller_.assign_interfaces(std::move(loaned_commands), std::move(loaned_states));
+
+    const rclcpp_lifecycle::State previous_state;
+    ASSERT_EQ(controller_.on_configure(previous_state), controller_interface::CallbackReturn::SUCCESS);
+    ASSERT_EQ(controller_.on_activate(previous_state), controller_interface::CallbackReturn::SUCCESS);
+
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    executor_->add_node(controller_.get_node()->get_node_base_interface());
+    spinner_ = std::thread([this]() { executor_->spin(); });
+
+    acknowledge_ = true;
+    acker_ = std::thread([this]() {
+      auto io_async = find_command("gpio/io_async_success");
+      while (acknowledge_.load()) {
+        const auto value = io_async->get_optional<double>();
+        if (value.has_value() && *value == 2.0) {
+          std::ignore = io_async->set_value(1.0);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    });
+
+    client_node_ = std::make_shared<rclcpp::Node>("gpio_flange_set_io_client");
+    const std::string service_name = std::string(controller_.get_node()->get_fully_qualified_name()) + "/set_io";
+    client_ = client_node_->create_client<ur_msgs::srv::SetIO>(service_name);
+    ASSERT_TRUE(client_->wait_for_service(std::chrono::seconds(5)));
+  }
+
+  void TearDown() override
+  {
+    acknowledge_.store(false);
+    if (acker_.joinable()) {
+      acker_.join();
+    }
+    if (executor_) {
+      executor_->cancel();
+    }
+    if (spinner_.joinable()) {
+      spinner_.join();
+    }
+    controller_.release_interfaces();
+    client_.reset();
+    client_node_.reset();
+    if (controller_.get_node()) {
+      controller_.get_node()->shutdown();
+    }
+  }
+
+  hardware_interface::CommandInterface::SharedPtr find_command(const std::string& name) const
+  {
+    for (const auto& command : commands_) {
+      if (command->get_name() == name) {
+        return command;
+      }
+    }
+    return nullptr;
+  }
+
+  ur_msgs::srv::SetIO::Response::SharedPtr call_set_io(int8_t fun, int8_t pin, float state)
+  {
+    auto request = std::make_shared<ur_msgs::srv::SetIO::Request>();
+    request->fun = fun;
+    request->pin = pin;
+    request->state = state;
+    auto future = client_->async_send_request(request);
+    EXPECT_EQ(rclcpp::spin_until_future_complete(client_node_, future, std::chrono::seconds(5)),
+              rclcpp::FutureReturnCode::SUCCESS);
+    return future.get();
+  }
+
+  bool connectors_present() const
+  {
+    return GetParam() == 2.0;
+  }
+
+  ur_controllers::GPIOController controller_;
+  std::vector<hardware_interface::CommandInterface::SharedPtr> commands_;
+  std::vector<hardware_interface::StateInterface::SharedPtr> states_;
+  std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
+  std::thread spinner_;
+  std::thread acker_;
+  std::atomic<bool> acknowledge_{ false };
+  rclcpp::Node::SharedPtr client_node_;
+  rclcpp::Client<ur_msgs::srv::SetIO>::SharedPtr client_;
+};
+
+TEST_P(GPIOControllerFlangeServiceTest, set_io_answers_from_tool_flange_type)
+{
+  using Request = ur_msgs::srv::SetIO::Request;
+
+  const auto t1 = call_set_io(Request::FUN_SET_DIGITAL_OUT, Request::PIN_TOOL_T1_DOUT0, Request::STATE_ON);
+  ASSERT_NE(t1, nullptr);
+  EXPECT_EQ(t1->success, connectors_present());
+  const auto t1_command = find_command("gpio/standard_digital_output_cmd_18");
+  ASSERT_NE(t1_command, nullptr);
+  const auto t1_value = t1_command->get_optional<double>();
+  ASSERT_TRUE(t1_value.has_value());
+  if (connectors_present()) {
+    EXPECT_DOUBLE_EQ(*t1_value, Request::STATE_ON);
+  } else {
+    EXPECT_TRUE(std::isnan(*t1_value));
+  }
+
+  const auto t2 = call_set_io(Request::FUN_SET_TOOL_VOLTAGE_T2, 0, Request::STATE_TOOL_VOLTAGE_24V);
+  ASSERT_NE(t2, nullptr);
+  EXPECT_EQ(t2->success, connectors_present());
+  const auto t2_command = find_command("gpio/tool_voltage_t2_cmd");
+  ASSERT_NE(t2_command, nullptr);
+  const auto t2_value = t2_command->get_optional<double>();
+  ASSERT_TRUE(t2_value.has_value());
+  if (connectors_present()) {
+    EXPECT_DOUBLE_EQ(*t2_value, Request::STATE_TOOL_VOLTAGE_24V);
+  } else {
+    EXPECT_TRUE(std::isnan(*t2_value));
+  }
+
+  // 12 V is not a T2 voltage, including on a V2 flange.
+  const auto rejected_voltage = call_set_io(Request::FUN_SET_TOOL_VOLTAGE_T2, 0, Request::STATE_TOOL_VOLTAGE_12V);
+  ASSERT_NE(rejected_voltage, nullptr);
+  EXPECT_FALSE(rejected_voltage->success);
+
+  // Standard and T0 outputs do not depend on the tool flange.
+  const auto standard = call_set_io(Request::FUN_SET_DIGITAL_OUT, Request::PIN_DOUT0, Request::STATE_ON);
+  ASSERT_NE(standard, nullptr);
+  EXPECT_TRUE(standard->success);
+  const auto tool_t0 = call_set_io(Request::FUN_SET_DIGITAL_OUT, Request::PIN_TOOL_DOUT0, Request::STATE_ON);
+  ASSERT_NE(tool_t0, nullptr);
+  EXPECT_TRUE(tool_t0->success);
+}
+
+INSTANTIATE_TEST_SUITE_P(ToolFlangeTypes, GPIOControllerFlangeServiceTest, ::testing::Values(0.0, 1.0, 2.0),
+                         [](const ::testing::TestParamInfo<double>& info) {
+                           if (info.param == 2.0) {
+                             return std::string("v2");
+                           }
+                           if (info.param == 1.0) {
+                             return std::string("v1");
+                           }
+                           return std::string("unknown");
+                         });
 
 int main(int argc, char* argv[])
 {

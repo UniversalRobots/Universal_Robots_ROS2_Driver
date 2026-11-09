@@ -217,7 +217,9 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_gpio_controller_tool_t2
     ${PROJECT_NAME}
+    ${ur_msgs_TARGETS}
     controller_manager::controller_manager
+    hardware_interface::hardware_interface
   )
   target_link_libraries(test_load_twist_controller
     ${PROJECT_NAME}
