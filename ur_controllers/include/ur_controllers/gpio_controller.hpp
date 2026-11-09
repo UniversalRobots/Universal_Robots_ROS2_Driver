@@ -38,10 +38,7 @@
 #ifndef UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 #define UR_CONTROLLERS__GPIO_CONTROLLER_HPP_
 
-#include <atomic>
-#include <limits>
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -107,6 +104,7 @@ enum CommandInterfaces
   PAYLOAD_INERTIA_IXZ = 44,
   PAYLOAD_INERTIA_IYZ = 45,
   PAYLOAD_TRANSITION_TIME = 46,
+  TOOL_VOLTAGE_T2_CMD = 47,
 };
 
 enum StateInterfaces
@@ -141,6 +139,9 @@ enum StateInterfaces
   TOOL_T1_CONFIGURABLE_DIGITAL_INPUTS = 85,
   TOOL_T1_SMART_PANEL_DIGITAL_INPUTS = 87,
   TOOL_T1_CONNECTED = 90,
+  TOOL_T2_AVAILABLE = 91,
+  TOOL_OUTPUT_VOLTAGE_2 = 92,
+  TOOL_OUTPUT_CURRENT_2 = 93,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -236,15 +237,6 @@ protected:
   // Parameters from ROS for gpio_controller
   std::shared_ptr<gpio_controller::ParamListener> param_listener_;
   gpio_controller::Params params_;
-
-  // State indices are update-thread only. The command index is atomic because set_io reads it,
-  // and it is not cleared on deactivate so that read never sees an empty value.
-  static constexpr size_t kNoInterfaceIndex = std::numeric_limits<size_t>::max();
-  std::atomic<bool> has_tool_t2_interfaces_{ false };
-  std::atomic<size_t> tool_voltage_t2_cmd_idx_{ kNoInterfaceIndex };
-  std::optional<size_t> tool_t2_available_idx_;
-  std::optional<size_t> tool_output_voltage_2_idx_;
-  std::optional<size_t> tool_output_current_2_idx_;
 
   static constexpr double ASYNC_WAITING = 2.0;
   // TODO(anyone) publishers to add: tcp_pose_pub_

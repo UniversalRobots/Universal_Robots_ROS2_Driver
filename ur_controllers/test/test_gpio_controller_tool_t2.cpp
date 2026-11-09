@@ -49,7 +49,7 @@ using ur_controllers::kStandardDigitalIoCount;
 using ur_controllers::kT1ConfigurableDigitalInputCount;
 using ur_controllers::kT1SmartPanelDigitalInputCount;
 
-// Interfaces the GPIO controller always claims. Names match gpio_controller.cpp. Connector T2 is
+// Interfaces the GPIO controller claims. Names match gpio_controller.cpp. Connector T2 is
 // added separately so a description without it can be tested.
 const std::map<std::string, std::vector<std::string>> kCommandInterfaces = {
   { "gpio",
@@ -153,7 +153,7 @@ std::string makeUrdf(bool with_tool_t2)
          gpios + "</ros2_control></robot>";
 }
 
-controller_interface::return_type activate(const std::string& urdf, bool tool_t2_interfaces)
+controller_interface::return_type activate(const std::string& urdf)
 {
   auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   controller_manager::ControllerManager cm{ executor, urdf, true, "test_controller_manager" };
@@ -176,10 +176,6 @@ controller_interface::return_type activate(const std::string& urdf, bool tool_t2
   });
 
   const std::string name = "test_gpio_controller";
-  if (tool_t2_interfaces) {
-    const std::string params = std::string{ TEST_FILES_DIRECTORY } + "/gpio_controller_tool_t2_params.yaml";
-    cm.set_parameter({ name + ".params_file", params });
-  }
   cm.set_parameter({ name + ".type", "ur_controllers/GPIOController" });
 
   controller_interface::return_type result = controller_interface::return_type::ERROR;
@@ -196,19 +192,14 @@ controller_interface::return_type activate(const std::string& urdf, bool tool_t2
 }
 }  // namespace
 
-TEST(TestGPIOControllerToolT2, activates_without_t2_interfaces_when_disabled)
+TEST(TestGPIOControllerToolT2, activates_with_t2_interfaces)
 {
-  EXPECT_EQ(activate(makeUrdf(false), false), controller_interface::return_type::OK);
+  EXPECT_EQ(activate(makeUrdf(true)), controller_interface::return_type::OK);
 }
 
-TEST(TestGPIOControllerToolT2, refuses_activation_when_t2_interfaces_are_missing)
+TEST(TestGPIOControllerToolT2, refuses_activation_without_t2_interfaces)
 {
-  EXPECT_EQ(activate(makeUrdf(false), true), controller_interface::return_type::ERROR);
-}
-
-TEST(TestGPIOControllerToolT2, activates_with_t2_interfaces_when_enabled)
-{
-  EXPECT_EQ(activate(makeUrdf(true), true), controller_interface::return_type::OK);
+  EXPECT_EQ(activate(makeUrdf(false)), controller_interface::return_type::ERROR);
 }
 
 int main(int argc, char* argv[])

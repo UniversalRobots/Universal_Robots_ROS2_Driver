@@ -150,12 +150,6 @@ public:
 
   std::vector<hardware_interface::CommandInterface::SharedPtr> on_export_command_interfaces() final;
 
-  // Connector T2 is optional in a description. Export any of these the description omits, so real
-  // hardware still provides them. Mock hardware has no unlisted export, so it only has what is declared.
-  std::vector<hardware_interface::InterfaceDescription> export_unlisted_state_interface_descriptions() override;
-
-  std::vector<hardware_interface::InterfaceDescription> export_unlisted_command_interface_descriptions() override;
-
   hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State& previous_state) final;
   hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;

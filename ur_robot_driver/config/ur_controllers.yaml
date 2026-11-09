@@ -70,10 +70,6 @@ speed_scaling_state_broadcaster:
 io_and_status_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
-    # Real hardware exports T2 interfaces that the description omits, so this can stay true.
-    # Mock and simulation hardware only export declared interfaces. Set this false there when
-    # the description omits them.
-    tool_t2_interfaces: true
 
 ur_configuration_controller:
   ros__parameters:
