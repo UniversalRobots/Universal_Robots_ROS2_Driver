@@ -147,6 +147,7 @@ controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
   change_requested_ = false;
+  cancel_requested_ = false;
   force_mode_active_ = false;
   async_state_ = std::numeric_limits<double>::quiet_NaN();
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -155,8 +156,13 @@ ur_controllers::ForceModeController::on_activate(const rclcpp_lifecycle::State& 
 controller_interface::CallbackReturn
 ur_controllers::ForceModeController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
+  // A start staged before deactivation must not be executed once the robot program resumes.
+  if (!withdrawStagedCommand()) {
+    return LifecycleNodeInterface::CallbackReturn::ERROR;
+  }
   // Stop force mode if this controller is deactivated.
-  if (!command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0)) {
+  if (!command_interfaces_[CommandInterfaces::FORCE_MODE_DISABLE_CMD].set_value(1.0) ||
+      !command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(ASYNC_WAITING)) {
     return LifecycleNodeInterface::CallbackReturn::ERROR;
   }
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -175,6 +181,20 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
 {
   async_state_ =
       command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+
+  if (cancel_requested_) {
+    // Only withdraw if the request is unstaged or still unprocessed; otherwise keep the hardware's result.
+    if (change_requested_ || async_state_ == ASYNC_WAITING) {
+      if (!withdrawStagedCommand()) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Could not withdraw pending force mode command.");
+        return controller_interface::return_type::ERROR;
+      }
+      async_state_ = 0.0;
+    }
+    change_requested_ = false;
+    cancel_requested_ = false;
+    return controller_interface::return_type::OK;
+  }
 
   // Publish state of force_mode?
   if (change_requested_) {
@@ -266,6 +286,12 @@ controller_interface::return_type ur_controllers::ForceModeController::update(co
 bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request::SharedPtr req,
                                        ur_msgs::srv::SetForceMode::Response::SharedPtr resp)
 {
+  if (cancel_requested_) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Force mode cancellation is still pending.");
+    resp->success = false;
+    return false;
+  }
+
   // Reject if controller is not active
   if (get_lifecycle_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
     RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Controller is not running.");
@@ -377,18 +403,7 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
   change_requested_ = true;
 
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be set.");
-  const auto maximum_retries = params_.check_io_successful_retries;
-  int retries = 0;
-  while (async_state_ == ASYNC_WAITING || change_requested_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    retries++;
-
-    if (retries > maximum_retries) {
-      resp->success = false;
-    }
-  }
-
-  resp->success = async_state_ == 1.0;
+  resp->success = waitForAsyncCommand([&]() { return async_state_.load(); }) && async_state_ == 1.0;
 
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Force mode has been set successfully.");
@@ -403,14 +418,16 @@ bool ForceModeController::setForceMode(const ur_msgs::srv::SetForceMode::Request
 bool ForceModeController::disableForceMode(const std_srvs::srv::Trigger::Request::SharedPtr /*req*/,
                                            std_srvs::srv::Trigger::Response::SharedPtr resp)
 {
+  if (cancel_requested_) {
+    RCLCPP_ERROR(get_node()->get_logger(), "Can't accept new requests. Force mode cancellation is still pending.");
+    resp->success = false;
+    return false;
+  }
+
   force_mode_active_ = false;
   change_requested_ = true;
   RCLCPP_DEBUG(get_node()->get_logger(), "Waiting for force mode to be disabled.");
-  while (async_state_ == ASYNC_WAITING || change_requested_) {
-    // Asynchronous wait until the hardware interface has set the force mode
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
-  resp->success = async_state_ == 1.0;
+  resp->success = waitForAsyncCommand([&]() { return async_state_.load(); }) && async_state_ == 1.0;
   if (resp->success) {
     RCLCPP_INFO(get_node()->get_logger(), "Force mode has been disabled successfully.");
   } else {
@@ -418,6 +435,63 @@ bool ForceModeController::disableForceMode(const std_srvs::srv::Trigger::Request
     return false;
   }
   return true;
+}
+
+bool ForceModeController::waitForAsyncCommand(std::function<double(void)> get_value)
+{
+  const auto maximum_retries = params_.check_io_successful_retries;
+  int retries = 0;
+  while (get_value() == ASYNC_WAITING || change_requested_) {
+    if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Controller is no longer active, aborting force mode request.");
+      change_requested_ = false;
+      return false;
+    }
+    if (retries > maximum_retries) {
+      if (cancelPendingCommand()) {
+        return true;
+      }
+      RCLCPP_ERROR(get_node()->get_logger(), "Timed out waiting for the hardware to process the force mode "
+                                             "request.");
+      return false;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    retries++;
+  }
+  return true;
+}
+
+bool ForceModeController::cancelPendingCommand()
+{
+  cancel_requested_ = true;
+  const auto deadline =
+      std::chrono::steady_clock::now() + std::chrono::milliseconds(50) * (params_.check_io_successful_retries + 1);
+  while (cancel_requested_) {
+    if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+      // on_deactivate() has already withdrawn any staged command.
+      cancel_requested_ = false;
+      change_requested_ = false;
+      return false;
+    }
+    if (std::chrono::steady_clock::now() >= deadline) {
+      return false;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  return async_state_ != 0.0;
+}
+
+bool ForceModeController::withdrawStagedCommand()
+{
+  bool write_successful = true;
+  for (size_t i = 0; i < command_interfaces_.size(); ++i) {
+    if (i != CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS) {
+      write_successful &= command_interfaces_[i].set_value(std::numeric_limits<double>::quiet_NaN());
+    }
+  }
+  // Resolve the acknowledgement so it can't be consumed by a later request.
+  write_successful &= command_interfaces_[CommandInterfaces::FORCE_MODE_ASYNC_SUCCESS].set_value(0.0);
+  return write_successful;
 }
 }  // namespace ur_controllers
 
