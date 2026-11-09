@@ -28,8 +28,11 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
+#include <future>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -41,6 +44,7 @@
 #include "controller_manager_msgs/srv/switch_controller.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "ur_controllers/gpio_controller.hpp"
+#include "ur_msgs/srv/set_io.hpp"
 
 namespace
 {
@@ -131,17 +135,16 @@ std::string makeUrdf(bool with_tool_t2)
     std::string extra_states;
     if (with_tool_t2 && name == "gpio") {
       extra_commands = interfaces("command_interface", { "tool_voltage_t2_cmd" }, "0");
-      extra_states = interfaces(
-          "state_interface", { "tool_t2_available", "tool_output_voltage_2", "tool_output_current_2" }, "0");
+      extra_states =
+          interfaces("state_interface", { "tool_t2_available", "tool_output_voltage_2", "tool_output_current_2" }, "0");
     }
     const std::string initial = name == "system_interface" ? "1" : "0";
     gpios += "<gpio name=\"" + name + "\">" + interfaces("command_interface", commands, "") + extra_commands +
              interfaces("state_interface", states, initial) + extra_states + "</gpio>";
   }
   // system_interface has no command interfaces, so the loop above skipped it.
-  gpios +=
-      "<gpio name=\"system_interface\"><state_interface name=\"initialized\">"
-      "<param name=\"initial_value\">1</param></state_interface></gpio>";
+  gpios += "<gpio name=\"system_interface\"><state_interface name=\"initialized\">"
+           "<param name=\"initial_value\">1</param></state_interface></gpio>";
 
   return "<robot name=\"gpio_test\"><link name=\"base_link\"/>"
          "<ros2_control name=\"gpio_test\" type=\"system\"><hardware>"
@@ -149,10 +152,13 @@ std::string makeUrdf(bool with_tool_t2)
          gpios + "</ros2_control></robot>";
 }
 
-controller_interface::return_type activate(const std::string& urdf, bool tool_t2_interfaces)
+controller_interface::return_type activate(const std::string& urdf, bool tool_t2_interfaces,
+                                           const std::function<void(rclcpp::Node&)>& while_active = {})
 {
   auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   controller_manager::ControllerManager cm{ executor, urdf, true, "test_controller_manager" };
+  auto client_node = std::make_shared<rclcpp::Node>("test_gpio_controller_client");
+  executor->add_node(client_node);
   std::thread spinner([&executor]() { executor->spin(); });
 
   // This controller_manager does not run its own update thread. switch_controller only schedules
@@ -179,10 +185,12 @@ controller_interface::return_type activate(const std::string& urdf, bool tool_t2
   cm.set_parameter({ name + ".type", "ur_controllers/GPIOController" });
 
   controller_interface::return_type result = controller_interface::return_type::ERROR;
-  if (cm.load_controller(name) != nullptr &&
-      cm.configure_controller(name) == controller_interface::return_type::OK) {
+  if (cm.load_controller(name) != nullptr && cm.configure_controller(name) == controller_interface::return_type::OK) {
     result = cm.switch_controller({ name }, {}, controller_manager_msgs::srv::SwitchController::Request::STRICT, false,
                                   rclcpp::Duration::from_seconds(5.0));
+  }
+  if (result == controller_interface::return_type::OK && while_active) {
+    while_active(*client_node);
   }
 
   run_update.store(false);
@@ -206,6 +214,25 @@ TEST(TestGPIOControllerToolT2, refuses_activation_when_t2_interfaces_are_missing
 TEST(TestGPIOControllerToolT2, activates_with_t2_interfaces_when_enabled)
 {
   EXPECT_EQ(activate(makeUrdf(true), true), controller_interface::return_type::OK);
+}
+
+// Mock hardware never acknowledges io_async_success, so the request times out with the pending value.
+TEST(TestGPIOControllerToolT2, unacknowledged_t2_voltage_request_fails)
+{
+  std::optional<bool> success;
+  const auto result = activate(makeUrdf(true), true, [&success](rclcpp::Node& node) {
+    auto client = node.create_client<ur_msgs::srv::SetIO>("/test_gpio_controller/set_io");
+    ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(5)));
+    auto request = std::make_shared<ur_msgs::srv::SetIO::Request>();
+    request->fun = ur_msgs::srv::SetIO::Request::FUN_SET_TOOL_VOLTAGE_T2;
+    request->state = ur_msgs::srv::SetIO::Request::STATE_TOOL_VOLTAGE_0V;
+    auto future = client->async_send_request(request);
+    ASSERT_EQ(future.wait_for(std::chrono::seconds(10)), std::future_status::ready);
+    success = future.get()->success;
+  });
+  ASSERT_EQ(result, controller_interface::return_type::OK);
+  ASSERT_TRUE(success.has_value());
+  EXPECT_FALSE(*success);
 }
 
 int main(int argc, char* argv[])
