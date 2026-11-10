@@ -224,10 +224,13 @@ The following table summarizes how position and velocity controllers can be comb
        ``force_mode_controller`` and ``tool_contact_controller``.
    * - ``forward_position_controller``
      - Mutually exclusive with other motion controllers. Can combine with
-       ``force_mode_controller``.
+       ``tool_contact_controller``.
    * - ``forward_velocity_controller``
      - Mutually exclusive with other motion controllers. Can combine with
-       ``force_mode_controller``.
+       ``tool_contact_controller``.
+   * - ``forward_effort_controller``
+     - Mutually exclusive with other motion controllers. Can combine with
+       ``tool_contact_controller``.
    * - ``twist_controller``
      - Mutually exclusive with other motion controllers. Can combine with
        ``force_mode_controller`` and ``tool_contact_controller``.
