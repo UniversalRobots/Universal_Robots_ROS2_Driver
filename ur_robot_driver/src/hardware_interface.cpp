@@ -1334,8 +1334,8 @@ void URPositionHardwareInterface::configureToolConnectorT2()
       std::find(output_recipe.begin(), output_recipe.end(), "tool_output_current_2") != output_recipe.end();
   // Commands, including OFF, stay available when the T2 fields were rejected. Only the readings go away.
   tool_t2_telemetry_ = tool_t2_supported_ && has_voltage && has_current;
-  // 0.0/1.0, never NaN: a NaN state would read as available.
-  tool_flange_type_ = static_cast<double>(ur_driver_->getPrimaryClient()->getToolFlangeType());
+  // Wire value from the RTDE writer: 0 unknown, 1 V1, 2 V2.
+  tool_flange_type_ = static_cast<double>(ur_driver_->getRTDEWriter().getToolFlangeType());
   if (!tool_t2_telemetry_) {
     tool_output_voltage_2_copy_ = NO_NEW_CMD_;
     tool_output_current_2_ = NO_NEW_CMD_;

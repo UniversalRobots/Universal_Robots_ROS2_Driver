@@ -139,7 +139,7 @@ hardware_interface::HardwareInfo BuildTestHardwareInfo()
   }
   gpio_states.push_back("tool_mode");
   gpio_states.push_back("tool_output_voltage");
-  gpio_states.push_back("tool_t2_available");
+  gpio_states.push_back("tool_flange_type");
   gpio_states.push_back("tool_output_voltage_2");
   gpio_states.push_back("tool_output_current_2");
   gpio_states.push_back("tool_output_current");
@@ -334,7 +334,7 @@ TEST_F(URHardwareInterfaceExportTest, ExportsExpectedStateInterfaces)
     expected_names.push_back(std::string(kTfPrefix) + "gpio/standard_analog_output_" + std::to_string(i));
   }
   for (const char* name :
-       { "tool_output_voltage", "tool_t2_available", "tool_output_voltage_2", "tool_output_current_2", "robot_mode",
+       { "tool_output_voltage", "tool_flange_type", "tool_output_voltage_2", "tool_output_current_2", "robot_mode",
          "safety_mode", "tool_mode", "tool_output_current", "tool_temperature", "program_running" }) {
     expected_names.push_back(std::string(kTfPrefix) + "gpio/" + name);
   }
