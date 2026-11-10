@@ -49,6 +49,7 @@
 #include "ur_msgs/msg/io_states.hpp"
 #include "ur_msgs/msg/tool_data_msg.hpp"
 #include "ur_msgs/msg/tool_data_t1_msg.hpp"
+#include "ur_msgs/msg/tool_data_t2_msg.hpp"
 #include "ur_dashboard_msgs/msg/robot_mode.hpp"
 #include "ur_dashboard_msgs/msg/safety_mode.hpp"
 #include "ur_msgs/srv/set_io.hpp"
@@ -103,6 +104,7 @@ enum CommandInterfaces
   PAYLOAD_INERTIA_IXZ = 44,
   PAYLOAD_INERTIA_IYZ = 45,
   PAYLOAD_TRANSITION_TIME = 46,
+  TOOL_VOLTAGE_T2_CMD = 47,
 };
 
 enum StateInterfaces
@@ -137,6 +139,9 @@ enum StateInterfaces
   TOOL_T1_CONFIGURABLE_DIGITAL_INPUTS = 85,
   TOOL_T1_SMART_PANEL_DIGITAL_INPUTS = 87,
   TOOL_T1_CONNECTED = 90,
+  TOOL_FLANGE_TYPE = 91,
+  TOOL_OUTPUT_VOLTAGE_2 = 92,
+  TOOL_OUTPUT_CURRENT_2 = 93,
 };
 
 class GPIOController : public controller_interface::ControllerInterface
@@ -188,6 +193,7 @@ private:
   void publishToolData();
 
   void publishToolDataT1();
+  void publishToolDataT2();
 
   void publishRobotMode();
 
@@ -216,6 +222,7 @@ protected:
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::IOStates>> io_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataMsg>> tool_data_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT1Msg>> tool_data_t1_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT2Msg>> tool_data_t2_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>> robot_mode_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::SafetyMode>> safety_mode_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::msg::Bool>> program_state_pub_;
@@ -223,9 +230,11 @@ protected:
   ur_msgs::msg::IOStates io_msg_;
   ur_msgs::msg::ToolDataMsg tool_data_msg_;
   ur_msgs::msg::ToolDataT1Msg tool_data_t1_msg_;
+  ur_msgs::msg::ToolDataT2Msg tool_data_t2_msg_;
   ur_dashboard_msgs::msg::RobotMode robot_mode_msg_;
   ur_dashboard_msgs::msg::SafetyMode safety_mode_msg_;
   std_msgs::msg::Bool program_running_msg_;
+  uint32_t tool_flange_type_{ 0u };
 
   // Parameters from ROS for gpio_controller
   std::shared_ptr<gpio_controller::ParamListener> param_listener_;

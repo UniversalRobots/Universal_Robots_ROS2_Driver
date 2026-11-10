@@ -112,10 +112,19 @@ Number of idle chars for the TX unit used for tool communication. Will be set as
 
 This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
 
-tool_voltage (Required)
------------------------
+tool_voltage (default: "0")
+---------------------------
 
-Tool voltage that will be set as soon as the UR-Program on the robot is started. Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``. Then, this parameter is required.
+Tool voltage on connector T0 (exactly ``0``, ``12`` or ``24``) that will be set as soon as the UR-Program on the robot is started. Any other value, including a prefix such as ``12.5``, fails configuration and does not energize the connector. Note: This parameter is only evaluated, when the parameter "use_tool_communication" is set to ``true``.
+
+48 V is not valid on connector T0. Use ``tool_voltage_t2`` for the 48 V connector.
+
+This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
+
+tool_voltage_t2
+---------------
+
+Voltage on connector T2 on Tool Flange V2 that will be set as soon as the UR-Program on the robot is started. Valid values are exactly ``0``, ``24`` and ``48``. Leave it empty to leave connector T2 unchanged. Note: This parameter is evaluated whether or not the parameter "use_tool_communication" is set to ``true``. Requires Tool Flange V2 on PolyScope X 10.15 or later.
 
 This can also be configured using the robot teach pendant. Remember to save the installation on the robot to keep the setting after reboot.
 
