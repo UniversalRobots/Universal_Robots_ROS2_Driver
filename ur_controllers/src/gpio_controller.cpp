@@ -495,7 +495,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
       RCLCPP_INFO(get_node()->get_logger(), "Setting tool digital output '%d' to state: '%1.0f'.",
                   req->pin - req->PIN_TOOL_DOUT0, req->state);
     } else if (req->pin >= req->PIN_TOOL_T1_DOUT0 && req->pin <= req->PIN_TOOL_T1_DOUT3) {
-      if (tool_flange_type_ != 2) {
+      if (tool_flange_type_ < 2) {
         RCLCPP_ERROR(
             get_node()->get_logger(),
             "Connector T1 is not present on this robot. It requires PolyScope X 10.15 or later and Tool Flange V2.");
@@ -558,7 +558,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
         command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
     return resp->success;
   } else if (req->fun == req->FUN_SET_TOOL_VOLTAGE_T2) {
-    if (tool_flange_type_ != 2) {
+    if (tool_flange_type_ < 2) {
       RCLCPP_ERROR(
           get_node()->get_logger(),
           "Connector T2 is not present on this robot. It requires PolyScope X 10.15 or later and Tool Flange V2.");
