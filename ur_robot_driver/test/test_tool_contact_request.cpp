@@ -65,11 +65,13 @@ struct FakeHardwareInterface
     }
   }
 
-  // The controller is deactivated: tool contact is ended on the robot and write() no longer looks at
-  // the tool contact command.
-  void stopController()
+  // The controller is deactivated: tool contact is ended on the robot, write() no longer looks at
+  // the tool contact command, and both the state and the leftover command are reset to standby.
+  // Returns the command a write() cycle sees until the controller writes one again.
+  double stopController()
   {
     state = ur_robot_driver::TOOL_CONTACT_STANDBY;
+    return ur_robot_driver::TOOL_CONTACT_STANDBY;
   }
 
   void writeCycles(const double commanded_state, const int cycles)
@@ -140,6 +142,21 @@ TEST(ToolContactRequestTest, FirstRequestAfterAStopWhileExecutingStartsAgain)
   hw.writeCycles(ur_robot_driver::TOOL_CONTACT_WAITING_BEGIN, CYCLES);
   EXPECT_EQ(hw.starts, 2);
   EXPECT_EQ(hw.state, ur_robot_driver::TOOL_CONTACT_EXECUTING);
+}
+
+// The controller is deactivated after a detected contact, with its command still at WAITING_END. The
+// cycles between the hardware interface learning that the controller runs again and the
+// controller's first command must not send another end request.
+TEST(ToolContactRequestTest, LeftoverCommandAfterAStopSendsNothing)
+{
+  FakeHardwareInterface hw;
+  hw.writeCycles(ur_robot_driver::TOOL_CONTACT_WAITING_BEGIN, CYCLES);
+  hw.writeCycles(ur_robot_driver::TOOL_CONTACT_WAITING_END, CYCLES);
+  const double leftover_command = hw.stopController();
+  hw.writeCycles(leftover_command, CYCLES);
+  EXPECT_EQ(hw.starts, 1);
+  EXPECT_EQ(hw.ends, 1);
+  EXPECT_EQ(hw.state, STANDBY);
 }
 
 // A request that could not be sent is tried again for as long as the controller asks for it.

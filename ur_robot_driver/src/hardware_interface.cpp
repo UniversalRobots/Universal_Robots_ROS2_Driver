@@ -1889,6 +1889,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
     // bring the state back from "executing". Reset it here, or the first request after the next
     // activation could be taken for one that has already been sent.
     tool_contact_state_ = TOOL_CONTACT_STANDBY;
+    // The controller leaves its last command behind and only writes standby again in on_activate(),
+    // after this hardware interface has been told that the controller is running. A write() cycle
+    // in between must not act on that leftover command.
+    tool_contact_set_state_ = TOOL_CONTACT_STANDBY;
     ur_driver_->endToolContact();
   }
 
