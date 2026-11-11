@@ -56,6 +56,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ur_robot_driver/hardware_interface.hpp"
 #include "ur_robot_driver/mode_compatibility.hpp"
+#include "ur_robot_driver/tool_contact_request.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
 
 namespace rtde = urcl::rtde_interface;
@@ -1564,28 +1565,29 @@ void URPositionHardwareInterface::check_tool_contact_controller()
   cmd_state = tool_contact_set_state_;
 
   if (ur_driver_ != nullptr) {
-    if (cmd_state == 2.0) {
-      bool success = ur_driver_->startToolContact();
-      if (success) {
-        // TOOL_CONTACT_EXECUTING
-        tool_contact_state_ = 3.0;
-        tool_contact_result_ = 3.0;
-      } else {
-        // TOOL_CONTACT_FAILURE_BEGIN
-        tool_contact_state_ = 4.0;
-      }
-
-    } else if (cmd_state == 5.0) {
-      bool success = ur_driver_->endToolContact();
-      if (success) {
-        // TOOL_CONTACT_SUCCESS_END
-        tool_contact_state_ = 6.0;
-      } else {
-        // TOOL_CONTACT_FAILURE_END
-        tool_contact_state_ = 7.0;
-      }
-    } else {
-      tool_contact_state_ = cmd_state;
+    // This runs in every write() cycle, while the controller keeps its command unchanged for as long
+    // as tool contact is executing. toolContactRequest() makes sure each request is sent only once.
+    switch (toolContactRequest(cmd_state, tool_contact_state_)) {
+      case ToolContactRequest::START:
+        if (ur_driver_->startToolContact()) {
+          tool_contact_state_ = TOOL_CONTACT_EXECUTING;
+          tool_contact_result_ = TOOL_CONTACT_EXECUTING;
+        } else {
+          tool_contact_state_ = TOOL_CONTACT_FAILURE_BEGIN;
+        }
+        break;
+      case ToolContactRequest::END:
+        if (ur_driver_->endToolContact()) {
+          tool_contact_state_ = TOOL_CONTACT_SUCCESS_END;
+        } else {
+          tool_contact_state_ = TOOL_CONTACT_FAILURE_END;
+        }
+        break;
+      case ToolContactRequest::NONE:
+        if (cmd_state != TOOL_CONTACT_WAITING_BEGIN && cmd_state != TOOL_CONTACT_WAITING_END) {
+          tool_contact_state_ = cmd_state;
+        }
+        break;
     }
   }
 }
