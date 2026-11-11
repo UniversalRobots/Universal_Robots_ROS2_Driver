@@ -1885,6 +1885,10 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
     tool_contact_controller_running_ = false;
     tool_contact_result_ = 3.0;
+    // check_tool_contact_controller() no longer runs once the controller is stopped, so it cannot
+    // bring the state back from "executing". Reset it here, or the first request after the next
+    // activation could be taken for one that has already been sent.
+    tool_contact_state_ = TOOL_CONTACT_STANDBY;
     ur_driver_->endToolContact();
   }
 

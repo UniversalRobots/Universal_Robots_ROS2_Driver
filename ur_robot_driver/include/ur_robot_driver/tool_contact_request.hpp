@@ -33,6 +33,7 @@ namespace ur_robot_driver
 {
 // Values of the tool contact command and state interfaces. They mirror the constants of the same
 // names in ur_controllers::ToolContactController.
+constexpr double TOOL_CONTACT_STANDBY = 1.0;
 constexpr double TOOL_CONTACT_WAITING_BEGIN = 2.0;
 constexpr double TOOL_CONTACT_EXECUTING = 3.0;
 constexpr double TOOL_CONTACT_FAILURE_BEGIN = 4.0;
