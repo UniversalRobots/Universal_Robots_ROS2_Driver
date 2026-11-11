@@ -218,10 +218,7 @@ class IOControllerTest(unittest.TestCase):
                 izz=p["izz"],
                 transition_time=DurationMsg(),
             )
-<<<<<<< HEAD
             self.assertTrue(res.success, f"set_payload failed for m={p['mass']}")
-=======
-            self.assertTrue(res.success, f"set_payload failed for m={payload.m}")
 
     def _wait_for_tool_data(self, timeout=5.0):
         """Return the next ~/tool_data message."""
@@ -373,4 +370,3 @@ class IOControllerTest(unittest.TestCase):
                     self._wait_for_t2_voltage(t2_state, SetIO.Request.STATE_TOOL_VOLTAGE_0V)
         finally:
             self.node.destroy_subscription(subscription)
->>>>>>> 0cba722 (Add g-Series 48v T2 tool connector support (#2049))
