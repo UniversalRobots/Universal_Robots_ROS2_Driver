@@ -9,6 +9,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 find_package(ament_cmake REQUIRED)
 find_package(angles REQUIRED)
 find_package(controller_interface REQUIRED)
+find_package(hardware_interface REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(joint_trajectory_controller REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
@@ -31,6 +32,7 @@ find_package(action_msgs REQUIRED)
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   angles
   controller_interface
+  hardware_interface
   geometry_msgs
   joint_trajectory_controller
   lifecycle_msgs
@@ -213,7 +215,9 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_gpio_controller_tool_t2
     ${PROJECT_NAME}
+    ${ur_msgs_TARGETS}
     controller_manager::controller_manager
+    hardware_interface::hardware_interface
   )
   target_link_libraries(test_load_twist_controller
     ${PROJECT_NAME}

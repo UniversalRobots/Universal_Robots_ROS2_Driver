@@ -348,7 +348,7 @@ protected:
   double tool_mode_copy_;
   std::array<double, 2> tool_analog_input_types_copy_;
   double tool_output_voltage_copy_;
-  double tool_t2_available_copy_{ 0.0 };
+  double tool_flange_type_{ static_cast<double>(urcl::ToolFlangeType::UNKNOWN) };
   double tool_output_voltage_2_copy_{ std::numeric_limits<double>::quiet_NaN() };
   double robot_mode_copy_;
   double safety_mode_copy_;

@@ -308,7 +308,7 @@ std::vector<hardware_interface::StateInterface> URPositionHardwareInterface::exp
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
   state_interfaces.emplace_back(
-      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_t2_available", &tool_t2_available_copy_));
+      hardware_interface::StateInterface(tf_prefix + "gpio", "tool_flange_type", &tool_flange_type_));
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage_2", &tool_output_voltage_2_copy_));
   state_interfaces.emplace_back(
@@ -1159,8 +1159,7 @@ void URPositionHardwareInterface::configureToolConnectorT2()
       std::find(output_recipe.begin(), output_recipe.end(), "tool_output_current_2") != output_recipe.end();
   // Commands, including OFF, stay available when the T2 fields were rejected. Only the readings go away.
   tool_t2_telemetry_ = tool_t2_supported_ && has_voltage && has_current;
-  // 0.0/1.0, never NaN: a NaN state would read as available.
-  tool_t2_available_copy_ = tool_t2_supported_ ? 1.0 : 0.0;
+  tool_flange_type_ = static_cast<double>(ur_driver_->getPrimaryClient()->getToolFlangeType());
   if (!tool_t2_telemetry_) {
     tool_output_voltage_2_copy_ = NO_NEW_CMD_;
     tool_output_current_2_ = NO_NEW_CMD_;
@@ -1440,7 +1439,6 @@ void URPositionHardwareInterface::updateNonDoubleValues()
   }
 
   tool_output_voltage_copy_ = static_cast<double>(tool_output_voltage_);
-  tool_t2_available_copy_ = tool_t2_supported_ ? 1.0 : 0.0;
   if (tool_t2_telemetry_) {
     tool_output_voltage_2_copy_ = static_cast<double>(tool_output_voltage_2_);
   } else {

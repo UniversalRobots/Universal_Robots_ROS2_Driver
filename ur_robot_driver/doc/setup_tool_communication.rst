@@ -100,6 +100,15 @@ Tool Flange V2, on PolyScope X 10.15 and later, has a second power connector, T2
 
 ``tool_voltage_t2`` sets the T2 voltage when the robot program starts, whether or not ``use_tool_communication`` is true. A robot that does not report Tool Flange V2 refuses to start rather than ignoring the request.
 
-At runtime, call ``/io_and_status_controller/set_io`` with ``fun`` set to ``FUN_SET_TOOL_VOLTAGE_T2`` and ``state`` set to 0, 24 or 48. This does not require tool communication. ``/io_and_status_controller/tool_data_t2`` publishes the measured ``tool_output_voltage`` and ``tool_current`` only while the robot reports that connector T2 is present. No message means the connector is not present.
+At runtime, call ``/io_and_status_controller/set_io`` with ``fun`` set to
+``FUN_SET_TOOL_VOLTAGE_T2`` and ``state`` set to 0, 24 or 48. This does not require tool
+communication. ``/io_and_status_controller/tool_data_t2`` publishes the measured
+``tool_output_voltage`` and ``tool_current`` only while the robot reports Tool Flange V2 or later.
+No message means the connector is not present.
 
-A custom ``ros2_control`` description used with the shipped controller configuration has to declare ``tool_voltage_t2_cmd``, ``tool_t2_available``, ``tool_output_voltage_2`` and ``tool_output_current_2`` on the gpio component. This applies to real hardware as well as mock and simulation hardware. A description that does not declare them has to set ``io_and_status_controller.tool_t2_interfaces`` to false, otherwise the controller does not activate.
+A custom robot description must declare these gpio interfaces as ``ur.ros2_control.xacro`` does,
+including ``tool_voltage_t2_cmd``, ``tool_flange_type``, ``tool_output_voltage_2``,
+``tool_output_current_2``, ``standard_digital_output_cmd_18``–``21``, ``digital_output_18``–``21``,
+``tool_t1_configurable_digital_input_*``, ``tool_t1_digital_input_*`` and ``tool_t1_connected``.
+The controller always claims them. If you write your own description you should include and use the
+macro declared in ``ur.ros2_control.xacro``.

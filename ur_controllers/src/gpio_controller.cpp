@@ -145,10 +145,7 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
   config.names.emplace_back(tf_prefix + "payload/transition_time");
 
-  // Appended after the fixed CommandInterfaces enum so existing indices stay valid.
-  if (params_.tool_t2_interfaces) {
-    config.names.emplace_back(tf_prefix + "gpio/tool_voltage_t2_cmd");
-  }
+  config.names.emplace_back(tf_prefix + "gpio/tool_voltage_t2_cmd");
 
   return config;
 }
@@ -234,12 +231,11 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
     config.names.emplace_back(tf_prefix + "gpio/tool_t1_digital_input_" + std::to_string(i));
   }
   config.names.emplace_back(tf_prefix + "gpio/tool_t1_connected");
-  // Appended after the fixed StateInterfaces enum so existing indices stay valid.
-  if (params_.tool_t2_interfaces) {
-    config.names.emplace_back(tf_prefix + "gpio/tool_t2_available");
-    config.names.emplace_back(tf_prefix + "gpio/tool_output_voltage_2");
-    config.names.emplace_back(tf_prefix + "gpio/tool_output_current_2");
-  }
+
+  // Connector T2 on tool flange V2
+  config.names.emplace_back(tf_prefix + "gpio/tool_flange_type");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_voltage_2");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_current_2");
 
   return config;
 }
@@ -249,7 +245,10 @@ controller_interface::return_type ur_controllers::GPIOController::update(const r
 {
   publishIO();
   publishToolData();
-  publishToolDataT1();
+  if (tool_flange_type_ >= 2) {
+    publishToolDataT1();
+    publishToolDataT2();
+  }
   publishRobotMode();
   publishSafetyMode();
   publishProgramRunning();
@@ -259,8 +258,6 @@ controller_interface::return_type ur_controllers::GPIOController::update(const r
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  const auto logger = get_node()->get_logger();
-
   if (!param_listener_) {
     RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
     return controller_interface::CallbackReturn::ERROR;
@@ -285,12 +282,10 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 
     tool_data_t1_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT1Msg>>(
         get_node()->create_publisher<ur_msgs::msg::ToolDataT1Msg>("~/tool_data_t1", rclcpp::SystemDefaultsQoS()));
-    // The topic exists only when this controller claims connector T2. Messages are published
-    // later, and only while the robot reports that the connector is present.
-    if (params_.tool_t2_interfaces) {
-      tool_data_t2_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT2Msg>>(
-          get_node()->create_publisher<ur_msgs::msg::ToolDataT2Msg>("~/tool_data_t2", rclcpp::SystemDefaultsQoS()));
-    }
+
+    // Messages are published only while the robot reports a V2 (or later) flange.
+    tool_data_t2_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT2Msg>>(
+        get_node()->create_publisher<ur_msgs::msg::ToolDataT2Msg>("~/tool_data_t2", rclcpp::SystemDefaultsQoS()));
 
     robot_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>>(
         get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched));
@@ -383,19 +378,6 @@ void GPIOController::publishToolData()
   tool_data_msg_.tool_temperature =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_optional().value_or(0.0));
   tool_data_pub_->try_publish(tool_data_msg_);
-
-  if (has_tool_t2_interfaces_.load() && tool_data_t2_pub_) {
-    const double raw_available = state_interfaces_[*tool_t2_available_idx_].get_optional().value_or(0.0);
-    if (!std::isnan(raw_available) && raw_available > 0.5) {
-      const double voltage = state_interfaces_[*tool_output_voltage_2_idx_].get_optional().value_or(
-          std::numeric_limits<double>::quiet_NaN());
-      const double current = state_interfaces_[*tool_output_current_2_idx_].get_optional().value_or(
-          std::numeric_limits<double>::quiet_NaN());
-      tool_data_t2_msg_.tool_output_voltage = static_cast<float>(voltage);
-      tool_data_t2_msg_.tool_current = static_cast<float>(current);
-      tool_data_t2_pub_->try_publish(tool_data_t2_msg_);
-    }
-  }
 }
 
 void GPIOController::publishToolDataT1()
@@ -420,6 +402,17 @@ void GPIOController::publishToolDataT1()
   tool_data_t1_pub_->try_publish(tool_data_t1_msg_);
 }
 
+void GPIOController::publishToolDataT2()
+{
+  const double voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE_2].get_optional().value_or(
+      std::numeric_limits<double>::quiet_NaN());
+  const double current = state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT_2].get_optional().value_or(
+      std::numeric_limits<double>::quiet_NaN());
+  tool_data_t2_msg_.tool_output_voltage = static_cast<float>(voltage);
+  tool_data_t2_msg_.tool_current = static_cast<float>(current);
+  tool_data_t2_pub_->try_publish(tool_data_t2_msg_);
+}
+
 void GPIOController::publishRobotMode()
 {
   auto robot_mode = static_cast<int8_t>(state_interfaces_[StateInterfaces::ROBOT_MODE].get_optional().value_or(0.0));
@@ -440,54 +433,15 @@ void GPIOController::publishProgramRunning()
   try_publish_on_change(*program_state_pub_, program_running_msg_, &std_msgs::msg::Bool::data, program_running);
 }
 
-namespace
-{
-// Connector T2 is appended only when tool_t2_interfaces is true, so it has no enum index.
-// Look it up by name, as the other controllers do, and keep the index for command_interfaces_[i].
-template <typename InterfacesT>
-std::optional<size_t> findInterfaceIndex(InterfacesT& interfaces, const std::string& name)
-{
-  for (size_t i = 0; i < interfaces.size(); ++i) {
-    if (interfaces[i].get_name() == name) {
-      return i;
-    }
-  }
-  return std::nullopt;
-}
-}  // namespace
-
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  has_tool_t2_interfaces_.store(false);
-  tool_t2_available_idx_.reset();
-  tool_output_voltage_2_idx_.reset();
-  tool_output_current_2_idx_.reset();
-
-  if (params_.tool_t2_interfaces) {
-    const std::string prefix = params_.tf_prefix;
-    const auto tool_voltage_t2_cmd_idx = findInterfaceIndex(command_interfaces_, prefix + "gpio/tool_voltage_t2_cmd");
-    tool_t2_available_idx_ = findInterfaceIndex(state_interfaces_, prefix + "gpio/tool_t2_available");
-    tool_output_voltage_2_idx_ = findInterfaceIndex(state_interfaces_, prefix + "gpio/tool_output_voltage_2");
-    tool_output_current_2_idx_ = findInterfaceIndex(state_interfaces_, prefix + "gpio/tool_output_current_2");
-    if (!tool_voltage_t2_cmd_idx || !tool_t2_available_idx_ || !tool_output_voltage_2_idx_ ||
-        !tool_output_current_2_idx_) {
-      RCLCPP_ERROR(get_node()->get_logger(), "tool_t2_interfaces is true but the connector T2 interfaces are not in "
-                                             "the ros2_control "
-                                             "description. Declare gpio/tool_voltage_t2_cmd, gpio/tool_t2_available, "
-                                             "gpio/tool_output_voltage_2 and gpio/tool_output_current_2, or set "
-                                             "tool_t2_interfaces to false.");
-      return LifecycleNodeInterface::CallbackReturn::ERROR;
-    }
-    // Publish the index before the flag so a service thread that observes the flag also observes the index.
-    tool_voltage_t2_cmd_idx_.store(*tool_voltage_t2_cmd_idx);
-    has_tool_t2_interfaces_.store(true);
-  }
-
   while (state_interfaces_[StateInterfaces::INITIALIZED_FLAG].get_optional().value_or(0.0) == 0.0) {
     RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
+  tool_flange_type_ =
+      static_cast<uint32_t>(state_interfaces_[StateInterfaces::TOOL_FLANGE_TYPE].get_optional().value_or(0.0));
 
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -495,12 +449,7 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_deactivate(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  // Drop the flag only. The command index stays so a concurrent set_io does not observe a cleared value.
-  has_tool_t2_interfaces_.store(false);
-  tool_t2_available_idx_.reset();
-  tool_output_voltage_2_idx_.reset();
-  tool_output_current_2_idx_.reset();
-  // Publishers and services are created in on_configure and released in on_cleanup.
+  // No teardown. Publishers and services are created in on_configure and released in on_cleanup.
   // on_activate/on_deactivate run inside the realtime update loop, so we keep DDS management separate to avoid
   // stalling the controller_manager update cycle.
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -538,12 +487,30 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
   // Pins 0-17 are the existing standard, configurable and T0 outputs. Pins 18-21 are
   // T1_DO0-T1_DO3, which the hardware sends as tool digital output pins 2-5.
-  if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= req->PIN_TOOL_T1_DOUT3) {
+  if (req->fun == req->FUN_SET_DIGITAL_OUT) {
+    if (req->pin >= 0 && req->pin <= req->PIN_CONF_OUT7) {
+      RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
+    } else if (req->pin >= req->PIN_TOOL_DOUT0 && req->pin <= req->PIN_TOOL_DOUT1) {
+      RCLCPP_INFO(get_node()->get_logger(), "Setting tool digital output '%d' to state: '%1.0f'.",
+                  req->pin - req->PIN_TOOL_DOUT0, req->state);
+    } else if (req->pin >= req->PIN_TOOL_T1_DOUT0 && req->pin <= req->PIN_TOOL_T1_DOUT3) {
+      if (tool_flange_type_ < 2) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Connector T1 is not present on this robot. It requires PolyScope X "
+                                               "10.15 or later and Tool Flange V2.");
+        resp->success = false;
+        return false;
+      }
+      RCLCPP_INFO(get_node()->get_logger(), "Setting tool T1 digital output '%d' to state: '%1.0f'.",
+                  req->pin - req->PIN_TOOL_T1_DOUT0, req->state);
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Invalid digital output pin '%d'.", req->pin);
+      resp->success = false;
+      return false;
+    }
+
     // io async success
     std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     std::ignore = command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
-
-    RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
     if (!waitForAsyncCommand([&]() {
           return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
@@ -589,18 +556,9 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
         command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING));
     return resp->success;
   } else if (req->fun == req->FUN_SET_TOOL_VOLTAGE_T2) {
-    if (!has_tool_t2_interfaces_.load()) {
-      RCLCPP_ERROR(get_node()->get_logger(), "FUN_SET_TOOL_VOLTAGE_T2 requires the controller parameter "
-                                             "tool_t2_interfaces to be true and the "
-                                             "connector T2 interfaces to be available.");
-      resp->success = false;
-      return false;
-    }
-    const size_t tool_voltage_t2_cmd_idx = tool_voltage_t2_cmd_idx_.load();
-    if (tool_voltage_t2_cmd_idx == kNoInterfaceIndex) {
-      RCLCPP_ERROR(get_node()->get_logger(), "FUN_SET_TOOL_VOLTAGE_T2 requires the controller parameter "
-                                             "tool_t2_interfaces to be true and the "
-                                             "connector T2 interfaces to be available.");
+    if (tool_flange_type_ < 2) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 is not present on this robot. It requires PolyScope X 10.15 "
+                                             "or later and Tool Flange V2.");
       resp->success = false;
       return false;
     }
@@ -613,7 +571,8 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
       return false;
     }
     std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-    std::ignore = command_interfaces_[tool_voltage_t2_cmd_idx].set_value(static_cast<double>(req->state));
+    std::ignore =
+        command_interfaces_[CommandInterfaces::TOOL_VOLTAGE_T2_CMD].set_value(static_cast<double>(req->state));
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting connector T2 voltage to: '%1.0f'.", req->state);
 
