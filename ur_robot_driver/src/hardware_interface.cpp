@@ -50,11 +50,7 @@
 #include <rclcpp/logging.hpp>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ur_robot_driver/hardware_interface.hpp"
-<<<<<<< HEAD
-=======
-#include "ur_robot_driver/mode_compatibility.hpp"
 #include "ur_robot_driver/tool_contact_request.hpp"
->>>>>>> b7bf7ef (Start and end tool contact only once per request (#2078))
 #include "ur_robot_driver/urcl_log_handler.hpp"
 
 namespace rtde = urcl::rtde_interface;
