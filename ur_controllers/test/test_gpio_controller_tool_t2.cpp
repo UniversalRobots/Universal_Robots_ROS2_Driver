@@ -145,8 +145,8 @@ std::string makeUrdf(bool with_tool_t2)
     std::string extra_states;
     if (with_tool_t2 && name == "gpio") {
       extra_commands = interfaces("command_interface", { "tool_voltage_t2_cmd" }, "0");
-      extra_states =
-          interfaces("state_interface", { "tool_flange_type", "tool_output_voltage_2", "tool_output_current_2" }, "0");
+      extra_states = interfaces("state_interface", { "tool_flange_type" }, "2") +
+                     interfaces("state_interface", { "tool_output_voltage_2", "tool_output_current_2" }, "0");
     }
     const std::string initial = name == "system_interface" ? "1" : "0";
     gpios += "<gpio name=\"" + name + "\">" + interfaces("command_interface", commands, "") + extra_commands +

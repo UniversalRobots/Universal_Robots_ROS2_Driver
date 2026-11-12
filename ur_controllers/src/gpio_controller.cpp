@@ -440,8 +440,8 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
-  tool_flange_type_ =
-      static_cast<uint32_t>(state_interfaces_[StateInterfaces::TOOL_FLANGE_TYPE].get_optional().value_or(0.0));
+  const double tool_flange_type = state_interfaces_[StateInterfaces::TOOL_FLANGE_TYPE].get_optional().value_or(0.0);
+  tool_flange_type_ = std::isfinite(tool_flange_type) ? static_cast<uint32_t>(tool_flange_type) : 0u;
 
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
