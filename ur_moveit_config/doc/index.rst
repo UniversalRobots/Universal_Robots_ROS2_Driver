@@ -57,3 +57,20 @@ robot as explained `here <https://moveit.picknik.ai/main/doc/tutorials/quickstar
    moveit_config ``joint_limits.yaml`` in the context of MoveIt motion planning.
    One way to interpret this is that the URDF describes the hardware's limits, while the
    moveit_config provides limits on an application / planning level.
+
+.. note::
+   This example loads its description from the running robot_state_publisher and thus needs a
+   running driver / robot_state_publisher to be able to load the robot_description. This is not the
+   default that the moveit_configs_builder expects, but we think that this is less error-prone and
+   easier to use than having to specify the description to load that should match the one used by
+   the driver. This will produce a couple of warnings at startup:
+
+   .. code-block::
+
+      WARNING:root:Cannot infer URDF from `/opt/ros/lyrical/share/ur_moveit_config`. -- using config/ur.urdf
+      WARNING:root:Cannot infer SRDF from `/opt/ros/lyrical/share/ur_moveit_config`. -- using config/ur.srdf
+      WARNING:root:"File /opt/ros/lyrical/share/ur_moveit_config/config/ur.urdf doesn't exist"
+      WARNING:root:The robot description will be loaded from /robot_description topic
+
+   Those are expected and can be ignored. The fallback in the last line is the one actually
+   desired.
