@@ -1561,34 +1561,12 @@ void URPositionHardwareInterface::checkAsyncIO()
 
 void URPositionHardwareInterface::check_tool_contact_controller()
 {
-  static double cmd_state;
-  cmd_state = tool_contact_set_state_;
-
   if (ur_driver_ != nullptr) {
     // This runs in every write() cycle, while the controller keeps its command unchanged for as long
-    // as tool contact is executing. toolContactRequest() makes sure each request is sent only once.
-    switch (toolContactRequest(cmd_state, tool_contact_state_)) {
-      case ToolContactRequest::START:
-        if (ur_driver_->startToolContact()) {
-          tool_contact_state_ = TOOL_CONTACT_EXECUTING;
-          tool_contact_result_ = TOOL_CONTACT_EXECUTING;
-        } else {
-          tool_contact_state_ = TOOL_CONTACT_FAILURE_BEGIN;
-        }
-        break;
-      case ToolContactRequest::END:
-        if (ur_driver_->endToolContact()) {
-          tool_contact_state_ = TOOL_CONTACT_SUCCESS_END;
-        } else {
-          tool_contact_state_ = TOOL_CONTACT_FAILURE_END;
-        }
-        break;
-      case ToolContactRequest::NONE:
-        if (cmd_state != TOOL_CONTACT_WAITING_BEGIN && cmd_state != TOOL_CONTACT_WAITING_END) {
-          tool_contact_state_ = cmd_state;
-        }
-        break;
-    }
+    // as tool contact is executing. processToolContactCommand() sends each request only once.
+    processToolContactCommand(
+        tool_contact_set_state_, tool_contact_state_, tool_contact_result_,
+        [this]() { return ur_driver_->startToolContact(); }, [this]() { return ur_driver_->endToolContact(); });
   }
 }
 
@@ -1884,15 +1862,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
     tool_contact_controller_running_ = false;
-    tool_contact_result_ = 3.0;
-    // check_tool_contact_controller() no longer runs once the controller is stopped, so it cannot
-    // bring the state back from "executing". Reset it here, or the first request after the next
-    // activation could be taken for one that has already been sent.
-    tool_contact_state_ = TOOL_CONTACT_STANDBY;
-    // The controller leaves its last command behind and only writes standby again in on_activate(),
-    // after this hardware interface has been told that the controller is running. A write() cycle
-    // in between must not act on that leftover command.
-    tool_contact_set_state_ = TOOL_CONTACT_STANDBY;
+    resetToolContactOnStop(tool_contact_set_state_, tool_contact_state_, tool_contact_result_);
     ur_driver_->endToolContact();
   }
 

@@ -35,11 +35,13 @@ using ur_robot_driver::toolContactRequest;
 
 namespace
 {
-// The robot side of URPositionHardwareInterface::check_tool_contact_controller(): counts what is sent
-// and tracks the state interface the way the hardware interface does.
+// Stands in for URPositionHardwareInterface: owns the three tool contact interface values, runs the
+// driver's own per-cycle and on-stop functions on them, and counts what would be sent to the robot.
 struct FakeHardwareInterface
 {
+  double command = 0.0;
   double state = 0.0;
+  double result = ur_robot_driver::TOOL_CONTACT_EXECUTING;
   int starts = 0;
   int ends = 0;
   bool start_succeeds = true;
@@ -47,31 +49,25 @@ struct FakeHardwareInterface
 
   void write(const double commanded_state)
   {
-    switch (toolContactRequest(commanded_state, state)) {
-      case ToolContactRequest::START:
-        ++starts;
-        state = start_succeeds ? ur_robot_driver::TOOL_CONTACT_EXECUTING : ur_robot_driver::TOOL_CONTACT_FAILURE_BEGIN;
-        break;
-      case ToolContactRequest::END:
-        ++ends;
-        state = end_succeeds ? ur_robot_driver::TOOL_CONTACT_SUCCESS_END : ur_robot_driver::TOOL_CONTACT_FAILURE_END;
-        break;
-      case ToolContactRequest::NONE:
-        if (commanded_state != ur_robot_driver::TOOL_CONTACT_WAITING_BEGIN &&
-            commanded_state != ur_robot_driver::TOOL_CONTACT_WAITING_END) {
-          state = commanded_state;
-        }
-        break;
-    }
+    command = commanded_state;
+    ur_robot_driver::processToolContactCommand(
+        command, state, result,
+        [this]() {
+          ++starts;
+          return start_succeeds;
+        },
+        [this]() {
+          ++ends;
+          return end_succeeds;
+        });
   }
 
-  // The controller is deactivated: tool contact is ended on the robot, write() no longer looks at
-  // the tool contact command, and both the state and the leftover command are reset to standby.
-  // Returns the command a write() cycle sees until the controller writes one again.
+  // The controller is deactivated. Returns the command a write() cycle sees until the controller
+  // writes one again.
   double stopController()
   {
-    state = ur_robot_driver::TOOL_CONTACT_STANDBY;
-    return ur_robot_driver::TOOL_CONTACT_STANDBY;
+    ur_robot_driver::resetToolContactOnStop(command, state, result);
+    return command;
   }
 
   void writeCycles(const double commanded_state, const int cycles)
@@ -95,6 +91,19 @@ TEST(ToolContactRequestTest, StartIsSentOnceWhileTheCommandIsHeld)
   EXPECT_EQ(hw.starts, 1);
   EXPECT_EQ(hw.ends, 0);
   EXPECT_EQ(hw.state, ur_robot_driver::TOOL_CONTACT_EXECUTING);
+}
+
+// The robot reports its result once, from another thread, while the command is still held. It has to
+// survive every following cycle until the controller has read it.
+TEST(ToolContactRequestTest, ResultIsNotOverwrittenWhileTheCommandIsHeld)
+{
+  constexpr double RESULT_SUCCESS = 0.0;
+  FakeHardwareInterface hw;
+  hw.writeCycles(ur_robot_driver::TOOL_CONTACT_WAITING_BEGIN, CYCLES);
+  EXPECT_EQ(hw.result, ur_robot_driver::TOOL_CONTACT_EXECUTING);
+  hw.result = RESULT_SUCCESS;
+  hw.writeCycles(ur_robot_driver::TOOL_CONTACT_WAITING_BEGIN, CYCLES);
+  EXPECT_EQ(hw.result, RESULT_SUCCESS);
 }
 
 // After a detected contact the controller holds the command at WAITING_END until the next goal.

@@ -75,6 +75,64 @@ inline ToolContactRequest toolContactRequest(const double commanded_state, const
   return ToolContactRequest::NONE;
 }
 
+/*!
+ * \brief One write() cycle of the tool contact handshake: sends what toolContactRequest() asks for
+ * and updates the state and result interfaces accordingly.
+ *
+ * The result is set to "executing" only together with a start request that was sent. In every other
+ * cycle it is left alone, so that a result reported by the robot stays in place until the controller
+ * has read it.
+ *
+ * \param commanded_state Value of the tool contact command interface
+ * \param state Value of the tool contact state interface, updated
+ * \param result Value of the tool contact result interface, updated
+ * \param start_tool_contact Sends the start request to the robot, returns whether it was sent
+ * \param end_tool_contact Sends the end request to the robot, returns whether it was sent
+ */
+template <typename StartToolContact, typename EndToolContact>
+void processToolContactCommand(const double commanded_state, double& state, double& result,
+                               StartToolContact&& start_tool_contact, EndToolContact&& end_tool_contact)
+{
+  switch (toolContactRequest(commanded_state, state)) {
+    case ToolContactRequest::START:
+      if (start_tool_contact()) {
+        state = TOOL_CONTACT_EXECUTING;
+        result = TOOL_CONTACT_EXECUTING;
+      } else {
+        state = TOOL_CONTACT_FAILURE_BEGIN;
+      }
+      break;
+    case ToolContactRequest::END:
+      state = end_tool_contact() ? TOOL_CONTACT_SUCCESS_END : TOOL_CONTACT_FAILURE_END;
+      break;
+    case ToolContactRequest::NONE:
+      if (commanded_state != TOOL_CONTACT_WAITING_BEGIN && commanded_state != TOOL_CONTACT_WAITING_END) {
+        state = commanded_state;
+      }
+      break;
+  }
+}
+
+/*!
+ * \brief Resets the tool contact interfaces when the tool contact controller is stopped.
+ *
+ * processToolContactCommand() no longer runs for a stopped controller, so it cannot bring the state
+ * back from "executing"; left there, the first request after the next activation would be taken for
+ * one that has already been sent. The controller also leaves its last command behind and only writes
+ * standby again in on_activate(), after the hardware interface has been told that the controller is
+ * running. A write() cycle in between must not act on that leftover command.
+ *
+ * \param commanded_state Value of the tool contact command interface, reset to standby
+ * \param state Value of the tool contact state interface, reset to standby
+ * \param result Value of the tool contact result interface, reset to "executing" (no result)
+ */
+inline void resetToolContactOnStop(double& commanded_state, double& state, double& result)
+{
+  commanded_state = TOOL_CONTACT_STANDBY;
+  state = TOOL_CONTACT_STANDBY;
+  result = TOOL_CONTACT_EXECUTING;
+}
+
 }  // namespace ur_robot_driver
 
 #endif  // UR_ROBOT_DRIVER__TOOL_CONTACT_REQUEST_HPP_
