@@ -73,7 +73,9 @@
           <param name="use_tool_communication">${use_tool_communication}</param>
           <param name="kinematics/hash">${kinematics_hash}</param>
           <param name="tool_voltage">${tool_voltage}</param>
-          <param name="tool_voltage_t2">${tool_voltage_t2}</param>
+          <xacro:if value="${tool_voltage_t2 != ''}">
+            <param name="tool_voltage_t2">${tool_voltage_t2}</param>
+          </xacro:if>
           <param name="tool_parity">${tool_parity}</param>
           <param name="tool_baud_rate">${tool_baud_rate}</param>
           <param name="tool_stop_bits">${tool_stop_bits}</param>
