@@ -286,37 +286,11 @@ if(BUILD_TESTING)
     ur_robot_driver_plugin
   )
 
-<<<<<<< HEAD
-=======
   ament_add_gmock(test_tool_contact_request
     test/test_tool_contact_request.cpp
   )
   target_include_directories(test_tool_contact_request PRIVATE include)
 
-  ament_add_gmock(test_hardware_interface_exports
-    test/test_hardware_interface_exports.cpp
-  )
-  target_link_libraries(test_hardware_interface_exports
-    ur_robot_driver_plugin
-    hardware_interface::hardware_interface
-  )
-  target_include_directories(test_hardware_interface_exports PRIVATE
-    include
-    ${motion_primitives_controllers_INCLUDE_DIRS}
-  )
-
-  ament_add_gmock(test_tool_voltage_t2_startup
-    test/test_tool_voltage_t2_startup.cpp
-  )
-  target_link_libraries(test_tool_voltage_t2_startup
-    ur_robot_driver_plugin
-  )
-  target_include_directories(test_tool_voltage_t2_startup PRIVATE
-    include
-    ${motion_primitives_controllers_INCLUDE_DIRS}
-  )
-
->>>>>>> b7bf7ef (Start and end tool contact only once per request (#2078))
   ament_add_gmock(test_robot_state_helper
     test/test_robot_state_helper.cpp
   )
