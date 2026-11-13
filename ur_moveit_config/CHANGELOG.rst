@@ -2,8 +2,8 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.17.0 (2026-11-13)
+-------------------
 * Add launch support for g-series robots (backport `#2052 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2052>`_) (`#2061 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2061>`_)
 * Contributors: mergify[bot]
 

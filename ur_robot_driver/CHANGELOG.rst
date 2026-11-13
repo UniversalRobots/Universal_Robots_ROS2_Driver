@@ -1,5 +1,5 @@
-Forthcoming
------------
+2.17.0 (2026-11-13)
+-------------------
 * Add g-Series 48v T2 tool connector support (backport `#2029 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2029>`_) (`#2090 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2090>`_)
 * [fix] Start and end tool contact only once per request (backport `#2078 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2078>`_) (`#2082 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2082>`_)
 * Add launch support for g-series robots (backport `#2052 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2052>`_) (`#2061 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2061>`_)
