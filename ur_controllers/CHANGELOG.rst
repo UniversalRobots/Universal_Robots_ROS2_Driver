@@ -2,6 +2,12 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add g-Series 48v T2 tool connector support (backport `#2029 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2029>`_) (`#2089 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2089>`_)
+* Add T1 connector I/Os (backport `#2048 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2048>`_) (`#2053 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2053>`_)
+* Contributors: mergify[bot]
+
 4.10.0 (2026-10-20)
 -------------------
 * [gravity_controller] Add missing include (`#2040 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2040>`_)
