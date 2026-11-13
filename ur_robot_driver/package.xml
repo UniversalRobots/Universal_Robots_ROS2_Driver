@@ -46,7 +46,7 @@
   <depend version_gte="2.17.0">ur_client_library</depend>
   <depend>ur_controllers</depend>
   <depend>ur_dashboard_msgs</depend>
-  <depend>ur_description</depend>
+  <depend version_gte="2.16.0">ur_description</depend>
   <depend version_gte="2.7.0">ur_msgs</depend>
 
   <exec_depend>effort_controllers</exec_depend>
