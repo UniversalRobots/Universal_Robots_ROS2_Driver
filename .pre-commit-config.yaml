@@ -141,5 +141,5 @@ repos:
     rev: v2.4.3
     hooks:
       - id: codespell
-        args: ['--write-changes', '-L bootup,assertIn']
+        args: ['--write-changes', '-L bootup,assertIn,DOUT']
         exclude: \.(svg|pyc|drawio|urpx)$
