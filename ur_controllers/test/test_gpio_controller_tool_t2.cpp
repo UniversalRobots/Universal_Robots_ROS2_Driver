@@ -349,8 +349,11 @@ protected:
     request->pin = pin;
     request->state = state;
     auto future = client_->async_send_request(request);
-    EXPECT_EQ(rclcpp::spin_until_future_complete(client_node_, future, std::chrono::seconds(5)),
-              rclcpp::FutureReturnCode::SUCCESS);
+    auto future_return = rclcpp::spin_until_future_complete(client_node_, future, std::chrono::seconds(5));
+    EXPECT_EQ(future_return, rclcpp::FutureReturnCode::SUCCESS);
+    if (future_return != rclcpp::FutureReturnCode::SUCCESS) {
+      return nullptr;
+    }
     return future.get();
   }
 
