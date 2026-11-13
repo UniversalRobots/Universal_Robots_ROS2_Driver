@@ -237,6 +237,10 @@ if(BUILD_TESTING)
   target_include_directories(test_tool_voltage_t2_startup PRIVATE
     include
   )
+  ament_add_gmock(test_tool_contact_request
+    test/test_tool_contact_request.cpp
+  )
+  target_include_directories(test_tool_contact_request PRIVATE include)
 
   ament_add_gmock(test_robot_state_helper
     test/test_robot_state_helper.cpp
