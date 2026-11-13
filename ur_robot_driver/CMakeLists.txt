@@ -286,6 +286,11 @@ if(BUILD_TESTING)
     ur_robot_driver_plugin
   )
 
+  ament_add_gmock(test_tool_contact_request
+    test/test_tool_contact_request.cpp
+  )
+  target_include_directories(test_tool_contact_request PRIVATE include)
+
   ament_add_gmock(test_hardware_interface_exports
     test/test_hardware_interface_exports.cpp
   )
