@@ -1,5 +1,5 @@
-Forthcoming
------------
+6.3.0 (2026-11-13)
+------------------
 * [fix] Start and end tool contact only once per request (backport `#2078 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2078>`_) (`#2085 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2085>`_)
 * [maint] Update goal time constraint for JTC to match upstream change (backport `#2065 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2065>`_) (`#2066 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2066>`_)
 * Add g-Series 48v T2 tool connector support (backport `#2049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2049>`_) (`#2075 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2075>`_)
