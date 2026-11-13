@@ -1,5 +1,5 @@
-Forthcoming
------------
+7.3.0 (2026-11-13)
+------------------
 * [fix] Start and end tool contact only once per request (`#2078 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2078>`_)
 * Add g-Series 48v T2 tool connector support (`#2049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2049>`_)
 * [docs] Update motion controller compatibility in documentation (`#2070 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2070>`_)
