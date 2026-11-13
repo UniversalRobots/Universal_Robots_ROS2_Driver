@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add note about moveit startup warnings (`#2077 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2077>`_)
+* Add launch support for g-series robots (`#2052 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2052>`_)
+* Contributors: Felix Exner
+
 7.2.0 (2026-10-20)
 ------------------
 * [ur_moveit_config] Update license tag (`#1993 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1993>`_)

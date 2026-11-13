@@ -1,3 +1,14 @@
+Forthcoming
+-----------
+* [fix] Start and end tool contact only once per request (`#2078 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2078>`_)
+* Add g-Series 48v T2 tool connector support (`#2049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2049>`_)
+* [docs] Update motion controller compatibility in documentation (`#2070 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2070>`_)
+* [maint] Update goal time constraint for JTC to match upstream change (`#2065 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2065>`_)
+* Add launch support for g-series robots (`#2052 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2052>`_)
+* Write DOUT 0-7 to CO8-CO15 on a CB7 (`#2047 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2047>`_)
+* Add T1 connector I/Os (`#2048 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2048>`_)
+* Contributors: Christian Rishøj, Felix Exner, Rune Søe-Knudsen
+
 7.2.0 (2026-10-20)
 ------------------
 * Migrate ur_robot_driver off deprecated Handle raw-pointer API (`#2033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2033>`_)
