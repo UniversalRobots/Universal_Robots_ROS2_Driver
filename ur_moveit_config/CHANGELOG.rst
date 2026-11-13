@@ -2,6 +2,12 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.11.0 (2026-11-13)
+-------------------
+* [docs] Add note about moveit startup warnings (backport `#2077 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2077>`_) (`#2080 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2080>`_)
+* Add launch support for g-series robots (backport `#2052 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2052>`_) (`#2063 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2063>`_)
+* Contributors: mergify[bot]
+
 4.10.0 (2026-10-20)
 -------------------
 * [ur_moveit_config] Update license tag (backport `#1993 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1993>`_) (`#1996 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/1996>`_)
