@@ -83,6 +83,11 @@ def launch_setup(context, *args, **kwargs):
     tool_stop_bits = LaunchConfiguration("tool_stop_bits")
     tool_rx_idle_chars = LaunchConfiguration("tool_rx_idle_chars")
     tool_tx_idle_chars = LaunchConfiguration("tool_tx_idle_chars")
+<<<<<<< HEAD
+=======
+    tool_voltage = LaunchConfiguration("tool_voltage")
+    tool_voltage_t2 = LaunchConfiguration("tool_voltage_t2")
+>>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
     tool_device_name = LaunchConfiguration("tool_device_name")
     tool_tcp_port = LaunchConfiguration("tool_tcp_port")
     tool_voltage = LaunchConfiguration("tool_voltage")
@@ -430,6 +435,27 @@ def launch_setup(context, *args, **kwargs):
         controller_spawner(controllers_inactive, active=False),
     ]
 
+<<<<<<< HEAD
+=======
+    rsp = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(description_launchfile),
+        launch_arguments={
+            "robot_ip": robot_ip,
+            "ur_type": ur_type,
+            "use_tool_communication": use_tool_communication,
+            "tool_parity": tool_parity,
+            "tool_baud_rate": tool_baud_rate,
+            "tool_stop_bits": tool_stop_bits,
+            "tool_rx_idle_chars": tool_rx_idle_chars,
+            "tool_tx_idle_chars": tool_tx_idle_chars,
+            "tool_voltage": tool_voltage,
+            "tool_voltage_t2": tool_voltage_t2,
+            "tool_device_name": tool_device_name,
+            "tool_tcp_port": tool_tcp_port,
+        }.items(),
+    )
+
+>>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
     nodes_to_start = [
         control_node,
         ur_control_node,
@@ -682,6 +708,15 @@ def generate_launch_description():
             "tool_voltage",
             default_value="0",  # 0 being a conservative value that won't destroy anything
             description="Tool voltage that will be setup.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_voltage_t2",
+            default_value="",
+            description="Startup voltage for connector T2 (0, 24 or 48). Empty leaves T2 unchanged. "
+            "Applied when the robot program starts, whether or not use_tool_communication is "
+            "true. Requires Tool Flange V2 on PolyScope X 10.15 or later.",
         )
     )
     declared_arguments.append(

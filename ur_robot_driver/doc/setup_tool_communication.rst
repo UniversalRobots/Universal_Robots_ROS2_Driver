@@ -74,3 +74,23 @@ The convenience script for ``socat`` call is `here <https://github.com/Universal
 .. code-block:: bash
 
    $ ros2 run ur_robot_driver tool_communication.py --ros-args -p robot_ip:=192.168.56.101 -p device_name:=/tmp/ttyUR
+
+Connector T2 (48 V)
+-------------------
+
+Tool Flange V2, on PolyScope X 10.15 and later, has a second power connector, T2, with 0, 24 and 48 V. Connector T0 is unchanged and still accepts only 0, 12 and 24 V.
+
+``tool_voltage_t2`` sets the T2 voltage when the robot program starts, whether or not ``use_tool_communication`` is true. A robot that does not report Tool Flange V2 refuses to start rather than ignoring the request.
+
+At runtime, call ``/io_and_status_controller/set_io`` with ``fun`` set to
+``FUN_SET_TOOL_VOLTAGE_T2`` and ``state`` set to 0, 24 or 48. This does not require tool
+communication. ``/io_and_status_controller/tool_data_t2`` publishes the measured
+``tool_output_voltage`` and ``tool_current`` only while the robot reports Tool Flange V2 or later.
+No message means the connector is not present.
+
+A custom robot description must declare these gpio interfaces as ``ur.ros2_control.xacro`` does,
+including ``tool_voltage_t2_cmd``, ``tool_flange_type``, ``tool_output_voltage_2``,
+``tool_output_current_2``, ``standard_digital_output_cmd_18``–``21``, ``digital_output_18``–``21``,
+``tool_t1_configurable_digital_input_*``, ``tool_t1_digital_input_*`` and ``tool_t1_connected``.
+The controller always claims them. If you write your own description you should include and use the
+macro declared in ``ur.ros2_control.xacro``.

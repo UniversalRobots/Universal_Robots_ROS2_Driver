@@ -36,6 +36,7 @@
 //----------------------------------------------------------------------
 
 #include <cmath>
+#include <limits>
 #include <string>
 
 #include <lifecycle_msgs/msg/state.hpp>
@@ -143,6 +144,8 @@ controller_interface::InterfaceConfiguration GPIOController::command_interface_c
   config.names.emplace_back(tf_prefix + "payload/inertia.iyz");
   config.names.emplace_back(tf_prefix + "payload/transition_time");
 
+  config.names.emplace_back(tf_prefix + "gpio/tool_voltage_t2_cmd");
+
   return config;
 }
 
@@ -228,6 +231,11 @@ controller_interface::InterfaceConfiguration ur_controllers::GPIOController::sta
   }
   config.names.emplace_back(tf_prefix + "gpio/tool_t1_connected");
 
+  // Connector T2 on tool flange V2
+  config.names.emplace_back(tf_prefix + "gpio/tool_flange_type");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_voltage_2");
+  config.names.emplace_back(tf_prefix + "gpio/tool_output_current_2");
+
   return config;
 }
 
@@ -236,7 +244,10 @@ controller_interface::return_type ur_controllers::GPIOController::update(const r
 {
   publishIO();
   publishToolData();
-  publishToolDataT1();
+  if (tool_flange_type_ >= 2) {
+    publishToolDataT1();
+    publishToolDataT2();
+  }
   publishRobotMode();
   publishSafetyMode();
   publishProgramRunning();
@@ -246,8 +257,6 @@ controller_interface::return_type ur_controllers::GPIOController::update(const r
 controller_interface::CallbackReturn
 ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*previous_state*/)
 {
-  const auto logger = get_node()->get_logger();
-
   if (!param_listener_) {
     RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during init");
     return controller_interface::CallbackReturn::ERROR;
@@ -272,6 +281,10 @@ ur_controllers::GPIOController::on_configure(const rclcpp_lifecycle::State& /*pr
 
     tool_data_t1_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT1Msg>>(
         get_node()->create_publisher<ur_msgs::msg::ToolDataT1Msg>("~/tool_data_t1", rclcpp::SystemDefaultsQoS()));
+
+    // Messages are published only while the robot reports a V2 (or later) flange.
+    tool_data_t2_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_msgs::msg::ToolDataT2Msg>>(
+        get_node()->create_publisher<ur_msgs::msg::ToolDataT2Msg>("~/tool_data_t2", rclcpp::SystemDefaultsQoS()));
 
     robot_mode_pub_ = std::make_shared<realtime_tools::RealtimePublisher<ur_dashboard_msgs::msg::RobotMode>>(
         get_node()->create_publisher<ur_dashboard_msgs::msg::RobotMode>("~/robot_mode", qos_latched));
@@ -353,10 +366,19 @@ void GPIOController::publishToolData()
       static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_ANALOG_IO_TYPES + 1].get_value());
   tool_data_msg_.analog_input2 = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS].get_value());
   tool_data_msg_.analog_input3 =
+<<<<<<< HEAD
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS + 1].get_value());
   tool_data_msg_.tool_output_voltage =
       static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_value());
   tool_data_msg_.tool_current = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_value());
+=======
+      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS + 1].get_optional().value_or(0.0));
+  const auto tool_output_voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_optional().value_or(0.0);
+  // tool_output_voltage is uint8. A NaN reading must not be cast.
+  tool_data_msg_.tool_output_voltage = std::isnan(tool_output_voltage) ? 0 : static_cast<uint8_t>(tool_output_voltage);
+  tool_data_msg_.tool_current =
+      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_optional().value_or(0.0));
+>>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
   tool_data_msg_.tool_temperature =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_value());
   tool_data_pub_->tryPublish(tool_data_msg_);
@@ -382,6 +404,17 @@ void GPIOController::publishToolDataT1()
   tool_data_t1_msg_.smart_panel_connected =
       static_cast<bool>(state_interfaces_[StateInterfaces::TOOL_T1_CONNECTED].get_value());
   tool_data_t1_pub_->tryPublish(tool_data_t1_msg_);
+}
+
+void GPIOController::publishToolDataT2()
+{
+  const double voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE_2].get_optional().value_or(
+      std::numeric_limits<double>::quiet_NaN());
+  const double current = state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT_2].get_optional().value_or(
+      std::numeric_limits<double>::quiet_NaN());
+  tool_data_t2_msg_.tool_output_voltage = static_cast<float>(voltage);
+  tool_data_t2_msg_.tool_current = static_cast<float>(current);
+  tool_data_t2_pub_->try_publish(tool_data_t2_msg_);
 }
 
 void GPIOController::publishRobotMode()
@@ -412,6 +445,8 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
+  const double tool_flange_type = state_interfaces_[StateInterfaces::TOOL_FLANGE_TYPE].get_optional().value_or(0.0);
+  tool_flange_type_ = std::isfinite(tool_flange_type) ? static_cast<uint32_t>(tool_flange_type) : 0u;
 
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
@@ -432,6 +467,7 @@ ur_controllers::GPIOController::on_cleanup(const rclcpp_lifecycle::State& /*prev
     io_pub_.reset();
     tool_data_pub_.reset();
     tool_data_t1_pub_.reset();
+    tool_data_t2_pub_.reset();
     robot_mode_pub_.reset();
     safety_mode_pub_.reset();
     program_state_pub_.reset();
@@ -456,14 +492,40 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
 
   // Pins 0-17 are the existing standard, configurable and T0 outputs. Pins 18-21 are
   // T1_DO0-T1_DO3, which the hardware sends as tool digital output pins 2-5.
-  if (req->fun == req->FUN_SET_DIGITAL_OUT && req->pin >= 0 && req->pin <= req->PIN_TOOL_T1_DOUT3) {
+  if (req->fun == req->FUN_SET_DIGITAL_OUT) {
+    if (req->pin >= 0 && req->pin <= req->PIN_CONF_OUT7) {
+      RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
+    } else if (req->pin >= req->PIN_TOOL_DOUT0 && req->pin <= req->PIN_TOOL_DOUT1) {
+      RCLCPP_INFO(get_node()->get_logger(), "Setting tool digital output '%d' to state: '%1.0f'.",
+                  req->pin - req->PIN_TOOL_DOUT0, req->state);
+    } else if (req->pin >= req->PIN_TOOL_T1_DOUT0 && req->pin <= req->PIN_TOOL_T1_DOUT3) {
+      if (tool_flange_type_ < 2) {
+        RCLCPP_ERROR(get_node()->get_logger(), "Connector T1 is not present on this robot. It requires PolyScope X "
+                                               "10.15 or later and Tool Flange V2.");
+        resp->success = false;
+        return false;
+      }
+      RCLCPP_INFO(get_node()->get_logger(), "Setting tool T1 digital output '%d' to state: '%1.0f'.",
+                  req->pin - req->PIN_TOOL_T1_DOUT0, req->state);
+    } else {
+      RCLCPP_ERROR(get_node()->get_logger(), "Invalid digital output pin '%d'.", req->pin);
+      resp->success = false;
+      return false;
+    }
+
     // io async success
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
 
+<<<<<<< HEAD
     RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
 
     if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
+=======
+    if (!waitForAsyncCommand([&]() {
+          return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+        })) {
+>>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
       RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
                                             "mocked interface)");
     }
@@ -496,6 +558,40 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     }
 
     resp->success = static_cast<bool>(command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value());
+    return resp->success;
+  } else if (req->fun == req->FUN_SET_TOOL_VOLTAGE_T2) {
+    if (tool_flange_type_ < 2) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 is not present on this robot. It requires PolyScope X 10.15 "
+                                             "or later and Tool Flange V2.");
+      resp->success = false;
+      return false;
+    }
+    // Exactly 0, 24 or 48. A cast of 48.5 would otherwise become an accepted 48 V command, and NaN
+    // would leave the async flag waiting, which the service reports as success.
+    if (req->state != req->STATE_TOOL_VOLTAGE_0V && req->state != req->STATE_TOOL_VOLTAGE_24V &&
+        req->state != req->STATE_TOOL_VOLTAGE_48V) {
+      RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 accepts 0, 24 or 48 V. Requested '%f'.", req->state);
+      resp->success = false;
+      return false;
+    }
+    std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+    std::ignore =
+        command_interfaces_[CommandInterfaces::TOOL_VOLTAGE_T2_CMD].set_value(static_cast<double>(req->state));
+
+    RCLCPP_INFO(get_node()->get_logger(), "Setting connector T2 voltage to: '%1.0f'.", req->state);
+
+    if (!waitForAsyncCommand([&]() {
+          return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
+        })) {
+      // ASYNC_WAITING is 2.0, so treating the pending value as a bool would report success, including
+      // for an OFF request that the hardware never acknowledged.
+      RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 voltage command was not acknowledged.");
+      resp->success = false;
+      return false;
+    }
+
+    const auto acknowledged = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional();
+    resp->success = acknowledged.has_value() && *acknowledged == 1.0;
     return resp->success;
   } else {
     resp->success = false;
