@@ -1,3 +1,14 @@
+Forthcoming
+-----------
+* [fix] Start and end tool contact only once per request (backport `#2078 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2078>`_) (`#2085 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2085>`_)
+* [maint] Update goal time constraint for JTC to match upstream change (backport `#2065 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2065>`_) (`#2066 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2066>`_)
+* Add g-Series 48v T2 tool connector support (backport `#2049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2049>`_) (`#2075 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2075>`_)
+* [docs] Update motion controller compatibility in documentation (backport `#2070 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2070>`_) (`#2074 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2074>`_)
+* Add launch support for g-series robots (backport `#2052 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2052>`_) (`#2064 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2064>`_)
+* Write DOUT 0-7 to CO8-CO15 on a CB7 (backport `#2047 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2047>`_) (`#2059 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2059>`_)
+* Add T1 connector I/Os (backport `#2048 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2048>`_) (`#2054 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2054>`_)
+* Contributors: mergify[bot]
+
 6.2.0 (2026-10-20)
 ------------------
 * Migrate ur_robot_driver off deprecated Handle raw-pointer API (backport `#2033 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2033>`_) (`#2035 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2035>`_)
