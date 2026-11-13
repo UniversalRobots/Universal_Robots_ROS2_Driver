@@ -1,3 +1,12 @@
+Forthcoming
+-----------
+* Add g-Series 48v T2 tool connector support (`#2029 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2029>`_)
+* [fix] Start and end tool contact only once per request (backport `#2078 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2078>`_) (`#2083 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2083>`_)
+* Add launch support for g-series robots (backport `#2052 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2052>`_) (`#2062 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2062>`_)
+* Write DOUT 0-7 to CO8-CO15 on a CB7 (backport `#2047 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2047>`_) (`#2057 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2057>`_)
+* Add T1 connector I/Os (backport `#2048 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2048>`_) (`#2060 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2060>`_)
+* Contributors: Rune Søe-Knudsen, mergify[bot]
+
 3.10.0 (2026-10-20)
 -------------------
 * [move_until_node] Do not force an illegal terminal transition on an unrequested CANCELED child result (backport `#2003 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2003>`_) (`#2015 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2015>`_)

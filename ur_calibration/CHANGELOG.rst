@@ -2,6 +2,9 @@
 Changelog for package ur_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.10.0 (2026-10-20)
 -------------------
 * [ur_calibration] Write calibration rpy in the URDF convention (backport `#2030 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2030>`_) (`#2037 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2037>`_)
