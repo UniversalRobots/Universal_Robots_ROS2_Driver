@@ -40,6 +40,7 @@
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />
   <xacro:arg name="tool_voltage" default="0" />
+  <xacro:arg name="tool_voltage_t2" default="" />
   <xacro:arg name="tool_parity" default="0" />
   <xacro:arg name="tool_baud_rate" default="115200" />
   <xacro:arg name="tool_stop_bits" default="1" />
@@ -91,6 +92,7 @@
     initial_positions="${xacro.load_yaml(initial_positions_file)}"
     use_tool_communication="$(arg use_tool_communication)"
     tool_voltage="$(arg tool_voltage)"
+    tool_voltage_t2="$(arg tool_voltage_t2)"
     tool_parity="$(arg tool_parity)"
     tool_baud_rate="$(arg tool_baud_rate)"
     tool_stop_bits="$(arg tool_stop_bits)"
