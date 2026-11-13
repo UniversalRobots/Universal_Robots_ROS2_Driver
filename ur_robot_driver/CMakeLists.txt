@@ -286,6 +286,16 @@ if(BUILD_TESTING)
     ur_robot_driver_plugin
   )
 
+  ament_add_gmock(test_tool_voltage_t2_startup
+    test/test_tool_voltage_t2_startup.cpp
+  )
+  target_link_libraries(test_tool_voltage_t2_startup
+    ur_robot_driver_plugin
+    motion_primitives_controllers::motion_primitives_controllers
+  )
+  target_include_directories(test_tool_voltage_t2_startup PRIVATE
+    include
+  )
   ament_add_gmock(test_tool_contact_request
     test/test_tool_contact_request.cpp
   )
