@@ -50,6 +50,7 @@
 #include <rclcpp/logging.hpp>
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "ur_robot_driver/hardware_interface.hpp"
+#include "ur_robot_driver/tool_contact_request.hpp"
 #include "ur_robot_driver/urcl_log_handler.hpp"
 
 namespace rtde = urcl::rtde_interface;
@@ -1235,33 +1236,12 @@ void URPositionHardwareInterface::checkAsyncIO()
 
 void URPositionHardwareInterface::check_tool_contact_controller()
 {
-  static double cmd_state;
-  cmd_state = tool_contact_set_state_;
-
   if (ur_driver_ != nullptr) {
-    if (cmd_state == 2.0) {
-      bool success = ur_driver_->startToolContact();
-      if (success) {
-        // TOOL_CONTACT_EXECUTING
-        tool_contact_state_ = 3.0;
-        tool_contact_result_ = 3.0;
-      } else {
-        // TOOL_CONTACT_FAILURE_BEGIN
-        tool_contact_state_ = 4.0;
-      }
-
-    } else if (cmd_state == 5.0) {
-      bool success = ur_driver_->endToolContact();
-      if (success) {
-        // TOOL_CONTACT_SUCCESS_END
-        tool_contact_state_ = 6.0;
-      } else {
-        // TOOL_CONTACT_FAILURE_END
-        tool_contact_state_ = 7.0;
-      }
-    } else {
-      tool_contact_state_ = cmd_state;
-    }
+    // This runs in every write() cycle, while the controller keeps its command unchanged for as long
+    // as tool contact is executing. processToolContactCommand() sends each request only once.
+    processToolContactCommand(
+        tool_contact_set_state_, tool_contact_state_, tool_contact_result_,
+        [this]() { return ur_driver_->startToolContact(); }, [this]() { return ur_driver_->endToolContact(); });
   }
 }
 
@@ -1534,7 +1514,7 @@ hardware_interface::return_type URPositionHardwareInterface::perform_command_mod
   if (stop_modes_.size() != 0 && std::find(stop_modes_[0].begin(), stop_modes_[0].end(),
                                            StoppingInterface::STOP_TOOL_CONTACT) != stop_modes_[0].end()) {
     tool_contact_controller_running_ = false;
-    tool_contact_result_ = 3.0;
+    resetToolContactOnStop(tool_contact_set_state_, tool_contact_state_, tool_contact_result_);
     ur_driver_->endToolContact();
   }
 

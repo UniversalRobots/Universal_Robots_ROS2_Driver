@@ -263,6 +263,11 @@ if(BUILD_TESTING)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
 
+  ament_add_gmock(test_tool_contact_request
+    test/test_tool_contact_request.cpp
+  )
+  target_include_directories(test_tool_contact_request PRIVATE include)
+
   ament_add_gmock(test_robot_state_helper
     test/test_robot_state_helper.cpp
   )
