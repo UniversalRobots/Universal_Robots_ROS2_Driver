@@ -129,7 +129,10 @@ Published topics
 * ``~/safety_mode [ur_dashboard_msgs/msg/SafetyMode]``: The robot's current safety mode (e.g.
   ``PROTECTIVE_STOP``, ``ROBOT_EMERGENCY_STOP``, ``NORMAL``)
 * ``~/tool_data [ur_msgs/msg/ToolDataMsg]``: Information about the robot's tool configuration
-* ``~/tool_data_t1 [ur_msgs/msg/ToolDataT1Msg]``: Smart Panel (T1) inputs and outputs on a V2 tool flange
+* ``~/tool_data_t1 [ur_msgs/msg/ToolDataT1Msg]``: Smart Panel (T1) inputs and outputs on a V2 tool
+  flange. A message is published only while the robot reports Tool Flange V2 or later.
+* ``~/tool_data_t2 [ur_msgs/msg/ToolDataT2Msg]``: Measured voltage and current of connector T2.
+  A message is published only while the robot reports Tool Flange V2 or later.
 
 Smart Panel (T1)
 """"""""""""""""
