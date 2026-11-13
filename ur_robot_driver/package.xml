@@ -53,13 +53,9 @@
   <depend>ur_controllers</depend>
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_description</depend>
-<<<<<<< HEAD
-  <depend>ur_msgs</depend>
+  <depend version_gte="2.7.0">ur_msgs</depend>
   <depend>motion_primitives_controllers</depend>
   <depend>control_msgs</depend>
-=======
-  <depend version_gte="2.7.0">ur_msgs</depend>
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
 
   <exec_depend>effort_controllers</exec_depend>
   <exec_depend>force_torque_sensor_broadcaster</exec_depend>

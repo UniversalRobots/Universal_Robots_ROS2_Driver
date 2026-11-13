@@ -742,67 +742,6 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
   // own hash matching your actual robot.
   const std::string calibration_checksum = info_.hardware_parameters["kinematics/hash"];
 
-<<<<<<< HEAD
-  std::unique_ptr<urcl::ToolCommSetup> tool_comm_setup;
-  if (use_tool_communication) {
-    tool_comm_setup = std::make_unique<urcl::ToolCommSetup>();
-
-    using ToolVoltageT = std::underlying_type<urcl::ToolVoltage>::type;
-
-    // Tool voltage that will be set as soon as the UR-Program on the robot is started. Note: This
-    // parameter is only evaluated, when the parameter "use_tool_communication" is set to TRUE.
-    // Then, this parameter is required.}
-    const ToolVoltageT tool_voltage = std::stoi(info_.hardware_parameters["tool_voltage"]);
-    tool_comm_setup->setToolVoltage(static_cast<urcl::ToolVoltage>(tool_voltage));
-
-    using ParityT = std::underlying_type<urcl::Parity>::type;
-
-    // Parity used for tool communication. Will be set as soon as the UR-Program on the robot is
-    // started. Can be 0 (None), 1 (odd) and 2 (even).
-    //
-    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
-    // is set to TRUE.  Then, this parameter is required.
-    const ParityT parity = std::stoi(info_.hardware_parameters["tool_parity"]);
-    tool_comm_setup->setParity(static_cast<urcl::Parity>(parity));
-
-    // Baud rate used for tool communication. Will be set as soon as the UR-Program on the robot is
-    // started. See UR documentation for valid baud rates.
-    //
-    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
-    // is set to TRUE.  Then, this parameter is required.
-    const int baud_rate = std::stoi(info_.hardware_parameters["tool_baud_rate"]);
-    tool_comm_setup->setBaudRate(static_cast<uint32_t>(baud_rate));
-
-    // Number of stop bits used for tool communication. Will be set as soon as the UR-Program on the robot is
-    // started. Can be 1 or 2.
-    //
-    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
-    // is set to TRUE.  Then, this parameter is required.
-    const int stop_bits = std::stoi(info_.hardware_parameters["tool_stop_bits"]);
-    tool_comm_setup->setStopBits(static_cast<uint32_t>(stop_bits));
-
-    // Number of idle chars for the RX unit used for tool communication. Will be set as soon as the UR-Program on the
-    // robot is started. Valid values: min=1.0, max=40.0
-    //
-    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
-    // is set to TRUE.  Then, this parameter is required.
-    const int rx_idle_chars = std::stoi(info_.hardware_parameters["tool_rx_idle_chars"]);
-    tool_comm_setup->setRxIdleChars(rx_idle_chars);
-
-    // Number of idle chars for the TX unit used for tool communication. Will be set as soon as the UR-Program on the
-    // robot is started. Valid values: min=0.0, max=40.0
-    //
-    // Note: This parameter is only evaluated, when the parameter "use_tool_communication"
-    // is set to TRUE.  Then, this parameter is required.
-    const int tx_idle_chars = std::stoi(info_.hardware_parameters["tool_tx_idle_chars"]);
-    tool_comm_setup->setTxIdleChars(tx_idle_chars);
-  }
-
-=======
-  // Obtain the tf_prefix which is needed for the logging handler so that log messages from different arms are
-  // distiguishable in the log
-  const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
   RCLCPP_INFO(rclcpp::get_logger("URPositionHardwareInterface"), "Initializing driver...");
   std::string ur_type = info_.hardware_parameters["ur_type"];
   auto expected_type = robotTypeFromString(ur_type);
@@ -891,18 +830,12 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     driver_config.tool_comm_setup = std::move(tool_comm_setup);
     driver_config.handle_program_state =
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
-<<<<<<< HEAD
     ur_driver_ = std::make_shared<urcl::UrDriver>(driver_config);
-    if (ur_driver_->getControlFrequency() != info_.rw_rate) {
-      ur_driver_->resetRTDEClient(output_recipe, input_recipe, info_.rw_rate);
-=======
-    ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
     configureToolConnectorT2();
     if (startup_tool_voltage_t2_.has_value() && !tool_t2_supported_) {
       throw std::runtime_error("tool_voltage_t2 is set, but connector T2 is not available on this robot. It requires "
                                "PolyScope X 10.15 or "
                                "later and Tool Flange V2.");
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
     }
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {

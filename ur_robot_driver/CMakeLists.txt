@@ -291,6 +291,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_tool_voltage_t2_startup
     ur_robot_driver_plugin
+    motion_primitives_controllers::motion_primitives_controllers
   )
   target_include_directories(test_tool_voltage_t2_startup PRIVATE
     include
