@@ -36,11 +36,8 @@ Feature list and roadmap
    * - get and set IO states
      - yes (`io_and_status_controller <https://docs.ros.org/en/humble/p/ur_controllers/doc/index.html#ur-controllers-gpiocontroller>`_)
    * - use `tool communication forwarder <https://github.com/UniversalRobots/Universal_Robots_ToolComm_Forwarder_URCap>`_ on e-series
-<<<<<<< HEAD
-=======
-     - yes
+     - yes (:ref:`setup-tool-communication`)
    * - connector T2 tool voltage (0/24/48 V, Tool Flange V2, PolyScope X 10.15+)
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
      - yes (:ref:`setup-tool-communication`)
    * - use the driver without a teach pendant necessary
      - yes

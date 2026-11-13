@@ -366,19 +366,11 @@ void GPIOController::publishToolData()
       static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_ANALOG_IO_TYPES + 1].get_value());
   tool_data_msg_.analog_input2 = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS].get_value());
   tool_data_msg_.analog_input3 =
-<<<<<<< HEAD
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS + 1].get_value());
-  tool_data_msg_.tool_output_voltage =
-      static_cast<uint8_t>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_value());
-  tool_data_msg_.tool_current = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_value());
-=======
-      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_ANALOG_INPUTS + 1].get_optional().value_or(0.0));
-  const auto tool_output_voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_optional().value_or(0.0);
+  const auto tool_output_voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE].get_value();
   // tool_output_voltage is uint8. A NaN reading must not be cast.
   tool_data_msg_.tool_output_voltage = std::isnan(tool_output_voltage) ? 0 : static_cast<uint8_t>(tool_output_voltage);
-  tool_data_msg_.tool_current =
-      static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_optional().value_or(0.0));
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
+  tool_data_msg_.tool_current = static_cast<float>(state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT].get_value());
   tool_data_msg_.tool_temperature =
       static_cast<float>(state_interfaces_[StateInterfaces::TOOL_TEMPERATURE].get_value());
   tool_data_pub_->tryPublish(tool_data_msg_);
@@ -408,13 +400,11 @@ void GPIOController::publishToolDataT1()
 
 void GPIOController::publishToolDataT2()
 {
-  const double voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE_2].get_optional().value_or(
-      std::numeric_limits<double>::quiet_NaN());
-  const double current = state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT_2].get_optional().value_or(
-      std::numeric_limits<double>::quiet_NaN());
+  const double voltage = state_interfaces_[StateInterfaces::TOOL_OUTPUT_VOLTAGE_2].get_value();
+  const double current = state_interfaces_[StateInterfaces::TOOL_OUTPUT_CURRENT_2].get_value();
   tool_data_t2_msg_.tool_output_voltage = static_cast<float>(voltage);
   tool_data_t2_msg_.tool_current = static_cast<float>(current);
-  tool_data_t2_pub_->try_publish(tool_data_t2_msg_);
+  tool_data_t2_pub_->tryPublish(tool_data_t2_msg_);
 }
 
 void GPIOController::publishRobotMode()
@@ -445,7 +435,7 @@ ur_controllers::GPIOController::on_activate(const rclcpp_lifecycle::State& /*pre
     RCLCPP_INFO(get_node()->get_logger(), "Waiting for system interface to initialize...");
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
-  const double tool_flange_type = state_interfaces_[StateInterfaces::TOOL_FLANGE_TYPE].get_optional().value_or(0.0);
+  const double tool_flange_type = state_interfaces_[StateInterfaces::TOOL_FLANGE_TYPE].get_value();
   tool_flange_type_ = std::isfinite(tool_flange_type) ? static_cast<uint32_t>(tool_flange_type) : 0u;
 
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
@@ -517,15 +507,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
     command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
     command_interfaces_[req->pin].set_value(static_cast<double>(req->state));
 
-<<<<<<< HEAD
-    RCLCPP_INFO(get_node()->get_logger(), "Setting digital output '%d' to state: '%1.0f'.", req->pin, req->state);
-
     if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
-=======
-    if (!waitForAsyncCommand([&]() {
-          return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
-        })) {
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
       RCLCPP_WARN(get_node()->get_logger(), "Could not verify that io was set. (This might happen when using the "
                                             "mocked interface)");
     }
@@ -574,15 +556,12 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
       resp->success = false;
       return false;
     }
-    std::ignore = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
-    std::ignore =
-        command_interfaces_[CommandInterfaces::TOOL_VOLTAGE_T2_CMD].set_value(static_cast<double>(req->state));
+    command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].set_value(ASYNC_WAITING);
+    command_interfaces_[CommandInterfaces::TOOL_VOLTAGE_T2_CMD].set_value(static_cast<double>(req->state));
 
     RCLCPP_INFO(get_node()->get_logger(), "Setting connector T2 voltage to: '%1.0f'.", req->state);
 
-    if (!waitForAsyncCommand([&]() {
-          return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional().value_or(ASYNC_WAITING);
-        })) {
+    if (!waitForAsyncCommand([&]() { return command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value(); })) {
       // ASYNC_WAITING is 2.0, so treating the pending value as a bool would report success, including
       // for an OFF request that the hardware never acknowledged.
       RCLCPP_ERROR(get_node()->get_logger(), "Connector T2 voltage command was not acknowledged.");
@@ -590,8 +569,7 @@ bool GPIOController::setIO(ur_msgs::srv::SetIO::Request::SharedPtr req, ur_msgs:
       return false;
     }
 
-    const auto acknowledged = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_optional();
-    resp->success = acknowledged.has_value() && *acknowledged == 1.0;
+    resp->success = command_interfaces_[CommandInterfaces::IO_ASYNC_SUCCESS].get_value() == 1.0;
     return resp->success;
   } else {
     resp->success = false;

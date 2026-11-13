@@ -219,26 +219,16 @@ if(BUILD_TESTING)
     controller_manager::controller_manager
     ros2_control_test_assets::ros2_control_test_assets
   )
-<<<<<<< HEAD
-=======
-  ament_add_gmock(test_load_twist_controller
-    test/test_load_twist_controller.cpp
-  )
   ament_add_gmock(test_gpio_controller_tool_t2
     test/test_gpio_controller_tool_t2.cpp
   )
   target_link_libraries(test_gpio_controller_tool_t2
     ${PROJECT_NAME}
-    ${ur_msgs_TARGETS}
-    controller_manager::controller_manager
-    hardware_interface::hardware_interface
   )
-  target_link_libraries(test_load_twist_controller
-    ${PROJECT_NAME}
-    controller_manager::controller_manager
-    ros2_control_test_assets::ros2_control_test_assets
+  ament_target_dependencies(test_gpio_controller_tool_t2
+    hardware_interface
+    ur_msgs
   )
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
   ament_add_gmock(test_tool_contact_controller
     test/test_tool_contact_controller.cpp
   )

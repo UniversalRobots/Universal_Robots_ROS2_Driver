@@ -83,14 +83,10 @@ def launch_setup(context, *args, **kwargs):
     tool_stop_bits = LaunchConfiguration("tool_stop_bits")
     tool_rx_idle_chars = LaunchConfiguration("tool_rx_idle_chars")
     tool_tx_idle_chars = LaunchConfiguration("tool_tx_idle_chars")
-<<<<<<< HEAD
-=======
-    tool_voltage = LaunchConfiguration("tool_voltage")
-    tool_voltage_t2 = LaunchConfiguration("tool_voltage_t2")
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
     tool_device_name = LaunchConfiguration("tool_device_name")
     tool_tcp_port = LaunchConfiguration("tool_tcp_port")
     tool_voltage = LaunchConfiguration("tool_voltage")
+    tool_voltage_t2 = LaunchConfiguration("tool_voltage_t2")
     reverse_ip = LaunchConfiguration("reverse_ip")
     script_command_port = LaunchConfiguration("script_command_port")
     reverse_port = LaunchConfiguration("reverse_port")
@@ -198,6 +194,9 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "tool_voltage:=",
             tool_voltage,
+            " ",
+            "tool_voltage_t2:=",
+            tool_voltage_t2,
             " ",
             "reverse_ip:=",
             reverse_ip,
@@ -435,27 +434,6 @@ def launch_setup(context, *args, **kwargs):
         controller_spawner(controllers_inactive, active=False),
     ]
 
-<<<<<<< HEAD
-=======
-    rsp = IncludeLaunchDescription(
-        AnyLaunchDescriptionSource(description_launchfile),
-        launch_arguments={
-            "robot_ip": robot_ip,
-            "ur_type": ur_type,
-            "use_tool_communication": use_tool_communication,
-            "tool_parity": tool_parity,
-            "tool_baud_rate": tool_baud_rate,
-            "tool_stop_bits": tool_stop_bits,
-            "tool_rx_idle_chars": tool_rx_idle_chars,
-            "tool_tx_idle_chars": tool_tx_idle_chars,
-            "tool_voltage": tool_voltage,
-            "tool_voltage_t2": tool_voltage_t2,
-            "tool_device_name": tool_device_name,
-            "tool_tcp_port": tool_tcp_port,
-        }.items(),
-    )
-
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
     nodes_to_start = [
         control_node,
         ur_control_node,

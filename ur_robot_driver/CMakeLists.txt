@@ -263,15 +263,6 @@ if(BUILD_TESTING)
   find_package(ur_msgs REQUIRED)
   find_package(launch_testing_ament_cmake)
 
-<<<<<<< HEAD
-=======
-  ament_add_gmock(test_mode_compatibility_symmetry
-    test/test_mode_compatibility_symmetry.cpp
-  )
-  target_link_libraries(test_mode_compatibility_symmetry
-    ur_robot_driver_plugin
-  )
-
   ament_add_gmock(test_tool_voltage_t2_startup
     test/test_tool_voltage_t2_startup.cpp
   )
@@ -281,7 +272,6 @@ if(BUILD_TESTING)
   target_include_directories(test_tool_voltage_t2_startup PRIVATE
     include
   )
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
   ament_add_gmock(test_tool_contact_request
     test/test_tool_contact_request.cpp
   )

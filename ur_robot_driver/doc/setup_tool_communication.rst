@@ -45,6 +45,7 @@ Following parameters can be set `ur.ros2_control.xacro <https://github.com/Unive
 
 
 * ``tool_voltage``
+* ``tool_voltage_t2``
 * ``tool_parity``
 * ``tool_baud_rate``
 * ``tool_stop_bits``
@@ -88,9 +89,7 @@ communication. ``/io_and_status_controller/tool_data_t2`` publishes the measured
 ``tool_output_voltage`` and ``tool_current`` only while the robot reports Tool Flange V2 or later.
 No message means the connector is not present.
 
-A custom robot description must declare these gpio interfaces as ``ur.ros2_control.xacro`` does,
-including ``tool_voltage_t2_cmd``, ``tool_flange_type``, ``tool_output_voltage_2``,
-``tool_output_current_2``, ``standard_digital_output_cmd_18``–``21``, ``digital_output_18``–``21``,
-``tool_t1_configurable_digital_input_*``, ``tool_t1_digital_input_*`` and ``tool_t1_connected``.
-The controller always claims them. If you write your own description you should include and use the
-macro declared in ``ur.ros2_control.xacro``.
+The hardware interface exports the T2 command and state interfaces. Pass ``tool_voltage_t2`` through
+``ur_control.launch.py`` so ``ur_description`` can put it into the ros2_control hardware parameters.
+A robot that does not report Tool Flange V2 refuses to start rather than ignoring a configured
+startup voltage.

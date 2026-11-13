@@ -781,15 +781,12 @@ URPositionHardwareInterface::on_configure(const rclcpp_lifecycle::State& previou
     driver_config.handle_program_state =
         std::bind(&URPositionHardwareInterface::handleRobotProgramState, this, std::placeholders::_1);
     ur_driver_ = std::make_unique<urcl::UrDriver>(driver_config);
-<<<<<<< HEAD
-=======
     configureToolConnectorT2();
     if (startup_tool_voltage_t2_.has_value() && !tool_t2_supported_) {
       throw std::runtime_error("tool_voltage_t2 is set, but connector T2 is not available on this robot. It requires "
                                "PolyScope X 10.15 or "
                                "later and Tool Flange V2.");
     }
->>>>>>> 4420602 (Add g-Series 48v T2 tool connector support (#2029))
     data_package_buffer_ = std::make_unique<rtde::DataPackage>(ur_driver_->getRTDEOutputRecipe());
   } catch (urcl::ToolCommNotAvailable& e) {
     RCLCPP_FATAL_STREAM(rclcpp::get_logger("URPositionHardwareInterface"), "See parameter use_tool_communication");
@@ -1156,21 +1153,17 @@ void URPositionHardwareInterface::configureToolConnectorT2()
     }
   }
 
-  // One reset covers both a control-frequency change and the extra T2 fields. ignore_unavailable is
-  // set only when we added fields, so a controller that rejects the T2 outputs drops those fields
-  // instead of failing startup.
-  const bool frequency_mismatch = ur_driver_->getControlFrequency() != info_.rw_rate;
-  if (frequency_mismatch || added_t2_field) {
-    ur_driver_->resetRTDEClient(output_recipe, ur_driver_->getRTDEInputRecipe(), info_.rw_rate, added_t2_field);
+  // Humble has no HardwareInfo::rw_rate, so only reset when T2 fields were added. ignore_unavailable
+  // is set so a controller that rejects the T2 outputs drops those fields instead of failing startup.
+  if (added_t2_field) {
+    ur_driver_->resetRTDEClient(output_recipe, ur_driver_->getRTDEInputRecipe(), 0.0, true);
     // The flange is UNKNOWN for a moment during the reset. Read it again and fail closed.
     tool_t2_supported_ = ur_driver_->getVersion() >= min_version && flange_is_v2();
     output_recipe = ur_driver_->getRTDEOutputRecipe();
-    if (added_t2_field) {
-      for (const auto& field : required_recipe) {
-        if (std::find(output_recipe.begin(), output_recipe.end(), field) == output_recipe.end()) {
-          throw std::runtime_error("RTDE output recipe lost required field '" + field +
-                                   "' while negotiating connector T2 telemetry.");
-        }
+    for (const auto& field : required_recipe) {
+      if (std::find(output_recipe.begin(), output_recipe.end(), field) == output_recipe.end()) {
+        throw std::runtime_error("RTDE output recipe lost required field '" + field +
+                                 "' while negotiating connector T2 telemetry.");
       }
     }
   }
