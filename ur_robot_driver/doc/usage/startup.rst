@@ -91,8 +91,9 @@ Set these arguments of ``ur.urdf.xacro``:
 * ``rw_rate`` (default: *0*) - Rate of the hardware component. *0* uses the rate of the
   ``controller_manager``.
 
-With ``self_paced`` and ``blocking_read`` set to ``true``, the robot's control loop paces the
-async thread. With ``use_mock_hardware`` set to ``true``, the mock hardware is also async.
+With ``self_paced``, the robot's control loop paces the async thread. The thread does not sleep, so
+``self_paced`` always uses the blocking read, also if ``blocking_read`` is ``false``. With
+``use_mock_hardware`` set to ``true``, the mock hardware is also async.
 
 .. _robot_startup_program:
 
