@@ -28,6 +28,9 @@
     non_blocking_read:=true
     robot_receive_timeout:=0.04
     rw_rate:=0
+    scheduling_policy:=''
+    thread_priority:=50
+    cpu_affinity:=''
     verify_robot_model:=true
     use_currents_as_efforts:=false
     ">
@@ -45,7 +48,20 @@
     <!-- convert any dashes in the name to underscores for ros2_control -->
     <xacro:property name="hw_name" value="${name.replace('-', '_')}"/>
 
-    <ros2_control name="${hw_name}" type="system" rw_rate="${rw_rate}">
+    <!-- The hardware component is async if a scheduling_policy is set. This applies also to mock hardware. -->
+    <xacro:property name="is_async" value="${scheduling_policy != ''}"/>
+
+    <ros2_control name="${hw_name}" type="system" rw_rate="${rw_rate}" is_async="${is_async}">
+      <xacro:if value="${is_async}">
+        <properties>
+          <xacro:if value="${cpu_affinity != ''}">
+            <async scheduling_policy="${scheduling_policy}" thread_priority="${thread_priority}" affinity="${cpu_affinity}"/>
+          </xacro:if>
+          <xacro:unless value="${cpu_affinity != ''}">
+            <async scheduling_policy="${scheduling_policy}" thread_priority="${thread_priority}"/>
+          </xacro:unless>
+        </properties>
+      </xacro:if>
       <hardware>
         <xacro:if value="${use_mock_hardware}">
           <plugin>mock_components/GenericSystem</plugin>

@@ -75,6 +75,25 @@ updating the controllers and sending new commands. This way, the robot's control
 ROS control loop's pace. This is the recommended setting for single robot setups and therefore the
 default value for the startup launch file.
 
+.. _async_hardware_component:
+
+Async hardware component
+------------------------
+
+The hardware component can run in its own thread, as an `asynchronous component
+<https://control.ros.org/master/doc/ros2_control/hardware_interface/doc/asynchronous_components.html>`_.
+Set these arguments of ``ur.urdf.xacro``:
+
+* ``scheduling_policy`` (default: empty) - ``synchronized``, ``detached`` or ``self_paced``. An empty
+  value means that the hardware component is not async.
+* ``thread_priority`` (default: *50*) - Priority of the async thread.
+* ``cpu_affinity`` (default: empty) - CPU cores of the async thread, e.g. ``[2,3]``.
+* ``rw_rate`` (default: *0*) - Rate of the hardware component. *0* uses the rate of the
+  ``controller_manager``.
+
+With ``self_paced`` and ``blocking_read`` set to ``true``, the robot's control loop paces the
+async thread. With ``use_mock_hardware`` set to ``true``, the mock hardware is also async.
+
 .. _robot_startup_program:
 
 Finish startup on the robot

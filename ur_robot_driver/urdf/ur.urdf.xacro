@@ -37,6 +37,11 @@
   <xacro:arg name="use_currents_as_efforts" default="false"/>
 
   <xacro:arg name="blocking_read" default="false" />
+  <!-- ros2_control: hardware rate and async parameters. An empty scheduling_policy means not async. -->
+  <xacro:arg name="rw_rate" default="0" />
+  <xacro:arg name="scheduling_policy" default="" />
+  <xacro:arg name="thread_priority" default="50" />
+  <xacro:arg name="cpu_affinity" default="" />
 
   <!--   tool communication related parameters-->
   <xacro:arg name="use_tool_communication" default="false" />
@@ -114,6 +119,10 @@
     verify_robot_model="$(arg verify_robot_model)"
     use_currents_as_efforts="$(arg use_currents_as_efforts)"
     non_blocking_read="${not blocking_read}"
+    rw_rate="$(arg rw_rate)"
+    scheduling_policy="$(arg scheduling_policy)"
+    thread_priority="$(arg thread_priority)"
+    cpu_affinity="$(arg cpu_affinity)"
   />
 
 </robot>
