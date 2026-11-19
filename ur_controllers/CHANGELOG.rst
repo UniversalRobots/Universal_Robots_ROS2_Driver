@@ -2,8 +2,8 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.3.1 (2026-11-19)
+------------------
 * Fix ur_msgs dependency version (`#2096 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2096>`_)
 * Contributors: Felix Exner
 
