@@ -43,7 +43,7 @@ on:
 jobs:
   reusable_ici:
     name: ${{ inputs.ros_distro }} ${{ inputs.ros_repo }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # /tmp/ur_test_artifacts: collection point for test artifacts (e.g. VNC
       #     snapshots) written from inside the ICI container.
