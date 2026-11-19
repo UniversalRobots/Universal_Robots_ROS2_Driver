@@ -27,11 +27,15 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <gmock/gmock.h>
+
+#include <atomic>
+#include <thread>
 #include "controller_manager/controller_manager.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/utilities.hpp"
 #include "ros2_control_test_assets/descriptions.hpp"
+#include "tf2_ros/transform_broadcaster.hpp"
 
 TEST(TestLoadForceModeController, load_controller)
 {
@@ -46,6 +50,43 @@ TEST(TestLoadForceModeController, load_controller)
   cm.set_parameter({ "test_force_mode_controller.type", "ur_controllers/ForceModeController" });
 
   ASSERT_NE(cm.load_controller("test_force_mode_controller"), nullptr);
+}
+
+TEST(TestLoadForceModeController, reconfigure_controller_with_tf_traffic)
+{
+  std::shared_ptr<rclcpp::Executor> executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+
+  controller_manager::ControllerManager cm{ executor, ros2_control_test_assets::minimal_robot_urdf, true,
+                                            "test_controller_manager" };
+
+  const std::string test_file_path = std::string{ TEST_FILES_DIRECTORY } + "/force_mode_controller_params.yaml";
+  cm.set_parameter({ "test_force_mode_controller.params_file", test_file_path });
+  cm.set_parameter({ "test_force_mode_controller.type", "ur_controllers/ForceModeController" });
+  ASSERT_NE(cm.load_controller("test_force_mode_controller"), nullptr);
+
+  // Publish TF data during the test. The TF listener of the controller writes it into its buffer.
+  auto tf_node = std::make_shared<rclcpp::Node>("test_tf_publisher");
+  tf2_ros::TransformBroadcaster broadcaster(tf_node);
+  std::atomic<bool> publish{ true };
+  std::thread publisher_thread([&]() {
+    geometry_msgs::msg::TransformStamped transform;
+    transform.header.frame_id = "base";
+    transform.child_frame_id = "tool0";
+    transform.transform.rotation.w = 1.0;
+    while (publish) {
+      transform.header.stamp = tf_node->now();
+      broadcaster.sendTransform(transform);
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+  });
+
+  // Configure an inactive controller again: the controller manager cleans it up and configures it.
+  for (int i = 0; i < 20; ++i) {
+    EXPECT_EQ(cm.configure_controller("test_force_mode_controller"), controller_interface::return_type::OK);
+  }
+
+  publish = false;
+  publisher_thread.join();
 }
 
 int main(int argc, char* argv[])
