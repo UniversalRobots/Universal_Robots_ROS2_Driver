@@ -2,6 +2,9 @@
 Changelog for package ur_moveit_config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 6.3.0 (2026-11-13)
 ------------------
 * Add note about moveit startup warnings (backport `#2077 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2077>`_) (`#2081 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2081>`_)

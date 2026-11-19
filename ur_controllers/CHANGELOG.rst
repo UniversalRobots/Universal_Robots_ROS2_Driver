@@ -2,6 +2,11 @@
 Changelog for package ur_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix ur_msgs dependency version (`#2096 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2096>`_)
+* Contributors: Felix Exner
+
 6.3.0 (2026-11-13)
 ------------------
 * Add g-Series 48v T2 tool connector support (backport `#2049 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2049>`_) (`#2075 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2075>`_)
