@@ -1,3 +1,8 @@
+Forthcoming
+-----------
+* Fix ur_msgs dependency version (`#2096 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2096>`_)
+* Contributors: Felix Exner
+
 6.3.0 (2026-11-13)
 ------------------
 * [fix] Start and end tool contact only once per request (backport `#2078 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2078>`_) (`#2085 <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/issues/2085>`_)
