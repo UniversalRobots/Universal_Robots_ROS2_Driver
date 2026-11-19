@@ -125,6 +125,9 @@ ur_controllers::ForceModeController::on_configure(const rclcpp_lifecycle::State&
   // get parameters from the listener in case they were updated
   params_ = param_listener_->get_params();
 
+  // The listener writes into the buffer from its own thread. Destroy the old listener before the
+  // old buffer.
+  tf_listener_.reset();
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_node()->get_clock());
   tf_listener_ = std::make_unique<tf2_ros::TransformListener>(*tf_buffer_);
 
@@ -167,6 +170,8 @@ ur_controllers::ForceModeController::on_cleanup(const rclcpp_lifecycle::State& /
 {
   set_force_mode_srv_.reset();
   disable_force_mode_srv_.reset();
+  tf_listener_.reset();
+  tf_buffer_.reset();
   return CallbackReturn::SUCCESS;
 }
 

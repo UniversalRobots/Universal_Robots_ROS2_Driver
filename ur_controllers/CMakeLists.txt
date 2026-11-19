@@ -192,6 +192,7 @@ if(BUILD_TESTING)
     ${PROJECT_NAME}
     controller_manager::controller_manager
     ros2_control_test_assets::ros2_control_test_assets
+    tf2_ros::tf2_ros
   )
   ament_add_gmock(test_load_freedrive_mode_controller
     test/test_load_freedrive_mode_controller.cpp
