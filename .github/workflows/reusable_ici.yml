@@ -111,6 +111,14 @@ jobs:
           ROS_DISTRO: ${{ inputs.ros_distro }}
           ROS_REPO: ${{ inputs.ros_repo }}
           ADDITIONAL_DEBS: docker.io netcat-openbsd curl  # Needed for integration tests
+          # colcon reports package.xml version constraint failures as warnings.
+          AFTER_BUILD_TARGET_WORKSPACE: |
+            log="$current_ws/log/latest_build/logger_all.log"
+            test -r "$log" || { echo "Cannot read colcon build log: $log" >&2; exit 1; }
+            awk '/ WARNING:colcon\.colcon_core\.package_augmentation\.check_dependency_constraint:/ {
+              print
+              failed = 1
+            } END { exit failed }' "$log"
           OS_CODE_NAME: ${{ inputs.ros_distro == 'rolling' && 'resolute' || '' }}
           CMAKE_ARGS: >-
             -DUR_ROBOT_DRIVER_BUILD_INTEGRATION_TESTS=ON
