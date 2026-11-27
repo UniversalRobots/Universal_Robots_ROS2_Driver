@@ -53,7 +53,7 @@
   <depend>ur_controllers</depend>
   <depend>ur_dashboard_msgs</depend>
   <depend>ur_description</depend>
-  <depend version_gt="4.0.0">ur_msgs</depend>
+  <depend version_gte="3.1.0">ur_msgs</depend>
   <depend>motion_primitives_controllers</depend>
   <depend>control_msgs</depend>
 
