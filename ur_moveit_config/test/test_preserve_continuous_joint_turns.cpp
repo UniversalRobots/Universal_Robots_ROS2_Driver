@@ -26,6 +26,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+// cppcheck does not expand the Google Test fixture macros in the standalone hook.
+// cppcheck-suppress-file syntaxError
+
 #include <gtest/gtest.h>
 #include <srdfdom/model.h>
 #include <urdf/model.h>
