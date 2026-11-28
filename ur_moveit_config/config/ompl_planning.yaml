@@ -1,3 +1,6 @@
+# Opt in with fix_start_state: true and preserve_continuous_joint_turns: true.
+# This is intended for plans from the current state of robots with a continuous wrist.
+preserve_continuous_joint_turns: false
 planning_plugins:
   - ompl_interface/OMPLPlanner
 # The order of the elements in the adapter corresponds to the order they are processed by the motion planning pipeline.
@@ -8,5 +11,6 @@ request_adapters:
   - default_planning_request_adapters/CheckStartStateCollision
 response_adapters:
   - default_planning_response_adapters/AddTimeOptimalParameterization
+  - ur_moveit_config/PreserveContinuousJointTurns
   - default_planning_response_adapters/ValidateSolution
   - default_planning_response_adapters/DisplayMotionPath
