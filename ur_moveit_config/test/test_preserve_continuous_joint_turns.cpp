@@ -26,14 +26,14 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "../src/preserve_continuous_joint_turns.hpp"
-
 #include <gtest/gtest.h>
 #include <srdfdom/model.h>
 #include <urdf/model.h>
 
 #include <limits>
 #include <numbers>
+
+#include "../src/preserve_continuous_joint_turns.hpp"
 
 namespace ur_moveit_config
 {

@@ -26,8 +26,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef UR_MOVEIT_CONFIG__PRESERVE_CONTINUOUS_JOINT_TURNS_HPP_
-#define UR_MOVEIT_CONFIG__PRESERVE_CONTINUOUS_JOINT_TURNS_HPP_
+#ifndef PRESERVE_CONTINUOUS_JOINT_TURNS_HPP_
+#define PRESERVE_CONTINUOUS_JOINT_TURNS_HPP_
 
 #include <moveit/robot_state/robot_state.hpp>
 #include <moveit/robot_trajectory/robot_trajectory.hpp>
@@ -38,4 +38,4 @@ namespace ur_moveit_config
 void preserveContinuousJointTurns(const moveit::core::RobotState& measured, robot_trajectory::RobotTrajectory& path);
 }  // namespace ur_moveit_config
 
-#endif  // UR_MOVEIT_CONFIG__PRESERVE_CONTINUOUS_JOINT_TURNS_HPP_
+#endif  // PRESERVE_CONTINUOUS_JOINT_TURNS_HPP_
