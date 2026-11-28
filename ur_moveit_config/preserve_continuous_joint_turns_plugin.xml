@@ -1,0 +1,7 @@
+<library path="ur_moveit_preserve_continuous_joint_turns">
+  <class name="ur_moveit_config/PreserveContinuousJointTurns"
+         type="ur_moveit_config::PreserveContinuousJointTurns"
+         base_class_type="planning_interface::PlanningResponseAdapter">
+    <description>Preserve the measured turn count of continuous joints in an equivalent planned start pose.</description>
+  </class>
+</library>

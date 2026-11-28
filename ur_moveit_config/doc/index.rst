@@ -74,3 +74,30 @@ robot as explained `here <https://moveit.picknik.ai/main/doc/tutorials/quickstar
 
    Those are expected and can be ignored. The fallback in the last line is the one actually
    desired.
+
+Planning from a continuous wrist past 180 degrees
+--------------------------------------------------
+
+On a model with a continuous wrist, the measured position and the first
+waypoint of a plan can describe the same configuration with different turn
+counts. A streamed position controller may not be able to follow the resulting
+numeric step.
+
+To try planning with the measured turn retained, set both options in the
+OMPL pipeline configuration of your MoveIt config package:
+
+.. code-block:: yaml
+
+   fix_start_state: true
+   preserve_continuous_joint_turns: true
+
+Keep ``ur_moveit_config/PreserveContinuousJointTurns`` after time
+parameterization and before solution validation in the response adapter list.
+The option is off by default. Restart MoveIt after changing it. The adapter
+applies only when every active joint in the
+plan starts at a configuration equivalent to the current planning-scene
+state. For each continuous joint, the same whole-turn offset is added to
+every waypoint. Timing and relative motion are unchanged, and bounded joints
+are not adjusted. This option is intended for plans starting from the
+measured state; leave it off for plans where a different turn count is
+deliberately specified at the start.
